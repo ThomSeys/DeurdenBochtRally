@@ -37,6 +37,14 @@ export type SiteConfig = {
     };
   };
   seoImageUrl?: string;
+  heroBackgroundImage?: any;
+  heroBackgroundImageUrl?: string;
+  featureImage1?: any;
+  featureImage1Url?: string;
+  featureImage2?: any;
+  featureImage2Url?: string;
+  featureImage3?: any;
+  featureImage3Url?: string;
   noIndex: boolean;
   noFollow: boolean;
 };
@@ -212,21 +220,40 @@ export async function getSiteConfig(): Promise<SiteConfig | null> {
         seoTitle,
         seoDescription,
         seoImage,
+        heroBackgroundImage,
+        featureImage1,
+        featureImage2,
+        featureImage3,
         noIndex,
         noFollow
       }`,
       { editionId }
     );
     
-    // Build SEO image URL on the server side
-    if (config && config.seoImage) {
-      return {
-        ...config,
-        seoImageUrl: urlFor(config.seoImage).width(1200).height(630).url()
-      };
+    // Build image URLs on the server side
+    if (config) {
+      const result: any = { ...config };
+      
+      if (config.seoImage) {
+        result.seoImageUrl = urlFor(config.seoImage).width(1200).height(630).url();
+      }
+      if (config.heroBackgroundImage) {
+        result.heroBackgroundImageUrl = urlFor(config.heroBackgroundImage).width(1920).height(1080).url();
+      }
+      if (config.featureImage1) {
+        result.featureImage1Url = urlFor(config.featureImage1).width(800).height(600).url();
+      }
+      if (config.featureImage2) {
+        result.featureImage2Url = urlFor(config.featureImage2).width(600).height(400).url();
+      }
+      if (config.featureImage3) {
+        result.featureImage3Url = urlFor(config.featureImage3).width(600).height(400).url();
+      }
+      
+      return result;
     }
     
-    return config || null;
+    return null;
   } catch (error) {
     console.error('Error fetching site config:', error);
     return null;

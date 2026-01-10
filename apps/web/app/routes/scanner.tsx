@@ -87,6 +87,18 @@ export default function Scanner() {
               </p>
             </div>
 
+            {/* Info Notice */}
+            <div className="card bg-blue-50 border-2 border-blue-400 mb-6">
+              <h3 className="text-xl font-bold mb-2">ℹ️ Native QR Scanning</h3>
+              <p className="text-gray-700 mb-4">
+                De QR codes kunnen nu direct gescand worden met de native camera app op je smartphone! 
+                Open gewoon de camera en richt op de QR code - je wordt automatisch doorgestuurd naar de validatie pagina.
+              </p>
+              <p className="text-sm text-gray-600">
+                Deze pagina is enkel nodig als je de QR code data handmatig wilt invoeren.
+              </p>
+            </div>
+
             {/* Camera Scanner (Future Enhancement) */}
             <div className="card mb-6">
               <h3 className="text-xl font-bold mb-4">📷 Camera Scanner</h3>

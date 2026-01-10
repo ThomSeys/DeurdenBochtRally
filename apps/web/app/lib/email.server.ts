@@ -10,14 +10,12 @@ if (!process.env.RESEND_API_KEY) {
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
-export async function generateQRCodeDataURL(participant: Participant): Promise<string> {
-  const qrData = `Naam: ${participant.first_name} ${participant.last_name}
-Email: ${participant.email}
-ID: ${participant.id}
-Betaald: ${participant.payment_status === 'completed' ? 'Ja' : 'Nee'}`;
+export async function generateQRCodeDataURL(participant: Participant, baseUrl: string): Promise<string> {
+  // Generate a validation URL using the provided base URL
+  const qrUrl = `${baseUrl}/api/validate-qr?id=${participant.id}&email=${encodeURIComponent(participant.email)}`;
 
   try {
-    return await QRCode.toDataURL(qrData, {
+    return await QRCode.toDataURL(qrUrl, {
       width: 400,
       margin: 2,
       color: {
@@ -33,14 +31,15 @@ Betaald: ${participant.payment_status === 'completed' ? 'Ja' : 'Nee'}`;
 
 export async function sendRegistrationConfirmationEmail(
   participant: Participant,
-  eventName: string
+  eventName: string,
+  baseUrl: string
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     console.warn('Skipping email - RESEND_API_KEY not configured');
     return;
   }
 
-  const qrCodeDataURL = await generateQRCodeDataURL(participant);
+  const qrCodeDataURL = await generateQRCodeDataURL(participant, baseUrl);
   
   // Extract base64 data from data URL
   const base64Data = qrCodeDataURL.replace(/^data:image\/png;base64,/, '');

@@ -60,9 +60,11 @@ export async function action({ request }: ActionFunctionArgs) {
       // Send confirmation email with QR code
       try {
         const siteConfig = await getSiteConfig();
+        const baseUrl = new URL(request.url).origin;
         await sendRegistrationConfirmationEmail(
           participant,
-          siteConfig?.eventName || 'Deur Den Bocht Rally'
+          siteConfig?.eventName || 'Deur Den Bocht Rally',
+          baseUrl
         );
         console.log(`📧 Confirmation email sent to ${participant.email}`);
       } catch (emailError) {

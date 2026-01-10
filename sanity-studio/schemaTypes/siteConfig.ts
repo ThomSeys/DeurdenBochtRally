@@ -81,6 +81,42 @@ export default defineType({
       description: 'Image shown when sharing on social media (recommended: 1200x630px)',
     }),
     defineField({
+      name: 'heroBackgroundImage',
+      title: 'Hero Background Image',
+      type: 'image',
+      description: 'Large background image for the hero section (recommended: 1920x1080px)',
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
+      name: 'featureImage1',
+      title: 'Feature Image 1',
+      type: 'image',
+      description: 'Image for "What is it?" section (recommended: 800x600px)',
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
+      name: 'featureImage2',
+      title: 'Feature Image 2',
+      type: 'image',
+      description: 'Image for rally zones card (recommended: 600x400px)',
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
+      name: 'featureImage3',
+      title: 'Feature Image 3',
+      type: 'image',
+      description: 'Image for points card (recommended: 600x400px)',
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
       name: 'noIndex',
       title: 'No Index',
       type: 'boolean',

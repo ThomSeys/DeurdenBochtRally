@@ -103,7 +103,7 @@ export default function Index() {
           {/* Background Image with Overlay */}
           <div className="absolute inset-0">
             <img 
-              src="https://picsum.photos/1920/1080?random=1" 
+              src={siteConfig?.heroBackgroundImageUrl || "https://picsum.photos/1920/1080?random=1"} 
               alt="Background" 
               className="w-full h-full object-cover"
             />
@@ -214,7 +214,7 @@ export default function Index() {
               <div className="relative">
                 <div className="relative overflow-hidden shadow-2xl">
                   <img 
-                    src="https://picsum.photos/800/600?random=2" 
+                    src={siteConfig?.featureImage1Url || "https://picsum.photos/800/600?random=2"} 
                     alt="Motorrijden" 
                     className="w-full h-full object-cover"
                   />
@@ -317,7 +317,7 @@ export default function Index() {
                 <div className="card bg-white relative overflow-hidden group">
                   <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
                     <img 
-                      src="https://picsum.photos/600/400?random=3" 
+                      src={siteConfig?.featureImage2Url || "https://picsum.photos/600/400?random=3"} 
                       alt="Rally Zones" 
                       className="w-full h-full object-cover"
                     />
@@ -343,7 +343,7 @@ export default function Index() {
                 <div className="card bg-white relative overflow-hidden group">
                   <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
                     <img 
-                      src="https://picsum.photos/600/400?random=4" 
+                      src={siteConfig?.featureImage3Url || "https://picsum.photos/600/400?random=4"} 
                       alt="Punten verdienen" 
                       className="w-full h-full object-cover"
                     />
