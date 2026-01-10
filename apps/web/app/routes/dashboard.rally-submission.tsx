@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import { useState } from 'react';
 import { Header } from '~/components/Header';
 import { Footer } from '~/components/Footer';
 import { getUser } from '~/lib/session.server';
@@ -10,7 +11,7 @@ import { getRallyZones } from '~/lib/sanity.server';
 export const meta: MetaFunction = () => {
   return [
     { title: 'Rally Inzending - Dashboard' },
-    { name: 'description', content: 'Dien je rally foto\'s in en verdien punten!' },
+    { name: 'description', content: 'Vul je rally codes in en verdien punten!' },
   ];
 };
 
@@ -23,14 +24,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const rallyZones = await getRallyZones().catch(() => []);
 
-  // Check if user already has a submission
-  const { data: existingSubmission } = await supabase
+  // Get or create submission for user
+  let { data: submission } = await supabase
     .from('rally_submissions')
     .select('*')
     .eq('participant_id', user.id)
     .single();
 
-  return json({ user, rallyZones, existingSubmission });
+  // If no submission exists, create one
+  if (!submission) {
+    const { data: newSubmission } = await supabase
+      .from('rally_submissions')
+      .insert({
+        participant_id: user.id,
+        total_points: 0,
+        used_highways: false,
+        weather_bonus: false,
+      })
+      .select()
+      .single();
+    
+    submission = newSubmission;
+  }
+
+  return json({ user, rallyZones, submission });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -41,77 +58,89 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const formData = await request.formData();
-  const zoneId = formData.get('zoneId');
-  const photoUrl = formData.get('photoUrl');
-  const notes = formData.get('notes');
-
-  if (typeof zoneId !== 'string' || typeof photoUrl !== 'string') {
-    return json(
-      { error: 'Zone en foto zijn verplicht' },
-      { status: 400 }
-    );
-  }
+  const action = formData.get('action');
 
   try {
-    // Insert rally submission
-    const { error: submissionError } = await supabase
-      .from('rally_submissions')
-      .insert({
-        participant_id: user.id,
-        zone_id: zoneId,
-        photo_url: photoUrl,
-        notes: notes?.toString() || null,
-        submitted_at: new Date().toISOString(),
-      });
+    if (action === 'updateCode') {
+      const zoneNumber = formData.get('zoneNumber');
+      const code = formData.get('code');
+      
+      if (!zoneNumber || typeof code !== 'string') {
+        return json({ error: 'Ongeldige invoer' }, { status: 400 });
+      }
 
-    if (submissionError) {
-      console.error('Submission error:', submissionError);
-      return json(
-        { error: 'Fout bij het indienen. Probeer het opnieuw.' },
-        { status: 400 }
-      );
+      const columnName = `rz${zoneNumber}_code`;
+      
+      const { error } = await supabase
+        .from('rally_submissions')
+        .update({ [columnName]: code || null })
+        .eq('participant_id', user.id);
+
+      if (error) {
+        console.error('Update error:', error);
+        return json({ error: 'Fout bij opslaan' }, { status: 400 });
+      }
+
+      return json({ success: true, message: 'Code opgeslagen!' });
     }
 
-    return redirect('/dashboard?submitted=true');
+    if (action === 'updateExtras') {
+      const totalDistance = formData.get('totalDistance');
+      const usedHighways = formData.get('usedHighways') === 'true';
+      const weatherBonus = formData.get('weatherBonus') === 'true';
+
+      const { error } = await supabase
+        .from('rally_submissions')
+        .update({
+          total_distance: totalDistance ? parseInt(totalDistance.toString()) : null,
+          used_highways: usedHighways,
+          weather_bonus: weatherBonus,
+        })
+        .eq('participant_id', user.id);
+
+      if (error) {
+        console.error('Update error:', error);
+        return json({ error: 'Fout bij opslaan' }, { status: 400 });
+      }
+
+      return json({ success: true, message: 'Extra vragen opgeslagen!' });
+    }
+
+    if (action === 'finalSubmit') {
+      const { error } = await supabase
+        .from('rally_submissions')
+        .update({ submitted_at: new Date().toISOString() })
+        .eq('participant_id', user.id);
+
+      if (error) {
+        console.error('Submit error:', error);
+        return json({ error: 'Fout bij indienen' }, { status: 400 });
+      }
+
+      return redirect('/dashboard?submitted=true');
+    }
+
+    return json({ error: 'Ongeldige actie' }, { status: 400 });
   } catch (error) {
     console.error('Rally submission error:', error);
-    return json(
-      { error: 'Er is iets misgegaan. Probeer het later opnieuw.' },
-      { status: 500 }
-    );
+    return json({ error: 'Er is iets misgegaan' }, { status: 500 });
   }
 }
 
 export default function RallySubmission() {
-  const { user, rallyZones, existingSubmission } = useLoaderData<typeof loader>();
+  const { user, rallyZones, submission } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
+  const [editingZone, setEditingZone] = useState<number | null>(null);
 
-  if (existingSubmission) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header user={user} />
-        <main className="flex-1 py-16">
-          <div className="container-custom">
-            <div className="max-w-2xl mx-auto">
-              <div className="card text-center">
-                <span className="text-6xl mb-4 block">✅</span>
-                <h1 className="text-4xl font-display font-bold mb-4">Je hebt al ingediend!</h1>
-                <p className="text-xl text-gray-700 mb-6">
-                  Je rally inzending is ontvangen. De resultaten worden bekendgemaakt tijdens het feest.
-                </p>
-                <a href="/dashboard" className="btn-primary inline-block">
-                  Terug naar Dashboard
-                </a>
-              </div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const isSubmitted = !!submission?.submitted_at;
+
+  const getCodeForZone = (zoneIndex: number) => {
+    const columnName = `rz${zoneIndex + 1}_code` as keyof typeof submission;
+    return submission?.[columnName] as string | null;
+  };
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -119,107 +148,182 @@ export default function RallySubmission() {
 
       <main className="flex-1 py-16">
         <div className="container-custom">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h1 className="text-5xl font-display font-bold mb-4">Rally Inzending</h1>
               <p className="text-xl text-gray-700">
-                Upload je foto's en verdien punten! 📸
+                Vul je rally zone codes in om punten te verdienen 🏍
               </p>
             </div>
 
-            <div className="card">
-              {actionData?.error && (
-                <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 mb-6">
-                  <p className="text-red-700 font-bold">❌ {actionData.error}</p>
-                </div>
-              )}
-
-              <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-4 mb-6">
-                <h3 className="font-bold text-blue-900 mb-2">📋 Instructies:</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Upload een duidelijke foto bij elke rally zone</li>
-                  <li>• Je moet zichtbaar zijn op de foto samen met je motor</li>
-                  <li>• Foto's worden beoordeeld door de jury</li>
-                  <li>• De meeste punten wint!</li>
-                </ul>
+            {actionData?.success && (
+              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6">
+                <p className="text-green-700 font-bold">✅ {actionData.message}</p>
               </div>
+            )}
 
-              <Form method="post" className="space-y-6">
-                <div>
-                  <label htmlFor="zoneId" className="block text-sm font-bold text-gray-700 mb-2">
-                    Selecteer Rally Zone *
-                  </label>
-                  <select
-                    id="zoneId"
-                    name="zoneId"
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-600 focus:ring-0 transition-colors"
-                  >
-                    <option value="">Kies een zone...</option>
-                    {rallyZones.map((zone) => (
-                      <option key={zone._id} value={zone._id}>
-                        {zone.icon} {zone.name} - {zone.points} punten
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {actionData?.error && (
+              <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 mb-6">
+                <p className="text-red-700 font-bold">❌ {actionData.error}</p>
+              </div>
+            )}
 
+            {/* Rally Zones */}
+            <div className="space-y-4 mb-8">
+              <h2 className="text-2xl font-display font-bold">Rally Zones</h2>
+              
+              {rallyZones.filter((z) => z !== null).map((zone, index) => {
+                const currentCode = getCodeForZone(index);
+                const isEditing = editingZone === index;
+                const colorClasses: Record<string, string> = {
+                  green: 'border-l-4 border-green-500',
+                  yellow: 'border-l-4 border-yellow-500',
+                  orange: 'border-l-4 border-orange-500',
+                  red: 'border-l-4 border-red-500',
+                };
+
+                return (
+                  <div key={zone._id} className={`card ${colorClasses[zone.color] || 'border-l-4 border-gray-500'}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold">{zone.title}</h3>
+                        <p className="text-sm text-gray-600">{zone.checkpoint}</p>
+                        <p className="text-primary-600 font-bold">{zone.points} punten</p>
+                      </div>
+                      {currentCode && !isEditing && (
+                        <span className="text-2xl">✅</span>
+                      )}
+                    </div>
+
+                    {isEditing ? (
+                      <Form method="post" className="space-y-3">
+                        <input type="hidden" name="action" value="updateCode" />
+                        <input type="hidden" name="zoneNumber" value={index + 1} />
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Code (gevonden bij het checkpoint)
+                          </label>
+                          <input
+                            type="text"
+                            name="code"
+                            defaultValue={currentCode || ''}
+                            placeholder="Bijv. DDB123"
+                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-600"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="btn-primary flex-1"
+                          >
+                            {isSubmitting ? 'Opslaan...' : 'Opslaan'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingZone(null)}
+                            className="btn-secondary flex-1"
+                          >
+                            Annuleren
+                          </button>
+                        </div>
+                      </Form>
+                    ) : (
+                      <div>
+                        {currentCode ? (
+                          <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                            <p className="text-sm text-gray-600">Jouw code:</p>
+                            <p className="font-mono font-bold text-lg">{currentCode}</p>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-sm mb-3">Nog geen code ingevuld</p>
+                        )}
+                        <button
+                          onClick={() => setEditingZone(index)}
+                          className="btn-secondary w-full"
+                        >
+                          {currentCode ? 'Code aanpassen' : 'Code invullen'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Extra Questions */}
+            <div className="card bg-blue-50 border-2 border-blue-400 mb-8">
+              <h2 className="text-2xl font-display font-bold mb-4">Extra Vragen</h2>
+              
+              <Form method="post" className="space-y-4">
+                <input type="hidden" name="action" value="updateExtras" />
+                
                 <div>
-                  <label htmlFor="photoUrl" className="block text-sm font-bold text-gray-700 mb-2">
-                    Foto URL *
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Totale afstand (km)
                   </label>
                   <input
-                    type="url"
-                    id="photoUrl"
-                    name="photoUrl"
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-600 focus:ring-0 transition-colors"
-                    placeholder="https://..."
+                    type="number"
+                    name="totalDistance"
+                    defaultValue={submission?.total_distance || ''}
+                    placeholder="Bijv. 250"
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-600"
                   />
-                  <p className="text-sm text-gray-600 mt-1">
-                    Upload je foto eerst naar een bestandshost (bijv. Imgur) en plak hier de link
-                  </p>
                 </div>
 
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-bold text-gray-700 mb-2">
-                    Notities (optioneel)
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="usedHighways"
+                      value="true"
+                      defaultChecked={submission?.used_highways}
+                      className="w-5 h-5"
+                    />
+                    <span className="font-bold">Heb je snelwegen gebruikt?</span>
                   </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    rows={3}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-600 focus:ring-0 transition-colors"
-                    placeholder="Voeg extra informatie toe over je foto..."
-                  />
                 </div>
 
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Bezig met indienen...' : 'Dien in 🚀'}
-                  </button>
-                  <a
-                    href="/dashboard"
-                    className="btn-secondary flex-1 text-center"
-                  >
-                    Annuleren
-                  </a>
+                <div>
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      name="weatherBonus"
+                      value="true"
+                      defaultChecked={submission?.weather_bonus}
+                      className="w-5 h-5"
+                    />
+                    <span className="font-bold">Slecht weer bonus (regen tijdens de rit)</span>
+                  </label>
                 </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary w-full"
+                >
+                  {isSubmitting ? 'Opslaan...' : 'Extra vragen opslaan'}
+                </button>
               </Form>
             </div>
 
-            <div className="mt-8">
-              <div className="card bg-yellow-50 border-2 border-yellow-400">
-                <h3 className="text-lg font-bold mb-2">⚠️ Let op!</h3>
-                <p className="text-sm text-gray-700">
-                  Je kunt maar één keer indienen. Zorg ervoor dat je alle foto's hebt voordat je indient.
-                  In de toekomst kun je meerdere zones uploaden.
-                </p>
-              </div>
+            {/* Final Submit */}
+            <div className="card bg-yellow-50 border-2 border-yellow-400">
+              <h3 className="text-xl font-bold mb-4">🏁 Klaar om in te dienen?</h3>
+              <p className="text-gray-700 mb-4">
+                Let op: Na het indienen kun je geen wijzigingen meer aanbrengen. 
+                Zorg ervoor dat alle codes correct zijn ingevuld!
+              </p>
+              <Form method="post">
+                <input type="hidden" name="action" value="finalSubmit" />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary w-full text-lg"
+                >
+                  {isSubmitting ? 'Indienen...' : 'Definitief indienen'}
+                </button>
+              </Form>
             </div>
           </div>
         </div>
@@ -229,3 +333,4 @@ export default function RallySubmission() {
     </div>
   );
 }
+                   

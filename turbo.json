@@ -52,8 +52,6 @@
         "SITE_PASSWORD"
       ]
     },
-      ]
-    },
     "clean": {
       "cache": false
     }
