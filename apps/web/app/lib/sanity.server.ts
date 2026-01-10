@@ -155,7 +155,19 @@ export function getImageUrl(source: any, width?: number): string {
 export async function getActiveEdition() {
   try {
     const edition = await sanityClient.fetch(
-      `*[_type == "edition" && isActive == true][0] { _id, registrationOpen }`
+      `*[_type == "edition" && isActive == true][0] { 
+        _id, 
+        registrationOpen,
+        "pricingTiers": *[_type == "pricingTier" && references(^._id)] | order(order asc) {
+          _id,
+          name,
+          price,
+          icon,
+          features,
+          highlighted,
+          order
+        }
+      }`
     );
     return edition;
   } catch (error) {

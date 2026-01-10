@@ -17,9 +17,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (result.valid) {
     // Redirect to success page with participant data
     const params = new URLSearchParams({
-      name: result.participant.name,
-      email: result.participant.email,
-      status: result.participant.isPaid ? 'paid' : 'unpaid',
+      name: result.participant?.name || '',
+      email: result.participant?.email || '',
+      status: result.participant?.isPaid ? 'paid' : 'unpaid',
       checkedIn: 'true'
     });
     return redirect(`/check-in-success?${params.toString()}`);

@@ -137,15 +137,8 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <h3 className="text-xl font-bold mb-2">📱 Je QR Code voor Check-in</h3>
                   <p className="text-gray-700 mb-4">
-                    Scan deze code bij aankomst aan de start in Café Den Belami. 
-                    Je wordt automatisch ingecheckt!
+                    Toon deze code bij aankomst aan de start in Café Den Belami. 
                   </p>
-                  <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-4">
-                    <p className="text-sm text-blue-800 font-bold mb-1">💡 Tip</p>
-                    <p className="text-sm text-blue-700">
-                      Open je camera app en richt deze op de QR code. De check-in gebeurt automatisch!
-                    </p>
-                  </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg border-4 border-gray-300 shadow-lg">
                   <QRCodeSVG 
@@ -357,7 +350,7 @@ export default function Dashboard() {
                 Bij vragen of problemen kan je contact opnemen via:
               </p>
               <ul className="mt-2 space-y-1 text-gray-700">
-                <li>📧 <strong>Email:</strong> info@deurdenbocht.be</li>
+                <li>📧 <strong>Email:</strong> vzwddb@gmail.com</li>
                 <li>📱 <strong>WhatsApp:</strong> Link ontvang je bij de start</li>
               </ul>
             </div>

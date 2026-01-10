@@ -1,22 +1,49 @@
 # Email & QR Code Setup
 
-## New Environment Variables
+## Environment Variables
 
 Add these to your `.env` file and Vercel environment variables:
 
 ```bash
-# Resend Email Service
+# Resend Email Service (Using Test Domain - No Verification Required!)
 RESEND_API_KEY=re_xxxxxxxxxxxxx
-EMAIL_FROM=noreply@deurdenbocht.be
 APP_URL=https://your-domain.com
 ```
 
-## Getting Resend API Key
+## Setting Up Resend with Test Domain
 
+### Step 1: Create Resend Account
 1. Sign up at [https://resend.com](https://resend.com)
-2. Verify your domain or use resend's test domain for development
-3. Create an API key in the dashboard
-4. Add the API key to your environment variables
+2. No credit card required for the free tier
+
+### Step 2: Get API Key
+1. Go to **API Keys** in the Resend dashboard
+2. Click **Create API Key**
+3. Give it a name (e.g., "Deur Den Bocht")
+4. Copy the API key (starts with `re_`)
+
+### Step 3: Add to Environment Variables
+```bash
+RESEND_API_KEY=re_abcdefghijklmnop
+APP_URL=https://deurdenbocht.vercel.app
+```
+
+### Step 4: Use Test Domain (No Verification!)
+The code is already configured to use `onboarding@resend.dev` - Resend's free test domain that requires **no verification**.
+
+Emails will come from: **Deur Den Bocht <onboarding@resend.dev>**
+
+## Free Tier Limits
+- ✅ **3,000 emails/month** - plenty for your event
+- ✅ **No domain verification required** with test domain
+- ✅ **No credit card required**
+- ✅ Works immediately after setup
+
+## Upgrading to Custom Domain (Optional - Later)
+When you have a domain and want emails from `@deurdenbocht.be`:
+1. Add and verify your domain in Resend
+2. Update the `from` address in [email.server.ts](apps/web/app/lib/email.server.ts#L55)
+3. Change from `onboarding@resend.dev` to `noreply@deurdenbocht.be`
 
 ## Features Implemented
 
@@ -27,27 +54,17 @@ APP_URL=https://your-domain.com
 - ✅ Link to dashboard
 
 ### 2. QR Code Validation API
-- ✅ Endpoint: `POST /api/validate-qr`
+- ✅ Endpoint: `GET /api/validate-qr?id=UUID&email=encoded`
+- ✅ Works with native camera apps (URL-based QR codes)
 - ✅ Validates participant data
 - ✅ Checks payment status
-- ✅ Returns participant information
+- ✅ Updates checked_in flag in database
+- ✅ Redirects to success page
 
-**Example Request:**
-```json
-{
-  "qrData": "Naam: John Doe\nEmail: john@example.com\nID: abc-123\nBetaald: Ja"
-}
+**QR Code Format:**
 ```
-
-**Example Response:**
-```json
-{
-  "valid": true,
-  "participant": {
-    "id": "abc-123",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "isPaid": true,
+https://your-domain.com/api/validate-qr?id=abc-123&email=john%40example.com
+```
     "paymentStatus": "completed"
   },
   "message": "✅ Deelnemer geverifieerd en betaald"

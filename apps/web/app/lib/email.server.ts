@@ -1,5 +1,7 @@
 import { Resend } from 'resend';
 import QRCode from 'qrcode';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 import type { Database } from '~/lib/database.types';
 
 type Participant = Database['public']['Tables']['participants']['Row'];
@@ -10,19 +12,35 @@ if (!process.env.RESEND_API_KEY) {
 
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 
-export async function generateQRCodeDataURL(participant: Participant, baseUrl: string): Promise<string> {
+// Development mode: send all emails to test address
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const DEV_EMAIL = 'thoms.seyssens@gmail.com';
+
+export async function generateQRCodeFile(participant: Participant, baseUrl: string): Promise<string> {
   // Generate a validation URL using the provided base URL
   const qrUrl = `${baseUrl}/api/validate-qr?id=${participant.id}&email=${encodeURIComponent(participant.email)}`;
 
   try {
-    return await QRCode.toDataURL(qrUrl, {
+    // Create qr-codes directory in public folder
+    const publicDir = join(process.cwd(), 'public', 'qr-codes');
+    await mkdir(publicDir, { recursive: true });
+
+    // Generate filename based on participant ID
+    const filename = `${participant.id}.png`;
+    const filepath = join(publicDir, filename);
+
+    // Generate and save QR code to file
+    await QRCode.toFile(filepath, qrUrl, {
       width: 400,
       margin: 2,
       color: {
-        dark: '#000000',
-        light: '#FFFFFF',
+        foreground: '#000000',
+        background: '#FFFFFF',
       },
     });
+
+    // Return the public URL
+    return `${baseUrl}/qr-codes/${filename}`;
   } catch (error) {
     console.error('Error generating QR code:', error);
     throw error;
@@ -39,15 +57,19 @@ export async function sendRegistrationConfirmationEmail(
     return;
   }
 
-  const qrCodeDataURL = await generateQRCodeDataURL(participant, baseUrl);
-  
-  // Extract base64 data from data URL
-  const base64Data = qrCodeDataURL.replace(/^data:image\/png;base64,/, '');
+  // Generate QR code and get hosted URL
+  const qrCodeUrl = await generateQRCodeFile(participant, baseUrl);
+
+  // In development, send to test email. In production, send to participant
+  const recipientEmail = isDevelopment ? DEV_EMAIL : participant.email;
+  const fromAddress = isDevelopment 
+    ? 'Deur Den Bocht <onboarding@resend.dev>'
+    : process.env.EMAIL_FROM || 'Deur Den Bocht <noreply@deurdenbocht.be>';
 
   try {
     await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'noreply@deurdenbocht.be',
-      to: participant.email,
+      from: fromAddress,
+      to: recipientEmail,
       subject: `Bevestiging registratie - ${eventName}`,
       html: `
         <!DOCTYPE html>
@@ -128,7 +150,7 @@ export async function sendRegistrationConfirmationEmail(
               <div class="qr-container">
                 <h3 style="margin-top: 0;">📱 Jouw QR Code</h3>
                 <p>Bewaar deze QR code - je hebt hem nodig op de dag van het event!</p>
-                <img src="cid:qrcode" alt="QR Code" />
+                <img src="${qrCodeUrl}" alt="QR Code" style="max-width: 300px; width: 100%; height: auto;" />
                 <p style="font-size: 14px; color: #666; margin-top: 15px;">
                   Je kan deze QR code ook vinden in je dashboard op de website.
                 </p>
@@ -162,11 +184,10 @@ export async function sendRegistrationConfirmationEmail(
           </body>
         </html>
       `,
-      attachments: [
+      tags: [
         {
-          filename: 'qrcode.png',
-          content: base64Data,
-          cid: 'qrcode',
+          name: 'category',
+          value: 'registration_confirmation',
         },
       ],
     });
@@ -189,10 +210,15 @@ export async function sendContactFormEmail(
     return;
   }
 
+  const recipientEmail = isDevelopment ? DEV_EMAIL : contactEmail;
+  const fromAddress = isDevelopment 
+    ? 'Deur Den Bocht <onboarding@resend.dev>'
+    : process.env.EMAIL_FROM || 'Deur Den Bocht <noreply@deurdenbocht.be>';
+
   try {
     await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'vzwddb@gmail.com',
-      to: contactEmail,
+      from: fromAddress,
+      to: recipientEmail,
       replyTo: email,
       subject: `Nieuw contactformulier bericht van ${name}`,
       html: `
