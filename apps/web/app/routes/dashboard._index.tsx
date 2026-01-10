@@ -42,17 +42,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const hasEarlyAccess = participant?.allow_early_access || false;
   const areDocumentsAvailable = hasEarlyAccess || now >= twoDaysBeforeEvent;
 
+  // Generate QR code URL
+  const baseUrl = new URL(request.url).origin;
+  const qrCodeUrl = `${baseUrl}/api/validate-qr?id=${participant?.id}&email=${encodeURIComponent(participant?.email || '')}`;
+
   return json({ 
     participant, 
     documents: documents || [], 
     rallySubmission,
     areDocumentsAvailable,
-    availableDate: twoDaysBeforeEvent.toISOString()
+    availableDate: twoDaysBeforeEvent.toISOString(),
+    qrCodeUrl
   });
 }
 
 export default function Dashboard() {
-  const { participant, documents, rallySubmission, areDocumentsAvailable, availableDate } = useLoaderData<typeof loader>();
+  const { participant, documents, rallySubmission, areDocumentsAvailable, availableDate, qrCodeUrl } = useLoaderData<typeof loader>();
 
   if (!participant) {
     return null;
@@ -128,20 +133,24 @@ export default function Dashboard() {
 
             {/* QR Code */}
             <div className="card bg-yellow-50 border-2 border-yellow-600 mb-8">
-              <div className="flex flex-col md:flex-row items-center justify-between">
-                <div className="mb-4 md:mb-0">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex-1">
                   <h3 className="text-xl font-bold mb-2">📱 Je QR Code voor Check-in</h3>
-                  <p className="text-gray-700 mb-2">
-                    Toon deze code bij aankomst aan de start in Café Den Belami
+                  <p className="text-gray-700 mb-4">
+                    Scan deze code bij aankomst aan de start in Café Den Belami. 
+                    Je wordt automatisch ingecheckt!
                   </p>
-                  <p className="font-mono bg-white px-4 py-2 rounded border-2 border-gray-300 inline-block">
-                    {participant.qr_code}
-                  </p>
+                  <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-4">
+                    <p className="text-sm text-blue-800 font-bold mb-1">💡 Tip</p>
+                    <p className="text-sm text-blue-700">
+                      Open je camera app en richt deze op de QR code. De check-in gebeurt automatisch!
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg border-2 border-gray-300">
+                <div className="bg-white p-6 rounded-lg border-4 border-gray-300 shadow-lg">
                   <QRCodeSVG 
-                    value={`DEUR DEN BOCHT 2026\nDeelnemer: ${participant.first_name} ${participant.last_name}\nEmail: ${participant.email}\nID: ${participant.qr_code}\nStatus: ${participant.paid ? 'Betaald' : 'Nog te betalen'}`}
-                    size={128}
+                    value={qrCodeUrl}
+                    size={180}
                     level="H"
                     includeMargin
                   />
