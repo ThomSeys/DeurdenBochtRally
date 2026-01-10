@@ -1,5 +1,5 @@
 import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import {
   Links,
   Meta,
@@ -8,7 +8,7 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import { getUser } from './lib/session.server';
+import { getUser, getSession } from './lib/session.server';
 import styles from './styles/global.css?url';
 
 export const links: LinksFunction = () => [
@@ -26,6 +26,20 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  
+  // Skip password check for the password page itself and API routes
+  if (!pathname.startsWith('/site-password') && !pathname.startsWith('/api')) {
+    const session = await getSession(request.headers.get('Cookie'));
+    const sitePassword = process.env.SITE_PASSWORD;
+    
+    // Only enforce password if SITE_PASSWORD is set
+    if (sitePassword && !session.get('siteAccessGranted')) {
+      return redirect('/site-password');
+    }
+  }
+  
   const user = await getUser(request);
   return json({ user });
 }

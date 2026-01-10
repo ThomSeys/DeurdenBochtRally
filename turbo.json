@@ -11,7 +11,8 @@
     "SESSION_SECRET",
     "EVENT_DATE",
     "STRIPE_SECRET_KEY",
-    "STRIPE_WEBHOOK_SECRET"
+    "STRIPE_WEBHOOK_SECRET",
+    "SITE_PASSWORD"
   ],
   "tasks": {
     "build": {
@@ -27,7 +28,8 @@
         "SESSION_SECRET",
         "EVENT_DATE",
         "STRIPE_SECRET_KEY",
-        "STRIPE_WEBHOOK_SECRET"
+        "STRIPE_WEBHOOK_SECRET",
+        "SITE_PASSWORD"
       ]
     },
     "lint": {
@@ -46,7 +48,10 @@
         "SESSION_SECRET",
         "EVENT_DATE",
         "STRIPE_SECRET_KEY",
-        "STRIPE_WEBHOOK_SECRET"
+        "STRIPE_WEBHOOK_SECRET",
+        "SITE_PASSWORD"
+      ]
+    },
       ]
     },
     "clean": {
