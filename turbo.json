@@ -1,17 +1,53 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "globalEnv": [
+    "SANITY_PROJECT_ID",
+    "SANITY_DATASET",
+    "SANITY_API_TOKEN",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SESSION_SECRET",
+    "EVENT_DATE",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "build/**", "public/build/**"]
+      "outputs": [".next/**", "!.next/cache/**", "build/**", "public/build/**"],
+      "env": [
+        "SANITY_PROJECT_ID",
+        "SANITY_DATASET",
+        "SANITY_API_TOKEN",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SESSION_SECRET",
+        "EVENT_DATE",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "SANITY_PROJECT_ID",
+        "SANITY_DATASET",
+        "SANITY_API_TOKEN",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SESSION_SECRET",
+        "EVENT_DATE",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET"
+      ]
     },
     "clean": {
       "cache": false
