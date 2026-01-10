@@ -135,12 +135,12 @@ export function urlFor(source: any) {
 }
 
 // Get active edition
-async function getActiveEdition() {
+export async function getActiveEdition() {
   try {
     const edition = await sanityClient.fetch(
-      `*[_type == "edition" && isActive == true][0] { _id }`
+      `*[_type == "edition" && isActive == true][0] { _id, registrationOpen }`
     );
-    return edition?._id;
+    return edition;
   } catch (error) {
     console.error('Error fetching active edition:', error);
     return null;
@@ -150,7 +150,8 @@ async function getActiveEdition() {
 // Helper function to get all sponsors
 export async function getSponsors(): Promise<Sponsor[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId 
       ? `*[_type == "sponsor" && edition._ref == $editionId] | order(order asc)`
       : `*[_type == "sponsor"] | order(order asc)`;
@@ -180,7 +181,8 @@ export async function getSponsors(): Promise<Sponsor[]> {
 // Helper function to get site config
 export async function getSiteConfig(): Promise<SiteConfig | null> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId
       ? `*[_type == "siteConfig" && edition._ref == $editionId][0]`
       : `*[_type == "siteConfig"][0]`;
@@ -225,7 +227,8 @@ export async function getSiteConfig(): Promise<SiteConfig | null> {
 // Helper function to get stats
 export async function getStats(): Promise<Stat[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId
       ? `*[_type == "stat" && edition._ref == $editionId] | order(order asc)`
       : `*[_type == "stat"] | order(order asc)`;
@@ -250,7 +253,8 @@ export async function getStats(): Promise<Stat[]> {
 // Helper function to get pricing tiers
 export async function getPricingTiers(): Promise<PricingTier[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId
       ? `*[_type == "pricingTier" && edition._ref == $editionId] | order(order asc)`
       : `*[_type == "pricingTier"] | order(order asc)`;
@@ -277,7 +281,8 @@ export async function getPricingTiers(): Promise<PricingTier[]> {
 // Helper function to get rally zones
 export async function getRallyZones(): Promise<RallyZone[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId
       ? `*[_type == "rallyZone" && edition._ref == $editionId] | order(order asc)`
       : `*[_type == "rallyZone"] | order(order asc)`;
@@ -311,7 +316,8 @@ export async function getRallyZones(): Promise<RallyZone[]> {
 // Helper function to get page content
 export async function getPageContent(page: string): Promise<PageContent[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId
       ? `*[_type == "pageContent" && page == $page && edition._ref == $editionId] | order(order asc)`
       : `*[_type == "pageContent" && page == $page] | order(order asc)`;
@@ -337,7 +343,8 @@ export async function getPageContent(page: string): Promise<PageContent[]> {
 // Helper function to get schedule items
 export async function getScheduleItems(): Promise<ScheduleItem[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     const query = editionId
       ? `*[_type == "scheduleItem" && edition._ref == $editionId] | order(order asc)`
       : `*[_type == "scheduleItem"] | order(order asc)`;
@@ -397,7 +404,8 @@ export async function getFAQItems(category?: string): Promise<FAQItem[]> {
 // Helper function to get benefit items
 export async function getBenefitItems(category?: 'everyone' | 'winner'): Promise<BenefitItem[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     let query = editionId
       ? `*[_type == "benefitItem" && edition._ref == $editionId`
       : `*[_type == "benefitItem"`;
