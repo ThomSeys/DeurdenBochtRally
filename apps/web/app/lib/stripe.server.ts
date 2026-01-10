@@ -56,3 +56,38 @@ export async function createCheckoutSession(
     },
   });
 }
+
+export async function createStripeCheckoutSession(options: {
+  participantId: string;
+  email: string;
+  name: string;
+  amount: number;
+  successUrl: string;
+  cancelUrl: string;
+}): Promise<string> {
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card', 'bancontact', 'ideal'],
+    line_items: [
+      {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: 'Deur Den Bocht - Rally Inschrijving',
+            description: `Inschrijving voor ${options.name}`,
+          },
+          unit_amount: options.amount * 100, // Convert to cents
+        },
+        quantity: 1,
+      },
+    ],
+    mode: 'payment',
+    success_url: options.successUrl,
+    cancel_url: options.cancelUrl,
+    customer_email: options.email,
+    metadata: {
+      participantId: options.participantId,
+    },
+  });
+
+  return session.url || options.cancelUrl;
+}
