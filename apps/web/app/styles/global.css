@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white text-gray-900;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-black uppercase;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-6 py-3 rounded-none font-black uppercase transition-all duration-200;
+  }
+  
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transform hover:scale-105 px-8 py-4 tracking-wide;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-white text-brand-600 hover:bg-brand-50 border-4 border-brand-600 transform hover:scale-105 px-8 py-4 tracking-wide;
+  }
+
+  .card {
+    @apply bg-white rounded-none shadow-xl p-6 border-l-8 border-brand-600;
+  }
+
+  .section {
+    @apply py-12 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto;
+  }
+  
+  .hero-text {
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black uppercase leading-none;
+  }
+  
+  .section-title {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase leading-none mb-8 md:mb-12;
+  }
+  
+  .hero-pattern {
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 28px, white 28px, white 30px, transparent 30px, transparent 58px, white 58px, white 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 28px, white 28px, white 30px, transparent 30px, transparent 58px, white 58px, white 60px);
+    background-size: 60px 60px;
+  }
+}

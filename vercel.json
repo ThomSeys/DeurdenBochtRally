@@ -1,0 +1,15 @@
+{
+  "buildCommand": "cd apps/web && npm run build",
+  "outputDirectory": "apps/web/build/client",
+  "installCommand": "npm install",
+  "framework": "remix",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/apps/web"
+    }
+  ],
+  "env": {
+    "NODE_VERSION": "20.x"
+  }
+}
