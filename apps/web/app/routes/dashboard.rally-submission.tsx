@@ -156,13 +156,13 @@ export default function RallySubmission() {
               </p>
             </div>
 
-            {actionData?.success && (
+            {actionData && 'success' in actionData && actionData.success && (
               <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6">
                 <p className="text-green-700 font-bold">✅ {actionData.message}</p>
               </div>
             )}
 
-            {actionData?.error && (
+            {actionData && 'error' in actionData && actionData.error && (
               <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 mb-6">
                 <p className="text-red-700 font-bold">❌ {actionData.error}</p>
               </div>

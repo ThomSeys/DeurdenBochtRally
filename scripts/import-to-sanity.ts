@@ -1,6 +1,6 @@
 import { createClient } from '@sanity/client';
 import { sponsors } from '../apps/web/app/content/sponsors';
-import { siteConfig, stats } from '../apps/web/app/content/config';
+import { siteConfig } from '../apps/web/app/content/config';
 
 const client = createClient({
   projectId: 'tp2nrvnd',
@@ -27,7 +27,6 @@ async function importData() {
       contactLocation: siteConfig.contact.location,
       socialFacebook: siteConfig.social.facebook,
       socialInstagram: siteConfig.social.instagram,
-      socialStrava: siteConfig.social.strava,
     };
     await client.create(configDoc);
     console.log('✅ Site config imported!\n');

@@ -6,6 +6,14 @@ import { Footer } from '~/components/Footer';
 import { getUser } from '~/lib/session.server';
 import { getRallyZones, getPageContent } from '~/lib/sanity.server';
 import { PortableText } from '@portabletext/react';
+import imageUrlBuilder from '@sanity/image-url';
+import { sanityClient } from '~/lib/sanity.server';
+
+const builder = imageUrlBuilder(sanityClient);
+
+function urlFor(source: any) {
+  return builder.image(source);
+}
 
 export const meta: MetaFunction = () => {
   return [
@@ -57,6 +65,8 @@ export default function Rally() {
     );
   }
 
+  const useableHowItWorksContent = howItWorksContent.filter(c => c !== null);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header user={user} />
@@ -77,10 +87,10 @@ export default function Rally() {
           <section className="section">
             <div className="container-custom">
               <div className="card max-w-4xl mx-auto">
-                <h2 className="text-3xl font-display font-bold mb-6">{howItWorksContent.find(c => c.section === 'how-it-works-intro')?.title || 'Hoe werkt het?'}</h2>
-                {howItWorksContent.find(c => c.section === 'how-it-works-intro')?.content && (
+                <h2 className="text-3xl font-display font-bold mb-6">{useableHowItWorksContent.find(c => c.section === 'how-it-works-intro')?.title || 'Hoe werkt het?'}</h2>
+                {useableHowItWorksContent.find(c => c.section === 'how-it-works-intro')?.content && (
                   <div className="prose prose-lg max-w-none">
-                    <PortableText value={howItWorksContent.find(c => c.section === 'how-it-works-intro')!.content} />
+                    <PortableText value={useableHowItWorksContent.find(c => c.section === 'how-it-works-intro')!.content} />
                   </div>
                 )}
               </div>
@@ -110,7 +120,7 @@ export default function Rally() {
                     >
                       {zone.image && (
                         <img 
-                          src={zone.image.asset} 
+                          src={urlFor(zone.image).width(800).url()} 
                           alt={zone.checkpoint ? `Afbeelding van ${zone.checkpoint}` : 'Rally Zone afbeelding'}
                           className="w-full h-48 object-cover rounded-lg mb-4"
                         />
