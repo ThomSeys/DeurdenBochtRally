@@ -134,6 +134,15 @@ export function urlFor(source: any) {
   return builder.image(source);
 }
 
+// Helper to get image URL as a string for client-side use
+export function getImageUrl(source: any, width?: number): string {
+  const urlBuilder = builder.image(source);
+  if (width) {
+    urlBuilder.width(width);
+  }
+  return urlBuilder.url();
+}
+
 // Get active edition
 export async function getActiveEdition() {
   try {
@@ -372,7 +381,8 @@ export async function getScheduleItems(): Promise<ScheduleItem[]> {
 // Helper function to get FAQ items
 export async function getFAQItems(category?: string): Promise<FAQItem[]> {
   try {
-    const editionId = await getActiveEdition();
+    const edition = await getActiveEdition();
+    const editionId = edition?._id;
     let query = editionId
       ? `*[_type == "faqItem" && edition._ref == $editionId`
       : `*[_type == "faqItem"`;

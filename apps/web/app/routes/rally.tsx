@@ -4,16 +4,8 @@ import { useLoaderData } from '@remix-run/react';
 import { Header } from '~/components/Header';
 import { Footer } from '~/components/Footer';
 import { getUser } from '~/lib/session.server';
-import { getRallyZones, getPageContent } from '~/lib/sanity.server';
+import { getRallyZones, getPageContent, getImageUrl } from '~/lib/sanity.server';
 import { PortableText } from '@portabletext/react';
-import imageUrlBuilder from '@sanity/image-url';
-import { sanityClient } from '~/lib/sanity.server';
-
-const builder = imageUrlBuilder(sanityClient);
-
-function urlFor(source: any) {
-  return builder.image(source);
-}
 
 export const meta: MetaFunction = () => {
   return [
@@ -36,7 +28,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
     getPageContent('rally').catch(() => []),
   ]);
 
-  return json({ user, rallyZones, howItWorksContent, hasEarlyAccess });
+  // Process image URLs on the server
+  const rallyZonesWithUrls = rallyZones.map(zone => {
+    if (!zone || !zone.image) return zone;
+    return {
+      ...zone,
+      imageUrl: getImageUrl(zone.image, 800)
+    };
+  });
+
+  return json({ user, rallyZones: rallyZonesWithUrls, howItWorksContent, hasEarlyAccess });
 }
 
 export default function Rally() {
@@ -106,6 +107,7 @@ export default function Rally() {
             <div className="grid grid-cols-1 gap-6">
               {rallyZones.length > 0 ? (
                 rallyZones.filter((z) => z !== null).map((zone) => {
+                  const zoneWithImage = zone as typeof zone & { imageUrl?: string };
                   const colorClasses: Record<string, string> = {
                     green: 'border-l-4 border-green-500 bg-green-50',
                     yellow: 'border-l-4 border-yellow-500 bg-yellow-50',
@@ -118,9 +120,9 @@ export default function Rally() {
                       key={zone._id} 
                       className={`card hover:shadow-xl transition-shadow ${colorClasses[zone.color] || 'border-l-4 border-gray-500'}`}
                     >
-                      {zone.image && (
+                      {zoneWithImage.imageUrl && (
                         <img 
-                          src={urlFor(zone.image).width(800).url()} 
+                          src={zoneWithImage.imageUrl} 
                           alt={zone.checkpoint ? `Afbeelding van ${zone.checkpoint}` : 'Rally Zone afbeelding'}
                           className="w-full h-48 object-cover rounded-lg mb-4"
                         />

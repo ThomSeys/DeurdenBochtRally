@@ -2,6 +2,8 @@ import type { ActionFunctionArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import Stripe from 'stripe';
 import { supabase } from '~/lib/supabase.server';
+import { sendRegistrationConfirmationEmail } from '~/lib/email.server';
+import { getSiteConfig } from '~/lib/sanity.server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -38,13 +40,15 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       // Update participant payment status
-      const { error } = await supabase
+      const { data: participant, error } = await supabase
         .from('participants')
         .update({
           payment_status: 'completed',
           stripe_payment_id: session.payment_intent as string,
         })
-        .eq('id', participantId);
+        .eq('id', participantId)
+        .select()
+        .single();
 
       if (error) {
         console.error('Error updating participant:', error);
@@ -52,6 +56,19 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       console.log(`✅ Payment completed for participant ${participantId}`);
+      
+      // Send confirmation email with QR code
+      try {
+        const siteConfig = await getSiteConfig();
+        await sendRegistrationConfirmationEmail(
+          participant,
+          siteConfig?.eventName || 'Deur Den Bocht Rally'
+        );
+        console.log(`📧 Confirmation email sent to ${participant.email}`);
+      } catch (emailError) {
+        // Log error but don't fail the webhook
+        console.error('Error sending confirmation email:', emailError);
+      }
     }
   }
 

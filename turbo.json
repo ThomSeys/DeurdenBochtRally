@@ -12,7 +12,10 @@
     "EVENT_DATE",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
-    "SITE_PASSWORD"
+    "SITE_PASSWORD",
+    "RESEND_API_KEY",
+    "EMAIL_FROM",
+    "APP_URL"
   ],
   "tasks": {
     "build": {
@@ -29,7 +32,10 @@
         "EVENT_DATE",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "SITE_PASSWORD"
+        "SITE_PASSWORD",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "APP_URL"
       ]
     },
     "lint": {
@@ -49,7 +55,10 @@
         "EVENT_DATE",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "SITE_PASSWORD"
+        "SITE_PASSWORD",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "APP_URL"
       ]
     },
     "clean": {
@@ -69,7 +78,10 @@
         "EVENT_DATE",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "SITE_PASSWORD"
+        "SITE_PASSWORD",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "APP_URL"
       ]
     }
   }

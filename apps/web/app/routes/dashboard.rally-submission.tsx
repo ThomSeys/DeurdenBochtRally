@@ -47,7 +47,33 @@ export async function loader({ request }: LoaderFunctionArgs) {
     submission = newSubmission;
   }
 
-  return json({ user, rallyZones, submission });
+  // Get leaderboard for standings - include all submissions, not just submitted ones
+  const { data: leaderboard, error: leaderboardError } = await supabase
+    .from('rally_submissions')
+    .select(`
+      *,
+      participants(first_name, last_name)
+    `)
+    .order('total_points', { ascending: false })
+    .order('submitted_at', { ascending: true, nullsFirst: false });
+
+  if (leaderboardError) {
+    console.error('Leaderboard error:', leaderboardError);
+  }
+
+  // Find user's rank (add 1 since findIndex is 0-based)
+  const userRankIndex = leaderboard?.findIndex((entry) => entry.participant_id === user.id);
+  const userRank = userRankIndex !== undefined && userRankIndex >= 0 ? userRankIndex + 1 : null;
+
+  console.log('Leaderboard data:', { 
+    count: leaderboard?.length, 
+    userRank, 
+    userRankIndex,
+    firstEntry: leaderboard?.[0],
+    hasParticipants: leaderboard?.[0]?.participants 
+  });
+
+  return json({ user, rallyZones, submission, leaderboard: leaderboard || [], userRank });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -128,7 +154,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function RallySubmission() {
-  const { user, rallyZones, submission } = useLoaderData<typeof loader>();
+  const { user, rallyZones, submission, leaderboard, userRank } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
@@ -141,6 +167,8 @@ export default function RallySubmission() {
     return submission?.[columnName] as string | null;
   };
 
+  // Calculate filled zones count
+  const filledZonesCount = rallyZones.filter((_, index) => getCodeForZone(index)).length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -148,25 +176,97 @@ export default function RallySubmission() {
 
       <main className="flex-1 py-16">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-5xl font-display font-bold mb-4">Rally Inzending</h1>
-              <p className="text-xl text-gray-700">
-                Vul je rally zone codes in om punten te verdienen 🏍
-              </p>
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-display font-bold mb-4">Rally Inzending</h1>
+            <p className="text-xl text-gray-700">
+              Vul je rally zone codes in om punten te verdienen 🏍
+            </p>
+          </div>
+
+          {actionData && 'success' in actionData && actionData.success && (
+            <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6 max-w-6xl mx-auto">
+              <p className="text-green-700 font-bold">✅ {actionData.message}</p>
+            </div>
+          )}
+
+          {actionData && 'error' in actionData && actionData.error && (
+            <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 mb-6 max-w-6xl mx-auto">
+              <p className="text-red-700 font-bold">❌ {actionData.error}</p>
+            </div>
+          )}
+  {/* Rally Zones */}
+            <div className="space-y-4 mb-8">
+            <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Sidebar */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Stats Card */}
+              <div className="card bg-brand-600 text-white sticky top-24">
+                <h3 className="text-2xl font-display font-bold mb-4">📊 Jouw Stats</h3>
+                
+                <div className="space-y-4">
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <p className="text-sm text-brand-100 mb-1">Totale Punten</p>
+                    <p className="text-4xl font-black">{submission?.total_points || 0}</p>
+                  </div>
+
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <p className="text-sm text-brand-100 mb-1">Jouw Positie</p>
+                    <p className="text-4xl font-black">#{userRank ?? '-'}</p>
+                  </div>
+
+                  <div className="bg-white/10 rounded-lg p-4">
+                    <p className="text-sm text-brand-100 mb-1">Zones Ingevuld</p>
+                    <p className="text-4xl font-black">{filledZonesCount}/{rallyZones.length}</p>
+                  </div>
+
+                  {submission?.submitted_at && (
+                    <div className="bg-green-500 rounded-lg p-4 text-center">
+                      <p className="text-2xl mb-2">✅</p>
+                      <p className="font-black">Ingediend!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Top 5 Leaderboard */}
+              <div className="card">
+                <h3 className="text-xl font-display font-bold mb-4">🏆 Top 5</h3>
+                <div className="space-y-3">
+                  {leaderboard && leaderboard.length > 0 ? (
+                    leaderboard.slice(0, 5).map((entry, index) => {
+                      const participant = entry.participants as any;
+                      const isCurrentUser = entry.participant_id === user.id;
+                      
+                      return (
+                        <div 
+                          key={entry.id}
+                          className={`flex items-center justify-between p-3 rounded-lg ${
+                            isCurrentUser ? 'bg-brand-100 border-2 border-brand-600' : 'bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="text-2xl font-black text-gray-400">
+                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                            </span>
+                            <div>
+                              <p className={`font-bold ${isCurrentUser ? 'text-brand-600' : ''}`}>
+                                {participant?.team_name || `${participant?.first_name} ${participant?.last_name}`}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="font-black text-brand-600">{entry.total_points}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">Nog geen deelnemers</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {actionData && 'success' in actionData && actionData.success && (
-              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6">
-                <p className="text-green-700 font-bold">✅ {actionData.message}</p>
-              </div>
-            )}
-
-            {actionData && 'error' in actionData && actionData.error && (
-              <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 mb-6">
-                <p className="text-red-700 font-bold">❌ {actionData.error}</p>
-              </div>
-            )}
+            {/* Main Content */}
+            <div className="lg:col-span-2">
 
             {/* Rally Zones */}
             <div className="space-y-4 mb-8">
@@ -249,83 +349,85 @@ export default function RallySubmission() {
                   </div>
                 );
               })}
-            </div>
+              </div>
 
-            {/* Extra Questions */}
-            <div className="card bg-blue-50 border-2 border-blue-400 mb-8">
-              <h2 className="text-2xl font-display font-bold mb-4">Extra Vragen</h2>
-              
-              <Form method="post" className="space-y-4">
-                <input type="hidden" name="action" value="updateExtras" />
+              {/* Extra Questions */}
+              <div className="card bg-blue-50 border-2 border-blue-400 mb-8">
+                <h2 className="text-2xl font-display font-bold mb-4">Extra Vragen</h2>
                 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Totale afstand (km)
-                  </label>
-                  <input
-                    type="number"
-                    name="totalDistance"
-                    defaultValue={submission?.total_distance || ''}
-                    placeholder="Bijv. 250"
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center space-x-3">
+                <Form method="post" className="space-y-4">
+                  <input type="hidden" name="action" value="updateExtras" />
+                  
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Totale afstand (km)
+                    </label>
                     <input
-                      type="checkbox"
-                      name="usedHighways"
-                      value="true"
-                      defaultChecked={submission?.used_highways}
-                      className="w-5 h-5"
+                      type="number"
+                      name="totalDistance"
+                      defaultValue={submission?.total_distance || ''}
+                      placeholder="Bijv. 250"
+                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-600"
                     />
-                    <span className="font-bold">Heb je snelwegen gebruikt?</span>
-                  </label>
-                </div>
+                  </div>
 
-                <div>
-                  <label className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      name="weatherBonus"
-                      value="true"
-                      defaultChecked={submission?.weather_bonus}
-                      className="w-5 h-5"
-                    />
-                    <span className="font-bold">Slecht weer bonus (regen tijdens de rit)</span>
-                  </label>
-                </div>
+                  <div>
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        name="usedHighways"
+                        value="true"
+                        defaultChecked={submission?.used_highways}
+                        className="w-5 h-5"
+                      />
+                      <span className="font-bold">Heb je snelwegen gebruikt?</span>
+                    </label>
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary w-full"
-                >
-                  {isSubmitting ? 'Opslaan...' : 'Extra vragen opslaan'}
-                </button>
-              </Form>
-            </div>
+                  <div>
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        name="weatherBonus"
+                        value="true"
+                        defaultChecked={submission?.weather_bonus}
+                        className="w-5 h-5"
+                      />
+                      <span className="font-bold">Slecht weer bonus (regen tijdens de rit)</span>
+                    </label>
+                  </div>
 
-            {/* Final Submit */}
-            <div className="card bg-yellow-50 border-2 border-yellow-400">
-              <h3 className="text-xl font-bold mb-4">🏁 Klaar om in te dienen?</h3>
-              <p className="text-gray-700 mb-4">
-                Let op: Na het indienen kun je geen wijzigingen meer aanbrengen. 
-                Zorg ervoor dat alle codes correct zijn ingevuld!
-              </p>
-              <Form method="post">
-                <input type="hidden" name="action" value="finalSubmit" />
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary w-full text-lg"
-                >
-                  {isSubmitting ? 'Indienen...' : 'Definitief indienen'}
-                </button>
-              </Form>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary w-full"
+                  >
+                    {isSubmitting ? 'Opslaan...' : 'Extra vragen opslaan'}
+                  </button>
+                </Form>
+              </div>
+
+              {/* Final Submit */}
+              <div className="card bg-yellow-50 border-2 border-yellow-400">
+                <h3 className="text-xl font-bold mb-4">🏁 Klaar om in te dienen?</h3>
+                <p className="text-gray-700 mb-4">
+                  Let op: Na het indienen kun je geen wijzigingen meer aanbrengen. 
+                  Zorg ervoor dat alle codes correct zijn ingevuld!
+                </p>
+                <Form method="post">
+                  <input type="hidden" name="action" value="finalSubmit" />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary w-full text-lg"
+                  >
+                    {isSubmitting ? 'Indienen...' : 'Definitief indienen'}
+                  </button>
+                </Form>
+              </div>
             </div>
           </div>
+        </div>
         </div>
       </main>
 

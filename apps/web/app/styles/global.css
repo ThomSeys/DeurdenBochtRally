@@ -14,15 +14,69 @@
 
 @layer components {
   .btn {
-    @apply px-6 py-3 rounded-none font-black uppercase transition-all duration-200;
+    @apply px-6 py-3 rounded-none font-black uppercase transition-all duration-300;
   }
   
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transform hover:scale-105 px-8 py-4 tracking-wide;
+    @apply btn bg-brand-600 text-white shadow-lg px-8 py-4 tracking-wide relative overflow-hidden;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+  }
+  
+  .btn-primary:hover {
+    @apply bg-brand-700 shadow-2xl;
+    transform: translateY(-2px);
+  }
+  
+  .btn-primary:hover::before {
+    left: 100%;
+  }
+  
+  .btn-primary:active {
+    transform: translateY(0);
   }
   
   .btn-secondary {
-    @apply btn bg-white text-brand-600 hover:bg-brand-50 border-4 border-brand-600 transform hover:scale-105 px-8 py-4 tracking-wide;
+    @apply btn bg-white text-brand-600 border-4 border-brand-600 px-8 py-4 tracking-wide relative overflow-hidden;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-secondary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(31, 82, 119, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+  }
+  
+  .btn-secondary:hover {
+    @apply bg-brand-50;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(31, 82, 119, 0.3);
+  }
+  
+  .btn-secondary:hover::after {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .btn-secondary:active {
+    transform: translateY(0);
   }
 
   .card {
