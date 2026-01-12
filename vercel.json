@@ -1,14 +1,12 @@
 {
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs20.x",
-      "includeFiles": "build/server/**"
-    }
-  },
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/api/index.js"
+      "source": "/build/:path*",
+      "destination": "/build/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/api/index"
     }
   ]
 }
