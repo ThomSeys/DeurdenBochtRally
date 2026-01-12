@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { cpSync, mkdirSync, writeFileSync } from 'fs';
+import { cpSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 // Run the React Router build
@@ -16,36 +16,16 @@ cpSync('build/client', join(vercelOutput, 'static'), { recursive: true });
 // Copy server build
 cpSync('build/server', join(vercelOutput, 'functions/index.func/build/server'), { recursive: true });
 
-// Copy necessary dependencies (only React Router packages)
-const deps = [
-  '@react-router/node',
-  '@react-router/server-runtime',
-  'react-router'
-];
+// Read dependencies from your app's package.json
+const pkgJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
-mkdirSync(join(vercelOutput, 'functions/index.func/node_modules'), { recursive: true });
-
-deps.forEach(dep => {
-  const depPath = join('node_modules', dep);
-  const destPath = join(vercelOutput, 'functions/index.func/node_modules', dep);
-  try {
-    cpSync(depPath, destPath, { recursive: true });
-  } catch (error) {
-    console.warn(`Could not copy ${dep}:`, error.message);
-  }
-});
-
-// Create package.json for the function
+// Create package.json for the function with actual dependencies
 writeFileSync(
   join(vercelOutput, 'functions/index.func/package.json'),
   JSON.stringify({
     type: 'module',
-    dependencies: {
-      '@react-router/node': '*',
-      '@react-router/server-runtime': '*',
-      'react-router': '*'
-    }
-  })
+    dependencies: pkgJson.dependencies || {}
+  }, null, 2)
 );
 
 // Create the serverless function handler
@@ -69,14 +49,15 @@ writeFileSync(
   handlerCode
 );
 
-// Create function config
+// Create function config - this tells Vercel to install dependencies
 writeFileSync(
   join(vercelOutput, 'functions/index.func/.vc-config.json'),
   JSON.stringify({
     runtime: 'nodejs20.x',
     handler: 'index.js',
     launcherType: 'Nodejs',
-    supportsResponseStreaming: true
+    supportsResponseStreaming: true,
+    installCommand: 'npm install'
   })
 );
 
