@@ -1,5 +1,18 @@
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": null
+  "routes": [
+    {
+      "src": "/build/(.*)",
+      "dest": "/apps/web/build/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/apps/web/api"
+    }
+  ]
 }
