@@ -1,14 +1,22 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "build/client",
+  "serverlessFunctions": {
+    "build/server/index.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "routes": [
     {
-      "src": "/build/(.*)",
+      "src": "/build/(.+)",
       "dest": "/build/$1"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/server/index.mjs"
+      "dest": "/build/server/index.js"
     }
   ]
 }
