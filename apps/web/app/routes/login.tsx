@@ -13,11 +13,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = formData.get('email');
-  const qrCode = formData.get('qrCode');
+  const password = formData.get('password');
 
-  if (typeof email !== 'string' || typeof qrCode !== 'string') {
+  if (typeof email !== 'string' || typeof password !== 'string') {
     return { 
-      error: 'Email en QR-code zijn verplicht',
+      error: 'Email en wachtwoord zijn verplicht',
       status: 400
     };
   }
@@ -26,13 +26,13 @@ export async function action({ request }: ActionFunctionArgs) {
     .from('participants')
     .select('*')
     .eq('email', email.toLowerCase())
-    .eq('qr_code', qrCode)
+    .eq('password', password)
     .eq('payment_status', 'completed')
     .single();
 
   if (!participant) {
     return { 
-      error: 'Ongeldige login gegevens. Controleer je email en QR-code.',
+      error: 'Ongeldige login gegevens. Controleer je email en wachtwoord.',
       status: 400
     };
   }
@@ -54,7 +54,7 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             🏍 Deur Den Bocht
           </h1>
-          <p className="text-gray-600">Login met je QR-code</p>
+          <p className="text-gray-600">Login met je email en wachtwoord</p>
         </div>
 
         {actionData?.error && (
@@ -80,19 +80,19 @@ export default function Login() {
           </div>
 
           <div>
-            <label htmlFor="qrCode" className="block text-sm font-medium text-gray-700 mb-2">
-              QR-code
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Wachtwoord
             </label>
             <input
-              id="qrCode"
-              name="qrCode"
-              type="text"
+              id="password"
+              name="password"
+              type="password"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
-              placeholder="Je hebt deze ontvangen via email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Je wachtwoord"
             />
             <p className="mt-2 text-sm text-gray-500">
-              Je kreeg deze code in je bevestigingsmail na inschrijving
+              Je hebt dit wachtwoord ingesteld bij je inschrijving
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default function Login() {
         </Form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>QR-code kwijt?</p>
+          <p>Wachtwoord vergeten?</p>
           <p className="mt-1">
             Stuur een email naar{' '}
             <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">

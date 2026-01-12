@@ -37,6 +37,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const lastName = formData.get('lastName');
   const email = formData.get('email');
   const phone = formData.get('phone');
+  const password = formData.get('password');
   const motorcycleBrand = formData.get('motorcycleBrand');
   const motorcycleModel = formData.get('motorcycleModel');
   const licensePlate = formData.get('licensePlate');
@@ -49,6 +50,7 @@ export async function action({ request }: ActionFunctionArgs) {
     typeof lastName !== 'string' ||
     typeof email !== 'string' ||
     typeof phone !== 'string' ||
+    typeof password !== 'string' ||
     typeof motorcycleBrand !== 'string' ||
     typeof motorcycleModel !== 'string' ||
     typeof licensePlate !== 'string' ||
@@ -56,6 +58,10 @@ export async function action({ request }: ActionFunctionArgs) {
     typeof rideType !== 'string'
   ) {
     return {  error: 'Alle velden zijn verplicht', status: 400 };
+  }
+
+  if (password.length < 6) {
+    return {  error: 'Wachtwoord moet minstens 6 karakters lang zijn', status: 400 };
   }
 
   if (!['with_meals', 'breakfast_only'].includes(formula)) {
@@ -91,6 +97,7 @@ export async function action({ request }: ActionFunctionArgs) {
       last_name: lastName,
       email: email.toLowerCase(),
       phone,
+      password,
       motorcycle_brand: motorcycleBrand,
       motorcycle_model: motorcycleModel,
       license_plate: licensePlate.toUpperCase(),
@@ -217,7 +224,24 @@ export default function Registration() {
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
-                  </div>
+                  </di
+                <div className="mt-4">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    Wachtwoord *
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={6}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Minstens 6 karakters"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Dit wachtwoord gebruik je om in te loggen op je dashboard
+                  </p>
+                </div>v>
                 </div>
               </div>
 
