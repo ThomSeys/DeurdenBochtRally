@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
-import { cpSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { cpSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { build } from 'esbuild';
 
 // Run the React Router build
 execSync('npm run build', { stdio: 'inherit' });
@@ -13,28 +14,27 @@ mkdirSync(join(vercelOutput, 'static'), { recursive: true });
 // Copy static assets
 cpSync('build/client', join(vercelOutput, 'static'), { recursive: true });
 
-// Copy server build
-cpSync('build/server', join(vercelOutput, 'functions/index.func/build/server'), { recursive: true });
-
-// Read dependencies from your app's package.json
-const pkgJson = JSON.parse(readFileSync('package.json', 'utf8'));
-
-// Create package.json for the function with actual dependencies
-writeFileSync(
-  join(vercelOutput, 'functions/index.func/package.json'),
-  JSON.stringify({
-    type: 'module',
-    dependencies: pkgJson.dependencies || {}
-  }, null, 2)
-);
+// Bundle the server with all dependencies
+await build({
+  entryPoints: ['build/server/index.js'],
+  bundle: true,
+  platform: 'node',
+  target: 'node20',
+  format: 'esm',
+  outfile: join(vercelOutput, 'functions/index.func/server.js'),
+  external: [],
+  banner: {
+    js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);'
+  }
+});
 
 // Create the serverless function handler
 const handlerCode = `
 import { createRequestHandler } from "@react-router/node";
+import * as build from "./server.js";
 
 export default async function handler(req, res) {
   try {
-    const build = await import("./build/server/index.js");
     const requestHandler = createRequestHandler({ build });
     return requestHandler(req, res);
   } catch (error) {
@@ -49,15 +49,14 @@ writeFileSync(
   handlerCode
 );
 
-// Create function config - this tells Vercel to install dependencies
+// Create function config
 writeFileSync(
   join(vercelOutput, 'functions/index.func/.vc-config.json'),
   JSON.stringify({
     runtime: 'nodejs20.x',
     handler: 'index.js',
     launcherType: 'Nodejs',
-    supportsResponseStreaming: true,
-    installCommand: 'npm install'
+    supportsResponseStreaming: true
   })
 );
 
