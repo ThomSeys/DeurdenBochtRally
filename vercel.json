@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd apps/web && npm run build",
+  "buildCommand": "turbo run build --filter=web",
   "outputDirectory": "apps/web/build/client",
   "installCommand": "npm install",
-  "framework": "remix",
+  "framework": null,
   "rewrites": [
     {
       "source": "/(.*)",
