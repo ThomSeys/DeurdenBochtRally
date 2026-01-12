@@ -7,7 +7,7 @@
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "vercel-build": "node ../../build.js"
+    "vercel-build": "node build.js"
   },
   "dependencies": {
     "@portabletext/react": "^6.0.2",
