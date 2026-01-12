@@ -224,7 +224,7 @@ export default function Registration() {
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
-                  </di
+                  
                 <div className="mt-4">
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                     Wachtwoord *
@@ -241,7 +241,8 @@ export default function Registration() {
                   <p className="mt-1 text-sm text-gray-500">
                     Dit wachtwoord gebruik je om in te loggen op je dashboard
                   </p>
-                </div>v>
+                </div>
+                </div>
                 </div>
               </div>
 
