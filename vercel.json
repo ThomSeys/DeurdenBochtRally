@@ -1,28 +1,11 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "turbo run build --filter=web",
   "installCommand": "npm install",
-  "builds": [
+  "framework": null,
+  "rewrites": [
     {
-      "src": "apps/web/api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "dest": "/apps/web/build/client/assets/$1"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/apps/web/build/client/favicon.ico"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/apps/web/api/index.js"
+      "source": "/(.*)",
+      "destination": "/api/server"
     }
   ]
 }
