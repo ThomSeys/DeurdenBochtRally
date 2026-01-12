@@ -16,6 +16,38 @@ cpSync('build/client', join(vercelOutput, 'static'), { recursive: true });
 // Copy server build
 cpSync('build/server', join(vercelOutput, 'functions/index.func/build/server'), { recursive: true });
 
+// Copy necessary dependencies (only React Router packages)
+const deps = [
+  '@react-router/node',
+  '@react-router/server-runtime',
+  'react-router'
+];
+
+mkdirSync(join(vercelOutput, 'functions/index.func/node_modules'), { recursive: true });
+
+deps.forEach(dep => {
+  const depPath = join('node_modules', dep);
+  const destPath = join(vercelOutput, 'functions/index.func/node_modules', dep);
+  try {
+    cpSync(depPath, destPath, { recursive: true });
+  } catch (error) {
+    console.warn(`Could not copy ${dep}:`, error.message);
+  }
+});
+
+// Create package.json for the function
+writeFileSync(
+  join(vercelOutput, 'functions/index.func/package.json'),
+  JSON.stringify({
+    type: 'module',
+    dependencies: {
+      '@react-router/node': '*',
+      '@react-router/server-runtime': '*',
+      'react-router': '*'
+    }
+  })
+);
+
 // Create the serverless function handler
 const handlerCode = `
 import { createRequestHandler } from "@react-router/node";
@@ -27,7 +59,7 @@ export default async function handler(req, res) {
     return requestHandler(req, res);
   } catch (error) {
     console.error("Handler error:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send("Internal Server Error: " + error.message);
   }
 }
 `;
