@@ -2,17 +2,27 @@
   "version": 2,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "apps/web/api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
-      "src": "/build/(.*)",
-      "dest": "/apps/web/build/$1"
+      "src": "/assets/(.*)",
+      "dest": "/apps/web/build/client/assets/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/apps/web/build/client/favicon.ico"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/apps/web/api"
+      "dest": "/apps/web/api/index.js"
     }
   ]
 }
