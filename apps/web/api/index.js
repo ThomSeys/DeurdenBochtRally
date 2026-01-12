@@ -1,4 +1,6 @@
-import { createRequestHandler } from "@react-router/node";
+import reactRouterNode from "@react-router/node";
+
+const { createRequestHandler } = reactRouterNode;
 
 export default async function handler(req, res) {
   try {
