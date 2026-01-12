@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "vercel-build": "turbo run vercel-build",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "deploy": "turbo run deploy"
