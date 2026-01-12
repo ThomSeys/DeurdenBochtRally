@@ -1,7 +1,6 @@
 {
   "buildCommand": "npm install && npm run build",
   "installCommand": "npm install",
-  "cwd": "apps/web",
   "rewrites": [
     {
       "source": "/build/:path*",
