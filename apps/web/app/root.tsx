@@ -1,47 +1,38 @@
-import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
 import {
+  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
-} from '@remix-run/react';
-import { getUser, getSession } from './lib/session.server';
-import styles from './styles/global.css?url';
+} from "react-router";
 
-export const links: LinksFunction = () => [
-  { rel: 'stylesheet', href: styles },
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+import type { Route } from "./+types/root";
+import "./app.css";
+import { getUser } from "~/lib/session.server";
+
+export const links: Route.LinksFunction = () => [
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+  },
+  {
+    rel: "stylesheet",
+    href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=",
+    crossOrigin: "anonymous",
   },
 ];
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
-  
-  // Skip password check for the password page itself and API routes
-  if (!pathname.startsWith('/site-password') && !pathname.startsWith('/api')) {
-    const session = await getSession(request.headers.get('Cookie'));
-    const sitePassword = process.env.SITE_PASSWORD;
-    
-    // Only enforce password if SITE_PASSWORD is set
-    if (sitePassword && !session.get('siteAccessGranted')) {
-      return redirect('/site-password');
-    }
-  }
-  
+export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUser(request);
-  return json({ user });
+  return { user };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -53,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="antialiased">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -63,7 +54,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { user } = useLoaderData<typeof loader>();
-  
-  return <Outlet context={{ user }} />;
+  return <Outlet />;
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  let message = "Oeps!";
+  let details = "Er is een onverwachte fout opgetreden.";
+  let stack: string | undefined;
+
+  if (isRouteErrorResponse(error)) {
+    message = error.status === 404 ? "404" : "Error";
+    details =
+      error.status === 404
+        ? "The requested page could not be found."
+        : error.statusText || details;
+  } else if (import.meta.env.DEV && error && error instanceof Error) {
+    details = error.message;
+    stack = error.stack;
+  }
+
+  return (
+    <main className="pt-16 p-4 container mx-auto">
+      <h1>{message}</h1>
+      <p>{details}</p>
+      {stack && (
+        <pre className="w-full p-4 overflow-x-auto">
+          <code>{stack}</code>
+        </pre>
+      )}
+    </main>
+  );
 }

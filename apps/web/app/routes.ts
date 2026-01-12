@@ -1,0 +1,24 @@
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
+
+export default [
+  index("routes/_index.tsx"),
+  route("about", "routes/about.tsx"),
+  route("rally", "routes/rally.tsx"),
+  route("login", "routes/login.tsx"),
+  route("logout", "routes/logout.tsx"),
+  route("registration", "routes/registration._index.tsx"),
+  route("registration/success", "routes/registration.success.tsx"),
+  route("dashboard", "routes/dashboard._index.tsx"),
+  route("dashboard/rally-submission", "routes/dashboard.rally-submission.tsx"),
+  route("zone/:zoneId", "routes/zone.$zoneId.tsx"),
+  route("admin", "routes/admin._index.tsx"),
+  route("admin/participants", "routes/admin.participants.tsx"),
+  route("admin/participants/:participantId/submissions", "routes/admin.participants.$participantId.submissions.tsx"),
+  route("admin/check-in", "routes/admin.check-in.tsx"),
+  route("admin/submissions", "routes/admin.submissions.tsx"),
+  route("admin/leaderboard", "routes/admin.leaderboard.tsx"),
+  route("admin/settings", "routes/admin.settings.tsx"),
+  route("api/webhook", "routes/api.webhook.tsx"),
+  route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"),
+  route("api/rally-submission", "routes/api.rally-submission.tsx"),
+] satisfies RouteConfig;

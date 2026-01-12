@@ -24,6 +24,21 @@ export default defineType({
       initialValue: 'Café Belami, Aalter',
     }),
     defineField({
+      name: 'startLocation',
+      title: 'Start Location Coordinates',
+      type: 'object',
+      fields: [
+        { name: 'lat', type: 'number', title: 'Latitude' },
+        { name: 'lng', type: 'number', title: 'Longitude' },
+        { name: 'label', type: 'string', title: 'Label' },
+      ],
+      initialValue: {
+        lat: 51.0967,
+        lng: 3.4400,
+        label: 'Café Den Belami, Aalter',
+      },
+    }),
+    defineField({
       name: 'eventTagline',
       title: 'Event Tagline',
       type: 'text',

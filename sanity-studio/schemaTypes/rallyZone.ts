@@ -74,8 +74,16 @@ export default defineType({
       name: 'solution',
       title: 'Solution Code',
       type: 'string',
-      description: 'The correct answer/code for this zone',
+      description: 'The primary correct answer/code for this zone',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'validAnswers',
+      title: 'Valid Answers',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Alternative accepted answers (including the main solution). Add variations like "Belvédère", "Belvedere", etc.',
+      validation: (Rule) => Rule.required().min(1),
     }),
     defineField({
       name: 'color',
@@ -98,6 +106,46 @@ export default defineType({
       options: {
         hotspot: true,
       },
+    }),
+    defineField({
+      name: 'startPoint',
+      title: 'Start Point Coordinates',
+      type: 'object',
+      description: 'Where the loop begins (exit from main route)',
+      fields: [
+        {
+          name: 'lat',
+          title: 'Latitude',
+          type: 'number',
+          validation: (Rule) => Rule.required().min(-90).max(90),
+        },
+        {
+          name: 'lng',
+          title: 'Longitude',
+          type: 'number',
+          validation: (Rule) => Rule.required().min(-180).max(180),
+        },
+      ],
+    }),
+    defineField({
+      name: 'endPoint',
+      title: 'End Point Coordinates',
+      type: 'object',
+      description: 'Where the loop ends (rejoin main route)',
+      fields: [
+        {
+          name: 'lat',
+          title: 'Latitude',
+          type: 'number',
+          validation: (Rule) => Rule.required().min(-90).max(90),
+        },
+        {
+          name: 'lng',
+          title: 'Longitude',
+          type: 'number',
+          validation: (Rule) => Rule.required().min(-180).max(180),
+        },
+      ],
     }),
     defineField({
       name: 'order',

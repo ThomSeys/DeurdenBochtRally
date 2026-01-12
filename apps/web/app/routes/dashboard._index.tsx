@@ -1,364 +1,366 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
-import { QRCodeSVG } from 'qrcode.react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
-import { requireUserId } from '~/lib/session.server';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
+
+import { useLoaderData, Link, Form } from 'react-router';
+import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase } from '~/lib/supabase.server';
+import { sanityClient } from '~/lib/sanity.server';
+import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
+import Header from '~/components/Header';
 
 export const meta: MetaFunction = () => {
   return [
     { title: 'Dashboard - Deur Den Bocht' },
-    { name: 'description', content: 'Je persoonlijke Deur Den Bocht dashboard' },
   ];
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const userId = await requireUserId(request);
+  await requireUserId(request);
+  const user = await getUser(request);
 
-  const { data: participant } = await supabase
-    .from('participants')
+  if (!user) {
+    throw new Response('Not Found', { status: 404 });
+  }
+
+  // Get rally submission if exists
+  const { data: submission } = await supabase
+    .from('rally_submissions')
     .select('*')
-    .eq('id', userId)
+    .eq('participant_id', user.id)
     .single();
 
+  // Get documents
   const { data: documents } = await supabase
     .from('documents')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('category', { ascending: true });
 
-  const { data: rallySubmission } = await supabase
-    .from('rally_submissions')
-    .select('*')
-    .eq('participant_id', userId)
-    .single();
+  // Count completed zones
+  const completedZones = submission
+    ? [
+        submission.rz1_code,
+        submission.rz2_code,
+        submission.rz3_code,
+        submission.rz4_code,
+        submission.rz5_code,
+        submission.rz6_code,
+        submission.rz7_code,
+        submission.rz8_code,
+      ].filter((code) => code && code.trim()).length
+    : 0;
 
-  // Check if documents are available (2 days before event OR early access granted)
-  const eventDate = new Date(process.env.EVENT_DATE || '2026-05-16');
-  const twoDaysBeforeEvent = new Date(eventDate);
-  twoDaysBeforeEvent.setDate(twoDaysBeforeEvent.getDate() - 2);
-  const now = new Date();
-  const hasEarlyAccess = participant?.allow_early_access || false;
-  const areDocumentsAvailable = hasEarlyAccess || now >= twoDaysBeforeEvent;
+  // Check if user is in first place (Bochtenkoning)
+  let isBochtenkoning = false;
+  if (submission) {
+    // Get rally zones with points from Sanity
+    const rallyZones = await sanityClient.fetch(
+      `*[_type == "rallyZone"] | order(order asc) {
+        order,
+        points,
+        validAnswers
+      }`
+    );
 
-  // Generate QR code URL
-  const baseUrl = new URL(request.url).origin;
-  const qrCodeUrl = `${baseUrl}/api/validate-qr?id=${participant?.id}&email=${encodeURIComponent(participant?.email || '')}`;
+    // Get all rally submissions
+    const { data: allSubmissions } = await supabase
+      .from('rally_submissions')
+      .select('participant_id, rz1_code, rz2_code, rz3_code, rz4_code, rz5_code, rz6_code, rz7_code, rz8_code');
 
-  return json({ 
-    participant, 
-    documents: documents || [], 
-    rallySubmission,
-    areDocumentsAvailable,
-    availableDate: twoDaysBeforeEvent.toISOString(),
-    qrCodeUrl
-  });
+    // Get shadow scores
+    const { data: shadowScores } = await supabase
+      .from('rally_zone_submissions')
+      .select('participant_id, shadow_score');
+
+    // Calculate scores for all participants
+    const scores = (allSubmissions || []).map(sub => {
+      let basicPoints = 0;
+      let shadowTotal = 0;
+
+      // Basic points
+      for (let i = 1; i <= 8; i++) {
+        const code = sub[`rz${i}_code` as keyof typeof sub] as string | null;
+        if (code) {
+          const zone = rallyZones[i - 1];
+          const isCorrect = zone?.validAnswers?.some((answer: string) => 
+            answer.toLowerCase() === code.toLowerCase()
+          );
+          if (isCorrect && zone?.points) {
+            basicPoints += zone.points;
+          }
+        }
+      }
+
+      // Shadow points
+      const participantShadowScores = shadowScores?.filter(
+        s => s.participant_id === sub.participant_id
+      ) || [];
+      shadowTotal = participantShadowScores.reduce((sum, s) => sum + (s.shadow_score || 0), 0);
+
+      return {
+        participant_id: sub.participant_id,
+        totalScore: basicPoints + shadowTotal
+      };
+    }).sort((a, b) => b.totalScore - a.totalScore);
+
+    // Check if current user is first
+    isBochtenkoning = scores.length > 0 && scores[0].participant_id === user.id;
+  }
+
+  return { user, submission, documents, completedZones, isBochtenkoning };
 }
 
 export default function Dashboard() {
-  const { participant, documents, rallySubmission, areDocumentsAvailable, availableDate, qrCodeUrl } = useLoaderData<typeof loader>();
+  const { user, submission, documents, completedZones, isBochtenkoning } = useLoaderData<typeof loader>();
 
-  if (!participant) {
-    return null;
-  }
-
-  const gpxFiles = documents.filter(doc => doc.file_type === 'gpx');
-  const rallyBooks = documents.filter(doc => doc.category === 'rally_book');
-  const maps = documents.filter(doc => doc.category === 'map');
-  const instructions = documents.filter(doc => doc.category === 'instruction');
-
-  const formattedDate = new Date(availableDate).toLocaleDateString('nl-BE', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const documentsByCategory = {
+    route: documents?.filter((d: any) => d.category === 'route') || [],
+    rally_book: documents?.filter((d: any) => d.category === 'rally_book') || [],
+    map: documents?.filter((d: any) => d.category === 'map') || [],
+    instruction: documents?.filter((d: any) => d.category === 'instruction') || [],
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header user={participant} />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-primary-600 text-white py-12">
-          <div className="container-custom">
-            <h1 className="text-4xl font-display font-bold mb-2">
-              Welkom terug, {participant.first_name}! 🏍
-            </h1>
-            <p className="text-xl text-primary-100">
-              Alles wat je nodig hebt voor Den Bochtenkoning Rally!
-            </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg shadow-lg p-8 text-white mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            Welkom, {user.first_name}! 👋
+          </h1>
+          <p className="text-xl">
+            Klaar voor een dag vol bochten en avontuur?
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {/* Registration Status */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">✅</span>
+              Inschrijving
+            </h3>
+            <dl className="space-y-2 text-sm">
+              <div>
+                <dt className="text-gray-600">Status:</dt>
+                <dd className="font-medium text-green-600">Bevestigd</dd>
+              </div>
+              <div>
+                <dt className="text-gray-600">Formule:</dt>
+                <dd className="font-medium">{FORMULA_LABELS[user.formula as keyof typeof FORMULA_LABELS]}</dd>
+              </div>
+              <div>
+                <dt className="text-gray-600">Rittype:</dt>
+                <dd className="font-medium">{RIDE_TYPE_LABELS[user.ride_type as keyof typeof RIDE_TYPE_LABELS]}</dd>
+              </div>
+            </dl>
           </div>
-        </section>
 
-        {/* Quick Info Cards */}
-        <section className="section">
-          <div className="container-custom">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="card bg-green-50 border-l-4 border-green-600">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Inschrijving</p>
-                    <p className="text-2xl font-bold text-green-600">✅ Bevestigd</p>
-                  </div>
-                  <span className="text-4xl">✓</span>
-                </div>
-              </div>
-
-              <div className="card bg-blue-50 border-l-4 border-blue-600">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Je formule</p>
-                    <p className="text-lg font-bold">
-                      {participant.formula === 'with_meals' ? '🍽 Met maaltijden' : '☕ Enkel ontbijt'}
-                    </p>
-                  </div>
-                  <span className="text-4xl">{participant.formula === 'with_meals' ? '🍽' : '☕'}</span>
-                </div>
-              </div>
-
-              <div className="card bg-purple-50 border-l-4 border-purple-600">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Type rit</p>
-                    <p className="text-lg font-bold">
-                      {participant.ride_type === 'free' ? '🔵 Vrije rit' : '🟢 Begeleide rit'}
-                    </p>
-                  </div>
-                  <span className="text-4xl">{participant.ride_type === 'free' ? '🔵' : '🟢'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* QR Code */}
-            <div className="card bg-yellow-50 border-2 border-yellow-600 mb-8">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">📱 Je QR Code voor Check-in</h3>
-                  <p className="text-gray-700 mb-4">
-                    Toon deze code bij aankomst aan de start in Café Den Belami. 
-                  </p>
-                </div>
-                <div className="bg-white p-6 rounded-lg border-4 border-gray-300 shadow-lg">
-                  <QRCodeSVG 
-                    value={qrCodeUrl}
-                    size={180}
-                    level="H"
-                    includeMargin
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Documents Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              {/* GPX Routes */}
-              <div className="card">
-                <h3 className="text-2xl font-display font-bold mb-4 flex items-center">
-                  <span className="text-3xl mr-2">🗺</span>
-                  GPX Routes
-                </h3>
-                {!areDocumentsAvailable ? (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-600 p-4">
-                    <p className="font-semibold mb-2">🔒 Beschikbaar vanaf {formattedDate}</p>
-                    <p className="text-sm text-gray-700">
-                      De GPX bestanden worden 2 dagen voor het event vrijgegeven.
-                    </p>
-                  </div>
-                ) : gpxFiles.length > 0 ? (
-                  <div className="space-y-3">
-                    {gpxFiles.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 bg-gray-50 rounded-lg hover:bg-primary-50 transition-colors border border-gray-200"
-                      >
-                        <p className="font-semibold">{doc.title}</p>
-                        {doc.description && (
-                          <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
-                        )}
-                        <p className="text-xs text-primary-600 mt-1">↓ Download GPX</p>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">GPX bestanden komen binnenkort beschikbaar</p>
-                )}
-              </div>
-
-              {/* Rally Book */}
-              <div className="card">
-                <h3 className="text-2xl font-display font-bold mb-4 flex items-center">
-                  <span className="text-3xl mr-2">📕</span>
-                  Bochtenboek
-                </h3>
-                {!areDocumentsAvailable ? (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-600 p-4">
-                    <p className="font-semibold mb-2">🔒 Beschikbaar vanaf {formattedDate}</p>
-                    <p className="text-sm text-gray-700">
-                      Het digitale Bochtenboek wordt 2 dagen voor het event vrijgegeven. 
-                      Je ontvangt ook een fysieke versie bij de start.
-                    </p>
-                  </div>
-                ) : rallyBooks.length > 0 ? (
-                  <div className="space-y-3">
-                    {rallyBooks.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 bg-gray-50 rounded-lg hover:bg-primary-50 transition-colors border border-gray-200"
-                      >
-                        <p className="font-semibold">{doc.title}</p>
-                        {doc.description && (
-                          <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
-                        )}
-                        <p className="text-xs text-primary-600 mt-1">→ Open</p>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">
-                    Je ontvangt het fysieke Bochtenboek bij de start. 
-                    Een digitale versie komt hier ook beschikbaar.
-                  </p>
-                )}
-              </div>
-
-              {/* Maps */}
-              <div className="card">
-                <h3 className="text-2xl font-display font-bold mb-4 flex items-center">
-                  <span className="text-3xl mr-2">🗾</span>
-                  Kaarten
-                </h3>
-                {maps.length > 0 ? (
-                  <div className="space-y-3">
-                    {maps.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 bg-gray-50 rounded-lg hover:bg-primary-50 transition-colors border border-gray-200"
-                      >
-                        <p className="font-semibold">{doc.title}</p>
-                        {doc.description && (
-                          <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
-                        )}
-                        <p className="text-xs text-primary-600 mt-1">→ Bekijk</p>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">Kaarten komen binnenkort beschikbaar</p>
-                )}
-              </div>
-
-              {/* Instructions */}
-              <div className="card">
-                <h3 className="text-2xl font-display font-bold mb-4 flex items-center">
-                  <span className="text-3xl mr-2">📋</span>
-                  Instructies & Info
-                </h3>
-                {instructions.length > 0 ? (
-                  <div className="space-y-3">
-                    {instructions.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 bg-gray-50 rounded-lg hover:bg-primary-50 transition-colors border border-gray-200"
-                      >
-                        <p className="font-semibold">{doc.title}</p>
-                        {doc.description && (
-                          <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
-                        )}
-                        <p className="text-xs text-primary-600 mt-1">→ Lees meer</p>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">
-                    Belangrijke informatie en instructies worden hier geplaatst
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Rally Submission */}
-            <div className="card">
-              <h3 className="text-2xl font-display font-bold mb-4 flex items-center">
-                <span className="text-3xl mr-2">🏆</span>
-                Je Rally Deelname
-              </h3>
-              {rallySubmission ? (
-                <div>
-                  <p className="text-green-600 font-semibold mb-4">✅ Rally ingediend!</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-gray-50 p-3 rounded">
-                      <p className="text-sm text-gray-600">Totaal punten</p>
-                      <p className="text-2xl font-bold text-primary-600">{rallySubmission.total_points}</p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded">
-                      <p className="text-sm text-gray-600">Zones voltooid</p>
-                      <p className="text-2xl font-bold">
-                        {[
-                          rallySubmission.rz1_code,
-                          rallySubmission.rz2_code,
-                          rallySubmission.rz3_code,
-                          rallySubmission.rz4_code,
-                          rallySubmission.rz5_code,
-                          rallySubmission.rz6_code,
-                          rallySubmission.rz7_code,
-                          rallySubmission.rz8_code,
-                        ].filter(Boolean).length}
-                        /8
-                      </p>
-                    </div>
-                    {rallySubmission.total_distance && (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm text-gray-600">Totaal km</p>
-                        <p className="text-2xl font-bold">{rallySubmission.total_distance}</p>
-                      </div>
-                    )}
-                  </div>
-                  <Link to="/dashboard/rally-submission" className="btn-primary inline-block">
-                    ✏️ Codes Beheren / Bijwerken
-                  </Link>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-gray-700 mb-4">
-                    Nadat je de rally hebt gereden, kan je hier je codes indienen en je punten bekijken.
-                  </p>
-                  <Link to="/dashboard/rally-submission" className="btn-primary inline-block">
-                    📝 Rally Codes Indienen
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Contact Info */}
-            <div className="card bg-blue-50 border-l-4 border-blue-600 mt-8">
-              <h3 className="text-xl font-bold mb-2">📞 Hulp nodig?</h3>
-              <p className="text-gray-700">
-                Bij vragen of problemen kan je contact opnemen via:
+          {/* QR Code */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">📱</span>
+              QR-code
+            </h3>
+            <div className="bg-gray-50 p-4 rounded text-center">
+              <p className="font-mono text-lg font-bold text-primary-600 mb-2">
+                {user.qr_code}
               </p>
-              <ul className="mt-2 space-y-1 text-gray-700">
-                <li>📧 <strong>Email:</strong> vzwddb@gmail.com</li>
-                <li>📱 <strong>WhatsApp:</strong> Link ontvang je bij de start</li>
-              </ul>
+              <p className="text-xs text-gray-600">
+                Toon dit bij de start
+              </p>
             </div>
           </div>
-        </section>
-      </main>
 
-      <Footer />
+          {/* Rally Progress */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">🏆</span>
+              Rally Status
+            </h3>
+            {submission ? (
+              <div className="space-y-3 text-sm">
+                {isBochtenkoning && (
+                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-lg p-3 mb-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-3xl">👑</span>
+                      <div className="text-center">
+                        <div className="font-bold text-yellow-800 text-base">Bochtenkoning!</div>
+                        <div className="text-xs text-yellow-700">Je staat op #1</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-gray-600">Zones voltooid:</dt>
+                  <dd className="font-medium text-2xl text-primary-600">{completedZones}/8</dd>
+                </div>
+                <div>
+                  <dt className="text-gray-600">Totaal punten:</dt>
+                  <dd className="font-medium text-xl">{submission?.total_points}</dd>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm">
+                Nog geen rally codes ingediend
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Documents Section */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Routes */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">🗺️</span>
+              GPX Routes
+            </h3>
+            {documentsByCategory.route.length > 0 ? (
+              <ul className="space-y-2">
+                {documentsByCategory.route.map((doc: any) => (
+                  <li key={doc.id}>
+                    <a
+                      href={doc.file_url}
+                      download
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900">{doc.title}</div>
+                        {doc.description && (
+                          <div className="text-sm text-gray-600">{doc.description}</div>
+                        )}
+                      </div>
+                      <span className="text-primary-600">↓</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">Nog geen routes beschikbaar</p>
+            )}
+          </div>
+
+          {/* Rally Book */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">📕</span>
+              Bochtenboek
+            </h3>
+            {documentsByCategory.rally_book.length > 0 ? (
+              <ul className="space-y-2">
+                {documentsByCategory.rally_book.map((doc: any) => (
+                  <li key={doc.id}>
+                    <a
+                      href={doc.file_url}
+                      download
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900">{doc.title}</div>
+                        {doc.description && (
+                          <div className="text-sm text-gray-600">{doc.description}</div>
+                        )}
+                      </div>
+                      <span className="text-primary-600">↓</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">Nog niet beschikbaar</p>
+            )}
+          </div>
+
+          {/* Maps */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">🗺</span>
+              Kaarten
+            </h3>
+            {documentsByCategory.map.length > 0 ? (
+              <ul className="space-y-2">
+                {documentsByCategory.map.map((doc: any) => (
+                  <li key={doc.id}>
+                    <a
+                      href={doc.file_url}
+                      download
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900">{doc.title}</div>
+                        {doc.description && (
+                          <div className="text-sm text-gray-600">{doc.description}</div>
+                        )}
+                      </div>
+                      <span className="text-primary-600">↓</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">Nog geen kaarten beschikbaar</p>
+            )}
+          </div>
+
+          {/* Instructions */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">📋</span>
+              Instructies & Info
+            </h3>
+            {documentsByCategory.instruction.length > 0 ? (
+              <ul className="space-y-2">
+                {documentsByCategory.instruction.map((doc: any) => (
+                  <li key={doc.id}>
+                    <a
+                      href={doc.file_url}
+                      download
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900">{doc.title}</div>
+                        {doc.description && (
+                          <div className="text-sm text-gray-600">{doc.description}</div>
+                        )}
+                      </div>
+                      <span className="text-primary-600">↓</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">Nog geen instructies beschikbaar</p>
+            )}
+          </div>
+        </div>
+
+        {/* Rally Submission CTA */}
+        <div className="bg-primary-50 border-2 border-primary-200 rounded-lg p-6 text-center">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Rally codes indienen
+          </h3>
+          <p className="text-gray-700 mb-4">
+            Heb je rally zones voltooid? Dien je codes in om punten te verzamelen!
+          </p>
+          <Link
+            to="/dashboard/rally-submission"
+            className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            {submission ? 'Codes bijwerken' : 'Codes indienen'}
+          </Link>
+        </div>
+
+        {/* Contact Info */}
+        <div className="mt-8 text-center text-gray-600">
+          <p className="mb-2">Hulp nodig?</p>
+          <p>
+            📧 <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">
+              info@deurdenbocht.be
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

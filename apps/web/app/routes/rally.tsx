@@ -1,200 +1,225 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
-import { getUser } from '~/lib/session.server';
-import { getRallyZones, getPageContent, getImageUrl } from '~/lib/sanity.server';
-import { PortableText } from '@portabletext/react';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
+
+import { useLoaderData, Link } from 'react-router';
+import Header from '~/components/Header';
+import Footer from '~/components/Footer';
+import MapView from '~/components/MapView';
+import { getActiveEdition, getRallyZones } from '~/lib/sanity.server';
+import { urlFor } from '~/lib/sanity';
 
 export const meta: MetaFunction = () => {
   return [
     { title: 'Rally Zones - Deur Den Bocht' },
-    { name: 'description', content: 'Ontdek alle rally zones en instructies voor de Deur Den Bocht rally.' },
+    { name: 'description', content: 'Ontdek alle 8 rally zones van Deur Den Bocht' },
   ];
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
-  
-  if (!user) {
-    return redirect('/login');
-  }
+  const edition = await getActiveEdition();
+  const rallyZones = edition ? await getRallyZones(edition._id) : [];
 
-  const hasEarlyAccess = user.allow_early_access ?? false;
-
-  const [rallyZones, howItWorksContent] = await Promise.all([
-    getRallyZones().catch(() => []),
-    getPageContent('rally').catch(() => []),
-  ]);
-
-  // Process image URLs on the server
-  const rallyZonesWithUrls = rallyZones.map(zone => {
-    if (!zone || !zone.image) return zone;
-    return {
-      ...zone,
-      imageUrl: getImageUrl(zone.image, 800)
-    };
-  });
-
-  return json({ user, rallyZones: rallyZonesWithUrls, howItWorksContent, hasEarlyAccess });
+  return {  edition, rallyZones };
 }
 
+const colorClasses = {
+  green: 'bg-green-50 border-green-500',
+  yellow: 'bg-yellow-50 border-yellow-500',
+  orange: 'bg-orange-50 border-orange-500',
+  red: 'bg-red-50 border-red-500',
+};
+
 export default function Rally() {
-  const { user, rallyZones, howItWorksContent, hasEarlyAccess } = useLoaderData<typeof loader>();
-
-  if (!hasEarlyAccess) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header user={user} />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="container-custom text-center py-16">
-            <div className="card max-w-2xl mx-auto">
-              <span className="text-6xl mb-4 block">🔒</span>
-              <h1 className="text-4xl font-display font-bold mb-4">Rally Zones - Binnenkort Beschikbaar</h1>
-              <p className="text-xl text-gray-700 mb-6">
-                De rally zones worden beschikbaar op <strong>1 februari 2026</strong>.
-              </p>
-              <p className="text-gray-600">
-                Houd je dashboard in de gaten voor updates!
-              </p>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  const useableHowItWorksContent = howItWorksContent.filter(c => c !== null);
+  const { edition, rallyZones } = useLoaderData<typeof loader>();
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-primary-600 text-white py-16">
-          <div className="container-custom">
-            <h1 className="text-5xl font-display font-bold mb-4">Rally Zones</h1>
-            <p className="text-xl text-primary-100">
-              Ontdek alle zones en bereid je voor op de ultimate rally ervaring
-            </p>
-          </div>
-        </section>
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold mb-4">De Rally Zones</h1>
+          <p className="text-xl max-w-3xl mx-auto">
+            8 optionele rally-lussen waar je punten verzamelt voor Den Bochtenkoning
+          </p>
+        </div>
+      </section>
 
-        {/* How it works */}
-        {howItWorksContent && howItWorksContent.length > 0 && (
-          <section className="section">
-            <div className="container-custom">
-              <div className="card max-w-4xl mx-auto">
-                <h2 className="text-3xl font-display font-bold mb-6">{useableHowItWorksContent.find(c => c.section === 'how-it-works-intro')?.title || 'Hoe werkt het?'}</h2>
-                {useableHowItWorksContent.find(c => c.section === 'how-it-works-intro')?.content && (
-                  <div className="prose prose-lg max-w-none">
-                    <PortableText value={useableHowItWorksContent.find(c => c.section === 'how-it-works-intro')!.content} />
-                  </div>
-                )}
-              </div>
+      {/* How it works */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+            Hoe werkt het?
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-3xl mb-3">1️⃣</div>
+              <h3 className="font-bold text-lg mb-2">Je ziet een RZ-bordje</h3>
+              <p className="text-gray-700">Tijdens de rit zie je borden langs de route met "RZ" erop</p>
             </div>
-          </section>
-        )}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-3xl mb-3">2️⃣</div>
+              <h3 className="font-bold text-lg mb-2">Verlaat de hoofdroute</h3>
+              <p className="text-gray-700">Kies ervoor om de rally zone te doen of door te rijden</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-3xl mb-3">3️⃣</div>
+              <h3 className="font-bold text-lg mb-2">Volg het Bochtenboek</h3>
+              <p className="text-gray-700">Geschreven aanwijzingen leiden je naar een checkpunt</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-3xl mb-3">4️⃣</div>
+              <h3 className="font-bold text-lg mb-2">Noteer de code</h3>
+              <p className="text-gray-700">Op het checkpunt vind je een codewoord dat je noteert</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {/* Rally Zones */}
-        <section className="section bg-gray-100">
-          <div className="container-custom">
-            <h2 className="text-4xl font-display font-bold mb-8 text-center">De Rally Zones</h2>
-            
-            <div className="grid grid-cols-1 gap-6">
-              {rallyZones.length > 0 ? (
-                rallyZones.filter((z) => z !== null).map((zone) => {
-                  const zoneWithImage = zone as typeof zone & { imageUrl?: string };
-                  const colorClasses: Record<string, string> = {
-                    green: 'border-l-4 border-green-500 bg-green-50',
-                    yellow: 'border-l-4 border-yellow-500 bg-yellow-50',
-                    orange: 'border-l-4 border-orange-500 bg-orange-50',
-                    red: 'border-l-4 border-red-500 bg-red-50',
-                  };
-                  
-                  return (
-                    <div 
-                      key={zone._id} 
-                      className={`card hover:shadow-xl transition-shadow ${colorClasses[zone.color] || 'border-l-4 border-gray-500'}`}
-                    >
-                      {zoneWithImage.imageUrl && (
-                        <img 
-                          src={zoneWithImage.imageUrl} 
-                          alt={zone.checkpoint ? `Afbeelding van ${zone.checkpoint}` : 'Rally Zone afbeelding'}
-                          className="w-full h-48 object-cover rounded-lg mb-4"
-                        />
-                      )}
-                      <div className="mb-3">
-                        <h3 className="text-2xl font-display font-bold">{zone.title}</h3>
-                        <p className="text-sm text-gray-600">{zone.location}</p>
+      {/* Rally Zones */}
+      {rallyZones && rallyZones.length > 0 && (
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+              De 8 Rally Zones
+            </h2>
+            <div className="space-y-8">
+              {rallyZones.map((zone: any) => (
+                <div
+                  key={zone._id}
+                  className={`border-l-4 rounded-lg shadow-lg overflow-hidden ${
+                    colorClasses[zone.color as keyof typeof colorClasses] || colorClasses.green
+                  }`}
+                >
+                  <div className="p-6 md:p-8">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                          RZ{zone.zoneNumber} – {zone.title}
+                        </h3>
+                        <p className="text-gray-700 font-semibold">{zone.location}</p>
                       </div>
-                      
-                      <div className="space-y-3 mb-4">
-                        <p className="text-gray-700">{zone.description}</p>
-                        
-                        <div className="text-sm space-y-4">
-                          <p><strong>🚪 Exit:</strong> {zone.exit}</p>
-                          <p><strong>🔄 Lus:</strong> {zone.lus}</p>
-                          <p><strong>📍 Checkpoint:</strong> {zone.checkpoint}</p>
-                          <p><strong>💡 Hint:</strong> {zone.codeHint}</p>
-                          <p><strong>↩️ Terug:</strong> {zone.rejoin}</p>
+                      <div className="text-right">
+                        <div className="inline-block bg-white px-4 py-2 rounded-lg shadow">
+                          <span className="text-sm text-gray-600">Punten</span>
+                          <div className="text-2xl font-bold text-primary-600">{zone.points}</div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center justify-between text-sm pt-3 border-t border-gray-200">
-                        <span className="font-bold text-primary-600">
-                          {zone.points} punten
-                        </span>
+                    </div>
+
+                    {zone.description && (
+                      <p className="text-gray-700 mb-6 text-lg">{zone.description}</p>
+                    )}
+
+                    {/* Map View */}
+                    {zone.startLocation && zone.endLocation && (
+                      <div className="rounded-lg overflow-hidden shadow-md border border-gray-300 mb-6">
+                        <MapView
+                          startPoint={zone.startLocation}
+                          endPoint={zone.endLocation}
+                          className="h-80 w-full"
+                        />
+                      </div>
+                    )}
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">🚪 EXIT</h4>
+                        <p className="text-gray-700">{zone.exit}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">🔄 LUS</h4>
+                        <p className="text-gray-700">{zone.lus}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">📍 CHECKPUNT</h4>
+                        <p className="text-gray-700">{zone.checkpoint}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Code: <em>{zone.codeHint}</em>
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">↩️ REJOIN</h4>
+                        <p className="text-gray-700">{zone.rejoin}</p>
                       </div>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-xl text-gray-600">Er zijn nog geen rally zones toegevoegd.</p>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </section>
+      )}
 
-        {/* Important Info */}
-        <section className="section">
-          <div className="container-custom">
-            <div className="card bg-yellow-50 border-2 border-yellow-400 max-w-3xl mx-auto">
-              <h3 className="text-2xl font-bold mb-4 flex items-center">
-                <span className="text-3xl mr-3">⚡</span>
-                Belangrijke Rally Informatie
-              </h3>
-              <ul className="space-y-3 text-gray-800">
-                <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
-                  <span><strong>Start:</strong> 10:00 uur stipt - zorg dat je op tijd bent!</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
-                  <span><strong>Zones:</strong> Bezoek alle zones in willekeurige volgorde</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
-                  <span><strong>Foto's:</strong> Maak foto's bij elke zone om punten te verdienen</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
-                  <span><strong>Veiligheid:</strong> Volg alle verkeersregels en rij veilig!</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
-                  <span><strong>WhatsApp:</strong> Join de WhatsApp groep voor live updates</span>
-                </li>
-              </ul>
-            </div>
+      {/* Points System */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+            Puntensysteem
+          </h2>
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-primary-600 text-white">
+                <tr>
+                  <th className="px-6 py-4 text-left">Prestatie</th>
+                  <th className="px-6 py-4 text-right">Punten</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <tr>
+                  <td className="px-6 py-4">Elke Rally Zone</td>
+                  <td className="px-6 py-4 text-right font-bold">15</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4">Minstens 4 zones <em className="text-sm text-gray-600">(voor kwalificatie)</em></td>
+                  <td className="px-6 py-4 text-right font-bold">-</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4">Alle 8 zones <em className="text-sm text-primary-600">(bonus!)</em></td>
+                  <td className="px-6 py-4 text-right font-bold text-primary-600">+20</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4">Meer dan 500 km</td>
+                  <td className="px-6 py-4 text-right font-bold">+10</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4">Geen snelwegen</td>
+                  <td className="px-6 py-4 text-right font-bold">+10</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4">Regen 😄</td>
+                  <td className="px-6 py-4 text-right font-bold">+5</td>
+                </tr>
+                <tr className="bg-primary-50">
+                  <td className="px-6 py-4 font-bold">Maximum totaal</td>
+                  <td className="px-6 py-4 text-right font-bold text-2xl text-primary-600">165</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-center text-gray-600 mt-6">
+            <strong>Let op:</strong> Minimum 4 zones vereist om te kwalificeren als Bochtenkoning
+          </p>
+        </div>
+      </section>
+
+      {/* CTA */}
+      {edition?.registrationOpen && (
+        <section className="py-16 bg-primary-600 text-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold mb-4">Klaar voor de uitdaging?</h2>
+            <p className="text-xl mb-8">
+              Schrijf je in en verzamel punten om Den Bochtenkoning te worden
+            </p>
+            <Link
+              to="/registration"
+              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+            >
+              Inschrijven
+            </Link>
           </div>
         </section>
-      </main>
+      )}
 
       <Footer />
     </div>

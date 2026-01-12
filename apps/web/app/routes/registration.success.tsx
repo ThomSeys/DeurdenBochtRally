@@ -1,180 +1,144 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
+
+import { redirect } from 'react-router';
+import { useLoaderData, Link } from 'react-router';
 import { supabase } from '~/lib/supabase.server';
 import { stripe } from '~/lib/stripe.server';
-import { requireUserId } from '~/lib/session.server';
-import type { Database } from '~/lib/database.types';
-
-type Participant = Database['public']['Tables']['participants']['Row'];
+import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Inschrijving Succesvol - Deur Den Bocht' },
-    { name: 'description', content: 'Je inschrijving voor Deur Den Bocht is succesvol!' },
+    { title: 'Inschrijving Geslaagd - Deur Den Bocht' },
   ];
 };
 
-export async function loader({ request }: LoaderFunctionArgs): Promise<
-  { success: true; participant: Participant; skipped?: boolean } | 
-  { success: false; participant: null }
-> {
+export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const sessionId = url.searchParams.get('session_id');
-  const isSkipped = url.searchParams.get('skip') === 'true';
-
-  // Handle skip payment flow
-  if (isSkipped) {
-    const cookieHeader = request.headers.get('Cookie');
-    const userId = cookieHeader ? await requireUserId(request) : null;
-    
-    if (!userId) {
-      return json({ success: false, participant: null });
-    }
-
-    const { data: participant } = await supabase
-      .from('participants')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    return json({ success: true, participant, skipped: true });
-  }
 
   if (!sessionId) {
-    return json({ success: false, participant: null });
+    return redirect('/');
   }
 
-  try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    
-    if (session.payment_status === 'paid') {
-      // Update participant payment status
-      const { data: participant } = await supabase
-        .from('participants')
-        .update({
-          payment_status: 'completed',
-          stripe_payment_id: session.payment_intent as string,
-        })
-        .eq('id', session.metadata?.participantId)
-        .select()
-        .single();
+  // Verify Stripe session
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-      return json({ success: true, participant });
-    }
-
-    return json({ success: false, participant: null });
-  } catch (error) {
-    console.error('Error verifying payment:', error);
-    return json({ success: false, participant: null });
+  if (!session.metadata?.participantId) {
+    return redirect('/');
   }
+
+  // Get participant details
+  const { data: participant } = await supabase
+    .from('participants')
+    .select('*')
+    .eq('id', session.metadata.participantId)
+    .single();
+
+  if (!participant) {
+    return redirect('/');
+  }
+
+  return {  participant, session };
 }
 
 export default function RegistrationSuccess() {
-  const { success, participant } = useLoaderData<typeof loader>();
-
-  if (!success || !participant) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 section">
-          <div className="container-custom">
-            <div className="card max-w-2xl mx-auto text-center">
-              <span className="text-6xl">❌</span>
-              <h1 className="text-3xl font-display font-bold mt-4 mb-4">
-                Er ging iets mis
-              </h1>
-              <p className="text-gray-700 mb-6">
-                We konden je betaling niet verifiëren. Neem contact met ons op als je denkt dat dit een fout is.
-              </p>
-              <Link to="/" className="btn-primary inline-block">
-                Terug naar Home
-              </Link>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const { participant } = useLoaderData<typeof loader>();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
+      <div className="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">✅</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Inschrijving geslaagd!
+          </h1>
+          <p className="text-xl text-gray-600">
+            Welkom bij Deur Den Bocht, {participant.first_name}!
+          </p>
+        </div>
 
-      <main className="flex-1">
-        <section className="section bg-green-50">
-          <div className="container-custom">
-            <div className="card max-w-3xl mx-auto">
-              <div className="text-center mb-8">
-                <span className="text-7xl">✅</span>
-                <h1 className="text-4xl font-display font-bold mt-4 mb-2">
-                  Inschrijving Succesvol!
-                </h1>
-                <p className="text-xl text-gray-700">
-                  Welkom bij Deur Den Bocht, {participant.first_name}!
-                </p>
-              </div>
-
-              <div className="bg-primary-50 border-2 border-primary-600 rounded-lg p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4">Je inschrijvingsdetails</h2>
-                <div className="space-y-2">
-                  <p><strong>Naam:</strong> {participant.first_name} {participant.last_name}</p>
-                  <p><strong>Email:</strong> {participant.email}</p>
-                  <p><strong>Motor:</strong> {participant.motorcycle_brand} {participant.motorcycle_model}</p>
-                  <p><strong>Formule:</strong> {participant.formula === 'with_meals' ? 'Met alle maaltijden (€20)' : 'Enkel ontbijt (€10)'}</p>
-                  <p><strong>Type rit:</strong> {participant.ride_type === 'free' ? 'Vrije rit' : 'Begeleide rit'}</p>
-                  <p><strong>QR Code:</strong> {participant.qr_code}</p>
-                </div>
-              </div>
-
-              <div className="card bg-blue-50 border-l-4 border-blue-600 mb-6">
-                <h3 className="font-bold mb-2">📧 Bevestigingsmail</h3>
-                <p className="text-gray-700">
-                  We hebben een bevestigingsmail gestuurd naar <strong>{participant.email}</strong> met:
-                </p>
-                <ul className="list-disc list-inside mt-2 text-gray-700">
-                  <li>Je QR-code voor check-in</li>
-                  <li>Praktische informatie</li>
-                  <li>Links naar de GPX-route en documenten</li>
-                </ul>
-              </div>
-
-              <div className="card bg-yellow-50 border-l-4 border-yellow-600 mb-6">
-                <h3 className="font-bold mb-2">📱 Volgende stappen</h3>
-                <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                  <li>Bewaar je bevestigingsmail goed</li>
-                  <li>Log in op het dashboard voor toegang tot routes en documenten</li>
-                  <li>Toon je QR-code bij aankomst aan de start</li>
-                  <li>Geniet van de rit!</li>
-                </ol>
-              </div>
-
-              <div className="text-center space-x-4">
-                <Link to="/login" className="btn-primary inline-block">
-                  📱 Naar Dashboard
-                </Link>
-                <Link to="/" className="btn-secondary inline-block">
-                  🏠 Naar Home
-                </Link>
-              </div>
-
-              <div className="text-center mt-8 pt-6 border-t">
-                <p className="text-2xl font-display font-bold mb-2">
-                  Zien we je op het event! 🏍
-                </p>
-                <p className="text-gray-600 italic">
-                  "Altijd via de omweg."
-                </p>
-              </div>
+        <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Je gegevens</h2>
+          <dl className="space-y-2">
+            <div className="flex justify-between">
+              <dt className="text-gray-600">Naam:</dt>
+              <dd className="font-medium">{participant.first_name} {participant.last_name}</dd>
             </div>
-          </div>
-        </section>
-      </main>
+            <div className="flex justify-between">
+              <dt className="text-gray-600">Email:</dt>
+              <dd className="font-medium">{participant.email}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-600">Motor:</dt>
+              <dd className="font-medium">{participant.motorcycle_brand} {participant.motorcycle_model}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-600">Formule:</dt>
+              <dd className="font-medium">{FORMULA_LABELS[participant.formula as keyof typeof FORMULA_LABELS]}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-600">Rittype:</dt>
+              <dd className="font-medium">{RIDE_TYPE_LABELS[participant.ride_type as keyof typeof RIDE_TYPE_LABELS]}</dd>
+            </div>
+          </dl>
+        </div>
 
-      <Footer />
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Je QR-code</h2>
+          <div className="bg-white p-4 rounded-lg text-center mb-4">
+            <p className="font-mono text-2xl font-bold text-primary-600 mb-2">
+              {participant.qr_code}
+            </p>
+            <p className="text-sm text-gray-600">
+              Bewaar deze code goed - je hebt hem nodig om in te loggen!
+            </p>
+          </div>
+          <p className="text-sm text-gray-700">
+            Deze code is ook verstuurd naar je emailadres. Toon deze code aan de start
+            om je materiaal te ontvangen.
+          </p>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-green-900 mb-2">📧 Check je email</h3>
+          <p className="text-sm text-green-800">
+            Je ontvangt binnenkort een bevestigingsmail met alle informatie en je QR-code.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-gray-900">Volgende stappen:</h3>
+          <ul className="space-y-2 text-gray-700">
+            <li className="flex items-start">
+              <span className="text-primary-600 font-bold mr-2">1.</span>
+              <span>Log in op je dashboard met je email en QR-code</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary-600 font-bold mr-2">2.</span>
+              <span>Download de GPX route en het Bochtenboek</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary-600 font-bold mr-2">3.</span>
+              <span>Kom op de dag zelf naar Café Den Belami tussen 06:30 en 08:00</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="mt-8 flex gap-4">
+          <Link
+            to="/dashboard"
+            className="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 px-4 rounded-lg transition-colors"
+          >
+            Ga naar Dashboard
+          </Link>
+          <Link
+            to="/"
+            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 text-center font-semibold py-3 px-4 rounded-lg transition-colors"
+          >
+            Terug naar Home
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

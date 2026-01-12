@@ -1,155 +1,125 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { Form, Link, useActionData, useNavigation, useSearchParams } from '@remix-run/react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
+
+import { Form, useActionData, useSearchParams, Link } from 'react-router';
 import { supabase } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
-import bcrypt from 'bcryptjs';
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: 'Inloggen - Deur Den Bocht' },
-    { name: 'description', content: 'Log in op je Deur Den Bocht account' },
-  ];
-};
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
   if (userId) return redirect('/dashboard');
-  return json({});
+  return { };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const redirectTo = formData.get('redirectTo') as string || '/dashboard';
+  const email = formData.get('email');
+  const qrCode = formData.get('qrCode');
 
-  if (!email || !password) {
-    return json({ error: 'Email en wachtwoord zijn verplicht' }, { status: 400 });
+  if (typeof email !== 'string' || typeof qrCode !== 'string') {
+    return { 
+      error: 'Email en QR-code zijn verplicht',
+      status: 400
+    };
   }
 
-  // Find participant by email
-  const { data: participant, error } = await supabase
+  const { data: participant } = await supabase
     .from('participants')
     .select('*')
     .eq('email', email.toLowerCase())
+    .eq('qr_code', qrCode)
     .eq('payment_status', 'completed')
     .single();
 
-  if (error || !participant) {
-    return json(
-      { error: 'Ongeldige inloggegevens.' },
-      { status: 401 }
-    );
+  if (!participant) {
+    return { 
+      error: 'Ongeldige login gegevens. Controleer je email en QR-code.',
+      status: 400
+    };
   }
 
-  // Verify password
-  const isValidPassword = await bcrypt.compare(password, participant.password_hash);
-
-  if (!isValidPassword) {
-    return json(
-      { error: 'Ongeldige inloggegevens.' },
-      { status: 401 }
-    );
-  }
+  const url = new URL(request.url);
+  const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
 
   return createUserSession(participant.id, redirectTo);
 }
 
 export default function Login() {
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
-
-  const isSubmitting = navigation.state === 'submitting';
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <main className="flex-1 section">
-        <div className="container-custom">
-          <div className="max-w-md mx-auto">
-            <div className="card">
-              <div className="text-center mb-6">
-                <span className="text-5xl">🔐</span>
-                <h1 className="text-3xl font-display font-bold mt-4">Inloggen</h1>
-                <p className="text-gray-600 mt-2">
-                  Log in met je email en wachtwoord
-                </p>
-              </div>
-
-              {actionData?.error && (
-                <div className="bg-red-50 border-2 border-red-600 rounded-lg p-4 mb-6">
-                  <p className="text-red-800">❌ {actionData.error}</p>
-                </div>
-              )}
-
-              <Form method="post">
-                <input type="hidden" name="redirectTo" value={redirectTo} />
-
-                <div className="mb-4">
-                  <label htmlFor="email" className="block text-sm font-semibold mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    placeholder="je@email.com"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <label htmlFor="password" className="block text-sm font-semibold mb-2">
-                    Wachtwoord *
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    placeholder="Je wachtwoord"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? '⏳ Bezig met inloggen...' : '🔓 Inloggen'}
-                </button>
-              </Form>
-
-              <div className="mt-6 pt-6 border-t text-center">
-                <p className="text-sm text-gray-600">
-                  Nog niet ingeschreven?{' '}
-                  <Link to="/registration" className="text-primary-600 font-semibold hover:underline">
-                    Schrijf je hier in
-                  </Link>
-                </p>
-              </div>
-            </div>
-
-            <div className="card bg-blue-50 border-l-4 border-blue-600 mt-6">
-              <h3 className="font-bold mb-2">💡 QR Code kwijt?</h3>
-              <p className="text-sm text-gray-700">
-                Je QR code staat in de bevestigingsmail die je ontving na je inschrijving. 
-                Controleer ook je spam folder. Kan je hem niet vinden? Neem dan contact met ons op.
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            🏍 Deur Den Bocht
+          </h1>
+          <p className="text-gray-600">Login met je QR-code</p>
         </div>
-      </main>
 
-      <Footer />
+        {actionData?.error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {actionData.error}
+          </div>
+        )}
+
+        <Form method="post" className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="jouw@email.be"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="qrCode" className="block text-sm font-medium text-gray-700 mb-2">
+              QR-code
+            </label>
+            <input
+              id="qrCode"
+              name="qrCode"
+              type="text"
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
+              placeholder="Je hebt deze ontvangen via email"
+            />
+            <p className="mt-2 text-sm text-gray-500">
+              Je kreeg deze code in je bevestigingsmail na inschrijving
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+          >
+            Inloggen
+          </button>
+        </Form>
+
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <p>QR-code kwijt?</p>
+          <p className="mt-1">
+            Stuur een email naar{' '}
+            <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">
+              info@deurdenbocht.be
+            </a>
+          </p>
+        </div>
+
+        <div className="mt-6 text-center">
+          <Link to="/" className="text-sm text-primary-600 hover:underline">
+            ← Terug naar homepagina
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,472 +1,401 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
-import { getUser } from '~/lib/session.server';
-import { 
-  getSponsors, 
-  getSiteConfig, 
-  getStats, 
-  getPricingTiers, 
-  getRallyZones,
-  getPageContent
-} from '~/lib/sanity.server';
-import { PortableText } from '@portabletext/react';
-import { sponsors as fallbackSponsors } from '~/content/sponsors';
-import { siteConfig as fallbackConfig } from '~/content/config';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
+import { useLoaderData, Link } from 'react-router';
+import Header from '~/components/Header';
+import Footer from '~/components/Footer';
+import PortableText from '~/components/PortableText';
+import { getActiveEdition, getSiteConfig, getStats, getPricingTiers, getSponsors, getPageContent } from '~/lib/sanity.server';
+import { urlFor } from '~/lib/sanity';
+import { getUserId } from '~/lib/session.server';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-  const config = data?.siteConfig;
-  
-  const title = config?.seoTitle || config?.eventName || 'Deur Den Bocht - Den Bochtenkoning Rally 2026';
-  const description = config?.seoDescription || 
-    'Den Bochtenkoning Rally 2026! Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. ZONDAG 16 MEI 2026.';
-  const image = config?.seoImageUrl || 'https://deurdenbocht.be/og-image.jpg';
-  const url = 'https://deurdenbocht.be';
-  
-  const metaTags = [
-    { title },
-    { name: 'description', content: description },
-    
-    // Open Graph
-    { property: 'og:title', content: title },
-    { property: 'og:description', content: description },
-    { property: 'og:image', content: image },
-    { property: 'og:url', content: url },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'Deur Den Bocht' },
-    
-    // Twitter Card
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: title },
-    { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: image },
+  return [
+    { title: data?.siteConfig?.seoTitle || 'Deur Den Bocht - Den Bochtenkoning Rally 2026' },
+    { name: 'description', content: data?.siteConfig?.seoDescription || 'Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen.' },
   ];
-  
-  // Add noindex/nofollow if enabled
-  if (config?.noIndex || config?.noFollow) {
-    const robotsDirectives = [];
-    if (config?.noIndex) robotsDirectives.push('noindex');
-    if (config?.noFollow) robotsDirectives.push('nofollow');
-    metaTags.push({ name: 'robots', content: robotsDirectives.join(', ') });
-  }
-  
-  return metaTags;
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
-  
-  // Fetch from Sanity, fallback to static content if unavailable
-  const [sponsors, siteConfig, stats, pricingTiers, rallyZones, pageContent] = await Promise.all([
-    getSponsors().catch(() => fallbackSponsors),
-    getSiteConfig().catch(() => null),
-    getStats().catch(() => []),
-    getPricingTiers().catch(() => []),
-    getRallyZones().catch(() => []),
-    getPageContent('homepage').catch(() => []),
-  ]);
-  
-  return json({ 
-    user, 
-    sponsors, 
-    siteConfig, 
-    stats, 
-    pricingTiers, 
-    rallyZones,
-    pageContent
-  });
+  const userId = await getUserId(request);
+  const edition = await getActiveEdition();
+  const siteConfig = await getSiteConfig();
+  const stats = edition ? await getStats(edition._id) : [];
+  const pricing = edition ? await getPricingTiers(edition._id) : [];
+  const sponsors = edition ? await getSponsors(edition._id) : [];
+  const pageContent = edition ? await getPageContent('homepage', edition._id) : [];
+
+  return {  userId, edition, siteConfig, stats, pricing, sponsors, pageContent };
 }
 
 export default function Index() {
-  const { user, sponsors, siteConfig, stats, pricingTiers, rallyZones, pageContent } = useLoaderData<typeof loader>();
-  
-  // Extract content sections
-  const filteredContent = pageContent.filter((c) => c !== null);
-  const whatIsItContent = filteredContent.find((content) => content.section === 'what-is-it');
-  const rallyIntroContent = filteredContent.find((content) => content.section === 'rally-intro');
-  const heroQuoteContent = filteredContent.find((content) => content.section === 'hero-quote');
-  const rallyZonesCard = filteredContent.find((content) => content.section === 'rally-zones-card');
-  const pointsCard = filteredContent.find((content) => content.section === 'points-card');
-  const finalCTAContent = filteredContent.find((content) => content.section === 'final-cta');
-  const sponsorsIntro = filteredContent.find((content) => content.section === 'sponsors-intro');
-  const sponsorsCTA = filteredContent.find((content) => content.section === 'sponsors-cta');
+  const { userId, edition, siteConfig, stats, pricing, sponsors, pageContent } = useLoaderData<typeof loader>();
+
+  // Get specific sections from page content
+  const heroSection = pageContent.find((section: any) => section.section === 'hero-quote');
+  const ctaSection = pageContent.find((section: any) => section.section === 'final-cta');
+  const whatIsSection = pageContent.find((section: any) => section.section === 'what-is-it');
+  const rallyInfoSection = pageContent.find((section: any) => section.section === 'rally-intro');
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Header user={user} />
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
-      <main className="flex-1">
-        {/* MASSIVE Hero Section */}
-        <section className="relative bg-primary-600 text-white overflow-hidden">
-          {/* Background Image with Overlay */}
-          <div className="absolute inset-0">
-            <img 
-              src={siteConfig?.heroBackgroundImageUrl || "https://picsum.photos/1920/1080?random=1"} 
-              alt="Background" 
+      {/* Hero Section */}
+      <section className="relative bg-gray-900 text-white py-32 md:py-48 overflow-hidden">
+        {/* Background image if exists */}
+        {siteConfig?.heroBackgroundImage && (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={urlFor(siteConfig.heroBackgroundImage).width(1920).height(1080).url()}
+              alt="Hero background"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-primary-600/50"></div>
           </div>
-          
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10 hero-pattern"></div>
-
-          <div className="container-custom relative z-10 py-16 md:py-24 lg:py-32">
-            <div className="max-w-5xl mx-auto text-center">
-              {/* Logo Badge */}
-              <div className="inline-block mb-8">
-                <div className="bg-white rounded-full w-36 h-36 p-6 md:p-8 shadow-2xl transform hover:scale-110 transition-transform">
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-primary-600 hero-text font-black text-3xl md:text-4xl lg:text-5xl leading-none tracking-tighter">
-                        VZW<br/>DdB
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        )}
+        {/* Background with overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 z-0"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center">
+            {/* VZW Logo Badge */}
+            <div className="inline-flex items-center justify-center mb-8">
+              <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-full p-6">
+                <div className="text-6xl">🏍</div>
               </div>
+            </div>
 
-              {/* Main Title */}
-              <h1 className="hero-text text-white mb-6 tracking-tighter">
-                {siteConfig?.eventName || "Den Bochtenkoning Rally 2026"}
+            {heroSection?.title ? (
+              <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight whitespace-pre-line">
+                {heroSection.title}
               </h1>
-
-              {/* Subtitle */}
-              <p className="text-2xl md:text-3xl lg:text-4xl font-black uppercase text-primary-100 mb-8 tracking-wide">
-                Deur den Bocht
-              </p>
-
-              {/* Date & Location */}
-              <div className="bg-white text-primary-600 inline-block px-8 md:px-12 py-6 md:py-8 mb-12 shadow-2xl">
-                <p className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight">
-                  ZONDAG<br/>
-                  <span className="text-5xl md:text-6xl lg:text-7xl">{siteConfig?.eventDate || "16/05/2026"}</span>
-                </p>
-              </div>
-
-              {/* CTA */}
-              <div className="space-y-4">
-                <p className="text-xl md:text-2xl lg:text-3xl font-black uppercase mb-6">
-                  Gade mee?<br/>
-                  <span className="text-primary-200">Tot aan {siteConfig?.eventLocation || "café Belami, Aalter"}!</span>
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <Link to="/registration" className="btn-primary text-lg md:text-xl w-full sm:w-auto">
-                    📝 NU INSCHRIJVEN
-                  </Link>
-                  <Link to="/about" className="btn-secondary text-lg md:text-xl w-full sm:w-auto">
-                    📖 MEER INFO
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Wave Bottom */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-12 md:h-20">
-              <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="#ffffff"></path>
-              <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="#ffffff"></path>
-              <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="#ffffff"></path>
-            </svg>
-          </div>
-        </section>
-
-        {/* Quick Stats */}
-        <section className="py-12 md:py-16 bg-gray-50">
-          <div className="container-custom">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-              {stats.filter((stat) => stat !== null).map((stat) => (
-                <div key={stat._id} className="text-center p-6 bg-white shadow-lg border-t-8 border-primary-600">
-                  <div className="text-4xl md:text-5xl font-black text-primary-600 mb-2">{stat.value}</div>
-                  <div className="text-sm md:text-base font-bold uppercase text-gray-700">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* What is it? */}
-        <section className="section bg-white">
-          <div className="container-custom">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              <div>
-                <h2 className="section-title text-primary-600">
-                  {whatIsItContent?.title || "WAT IS DEUR DEN BOCHT?"}
-                </h2>
-                {whatIsItContent ? (
-                  <div className="prose prose-lg max-w-none">
-                    <PortableText value={whatIsItContent.content} />
-                  </div>
-                ) : (
-                  <div className="space-y-6 text-lg">
-                    <p className="text-gray-700">Content wordt binnenkort toegevoegd...</p>
-                  </div>
-                )}
-                <Link to="/about" className="btn-primary mt-8 inline-block">
-                  📖 VOLLEDIGE INFO
-                </Link>
-              </div>
-
-              <div className="relative">
-                <div className="relative overflow-hidden shadow-2xl">
-                  <img 
-                    src={siteConfig?.featureImage1Url || "https://picsum.photos/800/600?random=2"} 
-                    alt="Motorrijden" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary-600 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
-                    <div className="text-6xl md:text-7xl mb-6">🏍️</div>
-                    <h3 className="text-3xl md:text-4xl font-black uppercase mb-6">
-                      {heroQuoteContent?.title || '"Altijd via de omweg."'}
-                    </h3>
-                    {heroQuoteContent ? (
-                      <div className="prose prose-lg prose-invert max-w-none">
-                        <PortableText value={heroQuoteContent.content} />
-                      </div>
-                    ) : (
-                      <div className="space-y-4 text-lg font-bold">
-                        <p>✓ Geen snelweg</p>
-                        <p>✓ Geen GPS-pijltjes</p>
-                        <p>✓ Geen stress</p>
-                        <p className="text-2xl">= Pure rijvreugde</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section className="section bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-          <div className="container-custom">
-            <h2 className="section-title text-center text-white mb-12 md:mb-16">
-              KIES JE FORMULE
-            </h2>
+            ) : (
+              <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight">
+                DEN BOCHTENKONING<br />RALLY 2026
+              </h1>
+            )}
             
-            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-              {pricingTiers.filter((tier) => tier !== null).map((tier) => (
-                <div 
-                  key={tier._id} 
-                  className={`bg-white text-gray-900 p-8 md:p-10 shadow-2xl transform hover:scale-105 transition-transform ${
-                    tier.highlighted ? 'ring-4 ring-yellow-400' : ''
-                  }`}
-                >
-                  <div className="text-center mb-6">
-                    <div className="text-5xl mb-4">{tier.icon || '🏍️'}</div>
-                    <h3 className="text-3xl md:text-4xl font-black uppercase mb-2">
-                      {tier.name}
-                    </h3>
-                    <div className="text-5xl md:text-6xl font-black text-primary-600 my-6">
-                      €{tier.price}
-                    </div>
-                  </div>
-                  
-                  <ul className="space-y-4 mb-8">
-                    {tier.features?.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-2xl mr-3">✓</span>
-                        <span className="font-bold text-lg">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Link to="/registration" className="btn-primary w-full text-center">
-                    INSCHRIJVEN
-                  </Link>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-center mt-12 text-xl font-bold text-primary-100">
-              💳 Betaling via Bancontact of creditcard
+            <p className="text-3xl md:text-4xl mb-8 font-bold tracking-wider">
+              DEUR DEN BOCHT
             </p>
+            
+            {edition && (
+              <div className="inline-block bg-primary-600 px-8 py-3 rounded-lg mb-12">
+                <p className="text-xl font-bold">
+                  ZONDAG {new Date(edition.eventDate).toLocaleDateString('nl-BE', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  }).split('/').reverse().join('-')}
+                </p>
+              </div>
+            )}
+            
+            {/* Hero CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              {!userId && edition?.registrationOpen && (
+                <Link
+                  to="/registration"
+                  className="bg-white hover:bg-gray-100 text-gray-900 px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors shadow-lg"
+                >
+                  Nu inschrijven
+                </Link>
+              )}
+              <Link
+                to="/about"
+                className="bg-white/10 backdrop-blur-sm hover:bg-white/20 border-2 border-white/30 text-white px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors"
+              >
+                Meer info over het event
+              </Link>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Rally Info */}
-        <section className="section bg-white">
-          <div className="container-custom">
-            <h2 className="section-title text-primary-600 text-center mb-12">
-              HET BOCHTENBOEK<br/>& DE RALLY
-            </h2>
-
-            <div className="max-w-4xl mx-auto">
-              {rallyIntroContent ? (
-                <div className="bg-primary-50 border-l-8 border-primary-600 p-8 md:p-12 mb-8">
-                  <h3 className="text-3xl md:text-4xl font-black uppercase mb-6 text-primary-600">
-                    {rallyIntroContent.title}
-                  </h3>
-                  <div className="prose prose-lg max-w-none">
-                    <PortableText value={rallyIntroContent.content} />
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-primary-50 border-l-8 border-primary-600 p-8 md:p-12 mb-8">
-                  <p className="text-gray-600">Content wordt binnenkort toegevoegd...</p>
+      {/* CTA Section */}
+      <section className="bg-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {ctaSection?.title ? (
+            <>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                {ctaSection.title}
+              </h2>
+              {ctaSection.content && (
+                <div className="text-xl md:text-2xl text-gray-700 mb-8">
+                  <PortableText value={ctaSection.content} />
                 </div>
               )}
+            </>
+          ) : (
+            <>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                GADE MEE?
+              </h2>
+              <p className="text-xl md:text-2xl text-gray-700 mb-8">
+                TOT AAN CAFÉ DEN BELAMI, AALTER!
+              </p>
+            </>
+          )}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {edition?.registrationOpen && (
+              <Link
+                to="/registration"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors shadow-lg"
+              >
+                Nu inschrijven
+              </Link>
+            )}
+            <Link
+              to="/about"
+              className="bg-white border-2 border-gray-300 hover:border-primary-600 text-gray-900 px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors"
+            >
+              Meer info
+            </Link>
+          </div>
+        </div>
+      </section>
 
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <div className="card bg-white relative overflow-hidden group">
-                  <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                    <img 
-                      src={siteConfig?.featureImage2Url || "https://picsum.photos/600/400?random=3"} 
-                      alt="Rally Zones" 
-                      className="w-full h-full object-cover"
-                    />
+      {/* Stats Section */}
+      {stats && stats.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {stats.map((stat: any) => (
+                <div key={stat._id} className="bg-white rounded-lg p-8 text-center shadow-md hover:shadow-lg transition-shadow">
+                  <div className="text-5xl mb-4">{stat.icon}</div>
+                  <div className="text-4xl font-extrabold text-primary-600 mb-2">
+                    {stat.value}
                   </div>
-                  <div className="relative z-10">
-                    <div className="text-4xl mb-4">🗺️</div>
-                    <h4 className="text-2xl font-black uppercase mb-3 text-primary-600">
-                      {rallyZonesCard?.title || '8 Rally Zones'}
-                    </h4>
-                    {rallyZonesCard ? (
-                      <div className="prose max-w-none">
-                        <PortableText value={rallyZonesCard.content} />
-                      </div>
-                    ) : (
-                      <p className="text-gray-700 font-bold">
-                        Optionele lusjes van de hoofdroute. Volg de beschrijving, 
-                        vind het checkpunt, noteer de code.
-                      </p>
-                    )}
+                  <div className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                    {stat.label}
                   </div>
                 </div>
-
-                <div className="card bg-white relative overflow-hidden group">
-                  <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                    <img 
-                      src={siteConfig?.featureImage3Url || "https://picsum.photos/600/400?random=4"} 
-                      alt="Punten verdienen" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="relative z-10">
-                    <div className="text-4xl mb-4">🏆</div>
-                    <h4 className="text-2xl font-black uppercase mb-3 text-primary-600">
-                      {pointsCard?.title || 'Punten verdienen'}
-                    </h4>
-                    {pointsCard ? (
-                      <div className="prose max-w-none">
-                        <PortableText value={pointsCard.content} />
-                      </div>
-                    ) : (
-                      <p className="text-gray-700 font-bold">
-                        Elke zone = 15 punten. Alle 8 = +20 bonus. 
-                        Wie het best scoort wordt "Den Bochtenkoning"!
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <Link to="/rally" className="btn-primary text-lg">
-                  📖 BEKIJK ALLE RALLY ZONES
-                </Link>
-              </div>
+              ))}
             </div>
           </div>
         </section>
+      )}
 
-        {/* Sponsors Section */}
-        <section className="section bg-gray-50">
-          <div className="container-custom">
-            <h2 className="section-title text-primary-600 text-center mb-12">
-              {sponsorsIntro?.title || 'ONZE SPONSORS'}
-            </h2>
-            
-            {sponsorsIntro ? (
-              <div className="text-center mb-12 prose prose-xl mx-auto">
-                <PortableText value={sponsorsIntro.content} />
-              </div>
+      {/* What is it Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            {whatIsSection?.title ? (
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                {whatIsSection.title}
+              </h2>
             ) : (
-              <p className="text-center text-xl font-bold text-gray-600 mb-12 max-w-2xl mx-auto">
-                Dit evenement wordt mede mogelijk gemaakt door:
-              </p>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                Wat is Deur Den Bocht?
+              </h2>
             )}
+          </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
-              {sponsors.map((sponsor) => (
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              {whatIsSection?.content ? (
+                <PortableText value={whatIsSection.content} />
+              ) : (
+                <>
+                  <p className="text-lg text-gray-700 leading-relaxed">
+                    Deur den Bocht – The 500 is een <strong>all-day challenge ride</strong> waar je 500+ kilometer rijdt door België, Noord-Frankrijk en de Ardennen.
+                  </p>
+                  <ul className="space-y-4">
+                    <li className="flex items-start">
+                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-lg">Je rijdt <strong>500+ km</strong> via de mooiste bochten</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-lg">Je <strong>vertrekt wanneer jij wil</strong></span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-lg">Je <strong>stopt wanneer jij wil</strong></span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-lg">Iedereen rijdt dezelfde prachtige <strong>bochten-GPX</strong></span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-lg">Onderweg kan je <strong>optioneel deelnemen aan 8 Rally Zones</strong></span>
+                    </li>
+                  </ul>
+                  <p className="text-xl text-gray-900 font-semibold mt-8">
+                    Aan het einde van de dag kronen we: <strong className="text-primary-600">🏆 DEN BOCHTENKONING</strong>
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="bg-gray-100 rounded-2xl aspect-video flex items-center justify-center overflow-hidden shadow-lg">
+              {siteConfig?.featureImage1 ? (
+                <img
+                  src={urlFor(siteConfig.featureImage1).width(800).height(600).url()}
+                  alt={whatIsSection?.title || 'Deur Den Bocht'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-center">
+                  <span className="text-8xl">🏍️</span>
+                  <p className="text-gray-500 mt-4">Afbeelding komt hier</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      {pricing && pricing.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                Kies je formule
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {pricing.map((tier: any) => (
+                <div
+                  key={tier._id}
+                  className={`bg-white rounded-2xl p-10 ${
+                    tier.highlighted 
+                      ? 'border-4 border-yellow-400 shadow-2xl transform scale-105' 
+                      : 'border border-gray-200 shadow-lg'
+                  } transition-transform hover:scale-105`}
+                >
+                  {tier.icon && <div className="text-5xl mb-6 text-center">{tier.icon}</div>}
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4 text-center uppercase">
+                    {tier.name}
+                  </h3>
+                  <div className="text-center mb-8">
+                    <span className="text-5xl font-extrabold text-primary-600">€{tier.price}</span>
+                  </div>
+                  {tier.features && (
+                    <ul className="space-y-4">
+                      {tier.features.map((feature: string, idx: number) => (
+                        <li key={idx} className="flex items-start">
+                          <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                          <span className="text-lg">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {edition?.registrationOpen && (
+              <div className="text-center mt-12">
+                <Link
+                  to="/registration"
+                  className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-lg text-xl font-bold uppercase transition-colors shadow-lg"
+                >
+                  Nu inschrijven
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Rally Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            {rallyInfoSection?.title ? (
+              <>
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                  {rallyInfoSection.title}
+                </h2>
+                {rallyInfoSection.content && (
+                  <div className="text-xl text-gray-700 max-w-3xl mx-auto">
+                    <PortableText value={rallyInfoSection.content} />
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                  Het Bochtenboek & De Rally
+                </h2>
+                <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                  Onderweg kan je deelnemen aan <strong>8 Rally Zones</strong> – optionele rally-lussen
+                  waar je punten verzamelt voor <strong>Den Bochtenkoning</strong>
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-gray-50 p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition-shadow">
+              <div className="text-6xl mb-6">🗺️</div>
+              <h3 className="text-2xl font-bold mb-4">8 Rally Zones</h3>
+              <p className="text-gray-600 text-lg">
+                Optionele lussen langs de route met unieke uitdagingen en verborgen parels
+              </p>
+            </div>
+            <div className="bg-gray-50 p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition-shadow">
+              <div className="text-6xl mb-6">📕</div>
+              <h3 className="text-2xl font-bold mb-4">Het Bochtenboek</h3>
+              <p className="text-gray-600 text-lg">
+                Geschreven aanwijzingen in plaats van GPS-pijlen. Echt navigeren, echt avontuur.
+              </p>
+            </div>
+            <div className="bg-gray-50 p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition-shadow">
+              <div className="text-6xl mb-6">🏆</div>
+              <h3 className="text-2xl font-bold mb-4">165 punten mogelijk</h3>
+              <p className="text-gray-600 text-lg">
+                Verzamel punten en word gekroond tot Den Bochtenkoning van 2026
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link
+              to="/rally"
+              className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-lg text-xl font-bold uppercase transition-colors shadow-lg"
+            >
+              Ontdek alle Rally Zones
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Sponsors Section */}
+      {sponsors && sponsors.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 mb-12 uppercase">
+              Onze sponsors
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {sponsors.map((sponsor: any) => (
                 <a
                   key={sponsor._id}
-                  href={sponsor.website || '#'}
-                  target={sponsor.website ? '_blank' : undefined}
-                  rel={sponsor.website ? 'noopener noreferrer' : undefined}
-                  className="bg-white p-6 shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center h-32"
+                  href={sponsor.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all grayscale hover:grayscale-0 flex items-center justify-center"
                 >
-                  {sponsor.logoUrl ? (
-                    <img 
-                      src={sponsor.logoUrl}
-                      alt={sponsor.name} 
-                      className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all"
+                  {sponsor.logo ? (
+                    <img
+                      src={urlFor(sponsor.logo).width(200).url()}
+                      alt={sponsor.name}
+                      className="max-h-16 w-auto"
                     />
                   ) : (
-                    <span className="font-bold text-primary-600">{sponsor.name}</span>
+                    <div className="text-gray-400 text-sm text-center">
+                      <div className="text-4xl mb-2">🏢</div>
+                      <div>{sponsor.name}</div>
+                    </div>
                   )}
                 </a>
               ))}
             </div>
-
-            <div className="text-center mt-12">
-              {sponsorsCTA ? (
-                <>
-                  <div className="prose prose-lg mx-auto mb-4">
-                    <h3 className="font-bold">{sponsorsCTA.title}</h3>
-                    <PortableText value={sponsorsCTA.content} />
-                  </div>
-                  <a 
-                    href="mailto:info@deurdenbocht.be?subject=Sponsoring" 
-                    className="btn-primary inline-block"
-                  >
-                    📧 CONTACTEER ONS
-                  </a>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-bold text-gray-700 mb-4">
-                    Interesse om sponsor te worden?
-                  </p>
-                  <a 
-                    href="mailto:info@deurdenbocht.be?subject=Sponsoring" 
-                    className="btn-primary inline-block"
-                  >
-                    📧 CONTACTEER ONS
-                  </a>
-                </>
-              )}
-            </div>
           </div>
         </section>
-
-        {/* CTA Final */}
-        <section className="section bg-primary-600 text-white text-center">
-          <div className="container-custom">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase mb-6">
-              {finalCTAContent?.title || 'KLAAR VOOR HET AVONTUUR?'}
-            </h2>
-            {finalCTAContent ? (
-              <div className="prose prose-xl prose-invert mx-auto mb-8">
-                <PortableText value={finalCTAContent.content} />
-              </div>
-            ) : (
-              <p className="text-xl md:text-2xl font-bold mb-8 text-primary-100 max-w-2xl mx-auto">
-                Schrijf je nu in en zorg dat je erbij bent op {siteConfig?.eventDate || "16 mei 2026"}!
-              </p>
-            )}
-            <Link to="/registration" className="btn-primary bg-white text-primary-600 hover:bg-primary-50 text-xl md:text-2xl inline-block">
-              📝 NU INSCHRIJVEN
-            </Link>
-          </div>
-        </section>
-      </main>
+      )}
 
       <Footer />
     </div>

@@ -1,8 +1,8 @@
-import { createCookieSessionStorage, redirect } from '@remix-run/node';
+import { createCookieSessionStorage, redirect } from 'react-router';
 import { supabase } from './supabase.server';
 
 if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET must be set');
+  throw new Error('SESSION_SECRET is required');
 }
 
 const sessionStorage = createCookieSessionStorage({
@@ -16,8 +16,6 @@ const sessionStorage = createCookieSessionStorage({
     secure: process.env.NODE_ENV === 'production',
   },
 });
-
-export const { getSession, commitSession, destroySession } = sessionStorage;
 
 export async function createUserSession(userId: string, redirectTo: string) {
   const session = await sessionStorage.getSession();
@@ -33,10 +31,10 @@ export async function getUserSession(request: Request) {
   return sessionStorage.getSession(request.headers.get('Cookie'));
 }
 
-export async function getUserId(request: Request) {
+export async function getUserId(request: Request): Promise<string | undefined> {
   const session = await getUserSession(request);
   const userId = session.get('userId');
-  if (!userId || typeof userId !== 'string') return null;
+  if (!userId || typeof userId !== 'string') return undefined;
   return userId;
 }
 
@@ -55,19 +53,31 @@ export async function requireUserId(
 
 export async function getUser(request: Request) {
   const userId = await getUserId(request);
-  if (userId === null) return null;
+  if (userId === undefined) return null;
 
-  const { data: participant } = await supabase
+  const { data } = await supabase
     .from('participants')
-    .select('*')
+    .select('*, is_admin')
     .eq('id', userId)
     .single();
 
-  if (!participant) {
-    throw await logout(request);
+  return data;
+}
+
+export async function requireAdmin(request: Request) {
+  const userId = await requireUserId(request);
+  
+  const { data: user } = await supabase
+    .from('participants')
+    .select('is_admin')
+    .eq('id', userId)
+    .single();
+
+  if (!user?.is_admin) {
+    throw redirect('/dashboard');
   }
 
-  return participant;
+  return userId;
 }
 
 export async function logout(request: Request) {

@@ -1,81 +1,83 @@
-import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
-import { getUser } from '~/lib/session.server';
-import { getScheduleItems, getBenefitItems, getFAQItems } from '~/lib/sanity.server';
-import type { Database } from '~/lib/database.types';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
-type Participant = Database['public']['Tables']['participants']['Row'];
+import { useLoaderData, Link } from 'react-router';
+import Header from '~/components/Header';
+import Footer from '~/components/Footer';
+import MapView from '~/components/MapView';
+import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig } from '~/lib/sanity.server';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Over het Event - Deur Den Bocht' },
-    { name: 'description', content: 'Alles over de Deur Den Bocht rally - route, schema, veiligheid en meer.' },
+    { title: 'Over het event - Deur Den Bocht' },
+    { name: 'description', content: 'Alles wat je moet weten over het Deur Den Bocht rally event' },
   ];
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
-  const [scheduleItems, benefitsEveryone, benefitsWinner, safetyItems, cancellationItems, importantItems] = await Promise.all([
-    getScheduleItems().catch(() => []),
-    getBenefitItems('everyone').catch(() => []),
-    getBenefitItems('winner').catch(() => []),
-    getFAQItems('safety').catch(() => []),
-    getFAQItems('cancellation').catch(() => []),
-    getFAQItems('important').catch(() => []),
-  ]);
-  return json({ user, scheduleItems, benefitsEveryone, benefitsWinner, safetyItems, cancellationItems, importantItems });
+  const edition = await getActiveEdition();
+  const siteConfig = await getSiteConfig();
+  const schedule = edition ? await getScheduleItems(edition._id) : [];
+  const benefits = edition ? await getBenefitItems(edition._id) : [];
+  const faq = edition ? await getFAQItems(edition._id) : [];
+
+  return { edition, siteConfig, schedule, benefits, faq };
 }
 
 export default function About() {
-  const { user, scheduleItems, benefitsEveryone, benefitsWinner, safetyItems, cancellationItems, importantItems } = useLoaderData<typeof loader>();
+  const { edition, siteConfig, schedule, benefits, faq } = useLoaderData<typeof loader>();
 
-  const colorBorderClasses: Record<string, string> = {
-    primary: 'border-primary-600',
-    blue: 'border-blue-600',
-    green: 'border-green-600',
-    yellow: 'border-yellow-600',
-    red: 'border-red-600',
-  };
+  const everyoneBenefits = benefits.filter((b: any) => b.category === 'everyone');
+  const winnerBenefits = benefits.filter((b: any) => b.category === 'winner');
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-primary-600 text-white py-16">
-          <div className="container-custom">
-            <h1 className="text-5xl font-display font-bold mb-4">Over het Event</h1>
-            <p className="text-xl text-primary-100">
-              Alles wat je moet weten over Deur Den Bocht - Den Bochtenkoning Rally
-            </p>
-          </div>
-        </section>
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold mb-4">Over het Event</h1>
+          <p className="text-xl">Alles wat je moet weten over Deur Den Bocht</p>
+        </div>
+      </section>
 
-        {/* Schedule */}
-        <section className="section">
-          <div className="container-custom">
-            <h2 className="text-4xl font-display font-bold mb-8">Dagschema</h2>
-            
-            <div className="space-y-6 max-w-3xl">
-              {scheduleItems.filter((item) => item !== null).map((item) => (
-                <div key={item._id} className={`card border-l-4 ${colorBorderClasses[item.color] || 'border-primary-600'}`}>
+      {/* Schedule */}
+      {schedule && schedule.length > 0 && (
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+              Programma
+            </h2>
+            <div className="space-y-6">
+              {schedule.map((item: any, index: number) => (
+                <div key={item._id} className={`bg-white rounded-lg shadow-lg p-6 border-l-4 border-${item.color || 'primary'}-600`}>
                   <div className="flex items-start">
-                    <span className="text-4xl mr-4">{item.icon}</span>
-                    <div>
-                      <h3 className="text-2xl font-display font-bold mb-2">
-                        {item.time}: {item.title}
-                      </h3>
-                      <p className="text-gray-700 mb-2">{item.description}</p>
+                    {item.icon && <span className="text-4xl mr-4">{item.icon}</span>}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-2xl font-bold text-gray-900">{item.title}</h3>
+                        <span className="text-lg font-semibold text-primary-600">{item.time}</span>
+                      </div>
+                      <p className="text-gray-700 mb-4">{item.description}</p>
                       {item.details && item.details.length > 0 && (
-                        <ul className="list-disc list-inside space-y-1 text-gray-700">
-                          {item.details.map((detail, index) => (
-                            <li key={index}>{detail}</li>
+                        <ul className="space-y-2 mb-4">
+                          {item.details.map((detail: string, idx: number) => (
+                            <li key={idx} className="flex items-start">
+                              <span className="text-primary-600 mr-2">•</span>
+                              <span className="text-gray-600">{detail}</span>
+                            </li>
                           ))}
                         </ul>
+                      )}
+                      {/* Show map for first schedule item (start location) */}
+                      {index === 0 && siteConfig?.startLocation && (
+                        <div className="mt-4">
+                          <MapView
+                            startPoint={siteConfig.startLocation}
+                            endPoint={siteConfig.startLocation}
+                            className="h-64 rounded-lg"
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -84,105 +86,92 @@ export default function About() {
             </div>
           </div>
         </section>
+      )}
 
-        {/* What you receive */}
-        <section className="section bg-gray-100">
-          <div className="container-custom">
-            <h2 className="text-4xl font-display font-bold mb-8">Wat ontvang je?</h2>
+      {/* What you receive */}
+      {benefits && benefits.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
+              Wat krijg je?
+            </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="card">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <span className="text-3xl mr-3">🎁</span>
+            {everyoneBenefits.length > 0 && (
+              <>
+                <h3 className="text-2xl font-semibold text-center text-gray-700 mb-8">
                   Iedere deelnemer krijgt
                 </h3>
-                <ul className="space-y-2 text-gray-700">
-                  {benefitsEveryone.filter((benefit) => benefit !== null).map((benefit) => (
-                    <li key={benefit._id} className="flex items-start">
-                      <span className="text-primary-600 mr-2">{benefit.icon}</span>
-                      <span>{benefit.title}</span>
-                    </li>
+                <div className="grid md:grid-cols-3 gap-6 mb-12">
+                  {everyoneBenefits.map((benefit: any) => (
+                    <div key={benefit._id} className="bg-white p-6 rounded-lg shadow text-center">
+                      <div className="text-4xl mb-3">{benefit.icon}</div>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
+                      <p className="text-gray-600">{benefit.description}</p>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </>
+            )}
 
-              <div className="card bg-primary-50 border-2 border-primary-600">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <span className="text-3xl mr-3">👑</span>
+            {winnerBenefits.length > 0 && (
+              <>
+                <h3 className="text-2xl font-semibold text-center text-gray-700 mb-8">
                   De winnaar krijgt
                 </h3>
-                <ul className="space-y-2 text-gray-700">
-                  {benefitsWinner.filter((benefit) => benefit !== null).map((benefit) => (
-                    <li key={benefit._id} className="flex items-start">
-                      <span className="text-primary-600 mr-2">{benefit.icon}</span>
-                      <span><strong>{benefit.title}</strong></span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Safety */}
-        <section className="section">
-          <div className="container-custom">
-            <h2 className="text-4xl font-display font-bold mb-8">🔒 Veiligheid & Organisatie</h2>
-            
-            <div className="card max-w-3xl mx-auto">
-              <ul className="space-y-4 text-gray-700">
-                {safetyItems.filter((item) => item !== null).map((item) => (
-                  <li key={item._id} className="flex items-start">
-                    <span className="text-2xl mr-3">{item.icon}</span>
-                    <div>
-                      <strong>{item.question}</strong>
-                      <p>{item.answer}</p>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {winnerBenefits.map((benefit: any) => (
+                    <div key={benefit._id} className="bg-primary-50 p-6 rounded-lg shadow-lg border-2 border-primary-600 text-center">
+                      <div className="text-4xl mb-3">{benefit.icon}</div>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
+                      <p className="text-gray-600">{benefit.description}</p>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </section>
+      )}
 
-        {/* Cancellation Policy */}
-        <section className="section bg-gray-100">
-          <div className="container-custom">
-            <h2 className="text-4xl font-display font-bold mb-8">🔄 Annuleringsbeleid</h2>
-            
-            <div className="card max-w-3xl mx-auto">
-              <h3 className="text-xl font-bold mb-4">Niet kunnen komen?</h3>
-              <div className="space-y-3 text-gray-700">
-                {cancellationItems.filter((item) => item !== null).map((item) => (
-                  <p key={item._id}>
-                    <strong>{item.question}:</strong> {item.answer}
-                  </p>
-                ))}
-              </div>
+      {/* FAQ */}
+      {faq && faq.length > 0 && (
+        <section className="py-20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+              Veelgestelde Vragen
+            </h2>
+            <div className="space-y-4">
+              {faq.map((item: any) => (
+                <details key={item._id} className="bg-white rounded-lg shadow p-6">
+                  <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex items-center">
+                    {item.icon && <span className="mr-2">{item.icon}</span>}
+                    {item.question}
+                  </summary>
+                  <p className="mt-4 text-gray-700 pl-6">{item.answer}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
+      )}
 
-        {/* Important Info */}
-        <section className="section">
-          <div className="container-custom">
-            <div className="card bg-yellow-50 border-2 border-yellow-400 max-w-3xl mx-auto">
-              <h3 className="text-2xl font-bold mb-4 flex items-center">
-                <span className="text-3xl mr-3">⚡</span>
-                Belangrijke Info
-              </h3>
-              <ul className="space-y-2 text-gray-800">
-                {importantItems.filter((item) => item !== null).map((item) => (
-                  <li key={item._id} className="flex items-start">
-                    <span className="text-yellow-600 mr-2">•</span>
-                    <span><strong>{item.question}:</strong> {item.answer}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/* CTA */}
+      {edition?.registrationOpen && (
+        <section className="py-16 bg-primary-600 text-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold mb-4">Klaar voor het avontuur?</h2>
+            <p className="text-xl mb-8">
+              Schrijf je nu in en zeker je plaats voor Deur Den Bocht
+            </p>
+            <Link
+              to="/registration"
+              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+            >
+              Inschrijven
+            </Link>
           </div>
         </section>
-      </main>
+      )}
 
       <Footer />
     </div>

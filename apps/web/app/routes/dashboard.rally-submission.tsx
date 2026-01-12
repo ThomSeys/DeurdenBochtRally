@@ -1,438 +1,820 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
+
+import { redirect } from 'react-router';
+import { Form, useActionData, useLoaderData, Link } from 'react-router';
 import { useState } from 'react';
-import { Header } from '~/components/Header';
-import { Footer } from '~/components/Footer';
-import { getUser } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
-import { getRallyZones } from '~/lib/sanity.server';
+import { requireUserId, getUser } from '~/lib/session.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
+import { calculateRallyPoints } from '~/lib/utils';
+import Header from '~/components/Header';
+import { sanityClient } from '~/lib/sanity.server';
+import PortableText from '~/components/PortableText';
+import MapView from '~/components/MapView';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Rally Inzending - Dashboard' },
-    { name: 'description', content: 'Vul je rally codes in en verdien punten!' },
+    { title: 'Rally Codes Indienen - Deur Den Bocht' },
   ];
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request);
   const user = await getUser(request);
-  
+
   if (!user) {
-    return redirect('/login');
+    throw new Response('Not Found', { status: 404 });
   }
 
-  const rallyZones = await getRallyZones().catch(() => []);
-
-  // Get or create submission for user
-  let { data: submission } = await supabase
+  // Get existing submission
+  const { data: submission } = await supabaseAdmin
     .from('rally_submissions')
     .select('*')
-    .eq('participant_id', user.id)
+    .eq('participant_id', userId)
     .single();
 
-  // If no submission exists, create one
-  if (!submission) {
-    const { data: newSubmission } = await supabase
-      .from('rally_submissions')
-      .insert({
-        participant_id: user.id,
-        total_points: 0,
-        used_highways: false,
-        weather_bonus: false,
-      })
-      .select()
-      .single();
-    
-    submission = newSubmission;
-  }
+  // Get zone-level submissions with shadow scores
+  const { data: zoneSubmissions } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('zone_id, rhythm_score, view_score, shadow_score, zone_time_minutes')
+    .eq('participant_id', userId)
+    .order('zone_id', { ascending: true });
 
-  // Get leaderboard for standings - include all submissions, not just submitted ones
-  const { data: leaderboard, error: leaderboardError } = await supabase
+  // Get scoreboard - all participants with their scores
+  const { data: scoreboard } = await supabaseAdmin
     .from('rally_submissions')
     .select(`
-      *,
-      participants(first_name, last_name)
+      total_points,
+      shadow_total,
+      final_score,
+      participants!inner (
+        first_name,
+        last_name,
+        motorcycle_brand,
+        motorcycle_model
+      )
     `)
-    .order('total_points', { ascending: false })
-    .order('submitted_at', { ascending: true, nullsFirst: false });
+    .not('final_score', 'is', null)
+    .order('final_score', { ascending: false });
 
-  if (leaderboardError) {
-    console.error('Leaderboard error:', leaderboardError);
-  }
+  // Get shadow score explanation from Sanity
+  const shadowScoreExplanation = await sanityClient.fetch(
+    `*[_type == "pageContent" && page == "rally" && section == "shadow-score-explanation"][0]{
+      title,
+      content
+    }`
+  );
 
-  // Find user's rank (add 1 since findIndex is 0-based)
-  const userRankIndex = leaderboard?.findIndex((entry) => entry.participant_id === user.id);
-  const userRank = userRankIndex !== undefined && userRankIndex >= 0 ? userRankIndex + 1 : null;
+  // Get rally zones with coordinates
+  const rallyZones = await sanityClient.fetch(
+    `*[_type == "rallyZone"] | order(order asc) {
+      title,
+      order,
+      startLocation,
+      endLocation
+    }`
+  );
 
-  console.log('Leaderboard data:', { 
-    count: leaderboard?.length, 
-    userRank, 
-    userRankIndex,
-    firstEntry: leaderboard?.[0],
-    hasParticipants: leaderboard?.[0]?.participants 
-  });
-
-  return json({ user, rallyZones, submission, leaderboard: leaderboard || [], userRank });
+  return { user, submission, zoneSubmissions: zoneSubmissions || [], scoreboard: scoreboard || [], shadowScoreExplanation, rallyZones: rallyZones || [] };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const user = await getUser(request);
-  
-  if (!user) {
-    return redirect('/login');
-  }
-
+  const userId = await requireUserId(request);
   const formData = await request.formData();
+
   const action = formData.get('action');
 
-  try {
-    if (action === 'updateCode') {
-      const zoneNumber = formData.get('zoneNumber');
-      const code = formData.get('code');
-      
-      if (!zoneNumber || typeof code !== 'string') {
-        return json({ error: 'Ongeldige invoer' }, { status: 400 });
-      }
+  // Handle immediate odometer updates
+  if (action === 'update_odometer') {
+    const startKm = formData.get('start_km');
+    const endKm = formData.get('end_km');
+    const startKmLocked = formData.get('start_km_locked') === 'true';
+    const endKmLocked = formData.get('end_km_locked') === 'true';
+    const totalDistance = formData.get('total_distance');
 
-      const columnName = `rz${zoneNumber}_code`;
-      
-      const { error } = await supabase
-        .from('rally_submissions')
-        .update({ [columnName]: code || null })
-        .eq('participant_id', user.id);
+    // Check if existing submission exists
+    const { data: existing } = await supabaseAdmin
+      .from('rally_submissions')
+      .select('id')
+      .eq('participant_id', userId)
+      .single();
 
-      if (error) {
-        console.error('Update error:', error);
-        return json({ error: 'Fout bij opslaan' }, { status: 400 });
-      }
-
-      return json({ success: true, message: 'Code opgeslagen!' });
+    const updateData: any = {};
+    if (startKm) {
+      updateData.start_km = parseFloat(startKm as string);
+      updateData.start_km_locked = startKmLocked;
+    }
+    if (endKm) {
+      updateData.end_km = parseFloat(endKm as string);
+      updateData.end_km_locked = endKmLocked;
+    }
+    if (totalDistance) {
+      updateData.total_distance = parseFloat(totalDistance as string);
     }
 
-    if (action === 'updateExtras') {
-      const totalDistance = formData.get('totalDistance');
-      const usedHighways = formData.get('usedHighways') === 'true';
-      const weatherBonus = formData.get('weatherBonus') === 'true';
-
-      const { error } = await supabase
+    if (existing) {
+      const { error } = await supabaseAdmin
         .from('rally_submissions')
-        .update({
-          total_distance: totalDistance ? parseInt(totalDistance.toString()) : null,
-          used_highways: usedHighways,
-          weather_bonus: weatherBonus,
-        })
-        .eq('participant_id', user.id);
+        .update(updateData)
+        .eq('participant_id', userId);
 
       if (error) {
-        console.error('Update error:', error);
-        return json({ error: 'Fout bij opslaan' }, { status: 400 });
+        console.error('Update odometer error:', error);
+        return { error: 'Er ging iets mis bij het opslaan.', status: 500 };
       }
-
-      return json({ success: true, message: 'Extra vragen opgeslagen!' });
-    }
-
-    if (action === 'finalSubmit') {
-      const { error } = await supabase
+    } else {
+      const { error } = await supabaseAdmin
         .from('rally_submissions')
-        .update({ submitted_at: new Date().toISOString() })
-        .eq('participant_id', user.id);
+        .insert({
+          participant_id: userId,
+          ...updateData,
+        });
 
       if (error) {
-        console.error('Submit error:', error);
-        return json({ error: 'Fout bij indienen' }, { status: 400 });
+        console.error('Insert odometer error:', error);
+        return { error: 'Er ging iets mis bij het opslaan.', status: 500 };
       }
-
-      return redirect('/dashboard?submitted=true');
     }
 
-    return json({ error: 'Ongeldige actie' }, { status: 400 });
-  } catch (error) {
-    console.error('Rally submission error:', error);
-    return json({ error: 'Er is iets misgegaan' }, { status: 500 });
+    return { success: true };
   }
+
+  const submissionData = {
+    rz1_code: formData.get('rz1_code') as string | null,
+    rz2_code: formData.get('rz2_code') as string | null,
+    rz3_code: formData.get('rz3_code') as string | null,
+    rz4_code: formData.get('rz4_code') as string | null,
+    rz5_code: formData.get('rz5_code') as string | null,
+    rz6_code: formData.get('rz6_code') as string | null,
+    rz7_code: formData.get('rz7_code') as string | null,
+    rz8_code: formData.get('rz8_code') as string | null,
+  };
+
+  // Guard check: Verify that user has started each zone before allowing submission
+  const { data: zoneEntries } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('zone_id')
+    .eq('participant_id', userId);
+
+  // Map zone_id to a normalized format for comparison
+  // zone_id could be numeric (1, 2, 3...) or string format (rz1, rz2...)
+  const startedZones = new Set(
+    (zoneEntries || []).map((entry) => {
+      const zoneId = entry.zone_id;
+      // Normalize to just the number for comparison
+      if (typeof zoneId === 'string') {
+        // Extract number from formats like "rz1", "zone1", or just "1"
+        const match = zoneId.match(/\d+/);
+        return match ? parseInt(match[0], 10) : zoneId;
+      }
+      return zoneId;
+    })
+  );
+
+  console.log('Started zones:', Array.from(startedZones));
+
+  // Check each zone code that's being submitted
+  for (let i = 1; i <= 8; i++) {
+    const code = submissionData[`rz${i}_code` as keyof typeof submissionData];
+    if (code && code.trim()) {
+      // User is trying to submit a code for this zone
+      // Check against normalized zone number
+      if (!startedZones.has(i) && !startedZones.has(`rz${i}`) && !startedZones.has(`${i}`)) {
+        return {
+          error: `Je kunt geen code indienen voor Rally Zone ${i} zonder de zone eerst te hebben gestart. Start de zone door naar de start locatie te rijden.`,
+          status: 403
+        };
+      }
+    }
+  }
+
+  // Get distance values and locked states
+  const startKm = formData.get('start_km');
+  const endKm = formData.get('end_km');
+  const startKmLocked = formData.get('start_km_locked') === 'true';
+  const endKmLocked = formData.get('end_km_locked') === 'true';
+  
+  // Calculate total distance if both values provided
+  let totalDistance = null;
+  if (startKm && endKm) {
+    const start = parseFloat(startKm as string);
+    const end = parseFloat(endKm as string);
+    if (!isNaN(start) && !isNaN(end) && end >= start) {
+      totalDistance = end - start;
+    }
+  }
+
+  // Calculate points
+  const totalPoints = calculateRallyPoints(submissionData);
+
+  // Count completed zones
+  const completedZones = [
+    submissionData.rz1_code,
+    submissionData.rz2_code,
+    submissionData.rz3_code,
+    submissionData.rz4_code,
+    submissionData.rz5_code,
+    submissionData.rz6_code,
+    submissionData.rz7_code,
+    submissionData.rz8_code,
+  ].filter((code) => code && code.trim()).length;
+
+  // Check if at least one zone is completed
+  if (completedZones === 0) {
+    return {  error: 'Vul minstens één rally zone code in', status: 400 };
+  }
+
+  // Check if existing submission exists
+  const { data: existing } = await supabaseAdmin
+    .from('rally_submissions')
+    .select('id')
+    .eq('participant_id', userId)
+    .single();
+
+  const dataToSave = {
+    ...submissionData,
+    total_points: totalPoints,
+    total_distance: totalDistance,
+    start_km: startKm ? parseFloat(startKm as string) : null,
+    end_km: endKm ? parseFloat(endKm as string) : null,
+    start_km_locked: startKmLocked,
+    end_km_locked: endKmLocked,
+    submitted_at: new Date().toISOString(),
+  };
+
+  if (existing) {
+    // Update existing submission
+    const { error } = await supabaseAdmin
+      .from('rally_submissions')
+      .update(dataToSave)
+      .eq('participant_id', userId);
+
+    if (error) {
+      console.error('Update error:', error);
+      return {  error: 'Er ging iets mis bij het bijwerken. Probeer opnieuw.', status: 500 };
+    }
+  } else {
+    // Create new submission
+    const { error } = await supabaseAdmin
+      .from('rally_submissions')
+      .insert({
+        participant_id: userId,
+        ...dataToSave,
+      });
+
+    if (error) {
+      console.error('Insert error:', error);
+      return {  error: 'Er ging iets mis bij het opslaan. Probeer opnieuw.', status: 500 };
+    }
+  }
+
+  return redirect('/dashboard?success=rally');
 }
 
 export default function RallySubmission() {
-  const { user, rallyZones, submission, leaderboard, userRank } = useLoaderData<typeof loader>();
+  const { user, submission, zoneSubmissions, scoreboard, shadowScoreExplanation, rallyZones } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === 'submitting';
-  const [editingZone, setEditingZone] = useState<number | null>(null);
+  const [activeZone, setActiveZone] = useState(1);
+  const [startKm, setStartKm] = useState(submission?.start_km?.toString() || '');
+  const [endKm, setEndKm] = useState(submission?.end_km?.toString() || '');
+  const [startKmLocked, setStartKmLocked] = useState(submission?.start_km_locked || false);
+  const [endKmLocked, setEndKmLocked] = useState(submission?.end_km_locked || false);
+  const [showExplanationModal, setShowExplanationModal] = useState(false);
 
-  const isSubmitted = !!submission?.submitted_at;
-
-  const getCodeForZone = (zoneIndex: number) => {
-    const columnName = `rz${zoneIndex + 1}_code` as keyof typeof submission;
-    return submission?.[columnName] as string | null;
+  // Calculate total distance when both values are available
+  const calculateDistance = () => {
+    if (startKm && endKm) {
+      const start = parseFloat(startKm);
+      const end = parseFloat(endKm);
+      if (!isNaN(start) && !isNaN(end) && end >= start) {
+        return end - start;
+      }
+    }
+    return submission?.total_distance || null;
   };
 
-  // Calculate filled zones count
-  const filledZonesCount = rallyZones.filter((_, index) => getCodeForZone(index)).length;
+  const totalDistance = calculateDistance();
+
+  const handleStartKmBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value && !startKmLocked && value !== submission?.start_km?.toString()) {
+      const confirmed = window.confirm(
+        'Let op: De start kilometerstand kan na bevestiging niet meer worden aangepast. Wil je deze waarde opslaan?'
+      );
+      if (confirmed) {
+        // Submit immediately to database
+        const formData = new FormData();
+        formData.append('action', 'update_odometer');
+        formData.append('start_km', value);
+        formData.append('start_km_locked', 'true');
+        
+        const response = await fetch(window.location.pathname, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          setStartKm(value);
+          setStartKmLocked(true);
+        } else {
+          alert('Er ging iets mis bij het opslaan. Probeer opnieuw.');
+          e.target.value = startKm;
+        }
+      } else {
+        e.target.value = startKm;
+      }
+    }
+  };
+
+  const handleEndKmBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value && !endKmLocked && value !== submission?.end_km?.toString()) {
+      // Validate that end is higher than start
+      const start = parseFloat(startKm);
+      const end = parseFloat(value);
+      
+      if (!startKm || isNaN(start)) {
+        alert('Vul eerst de start kilometerstand in.');
+        e.target.value = endKm;
+        return;
+      }
+      
+      if (isNaN(end) || end <= start) {
+        alert('De eind kilometerstand moet hoger zijn dan de start kilometerstand.');
+        e.target.value = endKm;
+        return;
+      }
+      
+      const confirmed = window.confirm(
+        'Let op: De eind kilometerstand kan na bevestiging niet meer worden aangepast. Wil je deze waarde opslaan?'
+      );
+      if (confirmed) {
+        // Calculate total distance
+        const distance = end - start;
+
+        // Submit immediately to database
+        const formData = new FormData();
+        formData.append('action', 'update_odometer');
+        formData.append('end_km', value);
+        formData.append('end_km_locked', 'true');
+        if (distance !== null) {
+          formData.append('total_distance', distance.toString());
+        }
+        
+        const response = await fetch(window.location.pathname, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          setEndKm(value);
+          setEndKmLocked(true);
+        } else {
+          alert('Er ging iets mis bij het opslaan. Probeer opnieuw.');
+          e.target.value = endKm;
+        }
+      } else {
+        e.target.value = endKm;
+      }
+    }
+  };
+
+  const zones = [
+    { id: 1, name: 'RZ1', color: 'green' },
+    { id: 2, name: 'RZ2', color: 'yellow' },
+    { id: 3, name: 'RZ3', color: 'orange' },
+    { id: 4, name: 'RZ4', color: 'red' },
+    { id: 5, name: 'RZ5', color: 'green' },
+    { id: 6, name: 'RZ6', color: 'yellow' },
+    { id: 7, name: 'RZ7', color: 'orange' },
+    { id: 8, name: 'RZ8', color: 'red' },
+  ];
+
+  const getZoneSubmission = (zoneNum: number) => {
+    return zoneSubmissions.find((_, idx) => idx + 1 === zoneNum);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
 
-      <main className="flex-1 py-16">
-        <div className="container-custom">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-display font-bold mb-4">Rally Inzending</h1>
-            <p className="text-xl text-gray-700">
-              Vul je rally zone codes in om punten te verdienen 🏍
-            </p>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Form Area - Left/Center */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Rally Codes Indienen
+              </h1>
+              <p className="text-gray-600 mb-8">
+                Vul de codes in die je gevonden hebt bij de Rally Zone checkpunten
+              </p>
 
-          {actionData && 'success' in actionData && actionData.success && (
-            <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6 max-w-6xl mx-auto">
-              <p className="text-green-700 font-bold">✅ {actionData.message}</p>
-            </div>
-          )}
-
-          {actionData && 'error' in actionData && actionData.error && (
-            <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 mb-6 max-w-6xl mx-auto">
-              <p className="text-red-700 font-bold">❌ {actionData.error}</p>
-            </div>
-          )}
-  {/* Rally Zones */}
-            <div className="space-y-4 mb-8">
-            <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Stats Card */}
-              <div className="card bg-brand-600 text-white sticky top-24">
-                <h3 className="text-2xl font-display font-bold mb-4">📊 Jouw Stats</h3>
-                
-                <div className="space-y-4">
-                  <div className="bg-white/10 rounded-lg p-4">
-                    <p className="text-sm text-brand-100 mb-1">Totale Punten</p>
-                    <p className="text-4xl font-black">{submission?.total_points || 0}</p>
-                  </div>
-
-                  <div className="bg-white/10 rounded-lg p-4">
-                    <p className="text-sm text-brand-100 mb-1">Jouw Positie</p>
-                    <p className="text-4xl font-black">#{userRank ?? '-'}</p>
-                  </div>
-
-                  <div className="bg-white/10 rounded-lg p-4">
-                    <p className="text-sm text-brand-100 mb-1">Zones Ingevuld</p>
-                    <p className="text-4xl font-black">{filledZonesCount}/{rallyZones.length}</p>
-                  </div>
-
-                  {submission?.submitted_at && (
-                    <div className="bg-green-500 rounded-lg p-4 text-center">
-                      <p className="text-2xl mb-2">✅</p>
-                      <p className="font-black">Ingediend!</p>
-                    </div>
-                  )}
+              {actionData?.error && (
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                  {actionData.error}
                 </div>
-              </div>
+              )}
 
-              {/* Top 5 Leaderboard */}
-              <div className="card">
-                <h3 className="text-xl font-display font-bold mb-4">🏆 Top 5</h3>
-                <div className="space-y-3">
-                  {leaderboard && leaderboard.length > 0 ? (
-                    leaderboard.slice(0, 5).map((entry, index) => {
-                      const participant = entry.participants as any;
-                      const isCurrentUser = entry.participant_id === user.id;
-                      
-                      return (
-                        <div 
-                          key={entry.id}
-                          className={`flex items-center justify-between p-3 rounded-lg ${
-                            isCurrentUser ? 'bg-brand-100 border-2 border-brand-600' : 'bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-2xl font-black text-gray-400">
-                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+              {/* Zone Tabs */}
+              <div className="mb-6 border-b border-gray-200">
+                <nav className="-mb-px flex space-x-2 overflow-x-auto">
+                  {zones.map((zone) => {
+                    const hasCode = submission?.[`rz${zone.id}_code` as keyof typeof submission];
+                    const zoneScore = getZoneSubmission(zone.id);
+                    return (
+                      <button
+                        key={zone.id}
+                        type="button"
+                        onClick={() => setActiveZone(zone.id)}
+                        className={`
+                          whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm transition-colors
+                          ${activeZone === zone.id
+                            ? 'border-primary-600 text-primary-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span>{zone.name}</span>
+                          {hasCode && <span className="text-green-600">✓</span>}
+                          {zoneScore?.shadow_score && (
+                            <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">
+                              {zoneScore.shadow_score.toFixed(0)}
                             </span>
-                            <div>
-                              <p className={`font-bold ${isCurrentUser ? 'text-brand-600' : ''}`}>
-                                {participant?.team_name || `${participant?.first_name} ${participant?.last_name}`}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="font-black text-brand-600">{entry.total_points}</span>
+                          )}
                         </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-gray-500 text-center py-4">Nog geen deelnemers</p>
-                  )}
-                </div>
+                      </button>
+                    );
+                  })}
+                </nav>
               </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="lg:col-span-2">
+              <Form method="post" className="space-y-6">
+                {/* Zone Input Cards */}
+                {zones.map((zone) => {
+                  const zoneScore = getZoneSubmission(zone.id);
+                  return (
+                    <div
+                      key={zone.id}
+                      className={activeZone === zone.id ? 'block' : 'hidden'}
+                    >
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-2xl font-bold text-gray-900">Rally Zone {zone.id}</h2>
+                          {zoneScore?.zone_time_minutes && (
+                            <span className="text-sm text-gray-600">
+                              {zoneScore.zone_time_minutes} minuten
+                            </span>
+                          )}
+                        </div>
 
-            {/* Rally Zones */}
-            <div className="space-y-4 mb-8">
-              <h2 className="text-2xl font-display font-bold">Rally Zones</h2>
-              
-              {rallyZones.filter((z) => z !== null).map((zone, index) => {
-                const currentCode = getCodeForZone(index);
-                const isEditing = editingZone === index;
-                const colorClasses: Record<string, string> = {
-                  green: 'border-l-4 border-green-500',
-                  yellow: 'border-l-4 border-yellow-500',
-                  orange: 'border-l-4 border-orange-500',
-                  red: 'border-l-4 border-red-500',
-                };
+                        {/* Map View */}
+                        {rallyZones[zone.id - 1]?.startLocation && rallyZones[zone.id - 1]?.endLocation && (
+                          <div className="rounded-lg overflow-hidden shadow-md border border-gray-200">
+                            <MapView
+                              key={`map-${zone.id}-${activeZone}`}
+                              startPoint={rallyZones[zone.id - 1].startLocation}
+                              endPoint={rallyZones[zone.id - 1].endLocation}
+                              className="h-64 w-full"
+                            />
+                          </div>
+                        )}
 
-                return (
-                  <div key={zone._id} className={`card ${colorClasses[zone.color] || 'border-l-4 border-gray-500'}`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold">{zone.title}</h3>
-                        <p className="text-sm text-gray-600">{zone.checkpoint}</p>
-                        <p className="text-primary-600 font-bold">{zone.points} punten</p>
-                      </div>
-                      {currentCode && !isEditing && (
-                        <span className="text-2xl">✅</span>
-                      )}
-                    </div>
-
-                    {isEditing ? (
-                      <Form method="post" className="space-y-3">
-                        <input type="hidden" name="action" value="updateCode" />
-                        <input type="hidden" name="zoneNumber" value={index + 1} />
                         <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Code (gevonden bij het checkpoint)
+                          <label
+                            htmlFor={`rz${zone.id}_code`}
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Code
                           </label>
                           <input
+                            id={`rz${zone.id}_code`}
+                            name={`rz${zone.id}_code`}
                             type="text"
-                            name="code"
-                            defaultValue={currentCode || ''}
-                            placeholder="Bijv. DDB123"
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-600"
+                            defaultValue={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg uppercase"
+                            placeholder="Vul hier de code in..."
                           />
                         </div>
-                        <div className="flex gap-2">
+
+                        {/* Zone Shadow Score Display */}
+                        {zoneScore?.shadow_score !== null && zoneScore?.shadow_score !== undefined && (
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border border-gray-200">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-sm font-semibold text-gray-700 flex items-center">
+                                <span className="text-lg mr-2">🎯</span>
+                                Zone Score
+                              </h3>
+                              <span className="text-2xl font-bold text-primary-600">
+                                {zoneScore.shadow_score?.toFixed(0) || '0'}
+                                <span className="text-sm text-gray-500">/100</span>
+                              </span>
+                            </div>
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-medium text-gray-600 flex items-center">
+                                    <span className="mr-1">⏱️</span>
+                                    Ritme
+                                  </span>
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    {zoneScore.rhythm_score?.toFixed(1) || '0.0'}/50
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-blue-500 h-2 rounded-full transition-all"
+                                    style={{ width: `${((zoneScore.rhythm_score || 0) / 50) * 100}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-medium text-gray-600 flex items-center">
+                                    <span className="mr-1">👁️</span>
+                                    Blik
+                                  </span>
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    {zoneScore.view_score?.toFixed(1) || '0.0'}/50
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-green-500 h-2 rounded-full transition-all"
+                                    style={{ width: `${((zoneScore.view_score || 0) / 50) * 100}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Navigation Buttons */}
+                        <div className="flex justify-between pt-4">
                           <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="btn-primary flex-1"
+                            type="button"
+                            onClick={() => setActiveZone(Math.max(1, activeZone - 1))}
+                            disabled={activeZone === 1}
+                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            {isSubmitting ? 'Opslaan...' : 'Opslaan'}
+                            ← Vorige
                           </button>
                           <button
                             type="button"
-                            onClick={() => setEditingZone(null)}
-                            className="btn-secondary flex-1"
+                            onClick={() => setActiveZone(Math.min(8, activeZone + 1))}
+                            disabled={activeZone === 8}
+                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            Annuleren
+                            Volgende →
                           </button>
                         </div>
-                      </Form>
-                    ) : (
-                      <div>
-                        {currentCode ? (
-                          <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                            <p className="text-sm text-gray-600">Jouw code:</p>
-                            <p className="font-mono font-bold text-lg">{currentCode}</p>
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 text-sm mb-3">Nog geen code ingevuld</p>
-                        )}
-                        <button
-                          onClick={() => setEditingZone(index)}
-                          className="btn-secondary w-full"
-                        >
-                          {currentCode ? 'Code aanpassen' : 'Code invullen'}
-                        </button>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-              </div>
+                    </div>
+                  );
+                })}
 
-              {/* Extra Questions */}
-              <div className="card bg-blue-50 border-2 border-blue-400 mb-8">
-                <h2 className="text-2xl font-display font-bold mb-4">Extra Vragen</h2>
-                
-                <Form method="post" className="space-y-4">
-                  <input type="hidden" name="action" value="updateExtras" />
-                  
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Totale afstand (km)
-                    </label>
+                {/* Hidden inputs for all zones */}
+                {zones.map((zone) => (
+                  activeZone !== zone.id && (
                     <input
-                      type="number"
-                      name="totalDistance"
-                      defaultValue={submission?.total_distance || ''}
-                      placeholder="Bijv. 250"
-                      className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-600"
+                      key={zone.id}
+                      type="hidden"
+                      name={`rz${zone.id}_code`}
+                      value={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
+                    />
+                  )
+                ))}
+
+                {/* Distance Calculation Section */}
+                <div className="pt-6 border-t">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Totale Afstand</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="start_km" className="block text-sm font-medium text-gray-700 mb-2">
+                        Start kilometerstand
+                        {startKmLocked && <span className="ml-2 text-xs text-green-600">✓ Vergrendeld</span>}
+                      </label>
+                      <input
+                        id="start_km"
+                        name="start_km"
+                        type="number"
+                        step="0.1"
+                        defaultValue={startKm}
+                        onBlur={handleStartKmBlur}
+                        disabled={startKmLocked}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="Bijv. 12345.6"
+                      />
+                      {!startKmLocked && (
+                        <p className="mt-1 text-xs text-amber-600">
+                          ⚠️ Na invullen kan deze waarde niet meer worden aangepast
+                        </p>
+                      )}
+                      <input type="hidden" name="start_km_locked" value={startKmLocked.toString()} />
+                    </div>
+                    <div>
+                      <label htmlFor="end_km" className="block text-sm font-medium text-gray-700 mb-2">
+                        Eind kilometerstand
+                        {endKmLocked && <span className="ml-2 text-xs text-green-600">✓ Vergrendeld</span>}
+                      </label>
+                      <input
+                        id="end_km"
+                        name="end_km"
+                        type="number"
+                        step="0.1"
+                        defaultValue={endKm}
+                        onBlur={handleEndKmBlur}
+                        disabled={endKmLocked}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="Bijv. 12845.3"
+                      />
+                      {!endKmLocked && (
+                        <p className="mt-1 text-xs text-amber-600">
+                          ⚠️ Na invullen kan deze waarde niet meer worden aangepast
+                        </p>
+                      )}
+                      <input type="hidden" name="end_km_locked" value={endKmLocked.toString()} />
+                    </div>
+                  </div>
+                  {totalDistance !== null && totalDistance !== undefined && (
+                    <p className="mt-3 text-sm text-gray-600">
+                      Gereden afstand: <strong>{totalDistance.toFixed(1)} km</strong>
+                      {totalDistance >= 500 && (
+                        <span className="ml-2 text-green-600">✓ Meer dan 500 km (+10 punten)</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-6 border-t">
+                  <button
+                    type="submit"
+                    className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
+                  >
+                    Codes opslaan
+                  </button>
+                </div>
+              </Form>
+            </div>
+          </div>
+
+          {/* Scoreboard Sidebar - Right */}
+          <div className="lg:col-span-1">
+            {/* Total Shadow Score Card */}
+            {submission?.shadow_total !== null && submission?.shadow_total !== undefined && (
+              <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 mb-6 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 opacity-10 text-9xl">🏆</div>
+                <div className="relative z-10">
+                  <div className="text-sm font-semibold mb-1 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="mr-2">⚡</span>
+                      Je Schaduwscore
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowExplanationModal(true)}
+                      className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                      title="Uitleg schaduwscore"
+                    >
+                      <span className="text-sm">ℹ️</span>
+                    </button>
+                  </div>
+                  <div className="flex items-baseline space-x-2 mb-2">
+                    <div className="text-5xl font-bold">{submission.shadow_total.toFixed(0)}</div>
+                  </div>
+                  <div className="w-full bg-white/20 rounded-full h-2">
+                    <div
+                      className="bg-white h-2 rounded-full transition-all"
+                      style={{ width: `${(submission.shadow_total / 800) * 100}%` }}
                     />
                   </div>
-
-                  <div>
-                    <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="usedHighways"
-                        value="true"
-                        defaultChecked={submission?.used_highways}
-                        className="w-5 h-5"
-                      />
-                      <span className="font-bold">Heb je snelwegen gebruikt?</span>
-                    </label>
+                  <div className="text-xs text-primary-100 mt-2">
+                    {submission.shadow_total >= 600 ? '🔥 Uitstekend!' : 
+                     submission.shadow_total >= 400 ? '👍 Goed bezig!' : 
+                     submission.shadow_total >= 200 ? '💪 Blijf doorgaan!' : 
+                     '🎯 Eerste stappen'}
                   </div>
-
-                  <div>
-                    <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="weatherBonus"
-                        value="true"
-                        defaultChecked={submission?.weather_bonus}
-                        className="w-5 h-5"
-                      />
-                      <span className="font-bold">Slecht weer bonus (regen tijdens de rit)</span>
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary w-full"
-                  >
-                    {isSubmitting ? 'Opslaan...' : 'Extra vragen opslaan'}
-                  </button>
-                </Form>
+                </div>
               </div>
+            )}
 
-              {/* Final Submit */}
-              <div className="card bg-yellow-50 border-2 border-yellow-400">
-                <h3 className="text-xl font-bold mb-4">🏁 Klaar om in te dienen?</h3>
-                <p className="text-gray-700 mb-4">
-                  Let op: Na het indienen kun je geen wijzigingen meer aanbrengen. 
-                  Zorg ervoor dat alle codes correct zijn ingevuld!
+            {/* Scoreboard */}
+            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Klassement</h2>
+              
+              {scoreboard.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  Nog geen scores beschikbaar
                 </p>
-                <Form method="post">
-                  <input type="hidden" name="action" value="finalSubmit" />
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary w-full text-lg"
-                  >
-                    {isSubmitting ? 'Indienen...' : 'Definitief indienen'}
-                  </button>
-                </Form>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  {scoreboard.slice(0, 10).map((entry: any, index: number) => {
+                    const isCurrentUser = entry.participants.first_name === user.first_name && 
+                                         entry.participants.last_name === user.last_name;
+                    return (
+                      <div
+                        key={index}
+                        className={`
+                          p-3 rounded-lg transition-colors
+                          ${index === 0 ? 'bg-yellow-50' : ''}
+                          ${index === 1 ? 'bg-gray-50' : ''}
+                          ${index === 2 ? 'bg-orange-50' : ''}
+                          ${isCurrentUser ? 'ring-2 ring-primary-500 bg-primary-50' : ''}
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="flex items-center space-x-1">
+                              {index === 0 && <span className="text-lg">🏆</span>}
+                              {index === 1 && <span className="text-lg">🥈</span>}
+                              {index === 2 && <span className="text-lg">🥉</span>}
+                              <span className="text-sm font-bold text-gray-900">{index + 1}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-sm font-medium truncate ${isCurrentUser ? 'text-primary-700' : 'text-gray-900'}`}>
+                                {entry.participants.first_name} {entry.participants.last_name}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate">
+                                {entry.participants.motorcycle_brand} {entry.participants.motorcycle_model}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right ml-2">
+                            <div className="text-sm font-bold text-gray-900">
+                              {entry.total_points || 0}
+                            </div>
+                            <div className="text-xs text-gray-500">pts</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {scoreboard.length > 10 && (
+                    <div className="text-xs text-gray-500 text-center pt-2">
+                      +{scoreboard.length - 10} meer deelnemers
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
-        </div>
-      </main>
+      </div>
 
-      <Footer />
+      {/* Shadow Score Explanation Modal */}
+      {showExplanationModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {shadowScoreExplanation?.title || 'Hoe werkt de Schaduwscore?'}
+              </h2>
+              <button
+                onClick={() => setShowExplanationModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 py-6">
+              {shadowScoreExplanation?.content ? (
+                <PortableText value={shadowScoreExplanation.content} />
+              ) : (
+                <div className="prose prose-sm max-w-none">
+                  <p>
+                    De Schaduwscore is een verborgen score die je prestaties tijdens de rally meet.
+                    Deze score wordt berekend op basis van twee factoren:
+                  </p>
+                  <h3>⏱️ Ritme (0-50 punten)</h3>
+                  <p>
+                    Meet hoe consistent je bent in je timing. Hoe dichter je bij de mediaan tijd van alle deelnemers zit,
+                    hoe hoger je ritme score.
+                  </p>
+                  <h3>👁️ Blik (0-50 punten)</h3>
+                  <p>
+                    Meet hoe nauwkeurig en uniek je antwoorden zijn. Correcte antwoorden leveren punten op,
+                    en unieke observaties worden extra beloond.
+                  </p>
+                  <p className="mt-4">
+                    <strong>Totaal:</strong> Je Schaduwscore is de som van Ritme en Blik per zone (max 100 punten per zone, 800 punten totaal).
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t">
+              <button
+                onClick={() => setShowExplanationModal(false)}
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              >
+                Begrepen!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-                   
