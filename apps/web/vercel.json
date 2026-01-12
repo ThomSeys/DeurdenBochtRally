@@ -1,0 +1,15 @@
+{
+  "buildCommand": "cd ../.. && npm install && npm run build",
+  "outputDirectory": "build/client",
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ]
+}
