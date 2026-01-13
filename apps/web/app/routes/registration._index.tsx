@@ -83,21 +83,33 @@ export async function action({ request }: ActionFunctionArgs) {
     return {  error: 'Dit emailadres is al geregistreerd', status: 400 };
   }
 
+  // Create Supabase auth user
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    email: email.toLowerCase(),
+    password,
+    email_confirm: true,
+  });
+
+  if (authError || !authData.user) {
+    console.error('Auth error:', authError);
+    return {  error: 'Er ging iets mis bij het aanmaken van je account. Probeer opnieuw.', status: 500 };
+  }
+
   // Generate QR code
   const qrCode = generateQRCode();
 
   // Get price
   const amount = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
 
-  // Create participant record
+  // Create participant record linked to auth user
   const { data: participant, error: dbError } = await supabaseAdmin
     .from('participants')
     .insert({
+      id: authData.user.id,
       first_name: firstName,
       last_name: lastName,
       email: email.toLowerCase(),
       phone,
-      password,
       motorcycle_brand: motorcycleBrand,
       motorcycle_model: motorcycleModel,
       license_plate: licensePlate.toUpperCase(),
@@ -112,7 +124,23 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (dbError || !participant) {
     console.error('Database error:', dbError);
+    // Clean up auth user if participant creation fails
+    await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
     return {  error: 'Er ging iets mis bij het registreren. Probeer opnieuw.', status: 500 };
+  }
+
+  // Check if payment bypass is enabled (for development)
+  const bypassPayment = process.env.BYPASS_PAYMENT === 'true';
+  
+  if (bypassPayment) {
+    // Mark as completed without payment
+    await supabaseAdmin
+      .from('participants')
+      .update({ payment_status: 'completed' })
+      .eq('id', participant.id);
+    
+    const { createUserSession } = await import('~/lib/session.server');
+    return createUserSession(participant.id, '/dashboard');
   }
 
   // Create Stripe checkout session

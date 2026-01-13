@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { Form, useActionData, useSearchParams, Link } from 'react-router';
-import { supabase } from '~/lib/supabase.server';
+import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -22,17 +22,30 @@ export async function action({ request }: ActionFunctionArgs) {
     };
   }
 
+  // Authenticate with Supabase auth (server-side)
+  const { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
+    email: email.toLowerCase(),
+    password,
+  });
+
+  if (authError || !authData.user) {
+    return { 
+      error: 'Ongeldige login gegevens. Controleer je email en wachtwoord.',
+      status: 400
+    };
+  }
+
+  // Check if participant has completed payment
   const { data: participant } = await supabase
     .from('participants')
     .select('*')
-    .eq('email', email.toLowerCase())
-    .eq('password', password)
+    .eq('id', authData.user.id)
     .eq('payment_status', 'completed')
     .single();
 
   if (!participant) {
     return { 
-      error: 'Ongeldige login gegevens. Controleer je email en wachtwoord.',
+      error: 'Je betaling is nog niet voltooid of je account bestaat niet.',
       status: 400
     };
   }

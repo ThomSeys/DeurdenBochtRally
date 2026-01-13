@@ -5,6 +5,7 @@ import { useLoaderData, Link } from 'react-router';
 import { supabase } from '~/lib/supabase.server';
 import { stripe } from '~/lib/stripe.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
+import { createUserSession, getUserId } from '~/lib/session.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -20,6 +21,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/');
   }
 
+  // Check if already logged in
+  const existingUserId = await getUserId(request);
+  
   // Verify Stripe session
   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
@@ -36,6 +40,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   if (!participant) {
     return redirect('/');
+  }
+
+  // Update payment status if not already completed (fallback for when webhook hasn't fired yet)
+  if (participant.payment_status !== 'completed' && session.payment_status === 'paid') {
+    await supabase
+      .from('participants')
+      .update({
+        payment_status: 'completed',
+        stripe_payment_id: session.payment_intent as string,
+      })
+      .eq('id', session.metadata.participantId);
+    
+    participant.payment_status = 'completed';
+  }
+
+  // Auto-login user if not already logged in
+  if (!existingUserId && participant.payment_status === 'completed') {
+    return createUserSession(participant.id, '/registration/success?session_id=' + sessionId);
   }
 
   return {  participant, session };
