@@ -79,17 +79,24 @@ export async function getUser(request: Request) {
 export async function requireAdmin(request: Request) {
   const userId = await requireUserId(request);
   
-  const { data: user } = await supabase
-    .from('participants')
-    .select('is_admin')
-    .eq('id', userId)
-    .single();
+  try {
+    const { data: user } = await supabase
+      .from('participants')
+      .select('is_admin')
+      .eq('id', userId)
+      .single();
 
-  if (!user?.is_admin) {
-    throw redirect('/dashboard');
+    if (!user?.is_admin) {
+      throw redirect('/dashboard');
+    }
+
+    return userId;
+  } catch (error) {
+    // If offline or network error, allow access (app works offline with cached data)
+    console.warn('[session] requireAdmin check failed, allowing offline access:', error);
+    return userId;
   }
-
-  return userId;
+}  return userId;
 }
 
 export async function logout(request: Request) {
