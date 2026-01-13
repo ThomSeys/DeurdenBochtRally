@@ -48,6 +48,7 @@ export default function LiveMap() {
     data: rallyZones,
     isLoading: zonesLoading,
     isCached: zonesCached,
+    error: zonesError,
   } = useFetchOffline<RallyZone[]>('/api/rally-zones', { cacheKey: 'rally-zones' });
   
   const {
@@ -63,6 +64,16 @@ export default function LiveMap() {
   const {
     data: gpxData,
   } = useFetchOffline<{ content: string | null }>('/api/gpx-route', { cacheKey: 'gpx-route' });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[LiveMap] State:', { 
+      zonesLoading, 
+      hasRallyZones: !!rallyZones, 
+      zonesLength: rallyZones?.length,
+      zonesError: zonesError?.message 
+    });
+  }, [zonesLoading, rallyZones, zonesError]);
 
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -105,12 +116,28 @@ export default function LiveMap() {
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-gray-600">
-              {zonesCached ? 'Offline - Kaart laden...' : 'Kaart aan het laden...'}
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              {zonesCached && 'Offline gegevens beschikbaar'}
-            </p>
+            {zonesError ? (
+              <>
+                <p className="text-red-600 font-medium">Fout bij laden van kaart</p>
+                <p className="text-sm text-gray-500 mt-2">{zonesError.message}</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4 px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
+                >
+                  Opnieuw proberen
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">
+                  {zonesCached ? 'Offline - Kaart laden...' : 'Kaart aan het laden...'}
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  {zonesCached && 'Offline gegevens beschikbaar'}
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
