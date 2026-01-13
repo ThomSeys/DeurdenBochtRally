@@ -25,56 +25,61 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  // Get existing submission
-  const { data: submission } = await supabaseAdmin
-    .from('rally_submissions')
-    .select('*')
-    .eq('participant_id', userId)
-    .single();
+  try {
+    // Get existing submission
+    const { data: submission } = await supabaseAdmin
+      .from('rally_submissions')
+      .select('*')
+      .eq('participant_id', userId)
+      .single();
 
-  // Get zone-level submissions with shadow scores
-  const { data: zoneSubmissions } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('zone_id, rhythm_score, view_score, shadow_score, zone_time_minutes')
-    .eq('participant_id', userId)
-    .order('zone_id', { ascending: true });
+    // Get zone-level submissions with shadow scores
+    const { data: zoneSubmissions } = await supabaseAdmin
+      .from('rally_zone_submissions')
+      .select('zone_id, rhythm_score, view_score, shadow_score, zone_time_minutes')
+      .eq('participant_id', userId)
+      .order('zone_id', { ascending: true });
 
-  // Get scoreboard - all participants with their scores
-  const { data: scoreboard } = await supabaseAdmin
-    .from('rally_submissions')
-    .select(`
-      total_points,
-      shadow_total,
-      final_score,
-      participants!inner (
-        first_name,
-        last_name,
-        motorcycle_brand,
-        motorcycle_model
-      )
-    `)
-    .not('final_score', 'is', null)
-    .order('final_score', { ascending: false });
+    // Get scoreboard - all participants with their scores
+    const { data: scoreboard } = await supabaseAdmin
+      .from('rally_submissions')
+      .select(`
+        total_points,
+        shadow_total,
+        final_score,
+        participants!inner (
+          first_name,
+          last_name,
+          motorcycle_brand,
+          motorcycle_model
+        )
+      `)
+      .not('final_score', 'is', null)
+      .order('final_score', { ascending: false });
 
-  // Get shadow score explanation from Sanity
-  const shadowScoreExplanation = await sanityClient.fetch(
-    `*[_type == "pageContent" && page == "rally" && section == "shadow-score-explanation"][0]{
-      title,
-      content
-    }`
-  );
+    // Get shadow score explanation from Sanity
+    const shadowScoreExplanation = await sanityClient.fetch(
+      `*[_type == "pageContent" && page == "rally" && section == "shadow-score-explanation"][0]{
+        title,
+        content
+      }`
+    );
 
-  // Get rally zones with coordinates
-  const rallyZones = await sanityClient.fetch(
-    `*[_type == "rallyZone"] | order(order asc) {
-      title,
-      order,
-      startLocation,
-      endLocation
-    }`
-  );
+    // Get rally zones with coordinates
+    const rallyZones = await sanityClient.fetch(
+      `*[_type == "rallyZone"] | order(order asc) {
+        title,
+        order,
+        startLocation,
+        endLocation
+      }`
+    );
 
-  return { user, submission, zoneSubmissions: zoneSubmissions || [], scoreboard: scoreboard || [], shadowScoreExplanation, rallyZones: rallyZones || [] };
+    return { user, submission, zoneSubmissions: zoneSubmissions || [], scoreboard: scoreboard || [], shadowScoreExplanation, rallyZones: rallyZones || [] };
+  } catch (error) {
+    console.log('[RallySubmission] Offline or error:', error);
+    return { user, submission: null, zoneSubmissions: [], scoreboard: [], shadowScoreExplanation: null, rallyZones: [] };
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {

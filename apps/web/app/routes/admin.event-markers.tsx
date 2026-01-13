@@ -7,29 +7,34 @@ import { sanityClient } from '~/lib/sanity.server';
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
 
-  // Fetch all event markers
-  const eventMarkers = await sanityClient.fetch(`
-    *[_type == "eventMarker"] | order(createdAt desc) {
-      _id,
-      title,
-      description,
-      type,
-      location,
-      severity,
-      isActive,
-      createdAt,
-      updatedAt
-    }
-  `);
+  try {
+    // Fetch all event markers
+    const eventMarkers = await sanityClient.fetch(`
+      *[_type == "eventMarker"] | order(createdAt desc) {
+        _id,
+        title,
+        description,
+        type,
+        location,
+        severity,
+        isActive,
+        createdAt,
+        updatedAt
+      }
+    `);
 
-  // Fetch current edition
-  const edition = await sanityClient.fetch(`
-    *[_type == "edition" && year == "2026"][0] {
-      _id
-    }
-  `);
+    // Fetch current edition
+    const edition = await sanityClient.fetch(`
+      *[_type == "edition" && year == "2026"][0] {
+        _id
+      }
+    `);
 
-  return { eventMarkers, editionId: edition?._id };
+    return { eventMarkers, editionId: edition?._id };
+  } catch (error) {
+    console.log('[AdminEventMarkers] Offline:', error);
+    return { eventMarkers: [], editionId: null };
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {

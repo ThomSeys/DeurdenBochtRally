@@ -22,44 +22,55 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  // Get zone info from Sanity
-  const zone = await sanityClient.fetch(
-    `*[_type == "rallyZone" && order == $order][0] {
-      title,
-      description,
-      location,
-      exit,
-      lus,
-      checkpoint,
-      codeHint,
-      rejoin,
-      points,
-      color,
-      "imageUrl": image.asset->url,
-      startPoint,
-      endPoint
-    }`,
-    { order: zoneId - 1 }
-  );
+  try {
+    // Get zone info from Sanity
+    const zone = await sanityClient.fetch(
+      `*[_type == "rallyZone" && order == $order][0] {
+        title,
+        description,
+        location,
+        exit,
+        lus,
+        checkpoint,
+        codeHint,
+        rejoin,
+        points,
+        color,
+        "imageUrl": image.asset->url,
+        startPoint,
+        endPoint
+      }`,
+      { order: zoneId - 1 }
+    );
 
-  if (!zone) {
-    throw new Response('Zone not found', { status: 404 });
+    if (!zone) {
+      throw new Response('Zone not found', { status: 404 });
+    }
+
+    // Check if already started this zone
+    const { data: existingSubmission } = await supabaseAdmin
+      .from('rally_zone_submissions')
+      .select('id, entry_timestamp')
+      .eq('participant_id', user.id)
+      .eq('zone_id', zoneId.toString())
+      .single();
+
+    return { 
+      zone, 
+      zoneId, 
+      user,
+      alreadyStarted: !!existingSubmission 
+    };
+  } catch (error) {
+    console.log('[Zone] Offline or error:', error);
+    // Return minimal zone data
+    return {
+      zone: { title: `Zone ${zoneId}`, description: 'Offline', color: 'gray' },
+      zoneId,
+      user,
+      alreadyStarted: false
+    };
   }
-
-  // Check if already started this zone
-  const { data: existingSubmission } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('id, entry_timestamp')
-    .eq('participant_id', user.id)
-    .eq('zone_id', zoneId.toString())
-    .single();
-
-  return { 
-    zone, 
-    zoneId, 
-    user,
-    alreadyStarted: !!existingSubmission 
-  };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {

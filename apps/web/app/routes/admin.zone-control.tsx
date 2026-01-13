@@ -20,31 +20,36 @@ const sanityWriteClient = createSanityClient({
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get all rally zones with their open/close status
-  const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
-      _id,
-      title,
-      "zoneNumber": order + 1,
-      location,
-      "is_open": coalesce(is_open, true),
-      radius_m,
-      color
-    }
-  `);
+  try {
+    // Get all rally zones with their open/close status
+    const rallyZones = await sanityClient.fetch(`
+      *[_type == "rallyZone"] | order(order asc) {
+        _id,
+        title,
+        "zoneNumber": order + 1,
+        location,
+        "is_open": coalesce(is_open, true),
+        radius_m,
+        color
+      }
+    `);
 
-  // Get closure log from database
-  const { data: closureLog } = await supabaseAdmin
-    .from('zone_closure_log')
-    .select(`
-      *,
-      closed_by_user:participants!zone_closure_log_closed_by_fkey(first_name, last_name),
-      reopened_by_user:participants!zone_closure_log_reopened_by_fkey(first_name, last_name)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(10);
+    // Get closure log from database
+    const { data: closureLog } = await supabaseAdmin
+      .from('zone_closure_log')
+      .select(`
+        *,
+        closed_by_user:participants!zone_closure_log_closed_by_fkey(first_name, last_name),
+        reopened_by_user:participants!zone_closure_log_reopened_by_fkey(first_name, last_name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10);
 
-  return { rallyZones, closureLog: closureLog || [] };
+    return { rallyZones, closureLog: closureLog || [] };
+  } catch (error) {
+    console.log('[AdminZoneControl] Offline:', error);
+    return { rallyZones: [], closureLog: [] };
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {

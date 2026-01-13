@@ -15,39 +15,49 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get unchecked participants for main check-in
-  const { data: uncheckedParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, email, motorcycle_brand, motorcycle_model, license_plate, formula, ride_type')
-    .eq('payment_status', 'completed')
-    .eq('checked_in', false)
-    .order('first_name', { ascending: true });
+  try {
+    // Get unchecked participants for main check-in
+    const { data: uncheckedParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, email, motorcycle_brand, motorcycle_model, license_plate, formula, ride_type')
+      .eq('payment_status', 'completed')
+      .eq('checked_in', false)
+      .order('first_name', { ascending: true });
 
-  // Get checked-in participants for zone check-in
-  const { data: checkedInParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, email, motorcycle_brand, motorcycle_model')
-    .eq('payment_status', 'completed')
-    .eq('checked_in', true)
-    .order('first_name', { ascending: true });
+    // Get checked-in participants for zone check-in
+    const { data: checkedInParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, email, motorcycle_brand, motorcycle_model')
+      .eq('payment_status', 'completed')
+      .eq('checked_in', true)
+      .order('first_name', { ascending: true });
 
-  // Get today's check-ins
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    // Get today's check-ins
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const { data: todayCheckIns, count } = await supabaseAdmin
-    .from('participants')
-    .select('first_name, last_name, checked_in, created_at', { count: 'exact' })
-    .eq('checked_in', true)
-    .gte('checked_in_at', today.toISOString())
-    .order('created_at', { ascending: false });
+    const { data: todayCheckIns, count } = await supabaseAdmin
+      .from('participants')
+      .select('first_name, last_name, checked_in, created_at', { count: 'exact' })
+      .eq('checked_in', true)
+      .gte('checked_in_at', today.toISOString())
+      .order('created_at', { ascending: false });
 
-  return { 
-    uncheckedParticipants: uncheckedParticipants || [],
-    checkedInParticipants: checkedInParticipants || [],
-    todayCheckIns: todayCheckIns || [], 
-    checkInCount: count || 0 
-  };
+    return { 
+      uncheckedParticipants: uncheckedParticipants || [],
+      checkedInParticipants: checkedInParticipants || [],
+      todayCheckIns: todayCheckIns || [], 
+      checkInCount: count || 0 
+    };
+  } catch (error) {
+    console.log('[AdminCheckIn] Offline:', error);
+    return { 
+      uncheckedParticipants: [],
+      checkedInParticipants: [],
+      todayCheckIns: [], 
+      checkInCount: 0 
+    };
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {

@@ -9,24 +9,29 @@ import Header from '~/components/Header';
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get all active participants
-  const { data: participants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, license_plate')
-    .eq('status', 'active')
-    .order('last_name', { ascending: true });
+  try {
+    // Get all active participants
+    const { data: participants } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, license_plate')
+      .eq('status', 'active')
+      .order('last_name', { ascending: true });
 
-  // Get rally zones
-  const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
-      _id,
-      title,
-      "zoneNumber": order + 1,
-      is_open
-    }
-  `);
+    // Get rally zones
+    const rallyZones = await sanityClient.fetch(`
+      *[_type == "rallyZone"] | order(order asc) {
+        _id,
+        title,
+        "zoneNumber": order + 1,
+        is_open
+      }
+    `);
 
-  return { participants: participants || [], rallyZones };
+    return { participants: participants || [], rallyZones };
+  } catch (error) {
+    console.log('[AdminManualScan] Offline:', error);
+    return { participants: [], rallyZones: [] };
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {

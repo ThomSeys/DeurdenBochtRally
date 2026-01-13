@@ -13,61 +13,75 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get statistics
-  const { count: totalParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('*', { count: 'exact', head: true });
+  try {
+    // Get statistics
+    const { count: totalParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true });
 
-  const { count: paidParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('*', { count: 'exact', head: true })
-    .eq('payment_status', 'completed');
+    const { count: paidParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('payment_status', 'completed');
 
-  const { count: checkedInParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('*', { count: 'exact', head: true })
-    .eq('checked_in', true);
+    const { count: checkedInParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('checked_in', true);
 
-  const { count: totalSubmissions } = await supabaseAdmin
-    .from('rally_submissions')
-    .select('*', { count: 'exact', head: true })
-    .not('submitted_at', 'is', null);
+    const { count: totalSubmissions } = await supabaseAdmin
+      .from('rally_submissions')
+      .select('*', { count: 'exact', head: true })
+      .not('submitted_at', 'is', null);
 
-  // Get recent participants
-  const { data: recentParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, email, created_at, payment_status, checked_in')
-    .order('created_at', { ascending: false })
-    .limit(10);
+    // Get recent participants
+    const { data: recentParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, email, created_at, payment_status, checked_in')
+      .order('created_at', { ascending: false })
+      .limit(10);
 
-  // Get top scorers
-  const { data: topScorers } = await supabaseAdmin
-    .from('rally_submissions')
-    .select(`
-      final_score,
-      total_points,
-      shadow_total,
-      participants!inner (
-        first_name,
-        last_name,
-        motorcycle_brand,
-        motorcycle_model
-      )
-    `)
-    .not('final_score', 'is', null)
-    .order('final_score', { ascending: false })
-    .limit(10);
+    // Get top scorers
+    const { data: topScorers } = await supabaseAdmin
+      .from('rally_submissions')
+      .select(`
+        final_score,
+        total_points,
+        shadow_total,
+        participants!inner (
+          first_name,
+          last_name,
+          motorcycle_brand,
+          motorcycle_model
+        )
+      `)
+      .not('final_score', 'is', null)
+      .order('final_score', { ascending: false })
+      .limit(10);
 
-  return {
-    stats: {
-      totalParticipants: totalParticipants || 0,
-      paidParticipants: paidParticipants || 0,
-      checkedInParticipants: checkedInParticipants || 0,
-      totalSubmissions: totalSubmissions || 0,
-    },
-    recentParticipants: recentParticipants || [],
-    topScorers: topScorers || [],
-  };
+    return {
+      stats: {
+        totalParticipants: totalParticipants || 0,
+        paidParticipants: paidParticipants || 0,
+        checkedInParticipants: checkedInParticipants || 0,
+        totalSubmissions: totalSubmissions || 0,
+      },
+      recentParticipants: recentParticipants || [],
+      topScorers: topScorers || [],
+    };
+  } catch (error) {
+    console.log('[AdminDashboard] Offline:', error);
+    return {
+      stats: {
+        totalParticipants: 0,
+        paidParticipants: 0,
+        checkedInParticipants: 0,
+        totalSubmissions: 0,
+      },
+      recentParticipants: [],
+      topScorers: [],
+    };
+  }
 }
 
 export default function AdminDashboard() {

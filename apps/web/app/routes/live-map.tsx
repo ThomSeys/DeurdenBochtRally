@@ -35,8 +35,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
       isEventDay,
     };
   } catch (error) {
-    console.error('[live-map] loader error', error);
-    throw error;
+    console.log('[LiveMap] Offline or error:', error);
+    // Allow viewing in offline mode (default to non-event-day)
+    return {
+      isAdmin: false,
+      isEventDay: false,
+    };
   }
 }
 

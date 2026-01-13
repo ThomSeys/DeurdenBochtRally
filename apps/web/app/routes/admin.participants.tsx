@@ -14,38 +14,43 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  const url = new URL(request.url);
-  const searchQuery = url.searchParams.get('search') || '';
-  const paymentFilter = url.searchParams.get('payment') || 'all';
-  const checkedInFilter = url.searchParams.get('checkedIn') || 'all';
+  try {
+    const url = new URL(request.url);
+    const searchQuery = url.searchParams.get('search') || '';
+    const paymentFilter = url.searchParams.get('payment') || 'all';
+    const checkedInFilter = url.searchParams.get('checkedIn') || 'all';
 
-  let query = supabaseAdmin
-    .from('participants')
-    .select('*')
-    .order('created_at', { ascending: false });
+    let query = supabaseAdmin
+      .from('participants')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  // Apply search filter
-  if (searchQuery) {
-    query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,license_plate.ilike.%${searchQuery}%`);
+    // Apply search filter
+    if (searchQuery) {
+      query = query.or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,license_plate.ilike.%${searchQuery}%`);
+    }
+
+    // Apply payment status filter
+    if (paymentFilter !== 'all') {
+      query = query.eq('payment_status', paymentFilter);
+    }
+
+    // Apply check-in filter
+    if (checkedInFilter !== 'all') {
+      query = query.eq('checked_in', checkedInFilter === 'true');
+    }
+
+    const { data: participants, error } = await query;
+
+    if (error) {
+      console.error('Error fetching participants:', error);
+    }
+
+    return { participants: participants || [], searchQuery, paymentFilter, checkedInFilter };
+  } catch (error) {
+    console.log('[AdminParticipants] Offline:', error);
+    return { participants: [], searchQuery: '', paymentFilter: 'all', checkedInFilter: 'all' };
   }
-
-  // Apply payment status filter
-  if (paymentFilter !== 'all') {
-    query = query.eq('payment_status', paymentFilter);
-  }
-
-  // Apply check-in filter
-  if (checkedInFilter !== 'all') {
-    query = query.eq('checked_in', checkedInFilter === 'true');
-  }
-
-  const { data: participants, error } = await query;
-
-  if (error) {
-    console.error('Error fetching participants:', error);
-  }
-
-  return { participants: participants || [], searchQuery, paymentFilter, checkedInFilter };
 }
 
 export default function AdminParticipants() {

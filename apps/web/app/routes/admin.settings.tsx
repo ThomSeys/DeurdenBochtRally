@@ -13,19 +13,24 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get all participants to see admin status
-  const { data: admins } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, email, is_admin')
-    .eq('is_admin', true)
-    .order('first_name');
+  try {
+    // Get all participants to see admin status
+    const { data: admins } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, email, is_admin')
+      .eq('is_admin', true)
+      .order('first_name');
 
-  const { data: allParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, email, is_admin')
-    .order('first_name');
+    const { data: allParticipants } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, email, is_admin')
+      .order('first_name');
 
-  return { admins: admins || [], allParticipants: allParticipants || [] };
+    return { admins: admins || [], allParticipants: allParticipants || [] };
+  } catch (error) {
+    console.log('[AdminSettings] Offline:', error);
+    return { admins: [], allParticipants: [] };
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
