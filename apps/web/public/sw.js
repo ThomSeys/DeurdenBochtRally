@@ -1,6 +1,6 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '2';
+const VERSION = '3';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
@@ -38,18 +38,26 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate');
+  console.log('[SW] Activate - Version:', VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      console.log('[SW] Found caches:', cacheNames);
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE && name !== API_CACHE)
+          .filter((name) => {
+            const shouldKeep = name === CACHE_NAME || name === RUNTIME_CACHE || name === API_CACHE;
+            if (!shouldKeep) {
+              console.log('[SW] Deleting old cache:', name);
+            }
+            return !shouldKeep;
+          })
           .map((name) => caches.delete(name))
       );
     })
   );
   self.clients.claim();
 });
+
 
 // Fetch event - smart strategy based on file type
 self.addEventListener('fetch', (event) => {
