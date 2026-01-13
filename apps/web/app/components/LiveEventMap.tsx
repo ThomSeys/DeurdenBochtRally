@@ -230,7 +230,6 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         // Add check-in markers
         if (showCheckIns) {
           checkIns.forEach((checkIn) => {
-            console.log('[LiveEventMap] Processing check-in:', checkIn);
           if (checkIn.entry_latitude && checkIn.entry_longitude) {
             // Entry point (start)
             const entryIcon = L.default.divIcon({

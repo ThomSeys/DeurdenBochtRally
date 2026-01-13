@@ -1,74 +1,47 @@
--- Populate test GPS data for rally zones
+-- Insert test check-in data for rally zones
 -- Based on actual Belgian/French Ardennes locations
 
--- RZ1: Vlaamse Ardennen – Schelde (Eeklo area)
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.9541, entry_longitude = 3.9986, entry_accuracy = 18.5
-WHERE zone_id = '1' AND entry_latitude IS NULL;
+-- Sample participant IDs (using the two actual participants)
+-- Participant 1: b00e83d5-69dc-4cff-b13d-19cf8d053729
+-- Participant 2: 4a64f0ef-52ba-430f-a1f5-188bb958f473
+-- Each participant will have entries in alternate zones to avoid unique constraint violations
 
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.9535, answer_longitude = 3.9995, answer_accuracy = 22.3, answer_timestamp = NOW()
-WHERE zone_id = '1' AND answer_latitude IS NULL;
+-- RZ1: Vlaamse Ardennen – Schelde (Eeklo area)
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('b00e83d5-69dc-4cff-b13d-19cf8d053729', '1', 50.9541, 3.9986, 18.5, NOW(), 50.9535, 3.9995, 22.3, NOW(), NOW());
 
 -- RZ2: 's-Gravenbrakel – Henegouwen Domain
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.8044, entry_longitude = 3.8824, entry_accuracy = 15.2
-WHERE zone_id = '2' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.8052, answer_longitude = 3.8835, answer_accuracy = 19.8, answer_timestamp = NOW()
-WHERE zone_id = '2' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('4a64f0ef-52ba-430f-a1f5-188bb958f473', '2', 50.8044, 3.8824, 15.2, NOW(), 50.8052, 3.8835, 19.8, NOW(), NOW());
 
 -- RZ3: Charleroi/Thuin – Samber
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.4102, entry_longitude = 4.4046, entry_accuracy = 25.1
-WHERE zone_id = '3' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.4095, answer_longitude = 4.4065, answer_accuracy = 20.5, answer_timestamp = NOW()
-WHERE zone_id = '3' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('b00e83d5-69dc-4cff-b13d-19cf8d053729', '3', 50.4102, 4.4046, 25.1, NOW(), 50.4095, 4.4065, 20.5, NOW(), NOW());
 
 -- RZ4: Dinant – Maas (Meuse)
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.2607, entry_longitude = 4.9212, entry_accuracy = 16.8
-WHERE zone_id = '4' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.2615, answer_longitude = 4.9225, answer_accuracy = 21.2, answer_timestamp = NOW()
-WHERE zone_id = '4' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('4a64f0ef-52ba-430f-a1f5-188bb958f473', '4', 50.2607, 4.9212, 16.8, NOW(), 50.2615, 4.9225, 21.2, NOW(), NOW());
 
 -- RZ5: Revin – French Ardennes
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.0598, entry_longitude = 4.5889, entry_accuracy = 23.7
-WHERE zone_id = '5' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.0605, answer_longitude = 4.5905, answer_accuracy = 24.1, answer_timestamp = NOW()
-WHERE zone_id = '5' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('b00e83d5-69dc-4cff-b13d-19cf8d053729', '5', 50.0598, 4.5889, 23.7, NOW(), 50.0605, 4.5905, 24.1, NOW(), NOW());
 
 -- RZ6: Bouillon – Semois
-UPDATE rally_zone_submissions 
-SET entry_latitude = 49.8019, entry_longitude = 5.0698, entry_accuracy = 19.4
-WHERE zone_id = '6' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 49.8025, answer_longitude = 5.0712, answer_accuracy = 18.9, answer_timestamp = NOW()
-WHERE zone_id = '6' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('4a64f0ef-52ba-430f-a1f5-188bb958f473', '6', 49.8019, 5.0698, 19.4, NOW(), 49.8025, 5.0712, 18.9, NOW(), NOW());
 
 -- RZ7: Vielsalm – Plateau
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.4189, entry_longitude = 5.9687, entry_accuracy = 17.3
-WHERE zone_id = '7' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.4197, answer_longitude = 5.9705, answer_accuracy = 20.7, answer_timestamp = NOW()
-WHERE zone_id = '7' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('b00e83d5-69dc-4cff-b13d-19cf8d053729', '7', 50.4189, 5.9687, 17.3, NOW(), 50.4197, 5.9705, 20.7, NOW(), NOW());
 
 -- RZ8: Baraque de Fraiture – Highest point
-UPDATE rally_zone_submissions 
-SET entry_latitude = 50.4421, entry_longitude = 6.0395, entry_accuracy = 21.5
-WHERE zone_id = '8' AND entry_latitude IS NULL;
-
-UPDATE rally_zone_submissions 
-SET answer_latitude = 50.4428, answer_longitude = 6.0412, answer_accuracy = 23.2, answer_timestamp = NOW()
-WHERE zone_id = '8' AND answer_latitude IS NULL;
+INSERT INTO rally_zone_submissions (participant_id, zone_id, entry_latitude, entry_longitude, entry_accuracy, entry_timestamp, answer_latitude, answer_longitude, answer_accuracy, answer_timestamp, created_at)
+VALUES 
+  ('4a64f0ef-52ba-430f-a1f5-188bb958f473', '8', 50.4421, 6.0395, 21.5, NOW(), 50.4428, 6.0412, 23.2, NOW(), NOW());
