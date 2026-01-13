@@ -62,7 +62,7 @@ export default function LiveMap() {
   
   const {
     data: gpxData,
-  } = useFetchOffline<{ url: string }>('/api/gpx-route', { cacheKey: 'gpx-route' });
+  } = useFetchOffline<{ content: string | null }>('/api/gpx-route', { cacheKey: 'gpx-route' });
 
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -158,7 +158,7 @@ export default function LiveMap() {
         <LiveEventMapComponent
           rallyZones={rallyZones}
           eventMarkers={eventMarkers || []}
-          gpxRouteUrl={gpxData?.url}
+          gpxContent={gpxData?.content}
           checkIns={checkIns || []}
           showCheckIns={showCheckIns}
           showZoneRoutes={showZoneRoutes}
@@ -233,7 +233,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, gpxContent, checkIns, showCheckIns, showZoneRoutes, showEventMarkers }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -257,7 +257,7 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns
     <MapComponent
       rallyZones={rallyZones}
       eventMarkers={eventMarkers}
-      gpxRouteUrl={gpxRouteUrl}
+      gpxContent={gpxContent}
       checkIns={checkIns}
       showCheckIns={showCheckIns}
       showZoneRoutes={showZoneRoutes}

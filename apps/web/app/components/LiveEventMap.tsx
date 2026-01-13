@@ -45,14 +45,14 @@ interface CheckIn {
 interface LiveEventMapProps {
   rallyZones: RallyZone[];
   eventMarkers: EventMarker[];
-  gpxRouteUrl?: string;
+  gpxContent?: string | null;
   checkIns?: CheckIn[];
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
   showEventMarkers?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -136,19 +136,10 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         if (!mapRef.current) return;
 
         // Load and display GPX route if available
-        if (gpxRouteUrl && !gpxLayerRef.current) {
+        if (gpxContent && !gpxLayerRef.current) {
           try {
-            const response = await fetch(gpxRouteUrl);
-            const data = await response.json();
-            const gpxText = data.content;
-            
-            if (!gpxText) {
-              console.log('[Map] No GPX content available');
-              return;
-            }
-
             const parser = new DOMParser();
-            const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
+            const gpxDoc = parser.parseFromString(gpxContent, 'text/xml');
             
             // Parse GPX track points
             const trackPoints: [number, number][] = [];
@@ -438,7 +429,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         setMapError('Failed to initialize map');
       }
     });
-  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers]);
+  }, [isClient, rallyZones, eventMarkers, gpxContent, userLocation, showCheckIns, showZoneRoutes, showEventMarkers]);
 
   if (mapError) {
     return (
