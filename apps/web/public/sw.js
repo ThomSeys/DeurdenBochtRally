@@ -1,7 +1,9 @@
 // Service Worker for offline functionality
-const CACHE_NAME = 'ddb-rally-v1';
-const RUNTIME_CACHE = 'ddb-runtime';
-const API_CACHE = 'ddb-api-v1';
+// Version number to force updates (increment when you want to bust cache)
+const VERSION = '2';
+const CACHE_NAME = `ddb-rally-v${VERSION}`;
+const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
+const API_CACHE = `ddb-api-v${VERSION}`;
 
 // Static assets to cache on install
 const PRECACHE_URLS = [
@@ -49,7 +51,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - network first for API, cache for assets
+// Fetch event - smart strategy based on file type
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -64,12 +66,17 @@ self.addEventListener('fetch', (event) => {
     return event.respondWith(networkFirstForAPI(request));
   }
 
-  // Handle navigation and static assets
+  // Handle navigation (HTML pages)
   if (request.mode === 'navigate') {
     return event.respondWith(networkFirstForNav(request));
   }
 
-  // Cache static assets
+  // Handle CSS and JS - network first to get latest styles/scripts
+  if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+    return event.respondWith(networkFirstForAssets(request));
+  }
+
+  // Cache images and other static assets (cache-first)
   event.respondWith(cacheFirstForAssets(request));
 });
 
@@ -111,6 +118,24 @@ async function networkFirstForNav(request) {
       return cached;
     }
     return caches.match('/offline.html');
+  }
+}
+
+// Network-first strategy for CSS/JS (so you get latest styles)
+async function networkFirstForAssets(request) {
+  try {
+    const response = await fetch(request);
+    if (response.status === 200) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    throw error;
   }
 }
 
