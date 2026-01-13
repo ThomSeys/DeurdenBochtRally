@@ -174,8 +174,16 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         rallyZones.forEach(async (zone) => {
           if (zone.gpxRoute?.asset?.url) {
             try {
-              const response = await fetch(zone.gpxRoute.asset.url);
-              const gpxText = await response.text();
+              // Fetch through our API to avoid CORS issues
+              const response = await fetch(`/api/zone-gpx/${zone.order}`);
+              const data = await response.json();
+              const gpxText = data.content;
+              
+              if (!gpxText) {
+                console.log(`[Map] No GPX content for zone ${zone.title}`);
+                return;
+              }
+
               const parser = new DOMParser();
               const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
               

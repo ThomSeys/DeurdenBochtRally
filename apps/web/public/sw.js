@@ -1,6 +1,6 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '9';
+const VERSION = '10';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
@@ -23,6 +23,14 @@ const PRECACHE_API_URLS = [
   '/api/check-ins',
   '/api/event-markers',
   '/api/gpx-route',
+  '/api/zone-gpx/1',
+  '/api/zone-gpx/2',
+  '/api/zone-gpx/3',
+  '/api/zone-gpx/4',
+  '/api/zone-gpx/5',
+  '/api/zone-gpx/6',
+  '/api/zone-gpx/7',
+  '/api/zone-gpx/8',
 ];
 
 // Install event - cache core assets and API data
