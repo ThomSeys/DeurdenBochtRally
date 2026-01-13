@@ -1,6 +1,6 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '5';
+const VERSION = '6';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
@@ -69,16 +69,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle API requests with network-first strategy
+  // Handle API requests with stale-while-revalidate
   if (url.pathname.startsWith('/api/')) {
-    return event.respondWith(networkFirstForAPI(request));
+    return event.respondWith(staleWhileRevalidateAPI(request));
   }
 
-  // IMPORTANT: Do NOT intercept navigation (request.mode === 'navigate')
-  // Let the browser handle all HTML page navigation naturally
-  // This allows React Router to work properly with client-side routing
+  // Handle navigation (HTML pages) - cache-first so offline pages load from cache
   if (request.mode === 'navigate') {
-    return; // Skip service worker - let browser handle it
+    return event.respondWith(cacheFirst(request));
   }
 
   // Handle CSS and JS - network first to get latest styles/scripts
@@ -90,9 +88,38 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(cacheFirstForAssets(request));
 });
 
+// Cache-first strategy for HTML pages
+// Always serve from cache if available (for offline support)
+// If not cached, fetch from network and cache for next time
+async function cacheFirst(request) {
+  const cache = await caches.open(RUNTIME_CACHE);
+  
+  // Always check cache first
+  const cached = await cache.match(request);
+  if (cached) {
+    console.log('[SW] Serving cached page:', request.url);
+    return cached;
+  }
+  
+  // Not cached, fetch from network
+  try {
+    const response = await fetch(request.clone());
+    if (response.ok) {
+      // Cache successful page responses for offline access
+      cache.put(request, response.clone());
+      console.log('[SW] Cached page:', request.url);
+    }
+    return response;
+  } catch (error) {
+    console.log('[SW] Failed to fetch page and not cached:', request.url);
+    // Return a fallback page if neither cache nor network available
+    return caches.match('/') || new Response('Page not available', { status: 503 });
+  }
+}
+
 // Stale-while-revalidate strategy for API calls
 // Always return cached data immediately, update in background
-async function networkFirstForAPI(request) {
+async function staleWhileRevalidateAPI(request) {
   const cache = await caches.open(API_CACHE);
   
   // Always check cache first - serve immediately if available

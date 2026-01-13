@@ -55,47 +55,29 @@ export async function getUser(request: Request) {
   const userId = await getUserId(request);
   if (userId === undefined) return null;
 
-  try {
-    const { data } = await supabase
-      .from('participants')
-      .select('*, is_admin')
-      .eq('id', userId)
-      .single();
+  const { data } = await supabase
+    .from('participants')
+    .select('*, is_admin')
+    .eq('id', userId)
+    .single();
 
-    return data;
-  } catch (error) {
-    // If offline or network error, return a default user object
-    // This allows the app to work offline with cached data
-    console.warn('[session] getUser failed, returning default user:', error);
-    return {
-      id: userId,
-      is_admin: false,
-      first_name: 'User',
-      last_name: '',
-    };
-  }
+  return data;
 }
 
 export async function requireAdmin(request: Request) {
   const userId = await requireUserId(request);
   
-  try {
-    const { data: user } = await supabase
-      .from('participants')
-      .select('is_admin')
-      .eq('id', userId)
-      .single();
+  const { data: user } = await supabase
+    .from('participants')
+    .select('is_admin')
+    .eq('id', userId)
+    .single();
 
-    if (!user?.is_admin) {
-      throw redirect('/dashboard');
-    }
-
-    return userId;
-  } catch (error) {
-    // If offline or network error, allow access (app works offline with cached data)
-    console.warn('[session] requireAdmin check failed, allowing offline access:', error);
-    return userId;
+  if (!user?.is_admin) {
+    throw redirect('/dashboard');
   }
+
+  return userId;
 }  return userId;
 }
 

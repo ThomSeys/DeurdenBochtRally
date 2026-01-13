@@ -22,35 +22,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  // Get rally submission if exists - fail gracefully offline
-  let submission = null;
-  try {
-    const { data } = await supabase
-      .from('rally_submissions')
-      .select('*')
-      .eq('participant_id', user.id)
-      .single();
-    submission = data;
-  } catch (error) {
-    console.warn('[dashboard] Failed to fetch submission, continuing offline:', error);
-  }
+  // Get rally submission if exists
+  const { data: submission } = await supabase
+    .from('rally_submissions')
+    .select('*')
+    .eq('participant_id', user.id)
+    .single();
 
-  // Get documents - fail gracefully offline
-  let documents: any[] = [];
-  try {
-    const { data } = await supabase
-      .from('documents')
-      .select('*')
-      .order('category', { ascending: true });
-    documents = data || [];
-  } catch (error) {
-    console.warn('[dashboard] Failed to fetch documents, continuing offline:', error);
-  }
+  // Get documents
+  const { data: documents } = await supabase
+    .from('documents')
+    .select('*')
+    .order('category', { ascending: true });
 
   // Fetch GPX route file
-  let siteConfig = null;
-  try {
-    siteConfig = await sanityClient.fetch(`
+  const siteConfig = await sanityClient.fetch(`
     *[_type == "siteConfig"][0] {
       gpxRouteFile {
         asset-> {
@@ -59,9 +45,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
   `);
-  } catch (error) {
-    console.warn('[dashboard] Failed to fetch site config, continuing offline:', error);
-  }
 
   // Count completed zones
   const completedZones = submission
@@ -80,56 +63,43 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Check if user is in first place (Bochtenkoning)
   let isBochtenkoning = false;
   if (submission) {
-    try {
-      // Get rally zones with points from Sanity
-      const rallyZones = await sanityClient.fetch(
-        `*[_type == "rallyZone"] | order(order asc) {
-          order,
-          points,
-          validAnswers
-        }`
-      );
+    // Get rally zones with points from Sanity
+    const rallyZones = await sanityClient.fetch(
+      `*[_type == "rallyZone"] | order(order asc) {
+        order,
+        points,
+        validAnswers
+      }`
+    );
 
-      // Get all rally submissions
-      let allSubmissions: any[] = [];
-      try {
-        const { data } = await supabase
-          .from('rally_submissions')
-          .select('participant_id, rz1_code, rz2_code, rz3_code, rz4_code, rz5_code, rz6_code, rz7_code, rz8_code');
-        allSubmissions = data || [];
-      } catch (error) {
-        console.warn('[dashboard] Failed to fetch submissions for ranking:', error);
-      }
+    // Get all rally submissions
+    const { data: allSubmissions } = await supabase
+      .from('rally_submissions')
+      .select('participant_id, rz1_code, rz2_code, rz3_code, rz4_code, rz5_code, rz6_code, rz7_code, rz8_code');
 
-      // Get shadow scores
-      let shadowScores: any[] = [];
-      try {
-        const { data } = await supabase
-          .from('rally_zone_submissions')
-          .select('participant_id, shadow_score');
-        shadowScores = data || [];
-      } catch (error) {
-        console.warn('[dashboard] Failed to fetch shadow scores:', error);
-      }
+    // Get shadow scores
+    const { data: shadowScores } = await supabase
+      .from('rally_zone_submissions')
+      .select('participant_id, shadow_score');
 
-      // Calculate scores for all participants
-      const scores = (allSubmissions || []).map(sub => {
-        let basicPoints = 0;
-        let shadowTotal = 0;
+    // Calculate scores for all participants
+    const scores = (allSubmissions || []).map(sub => {
+      let basicPoints = 0;
+      let shadowTotal = 0;
 
-        // Basic points
-        for (let i = 1; i <= 8; i++) {
-          const code = sub[`rz${i}_code` as keyof typeof sub] as string | null;
-          if (code) {
-            const zone = rallyZones[i - 1];
-            const isCorrect = zone?.validAnswers?.some((answer: string) => 
-              answer.toLowerCase() === code.toLowerCase()
-            );
-            if (isCorrect && zone?.points) {
-              basicPoints += zone.points;
-            }
+      // Basic points
+      for (let i = 1; i <= 8; i++) {
+        const code = sub[`rz${i}_code` as keyof typeof sub] as string | null;
+        if (code) {
+          const zone = rallyZones[i - 1];
+          const isCorrect = zone?.validAnswers?.some((answer: string) => 
+            answer.toLowerCase() === code.toLowerCase()
+          );
+          if (isCorrect && zone?.points) {
+            basicPoints += zone.points;
           }
         }
+      }
 
       // Shadow points
       const participantShadowScores = shadowScores?.filter(
@@ -143,12 +113,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       };
     }).sort((a, b) => b.totalScore - a.totalScore);
 
-      // Check if current user is first
-      isBochtenkoning = scores.length > 0 && scores[0].participant_id === user.id;
-    } catch (error) {
-      console.warn('[dashboard] Failed to calculate Bochtenkoning ranking, continuing offline:', error);
-      isBochtenkoning = false;
-    }
+    // Check if current user is first
+    isBochtenkoning = scores.length > 0 && scores[0].participant_id === user.id;
   }
 
   const eventDate = process.env.EVENT_DATE || '2026-05-16';
