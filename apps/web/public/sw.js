@@ -66,14 +66,15 @@ self.addEventListener('fetch', (event) => {
     return event.respondWith(networkFirstForAPI(request));
   }
 
-  // Handle navigation (HTML pages)
-  if (request.mode === 'navigate') {
-    return event.respondWith(networkFirstForNav(request));
-  }
-
   // Handle CSS and JS - network first to get latest styles/scripts
   if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
     return event.respondWith(networkFirstForAssets(request));
+  }
+
+  // Skip service worker for navigation - let browser handle it naturally
+  // This allows React Router to work properly with page transitions
+  if (request.mode === 'navigate') {
+    return; // Don't intercept navigation
   }
 
   // Cache images and other static assets (cache-first)
@@ -105,19 +106,6 @@ async function networkFirstForAPI(request) {
         headers: { 'Content-Type': 'application/json' }
       }
     );
-  }
-}
-
-// Network-first strategy for navigation
-async function networkFirstForNav(request) {
-  try {
-    return await fetch(request);
-  } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) {
-      return cached;
-    }
-    return caches.match('/offline.html');
   }
 }
 
