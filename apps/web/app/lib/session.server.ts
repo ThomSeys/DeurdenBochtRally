@@ -78,7 +78,6 @@ export async function requireAdmin(request: Request) {
   }
 
   return userId;
-}  return userId;
 }
 
 export async function logout(request: Request) {
