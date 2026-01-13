@@ -75,8 +75,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     
     // Check correctness
     const submittedCode = code.toLowerCase().trim();
-    const correctCode = correctAnswers[zoneId] || '';
-    const validCodes = validAnswersMap[zoneId] || [];
+    const correctCode = correctAnswers[zoneId - 1] || '';
+    const validCodes = validAnswersMap[zoneId - 1] || [];
     const isCorrect = submittedCode === correctCode || validCodes.includes(submittedCode);
     
     // Apply filters

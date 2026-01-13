@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Deur Den Bocht Rally</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+    }
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 32px;
+      margin: 0 0 16px 0;
+    }
+    p {
+      font-size: 18px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+    .retry-button {
+      margin-top: 30px;
+      padding: 12px 32px;
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .retry-button:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>Je bent offline</h1>
+    <p>
+      Geen verbinding met het internet. Je check-ins worden lokaal opgeslagen 
+      en automatisch gesynchroniseerd wanneer je weer online bent.
+    </p>
+    <button class="retry-button" onclick="window.location.reload()">
+      Probeer opnieuw
+    </button>
+  </div>
+</body>
+</html>

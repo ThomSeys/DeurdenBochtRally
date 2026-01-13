@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate PWA Icons</title>
+  <style>
+    body {
+      font-family: system-ui;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 20px 0;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #4F46E5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Generate PWA Icons for Deur Den Bocht</h1>
+  <p>This page generates placeholder icons. Click buttons below to download:</p>
+  
+  <canvas id="canvas192" width="192" height="192"></canvas>
+  <button onclick="downloadIcon(192)">Download 192x192 Icon</button>
+  
+  <canvas id="canvas512" width="512" height="512"></canvas>
+  <button onclick="downloadIcon(512)">Download 512x512 Icon</button>
+
+  <script>
+    function drawIcon(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      const ctx = canvas.getContext('2d');
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#4F46E5');
+      gradient.addColorStop(1, '#7C3AED');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // Text
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size/4}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('DDB', size/2, size/2.2);
+      
+      ctx.font = `${size/10}px Arial`;
+      ctx.fillText('2026', size/2, size/1.5);
+    }
+    
+    function downloadIcon(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `icon-${size}.png`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    
+    // Draw icons on page load
+    drawIcon(192);
+    drawIcon(512);
+  </script>
+</body>
+</html>

@@ -6,11 +6,13 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { getUser } from "~/lib/session.server";
 import { requireSitePassword } from "~/lib/site-password.server";
+import { OfflineStatusBadge } from "~/components/OfflineStatusBadge";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -29,6 +31,10 @@ export const links: Route.LinksFunction = () => [
     integrity: "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=",
     crossOrigin: "anonymous",
   },
+  // PWA manifest
+  { rel: "manifest", href: "/manifest.json" },
+  // iOS specific
+  { rel: "apple-touch-icon", href: "/icon-192.png" },
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -43,11 +49,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* PWA meta tags */}
+        <meta name="theme-color" content="#4F46E5" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Deur Den Bocht" />
         <Meta />
         <Links />
       </head>
       <body className="antialiased">
         {children}
+        <OfflineStatusBadge />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -56,6 +68,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Register service worker for PWA
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
   return <Outlet />;
 }
 

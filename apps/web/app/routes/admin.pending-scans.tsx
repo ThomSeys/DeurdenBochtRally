@@ -11,11 +11,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
   // Get pending scans (valid = null)
-  const { data: pendingScans } = await supabaseAdmin
+  const { data: pendingScans, error } = await supabaseAdmin
     .from('rally_zone_submissions')
     .select(`
       *,
-      participants!inner (
+      participants!rally_zone_submissions_participant_id_fkey (
         id,
         first_name,
         last_name,
@@ -24,6 +24,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `)
     .is('valid', null)
     .order('created_at', { ascending: true });
+
+  console.log('[pending-scans] Query result:', { count: pendingScans?.length, error });
 
   // Get rally zones for reference
   const rallyZones = await sanityClient.fetch(`
