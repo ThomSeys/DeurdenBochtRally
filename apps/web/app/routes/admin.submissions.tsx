@@ -28,111 +28,90 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }`
   );
 
-  // Create a map of zone -> correct code, valid answers, and points
+  // Create a map of zone -> correct code and valid answers
   const correctAnswers: Record<number, string> = {};
   const validAnswersMap: Record<number, string[]> = {};
-  const zonePoints: Record<number, number> = {};
   
   rallyZones.forEach((zone: any) => {
     correctAnswers[zone.order] = zone.solution?.toLowerCase().trim() || '';
     validAnswersMap[zone.order] = (zone.validAnswers || []).map((ans: string) => ans.toLowerCase().trim());
   });
 
-  // Get all rally submissions with participant info
-  const { data: allSubmissions } = await supabaseAdmin
-    .from('rally_submissions')
+  // Get all zone submissions (primary data source) with participant info
+  const { data: zoneSubmissions } = await supabaseAdmin
+    .from('rally_zone_submissions')
     .select(`
       *,
-      participants!inner (
+      participants!rally_zone_submissions_participant_id_fkey (
         first_name,
         last_name,
         email,
         license_plate
       )
     `)
-    .order('submitted_at', { ascending: false });
+    .order('created_at', { ascending: false });
 
-  // Get all zone submissions with shadow scores
-  const { data: zoneSubmissions } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('participant_id, zone_id, shadow_score, rhythm_score, view_score, answer_accuracy, created_at');
+  // Get all rally submissions (aggregated data with zone codes)
+  const { data: rallySubmissions } = await supabaseAdmin
+    .from('rally_submissions')
+    .select('participant_id, rz1_code, rz2_code, rz3_code, rz4_code, rz5_code, rz6_code, rz7_code, rz8_code, submitted_at');
 
-  // Create a map for quick lookup: participantId-zoneId -> shadow score
-  const shadowScoreMap: Record<string, any> = {};
-  zoneSubmissions?.forEach((zs: any) => {
-    const key = `${zs.participant_id}-${zs.zone_id}`;
-    shadowScoreMap[key] = {
-      shadow_score: zs.shadow_score,
-      rhythm_score: zs.rhythm_score,
-      view_score: zs.view_score,
-      answer_accuracy: zs.answer_accuracy,
-      created_at: zs.created_at
-    };
+  // Create a map for quick lookup: participantId -> rally submission with codes
+  const rallySubmissionMap: Record<string, any> = {};
+  rallySubmissions?.forEach((rs: any) => {
+    rallySubmissionMap[rs.participant_id] = rs;
   });
 
-  // Transform each submission into individual zone entries with correctness check
+  // Transform each zone submission into a display row
   const submissions: any[] = [];
   
-  allSubmissions?.forEach((submission: any) => {
-    for (let i = 1; i <= 8; i++) {
-      const code = submission[`rz${i}_code`];
-      if (code && code.trim() !== '') {
-        const submittedCode = code.toLowerCase().trim();
-        const zoneIndex = i - 1; // Convert to 0-based index for Sanity
-        const correctCode = correctAnswers[zoneIndex] || '';
-        const validAnswers = validAnswersMap[zoneIndex] || [];
-        
-        // Check if submitted code matches any valid answer
-        const isCorrect = validAnswers.some(valid => valid === submittedCode);
-
-        // Get shadow scores for this zone submission
-        // Get shadow scores for this zone submission
-        const shadowKey = `${submission.participant_id}-${i}`;
-        const shadowData = shadowScoreMap[shadowKey] || { 
-          shadow_score: null, 
-          rhythm_score: null, 
-          view_score: null, 
-          answer_accuracy: null,
-          created_at: null 
-        };
-
-        // Apply zone filter
-        if (zoneFilter !== 'all' && i !== parseInt(zoneFilter)) {
-          continue;
-        }
-
-        // Apply status filter
-        if (statusFilter === 'correct' && !isCorrect) {
-          continue;
-        }
-        if (statusFilter === 'incorrect' && isCorrect) {
-          continue;
-        }
-
-        console.log(shadowData.created_at);
-
-        submissions.push({
-          id: `${submission.id}-zone${i}`,
-          participant_id: submission.participant_id,
-          zone_id: i,
-          code: code,
-          submitted_at: submission.submitted_at,
-          participants: submission.participants,
-          is_correct: isCorrect,
-          shadow_score: shadowData.shadow_score,
-          rhythm_score: shadowData.rhythm_score,
-          view_score: shadowData.view_score,
-          answer_accuracy: shadowData.answer_accuracy,
-          correct_answer: correctAnswers[zoneIndex] || 'Niet beschikbaar'
-        });
-      }
+  zoneSubmissions?.forEach((zoneSubmission: any) => {
+    const zoneId = parseInt(zoneSubmission.zone_id);
+    const participantId = zoneSubmission.participant_id;
+    
+    // Get the rally submission for this participant to find the submitted code
+    const rallySubmission = rallySubmissionMap[participantId];
+    const code = rallySubmission?.[`rz${zoneId}_code`] || '';
+    
+    // Check correctness
+    const submittedCode = code.toLowerCase().trim();
+    const correctCode = correctAnswers[zoneId] || '';
+    const validCodes = validAnswersMap[zoneId] || [];
+    const isCorrect = submittedCode === correctCode || validCodes.includes(submittedCode);
+    
+    // Apply filters
+    if (zoneFilter !== 'all' && zoneId !== parseInt(zoneFilter)) {
+      return;
     }
+    
+    if (statusFilter === 'correct' && !isCorrect) {
+      return;
+    }
+    if (statusFilter === 'incorrect' && isCorrect) {
+      return;
+    }
+    
+    submissions.push({
+      id: zoneSubmission.id,
+      participant_id: participantId,
+      zone_id: zoneId,
+      code: code,
+      submitted_at: rallySubmission?.submitted_at || zoneSubmission.created_at,
+      participants: zoneSubmission.participants,
+      is_correct: isCorrect,
+      shadow_score: zoneSubmission.shadow_score,
+      rhythm_score: zoneSubmission.rhythm_score,
+      view_score: zoneSubmission.view_score,
+      answer_accuracy: zoneSubmission.answer_accuracy,
+      correct_answer: correctCode || 'Niet beschikbaar',
+      created_at: zoneSubmission.created_at
+    });
   });
 
-  // Sort by submitted_at descending
+  // Sort by created_at descending
   submissions.sort((a, b) => {
-    const dateA = new Date(a.submitted_at || 0).getTime();
-    const dateB = new Date(b.submitted_at || 0).getTime();
+    const dateA = new Date(a.created_at || 0).getTime();
+    const dateB = new Date(b.created_at || 0).getTime();
     return dateB - dateA;
   });
 
@@ -275,10 +254,10 @@ export default function AdminSubmissions() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       {submission.answer_accuracy !== null && submission.answer_accuracy !== undefined ? (
                         <span className="text-sm font-semibold text-orange-600">
-                          {(submission.answer_accuracy * 100).toFixed(0)}%
+                          {submission.answer_accuracy.toFixed(1)}m
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">Nog niet berekend</span>
+                        <span className="text-xs text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
