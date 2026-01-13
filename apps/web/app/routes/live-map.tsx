@@ -105,16 +105,34 @@ export default function LiveMap() {
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-gray-600">Kaart aan het laden...</p>
+            <p className="text-gray-600">
+              {zonesCached ? 'Offline - Kaart laden...' : 'Kaart aan het laden...'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              {zonesCached && 'Offline gegevens beschikbaar'}
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Show message if using cached data
+  const isUsingCache = zonesCached || checkInsCached || markersCached;
+  const allDataMissing = !rallyZones || !checkIns || !eventMarkers;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
+
+      {/* Offline warning if needed */}
+      {isUsingCache && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
+          <p className="text-sm text-yellow-800">
+            📡 Offline modus: Toont gecachte gegevens. Liveupdates beschikbaar als je verbonden bent.
+          </p>
+        </div>
+      )}
 
       {/* Page Header */}
       <div className="bg-gradient-to-r h-full from-primary-600 to-primary-700 text-white">

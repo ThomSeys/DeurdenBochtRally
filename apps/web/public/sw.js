@@ -1,13 +1,18 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '6';
+const VERSION = '7';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
 
 // Static assets to cache on install
+// These key pages will be available offline immediately
 const PRECACHE_URLS = [
   '/',
+  '/dashboard',
+  '/live-map',
+  '/rally',
+  '/about',
   '/manifest.json',
   '/offline.html',
 ];
