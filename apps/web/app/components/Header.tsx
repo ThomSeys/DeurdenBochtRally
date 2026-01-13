@@ -6,6 +6,7 @@ export default function Header() {
   const rootMatch = matches.find(m => m.id === 'root');
   const user = (rootMatch?.data as any)?.user;
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="bg-primary-600 shadow-lg sticky top-0 z-50">
@@ -109,23 +110,95 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            {user ? (
-              <Link
-                to="/dashboard"
-                className="bg-white text-primary-600 hover:bg-primary-50 px-4 py-2 rounded font-bold text-sm transition-colors"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                to="/registration"
-                className="bg-white text-primary-600 hover:bg-primary-50 px-4 py-2 rounded font-bold text-sm transition-colors"
-              >
-                Inschrijven
-              </Link>
-            )}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-white p-2"
+              aria-label="Toggle menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-primary-700">
+            <div className="flex flex-col space-y-3">
+              <Link
+                to="/"
+                className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                to="/about"
+                className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Over het event
+              </Link>
+              {user ? (
+                <>
+                  <Link
+                    to="/rally"
+                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Rally Zones
+                  </Link>
+                  <Link
+                    to="/dashboard"
+                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  {user.is_admin && (
+                    <Link
+                      to="/admin"
+                      className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 border-t border-primary-700"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <Form method="post" action="/logout" className="border-t border-primary-700 pt-3">
+                    <button
+                      type="submit"
+                      className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 w-full text-left"
+                    >
+                      Uitloggen
+                    </button>
+                  </Form>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Inloggen
+                  </Link>
+                  <Link
+                    to="/registration"
+                    className="bg-white text-primary-600 hover:bg-primary-50 mx-4 px-6 py-2.5 rounded font-bold uppercase tracking-wide text-sm transition-colors shadow-md text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Inschrijven
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
     </header>
   );
