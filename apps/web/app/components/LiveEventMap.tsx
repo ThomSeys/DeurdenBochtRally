@@ -48,12 +48,13 @@ interface LiveEventMapProps {
   eventMarkers: EventMarker[];
   gpxContent?: string | null;
   checkIns?: CheckIn[];
+  isAdmin?: boolean;
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
   showEventMarkers?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, checkIns = [], isAdmin = false, showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -234,8 +235,8 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         });
 
 
-        // Add check-in markers
-        if (showCheckIns) {
+        // Add check-in markers (only for admins)
+        if (showCheckIns && isAdmin) {
           checkIns.forEach((checkIn) => {
           if (checkIn.entry_latitude && checkIn.entry_longitude) {
             // Entry point (start)
@@ -292,6 +293,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         // Add rally zone markers
         if (showZoneRoutes) {
           rallyZones.forEach((zone) => {
+
             // Skip zones without coordinates
             if (!zone.startLocation || !zone.endLocation) {
               console.warn(`Zone ${zone.title} missing startLocation or endLocation`);
@@ -326,35 +328,38 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
             ? '<span style="color: #22c55e; font-weight: bold;">✓ Open</span>'
             : '<span style="color: #ef4444; font-weight: bold;">✗ Closed</span>';
 
-          L.default.marker([zone.startLocation.lat, zone.startLocation.lng], { icon: startIcon })
-            .addTo(mapRef.current)
-            .bindPopup(`
-              <div style="min-width: 200px;">
-                <strong style="font-size: 16px;">${zone.title}</strong><br/>
-                <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                  ${statusBadge}
+          // Only show start/end markers for admins
+          if (isAdmin) {
+            L.default.marker([zone.startLocation.lat, zone.startLocation.lng], { icon: startIcon })
+              .addTo(mapRef.current)
+              .bindPopup(`
+                <div style="min-width: 200px;">
+                  <strong style="font-size: 16px;">${zone.title}</strong><br/>
+                  <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                    ${statusBadge}
+                  </div>
+                  <div style="margin-top: 4px; color: #666; font-size: 12px;">
+                    📍 Start Point
+                  </div>
                 </div>
-                <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                  📍 Start Point
-                </div>
-              </div>
-            `);
+              `);
 
-          L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
-            .addTo(mapRef.current)
-            .bindPopup(`
-              <div style="min-width: 200px;">
-                <strong style="font-size: 16px;">${zone.title}</strong><br/>
-                <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                  ${statusBadge}
+            L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
+              .addTo(mapRef.current)
+              .bindPopup(`
+                <div style="min-width: 200px;">
+                  <strong style="font-size: 16px;">${zone.title}</strong><br/>
+                  <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                    ${statusBadge}
+                  </div>
+                  <div style="margin-top: 4px; color: #666; font-size: 12px;">
+                    🏁 End Point
+                  </div>
                 </div>
-                <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                  🏁 End Point
-                </div>
-              </div>
-            `);
+              `);
+          }
 
           // Draw line between start and end
           L.default.polyline(
