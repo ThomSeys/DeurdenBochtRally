@@ -106,11 +106,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     isBochtenkoning = scores.length > 0 && scores[0].participant_id === user.id;
   }
 
-  return { user, submission, documents, completedZones, isBochtenkoning };
+  const eventDate = process.env.EVENT_DATE || '2026-05-16';
+
+  return { user, submission, documents, completedZones, isBochtenkoning, eventDate };
 }
 
 export default function Dashboard() {
-  const { user, submission, documents, completedZones, isBochtenkoning } = useLoaderData<typeof loader>();
+  const { user, submission, documents, completedZones, isBochtenkoning, eventDate } = useLoaderData<typeof loader>();
   const checkInUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${user.id}`;
   const [qrCodeUrl, setQrCodeUrl] = useState(`/api/qrcode?text=${encodeURIComponent(checkInUrl)}` || user.qr_code_image_url);
 
@@ -220,6 +222,34 @@ export default function Dashboard() {
 
         {/* Documents Section */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Live Map - ONLY visible on event day or for admins */}
+          {(user.is_admin || new Date().toISOString().split('T')[0] === eventDate) && (
+            <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white md:col-span-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-xl mb-2 flex items-center">
+                    <span className="text-3xl mr-3">🗺️</span>
+                    Live Rally Map
+                  </h3>
+                  <p className="text-blue-100 text-sm mb-4">
+                    Volg de route, rally zones en live evenementen tijdens de rally
+                  </p>
+                  {user.is_admin && new Date().toISOString().split('T')[0] !== eventDate && (
+                    <p className="text-xs bg-yellow-500 text-yellow-900 inline-block px-2 py-1 rounded font-medium">
+                      Admin Preview
+                    </p>
+                  )}
+                </div>
+                <Link
+                  to="/live-map"
+                  className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg"
+                >
+                  Open Map →
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Routes */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">

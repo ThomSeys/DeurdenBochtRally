@@ -3,6 +3,7 @@ import { recalculateAllShadowScores } from '~/lib/shadow-rally.server';
 import { requireUserId } from '~/lib/session.server';
 
 export async function action({ request }: ActionFunctionArgs) {
+  console.info('[api.shadow-recalculate] action start', { method: request.method });
   // TODO: Add admin check here
   await requireUserId(request);
   
@@ -12,9 +13,10 @@ export async function action({ request }: ActionFunctionArgs) {
   
   try {
     await recalculateAllShadowScores();
+    console.info('[api.shadow-recalculate] action success');
     return { success: true, message: 'Shadow scores recalculated successfully' };
   } catch (error) {
-    console.error('Shadow score calculation error:', error);
+    console.error('[api.shadow-recalculate] action error', error);
     return { error: 'Failed to calculate shadow scores', status: 500 };
   }
 }

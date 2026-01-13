@@ -51,120 +51,122 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireAdmin(request);
-  const formData = await request.formData();
-  const intent = formData.get('intent') as string;
-  const participantId = formData.get('participant_id') as string;
+  console.info('[admin.check-in] action start');
 
-  if (!participantId) {
-    return { error: 'Selecteer een deelnemer', success: false };
-  }
+  try {
+    await requireAdmin(request);
+    const formData = await request.formData();
+    const intent = formData.get('intent') as string;
+    const participantId = formData.get('participant_id') as string;
 
-  // Get participant info
-  const { data: participant, error: fetchError } = await supabaseAdmin
-    .from('participants')
-    .select('*')
-    .eq('id', participantId)
-    .single();
-
-  if (fetchError || !participant) {
-    return { error: 'Deelnemer niet gevonden', success: false };
-  }
-
-  if (participant.payment_status !== 'completed') {
-    return { 
-      error: 'Betaling niet voltooid.',
-      success: false,
-      participant 
-    };
-  }
-
-  // Handle zone check-in
-  if (intent === 'zone-checkin') {
-    const zoneNumber = formData.get('zone_number') as string;
-    
-    if (!zoneNumber) {
-      return { error: 'Selecteer een zone', success: false };
+    if (!participantId) {
+      return { error: 'Selecteer een deelnemer', success: false };
     }
 
-    if (!participant.checked_in) {
-      return { error: 'Deze deelnemer is nog niet ingecheckt', success: false };
-    }
-
-    // Get the zone document from Sanity to get the correct zone ID
-    const zoneOrder = parseInt(zoneNumber) - 1;
-    const zone = await sanityClient.fetch(
-      `*[_type == "rallyZone" && order == $order][0] { _id }`,
-      { order: zoneOrder }
-    );
-
-    if (!zone || !zone._id) {
-      return { error: 'Zone niet gevonden', success: false };
-    }
-
-    // Check if this zone submission already exists
-    const { data: existing } = await supabaseAdmin
-      .from('rally_zone_submissions')
-      .select('id, entry_timestamp')
-      .eq('participant_id', participantId)
-      .eq('zone_id', zone._id)
+    const { data: participant, error: fetchError } = await supabaseAdmin
+      .from('participants')
+      .select('*')
+      .eq('id', participantId)
       .single();
 
-    if (existing) {
+    if (fetchError || !participant) {
+      return { error: 'Deelnemer niet gevonden', success: false };
+    }
+
+    if (participant.payment_status !== 'completed') {
       return { 
-        warning: `Zone ${zoneNumber} is al geregistreerd voor ${participant.first_name} ${participant.last_name}`,
+        error: 'Betaling niet voltooid.',
+        success: false,
+        participant 
+      };
+    }
+
+    if (intent === 'zone-checkin') {
+      const zoneNumber = formData.get('zone_number') as string;
+      
+      if (!zoneNumber) {
+        return { error: 'Selecteer een zone', success: false };
+      }
+
+      if (!participant.checked_in) {
+        return { error: 'Deze deelnemer is nog niet ingecheckt', success: false };
+      }
+
+      const zoneOrder = parseInt(zoneNumber) - 1;
+      const zone = await sanityClient.fetch(
+        `*[_type == "rallyZone" && order == $order][0] { _id }`,
+        { order: zoneOrder }
+      );
+
+      if (!zone || !zone._id) {
+        return { error: 'Zone niet gevonden', success: false };
+      }
+
+      const { data: existing } = await supabaseAdmin
+        .from('rally_zone_submissions')
+        .select('id, entry_timestamp')
+        .eq('participant_id', participantId)
+        .eq('zone_id', zone._id)
+        .single();
+
+      if (existing) {
+        return { 
+          warning: `Zone ${zoneNumber} is al geregistreerd voor ${participant.first_name} ${participant.last_name}`,
+          success: true,
+          participant 
+        };
+      }
+
+      const { error: insertError } = await supabaseAdmin
+        .from('rally_zone_submissions')
+        .insert({
+          participant_id: participantId,
+          zone_id: zone._id,
+          entry_timestamp: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        return { 
+          error: 'Fout bij het registreren van de zone',
+          success: false 
+        };
+      }
+
+      console.info('[admin.check-in] action success', { intent, participantId, zoneNumber });
+      return { 
+        success: true,
+        message: `Zone ${zoneNumber} geregistreerd voor ${participant.first_name} ${participant.last_name}!`,
+        participant 
+      };
+    }
+
+    if (participant.checked_in) {
+      return { 
+        warning: 'Deze deelnemer is al ingecheckt.',
         success: true,
         participant 
       };
     }
 
-    // Create new zone submission with entry timestamp
-    const { error: insertError } = await supabaseAdmin
-      .from('rally_zone_submissions')
-      .insert({
-        participant_id: participantId,
-        zone_id: zone._id,
-        entry_timestamp: new Date().toISOString(),
-      });
+    const { error: updateError } = await supabaseAdmin
+      .from('participants')
+      .update({ checked_in: true })
+      .eq('id', participant.id);
 
-    if (insertError) {
-      return { 
-        error: 'Fout bij het registreren van de zone',
-        success: false 
-      };
+    if (updateError) {
+      return { error: 'Er ging iets mis bij het inchecken', success: false };
     }
 
+    console.info('[admin.check-in] action success', { intent: 'check-in', participantId });
     return { 
-      success: true,
-      message: `Zone ${zoneNumber} geregistreerd voor ${participant.first_name} ${participant.last_name}!`,
+      success: true, 
+      message: `${participant.first_name} ${participant.last_name} succesvol ingecheckt!`,
       participant 
     };
+  } catch (error) {
+    console.error('[admin.check-in] action error', error);
+    return { error: 'Onverwachte fout', success: false };
   }
-
-  // Handle main check-in
-  if (participant.checked_in) {
-    return { 
-      warning: 'Deze deelnemer is al ingecheckt.',
-      success: true,
-      participant 
-    };
-  }
-
-  // Check in the participant
-  const { error: updateError } = await supabaseAdmin
-    .from('participants')
-    .update({ checked_in: true })
-    .eq('id', participant.id);
-
-  if (updateError) {
-    return { error: 'Er ging iets mis bij het inchecken', success: false };
-  }
-
-  return { 
-    success: true, 
-    message: `${participant.first_name} ${participant.last_name} succesvol ingecheckt!`,
-    participant 
-  };
 }
 
 export default function AdminCheckIn() {

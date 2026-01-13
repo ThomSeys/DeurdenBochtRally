@@ -29,27 +29,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireAdmin(request);
-  const formData = await request.formData();
-  const action = formData.get('action') as string;
+  console.info('[admin.settings] action start');
 
-  if (action === 'toggle_admin') {
-    const participantId = formData.get('participant_id') as string;
-    const currentStatus = formData.get('current_status') === 'true';
+  try {
+    await requireAdmin(request);
+    const formData = await request.formData();
+    const action = formData.get('action') as string;
 
-    const { error } = await supabaseAdmin
-      .from('participants')
-      .update({ is_admin: !currentStatus })
-      .eq('id', participantId);
+    if (action === 'toggle_admin') {
+      const participantId = formData.get('participant_id') as string;
+      const currentStatus = formData.get('current_status') === 'true';
 
-    if (error) {
-      return { error: error.message };
+      const { error } = await supabaseAdmin
+        .from('participants')
+        .update({ is_admin: !currentStatus })
+        .eq('id', participantId);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      console.info('[admin.settings] action success', { action, participantId });
+      return redirect('/admin/settings');
     }
 
-    return redirect('/admin/settings');
+    console.info('[admin.settings] action success', { action: 'noop' });
+    return null;
+  } catch (error) {
+    console.error('[admin.settings] action error', error);
+    return { error: 'Onverwachte fout' };
   }
-
-  return null;
 }
 
 export default function AdminSettings() {

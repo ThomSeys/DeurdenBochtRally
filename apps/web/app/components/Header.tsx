@@ -63,6 +63,13 @@ export default function Header() {
                         Rally Zones
                       </Link>
                       <Link
+                        to="/live-map"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        🗺️ Live Kaart
+                      </Link>
+                      <Link
                         to="/dashboard"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
@@ -152,6 +159,13 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Rally Zones
+                  </Link>
+                  <Link
+                    to="/live-map"
+                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    🗺️ Live Kaart
                   </Link>
                   <Link
                     to="/dashboard"

@@ -8,6 +8,7 @@ import pageContent from './pageContent';
 import scheduleItem from './scheduleItem';
 import faqItem from './faqItem';
 import benefitItem from './benefitItem';
+import eventMarker from './eventMarker';
 
 export const schemaTypes = [
   edition,
@@ -20,5 +21,6 @@ export const schemaTypes = [
   scheduleItem,
   faqItem,
   benefitItem,
+  eventMarker,
 ];
 

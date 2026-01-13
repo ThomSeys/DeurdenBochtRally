@@ -1,0 +1,376 @@
+import { useState } from 'react';
+import { type LoaderFunctionArgs, type ActionFunctionArgs } from 'react-router';
+import { useLoaderData, useRevalidator, Form } from 'react-router';
+import { requireAdmin } from '~/lib/session.server';
+import { sanityClient } from '~/lib/sanity.server';
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  await requireAdmin(request);
+
+  // Fetch all event markers
+  const eventMarkers = await sanityClient.fetch(`
+    *[_type == "eventMarker"] | order(createdAt desc) {
+      _id,
+      title,
+      description,
+      type,
+      location,
+      severity,
+      isActive,
+      createdAt,
+      updatedAt
+    }
+  `);
+
+  // Fetch current edition
+  const edition = await sanityClient.fetch(`
+    *[_type == "edition" && year == "2026"][0] {
+      _id
+    }
+  `);
+
+  return { eventMarkers, editionId: edition?._id };
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  console.info('[admin.event-markers] action start');
+
+  try {
+    await requireAdmin(request);
+
+    const formData = await request.formData();
+    const intent = formData.get('intent');
+
+    if (intent === 'toggle') {
+      const id = formData.get('id') as string;
+      const isActive = formData.get('isActive') === 'true';
+
+      await sanityClient.patch(id).set({ isActive: !isActive, updatedAt: new Date().toISOString() }).commit();
+
+      console.info('[admin.event-markers] action success', { intent, id });
+      return { success: true };
+    }
+
+    if (intent === 'delete') {
+      const id = formData.get('id') as string;
+      await sanityClient.delete(id);
+
+      console.info('[admin.event-markers] action success', { intent, id });
+      return { success: true };
+    }
+
+    if (intent === 'create') {
+      const title = formData.get('title') as string;
+      const description = formData.get('description') as string;
+      const type = formData.get('type') as string;
+      const lat = parseFloat(formData.get('lat') as string);
+      const lng = parseFloat(formData.get('lng') as string);
+      const severity = formData.get('severity') as string;
+      const editionId = formData.get('editionId') as string;
+
+      await sanityClient.create({
+        _type: 'eventMarker',
+        title,
+        description,
+        type,
+        location: { lat, lng },
+        severity,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        edition: {
+          _type: 'reference',
+          _ref: editionId,
+        },
+      });
+
+      console.info('[admin.event-markers] action success', { intent });
+      return { success: true };
+    }
+
+    return { success: false };
+  } catch (error) {
+    console.error('[admin.event-markers] action error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unexpected error' };
+  }
+}
+
+export default function AdminEventMarkers() {
+  const { eventMarkers, editionId } = useLoaderData<typeof loader>();
+  const revalidator = useRevalidator();
+  const [showForm, setShowForm] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Event Markers</h1>
+              <p className="mt-1 text-sm text-gray-500">
+                Manage live event markers displayed on the rally map
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                {showForm ? '✕ Cancel' : '+ Add Marker'}
+              </button>
+              <a
+                href="/live-map"
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                🗺️ View Map
+              </a>
+              <a
+                href="/admin"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                ← Back
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Create Form */}
+        {showForm && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4">Create Event Marker</h2>
+            <Form method="post" onSubmit={() => setShowForm(false)}>
+              <input type="hidden" name="intent" value="create" />
+              <input type="hidden" name="editionId" value={editionId} />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    maxLength={50}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., Road Closure"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Event Type
+                  </label>
+                  <select
+                    name="type"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="closure">🚧 Road Closure</option>
+                    <option value="accident">🚨 Accident</option>
+                    <option value="stop">⛔ Stop</option>
+                    <option value="flood">🌊 Flooded Road</option>
+                    <option value="warning">⚠️ Warning</option>
+                    <option value="info">ℹ️ Information</option>
+                    <option value="station">💧 Water/Fuel Station</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    required
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Detailed information about the event"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Latitude
+                  </label>
+                  <input
+                    type="number"
+                    name="lat"
+                    required
+                    step="any"
+                    min="-90"
+                    max="90"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="51.0967"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Longitude
+                  </label>
+                  <input
+                    type="number"
+                    name="lng"
+                    required
+                    step="any"
+                    min="-180"
+                    max="180"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="3.4400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Severity
+                  </label>
+                  <select
+                    name="severity"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  type="submit"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Create Event Marker
+                </button>
+              </div>
+            </Form>
+          </div>
+        )}
+
+        {/* Markers List */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {eventMarkers.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <p className="text-lg">No event markers yet</p>
+              <p className="text-sm mt-2">Click "Add Marker" to create one</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Event
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Location
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Severity
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {eventMarkers.map((marker: any) => (
+                    <tr key={marker._id} className={!marker.isActive ? 'opacity-50' : ''}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className="text-2xl mr-2">{getEventTypeEmoji(marker.type)}</span>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{marker.title}</div>
+                            <div className="text-sm text-gray-500">{marker.description}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {marker.location.lat.toFixed(4)}, {marker.location.lng.toFixed(4)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getSeverityClass(marker.severity)}`}>
+                          {marker.severity}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Form method="post" className="inline">
+                          <input type="hidden" name="intent" value="toggle" />
+                          <input type="hidden" name="id" value={marker._id} />
+                          <input type="hidden" name="isActive" value={marker.isActive.toString()} />
+                          <button
+                            type="submit"
+                            className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                              marker.isActive
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            }`}
+                          >
+                            {marker.isActive ? '✓ Active' : '✗ Inactive'}
+                          </button>
+                        </Form>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(marker.createdAt).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Form method="post" className="inline">
+                          <input type="hidden" name="intent" value="delete" />
+                          <input type="hidden" name="id" value={marker._id} />
+                          <button
+                            type="submit"
+                            onClick={(e) => {
+                              if (!confirm('Are you sure you want to delete this marker?')) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </Form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getEventTypeEmoji(type: string): string {
+  const emojiMap: Record<string, string> = {
+    closure: '🚧',
+    accident: '🚨',
+    stop: '⛔',
+    flood: '🌊',
+    warning: '⚠️',
+    info: 'ℹ️',
+    station: '💧',
+  };
+  return emojiMap[type] || '📍';
+}
+
+function getSeverityClass(severity: string): string {
+  const classMap: Record<string, string> = {
+    low: 'bg-blue-100 text-blue-800',
+    medium: 'bg-yellow-100 text-yellow-800',
+    high: 'bg-orange-100 text-orange-800',
+    critical: 'bg-red-100 text-red-800',
+  };
+  return classMap[severity] || 'bg-gray-100 text-gray-800';
+}

@@ -18,22 +18,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const password = formData.get('password') as string;
-  const url = new URL(request.url);
-  const redirectTo = url.searchParams.get('redirect') || '/';
+  console.info('[site-access] action start');
 
-  if (!password) {
-    return { error: 'Wachtwoord is verplicht' };
+  try {
+    const formData = await request.formData();
+    const password = formData.get('password') as string;
+    const url = new URL(request.url);
+    const redirectTo = url.searchParams.get('redirect') || '/';
+
+    if (!password) {
+      return { error: 'Wachtwoord is verplicht' };
+    }
+
+    const isValid = await verifySitePassword(password);
+
+    if (!isValid) {
+      return { error: 'Onjuist wachtwoord' };
+    }
+
+    console.info('[site-access] action success');
+    return createSiteAccessSession(request, redirectTo);
+  } catch (error) {
+    console.error('[site-access] action error', error);
+    return { error: 'Onverwachte fout. Probeer opnieuw.' };
   }
-
-  const isValid = await verifySitePassword(password);
-
-  if (!isValid) {
-    return { error: 'Onjuist wachtwoord' };
-  }
-
-  return createSiteAccessSession(request, redirectTo);
 }
 
 export default function SiteAccessPage() {

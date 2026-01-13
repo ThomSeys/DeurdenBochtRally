@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { Form, useActionData, useSearchParams, Link } from 'react-router';
-import { supabase, supabaseAdmin } from '~/lib/supabase.server';
+import { supabase } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -11,49 +11,44 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const email = formData.get('email');
-  const password = formData.get('password');
+  console.info('[login] action start');
 
-  if (typeof email !== 'string' || typeof password !== 'string') {
-    return { 
-      error: 'Email en wachtwoord zijn verplicht',
-      status: 400
-    };
+  try {
+    const formData = await request.formData();
+    const email = formData.get('email');
+    const qrCode = formData.get('qrCode');
+
+    if (typeof email !== 'string' || typeof qrCode !== 'string') {
+      return { 
+        error: 'Email en QR-code zijn verplicht',
+        status: 400
+      };
+    }
+
+    const { data: participant } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .eq('qr_code', qrCode)
+      .eq('payment_status', 'completed')
+      .single();
+
+    if (!participant) {
+      return { 
+        error: 'Ongeldige login gegevens. Controleer je email en QR-code.',
+        status: 400
+      };
+    }
+
+    const url = new URL(request.url);
+    const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
+
+    console.info('[login] action success', { participantId: participant.id });
+    return createUserSession(participant.id, redirectTo);
+  } catch (error) {
+    console.error('[login] action error', error);
+    return { error: 'Onverwachte fout', status: 500 };
   }
-
-  // Authenticate with Supabase auth (server-side)
-  const { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
-    email: email.toLowerCase(),
-    password,
-  });
-
-  if (authError || !authData.user) {
-    return { 
-      error: 'Ongeldige login gegevens. Controleer je email en wachtwoord.',
-      status: 400
-    };
-  }
-
-  // Check if participant has completed payment
-  const { data: participant } = await supabase
-    .from('participants')
-    .select('*')
-    .eq('id', authData.user.id)
-    .eq('payment_status', 'completed')
-    .single();
-
-  if (!participant) {
-    return { 
-      error: 'Je betaling is nog niet voltooid of je account bestaat niet.',
-      status: 400
-    };
-  }
-
-  const url = new URL(request.url);
-  const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
-
-  return createUserSession(participant.id, redirectTo);
 }
 
 export default function Login() {
@@ -67,7 +62,7 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             🏍 Deur Den Bocht
           </h1>
-          <p className="text-gray-600">Login met je email en wachtwoord</p>
+          <p className="text-gray-600">Login met je QR-code</p>
         </div>
 
         {actionData?.error && (
@@ -93,19 +88,19 @@ export default function Login() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Wachtwoord
+            <label htmlFor="qrCode" className="block text-sm font-medium text-gray-700 mb-2">
+              QR-code
             </label>
             <input
-              id="password"
-              name="password"
-              type="password"
+              id="qrCode"
+              name="qrCode"
+              type="text"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Je wachtwoord"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
+              placeholder="Je hebt deze ontvangen via email"
             />
             <p className="mt-2 text-sm text-gray-500">
-              Je hebt dit wachtwoord ingesteld bij je inschrijving
+              Je kreeg deze code in je bevestigingsmail na inschrijving
             </p>
           </div>
 
@@ -118,7 +113,7 @@ export default function Login() {
         </Form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Wachtwoord vergeten?</p>
+          <p>QR-code kwijt?</p>
           <p className="mt-1">
             Stuur een email naar{' '}
             <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">

@@ -10,27 +10,34 @@ export const meta: MetaFunction = () => {
 };
 
 export async function action({ params, request }: ActionFunctionArgs) {
-  const { participantId } = params;
-  
-  if (!participantId) {
-    return { error: 'Participant ID is required' };
+  console.info('[check-in] action start');
+
+  try {
+    const { participantId } = params;
+    
+    if (!participantId) {
+      return { error: 'Participant ID is required' };
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('participants')
+      .update({ 
+        checked_in: true,
+        checked_in_at: new Date().toISOString()
+      })
+      .eq('id', participantId);
+
+    if (updateError) {
+      console.error('[check-in] action error', updateError);
+      return { error: 'Er ging iets mis bij het inchecken' };
+    }
+
+    console.info('[check-in] action success', { participantId });
+    return { success: true };
+  } catch (error) {
+    console.error('[check-in] action error', error);
+    return { error: 'Onverwachte fout' };
   }
-
-  // Check in the participant
-  const { error: updateError } = await supabaseAdmin
-    .from('participants')
-    .update({ 
-      checked_in: true,
-      checked_in_at: new Date().toISOString()
-    })
-    .eq('id', participantId);
-
-  if (updateError) {
-    console.error('Check-in error:', updateError);
-    return { error: 'Er ging iets mis bij het inchecken' };
-  }
-
-  return { success: true };
 }
 
 export async function loader({ params }: LoaderFunctionArgs) {

@@ -90,24 +90,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireAdmin(request);
-  const formData = await request.formData();
-  const action = formData.get('action') as string;
+  console.info('[admin.leaderboard] action start');
 
-  if (action === 'recalculate') {
-    const participantId = formData.get('participant_id') as string;
-    
-    // Trigger shadow score recalculation
-    await fetch(`${request.url.split('/admin')[0]}/api/shadow-recalculate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantId }),
-    });
+  try {
+    await requireAdmin(request);
+    const formData = await request.formData();
+    const action = formData.get('action') as string;
 
-    return redirect('/admin/leaderboard');
+    if (action === 'recalculate') {
+      const participantId = formData.get('participant_id') as string;
+      
+      await fetch(`${request.url.split('/admin')[0]}/api/shadow-recalculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantId }),
+      });
+
+      console.info('[admin.leaderboard] action success', { action, participantId });
+      return redirect('/admin/leaderboard');
+    }
+
+    console.info('[admin.leaderboard] action success', { action: 'noop' });
+    return null;
+  } catch (error) {
+    console.error('[admin.leaderboard] action error', error);
+    return { error: 'Unexpected error' };
   }
-
-  return null;
 }
 
 export default function AdminLeaderboard() {

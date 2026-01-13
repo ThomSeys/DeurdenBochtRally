@@ -78,10 +78,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const userId = await requireUserId(request);
-  const formData = await request.formData();
+  console.info('[dashboard.rally-submission] action start');
 
-  const action = formData.get('action');
+  try {
+    const userId = await requireUserId(request);
+    const formData = await request.formData();
+
+    const action = formData.get('action');
 
   // Handle immediate odometer updates
   if (action === 'update_odometer') {
@@ -150,10 +153,10 @@ export async function action({ request }: ActionFunctionArgs) {
   };
 
   // Guard check: Verify that user has started each zone before allowing submission
-  const { data: zoneEntries } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('zone_id')
-    .eq('participant_id', userId);
+    const { data: zoneEntries } = await supabaseAdmin
+      .from('rally_zone_submissions')
+      .select('zone_id')
+      .eq('participant_id', userId);
 
   // Map zone_id to a normalized format for comparison
   // zone_id could be numeric (1, 2, 3...) or string format (rz1, rz2...)
@@ -170,7 +173,7 @@ export async function action({ request }: ActionFunctionArgs) {
     })
   );
 
-  console.log('Started zones:', Array.from(startedZones));
+    console.info('[dashboard.rally-submission] started zones', { started: Array.from(startedZones) });
 
   // Check each zone code that's being submitted
   for (let i = 1; i <= 8; i++) {
@@ -243,31 +246,36 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (existing) {
     // Update existing submission
-    const { error } = await supabaseAdmin
-      .from('rally_submissions')
-      .update(dataToSave)
-      .eq('participant_id', userId);
+      const { error } = await supabaseAdmin
+        .from('rally_submissions')
+        .update(dataToSave)
+        .eq('participant_id', userId);
 
-    if (error) {
-      console.error('Update error:', error);
-      return {  error: 'Er ging iets mis bij het bijwerken. Probeer opnieuw.', status: 500 };
-    }
+      if (error) {
+        console.error('[dashboard.rally-submission] update error', error);
+        return {  error: 'Er ging iets mis bij het bijwerken. Probeer opnieuw.', status: 500 };
+      }
   } else {
     // Create new submission
-    const { error } = await supabaseAdmin
-      .from('rally_submissions')
-      .insert({
-        participant_id: userId,
-        ...dataToSave,
-      });
+      const { error } = await supabaseAdmin
+        .from('rally_submissions')
+        .insert({
+          participant_id: userId,
+          ...dataToSave,
+        });
 
-    if (error) {
-      console.error('Insert error:', error);
-      return {  error: 'Er ging iets mis bij het opslaan. Probeer opnieuw.', status: 500 };
-    }
+      if (error) {
+        console.error('[dashboard.rally-submission] insert error', error);
+        return {  error: 'Er ging iets mis bij het opslaan. Probeer opnieuw.', status: 500 };
+      }
   }
 
-  return redirect('/dashboard?success=rally');
+    console.info('[dashboard.rally-submission] action success', { action });
+    return redirect('/dashboard?success=rally');
+  } catch (error) {
+    console.error('[dashboard.rally-submission] action error', error);
+    return { error: 'Onverwachte fout', status: 500 };
+  }
 }
 
 export default function RallySubmission() {

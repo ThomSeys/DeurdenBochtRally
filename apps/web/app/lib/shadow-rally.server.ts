@@ -170,16 +170,22 @@ export async function calculateZoneShadowScores(zoneId: string): Promise<void> {
     return;
   }
   
-  // 2. Calculate zone times for all submissions
-  const zoneTimes = submissions.map(sub => {
+  // Separate manual and regular submissions
+  const manualSubmissions = submissions.filter(s => s.is_manual === true);
+  const regularSubmissions = submissions.filter(s => s.is_manual !== true);
+  
+  // 2. Calculate zone times for regular submissions only (exclude manual entries)
+  const zoneTimes = regularSubmissions.map(sub => {
     const entryTime = new Date(sub.entry_timestamp).getTime();
     const answerTime = new Date(sub.answer_timestamp!).getTime();
     const minutes = Math.round((answerTime - entryTime) / 60000);
     return { id: sub.id, minutes };
   });
   
-  // 3. Calculate median zone time
-  const medianTime = calculateMedian(zoneTimes.map(zt => zt.minutes));
+  // 3. Calculate median zone time (from regular submissions only)
+  const medianTime = zoneTimes.length > 0 
+    ? calculateMedian(zoneTimes.map(zt => zt.minutes))
+    : 0;
   
   // 4. Get valid answers for this zone
   const validAnswers = await getValidAnswers(zoneId);
@@ -200,10 +206,12 @@ export async function calculateZoneShadowScores(zoneId: string): Promise<void> {
   
   // 6. Calculate scores for each submission
   for (const sub of submissions) {
+    // Manual entries get rhythm_score = 0 (no timing advantage)
+    const isManual = sub.is_manual === true;
     const zoneTime = zoneTimes.find(zt => zt.id === sub.id)?.minutes || 0;
     
-    // Rhythm score
-    const rhythmScore = calculateRhythmScore(zoneTime, medianTime);
+    // Rhythm score (0 for manual entries)
+    const rhythmScore = isManual ? 0 : calculateRhythmScore(zoneTime, medianTime);
     
     // View score (Blik)
     let viewScore = 0;

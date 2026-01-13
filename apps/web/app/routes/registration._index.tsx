@@ -31,159 +31,151 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  
-  const firstName = formData.get('firstName');
-  const lastName = formData.get('lastName');
-  const email = formData.get('email');
-  const phone = formData.get('phone');
-  const password = formData.get('password');
-  const motorcycleBrand = formData.get('motorcycleBrand');
-  const motorcycleModel = formData.get('motorcycleModel');
-  const licensePlate = formData.get('licensePlate');
-  const formula = formData.get('formula');
-  const rideType = formData.get('rideType');
+  console.info('[registration] action start');
 
-  // Validation
-  if (
-    typeof firstName !== 'string' ||
-    typeof lastName !== 'string' ||
-    typeof email !== 'string' ||
-    typeof phone !== 'string' ||
-    typeof password !== 'string' ||
-    typeof motorcycleBrand !== 'string' ||
-    typeof motorcycleModel !== 'string' ||
-    typeof licensePlate !== 'string' ||
-    typeof formula !== 'string' ||
-    typeof rideType !== 'string'
-  ) {
-    return {  error: 'Alle velden zijn verplicht', status: 400 };
-  }
-
-  if (password.length < 6) {
-    return {  error: 'Wachtwoord moet minstens 6 karakters lang zijn', status: 400 };
-  }
-
-  if (!['with_meals', 'breakfast_only'].includes(formula)) {
-    return {  error: 'Ongeldige formule geselecteerd', status: 400 };
-  }
-
-  if (!['free', 'guided'].includes(rideType)) {
-    return {  error: 'Ongeldig rittype geselecteerd', status: 400 };
-  }
-
-  // Check if email already registered
-  const { data: existing } = await supabaseAdmin
-    .from('participants')
-    .select('id')
-    .eq('email', email.toLowerCase())
-    .single();
-
-  if (existing) {
-    return {  error: 'Dit emailadres is al geregistreerd', status: 400 };
-  }
-
-  // Create Supabase auth user
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email: email.toLowerCase(),
-    password,
-    email_confirm: true,
-  });
-
-  if (authError || !authData.user) {
-    console.error('Auth error:', authError);
-    return {  error: 'Er ging iets mis bij het aanmaken van je account. Probeer opnieuw.', status: 500 };
-  }
-
-  // Generate QR code
-  const qrCode = generateQRCode();
-  const participantId = authData.user.id;
-  
-  // Generate QR code URL for check-in
-  const qrCodeUrl = `${new URL(request.url).origin}/check-in/${participantId}`;
-
-  // Get price
-  const amount = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
-
-  // Create participant record linked to auth user
-  const { data: participant, error: dbError } = await supabaseAdmin
-    .from('participants')
-    .insert({
-      id: participantId,
-      first_name: firstName,
-      last_name: lastName,
-      email: email.toLowerCase(),
-      phone,
-      motorcycle_brand: motorcycleBrand,
-      motorcycle_model: motorcycleModel,
-      license_plate: licensePlate.toUpperCase(),
-      formula,
-      ride_type: rideType,
-      amount_paid: amount,
-      qr_code: qrCode,
-      payment_status: 'pending',
-    })
-    .select()
-    .single();
-
-  if (dbError || !participant) {
-    console.error('Database error:', dbError);
-    // Clean up auth user if participant creation fails
-    await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-    return {  error: 'Er ging iets mis bij het registreren. Probeer opnieuw.', status: 500 };
-  }
-
-  // Generate and save QR code image with check-in URL
   try {
-    const qrCodeImageUrl = await generateAndSaveQRCode(qrCodeUrl, participant.id);
+    const formData = await request.formData();
     
-    // Update participant with QR code image URL
-    await supabaseAdmin
-      .from('participants')
-      .update({ qr_code_image_url: qrCodeImageUrl })
-      .eq('id', participant.id);
-  } catch (qrError) {
-    console.error('QR code generation error:', qrError);
-    // Continue even if QR code generation fails - emails can use API endpoint as fallback
-  }
+    const firstName = formData.get('firstName');
+    const lastName = formData.get('lastName');
+    const email = formData.get('email');
+    const phone = formData.get('phone');
+    const password = formData.get('password');
+    const motorcycleBrand = formData.get('motorcycleBrand');
+    const motorcycleModel = formData.get('motorcycleModel');
+    const licensePlate = formData.get('licensePlate');
+    const formula = formData.get('formula');
+    const rideType = formData.get('rideType');
 
-  // Check if payment bypass is enabled (for development)
-  const bypassPayment = process.env.BYPASS_PAYMENT === 'true';
-  
-  if (bypassPayment) {
-    // Mark as completed without payment
-    await supabaseAdmin
-      .from('participants')
-      .update({ payment_status: 'completed' })
-      .eq('id', participant.id);
-    
-    const { createUserSession } = await import('~/lib/session.server');
-    return createUserSession(participant.id, '/dashboard');
-  }
+    if (
+      typeof firstName !== 'string' ||
+      typeof lastName !== 'string' ||
+      typeof email !== 'string' ||
+      typeof phone !== 'string' ||
+      typeof password !== 'string' ||
+      typeof motorcycleBrand !== 'string' ||
+      typeof motorcycleModel !== 'string' ||
+      typeof licensePlate !== 'string' ||
+      typeof formula !== 'string' ||
+      typeof rideType !== 'string'
+    ) {
+      return {  error: 'Alle velden zijn verplicht', status: 400 };
+    }
 
-  // Create Stripe checkout session
-  try {
-    const session = await createCheckoutSession({
+    if (password.length < 6) {
+      return {  error: 'Wachtwoord moet minstens 6 karakters lang zijn', status: 400 };
+    }
+
+    if (!['with_meals', 'breakfast_only'].includes(formula)) {
+      return {  error: 'Ongeldige formule geselecteerd', status: 400 };
+    }
+
+    if (!['free', 'guided'].includes(rideType)) {
+      return {  error: 'Ongeldig rittype geselecteerd', status: 400 };
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from('participants')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (existing) {
+      return {  error: 'Dit emailadres is al geregistreerd', status: 400 };
+    }
+
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email.toLowerCase(),
-      amount: amount / 100, // Convert cents to euros
-      metadata: {
-        participantId: participant.id,
-        formula,
-        rideType,
-        qrCode,
-      },
+      password,
+      email_confirm: true,
     });
 
-    return {  checkoutUrl: session.url };
-  } catch (error) {
-    console.error('Stripe error:', error);
-    // Clean up participant record
-    await supabaseAdmin
-      .from('participants')
-      .delete()
-      .eq('id', participant.id);
+    if (authError || !authData.user) {
+      console.error('[registration] auth error', authError);
+      return {  error: 'Er ging iets mis bij het aanmaken van je account. Probeer opnieuw.', status: 500 };
+    }
 
-    return {  error: 'Er ging iets mis bij het aanmaken van de betaling. Probeer opnieuw.', status: 500 };
+    const qrCode = generateQRCode();
+    const participantId = authData.user.id;
+    const qrCodeUrl = `${new URL(request.url).origin}/check-in/${participantId}`;
+    const amount = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
+
+    const { data: participant, error: dbError } = await supabaseAdmin
+      .from('participants')
+      .insert({
+        id: participantId,
+        first_name: firstName,
+        last_name: lastName,
+        email: email.toLowerCase(),
+        phone,
+        motorcycle_brand: motorcycleBrand,
+        motorcycle_model: motorcycleModel,
+        license_plate: licensePlate.toUpperCase(),
+        formula,
+        ride_type: rideType,
+        amount_paid: amount,
+        qr_code: qrCode,
+        payment_status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (dbError || !participant) {
+      console.error('[registration] database error', dbError);
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      return {  error: 'Er ging iets mis bij het registreren. Probeer opnieuw.', status: 500 };
+    }
+
+    try {
+      const qrCodeImageUrl = await generateAndSaveQRCode(qrCodeUrl, participant.id);
+      
+      await supabaseAdmin
+        .from('participants')
+        .update({ qr_code_image_url: qrCodeImageUrl })
+        .eq('id', participant.id);
+    } catch (qrError) {
+      console.error('[registration] QR code generation error', qrError);
+    }
+
+    const bypassPayment = process.env.BYPASS_PAYMENT === 'true';
+    
+    if (bypassPayment) {
+      await supabaseAdmin
+        .from('participants')
+        .update({ payment_status: 'completed' })
+        .eq('id', participant.id);
+      
+      const { createUserSession } = await import('~/lib/session.server');
+      console.info('[registration] bypass payment success', { participantId });
+      return createUserSession(participant.id, '/dashboard');
+    }
+
+    try {
+      const session = await createCheckoutSession({
+        email: email.toLowerCase(),
+        amount: amount / 100,
+        metadata: {
+          participantId: participant.id,
+          formula,
+          rideType,
+          qrCode,
+        },
+      });
+
+      console.info('[registration] action success', { participantId });
+      return {  checkoutUrl: session.url };
+    } catch (error) {
+      console.error('[registration] stripe error', error);
+      await supabaseAdmin
+        .from('participants')
+        .delete()
+        .eq('id', participant.id);
+
+      return {  error: 'Er ging iets mis bij het aanmaken van de betaling. Probeer opnieuw.', status: 500 };
+    }
+  } catch (error) {
+    console.error('[registration] action error', error);
+    return { error: 'Onverwachte fout', status: 500 };
   }
 }
 

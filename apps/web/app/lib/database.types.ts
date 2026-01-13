@@ -70,6 +70,7 @@ export type Database = {
           ride_type: string
           stripe_payment_id: string | null
           is_admin: boolean | null
+          status: string | null
         }
         Insert: {
           allow_early_access?: boolean | null
@@ -93,6 +94,7 @@ export type Database = {
           ride_type: string
           stripe_payment_id?: string | null
           is_admin?: boolean | null
+          status?: string | null
         }
         Update: {
           allow_early_access?: boolean | null
@@ -116,6 +118,7 @@ export type Database = {
           ride_type?: string
           stripe_payment_id?: string | null
           is_admin?: boolean | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -225,6 +228,17 @@ export type Database = {
           view_score: number | null
           zone_id: string
           zone_time_minutes: number | null
+          scan_type: string | null
+          proof_photo_url: string | null
+          is_manual: boolean | null
+          valid: boolean | null
+          reason_if_invalid: string | null
+          approved_by: string | null
+          approved_at: string | null
+          gps_within_geofence: boolean | null
+          gps_accuracy_low: boolean | null
+          submitted_offline: boolean | null
+          synced_at: string | null
         }
         Insert: {
           answer_accuracy?: number | null
@@ -237,6 +251,17 @@ export type Database = {
           entry_latitude?: number | null
           entry_longitude?: number | null
           entry_timestamp: string
+          scan_type?: string | null
+          proof_photo_url?: string | null
+          is_manual?: boolean | null
+          valid?: boolean | null
+          reason_if_invalid?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+          gps_within_geofence?: boolean | null
+          gps_accuracy_low?: boolean | null
+          submitted_offline?: boolean | null
+          synced_at?: string | null
           id?: string
           is_correct?: boolean | null
           normalized_answer?: string | null
@@ -260,6 +285,17 @@ export type Database = {
           entry_latitude?: number | null
           entry_longitude?: number | null
           entry_timestamp?: string
+          scan_type?: string | null
+          proof_photo_url?: string | null
+          is_manual?: boolean | null
+          valid?: boolean | null
+          reason_if_invalid?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+          gps_within_geofence?: boolean | null
+          gps_accuracy_low?: boolean | null
+          submitted_offline?: boolean | null
+          synced_at?: string | null
           id?: string
           is_correct?: boolean | null
           normalized_answer?: string | null
@@ -276,6 +312,99 @@ export type Database = {
           {
             foreignKeyName: "rally_zone_submissions_participant_id_fkey"
             columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zone_closure_log: {
+        Row: {
+          id: string
+          zone_id: string
+          closed_at: string | null
+          closed_by: string | null
+          reopened_at: string | null
+          reopened_by: string | null
+          reason: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          zone_id: string
+          closed_at?: string | null
+          closed_by?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          reason?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          zone_id?: string
+          closed_at?: string | null
+          closed_by?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          reason?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zone_closure_log_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zone_closure_log_reopened_by_fkey"
+            columns: ["reopened_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_score_adjustments: {
+        Row: {
+          id: string
+          participant_id: string
+          zone_id: string | null
+          adjustment_points: number
+          reason: string
+          adjusted_by: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          zone_id?: string | null
+          adjustment_points: number
+          reason: string
+          adjusted_by: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          participant_id?: string
+          zone_id?: string | null
+          adjustment_points?: number
+          reason?: string
+          adjusted_by?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_score_adjustments_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_score_adjustments_adjusted_by_fkey"
+            columns: ["adjusted_by"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]

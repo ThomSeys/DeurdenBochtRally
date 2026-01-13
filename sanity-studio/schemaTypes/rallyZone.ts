@@ -100,6 +100,30 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'radius_m',
+      title: 'Geofence Radius (meters)',
+      type: 'number',
+      description: 'GPS accuracy radius for zone validation (default: 30m)',
+      initialValue: 30,
+      validation: (Rule) => Rule.required().min(10).max(200),
+    }),
+    defineField({
+      name: 'is_open',
+      title: 'Zone is Open',
+      type: 'boolean',
+      description: 'Whether the zone is currently accepting scans',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'reference_photo',
+      title: 'Reference Photo',
+      type: 'image',
+      description: 'Reference photo for manual validation (what riders should photograph)',
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
       name: 'image',
       title: 'Zone Image',
       type: 'image',

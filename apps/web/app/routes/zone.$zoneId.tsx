@@ -62,34 +62,40 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  await requireUserId(request);
-  const user = await getUser(request);
-  const zoneId = parseInt(params.zoneId || '0');
+  console.info('[zone.$zoneId] action start');
 
-  if (!user || !zoneId) {
-    return { error: 'Invalid request' };
-  }
+  try {
+    await requireUserId(request);
+    const user = await getUser(request);
+    const zoneId = parseInt(params.zoneId || '0');
 
-  // Check if already exists
-  const { data: existing } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('id, entry_timestamp')
-    .eq('participant_id', user.id)
-    .eq('zone_id', zoneId.toString())
-    .single();
+    if (!user || !zoneId) {
+      return { error: 'Invalid request' };
+    }
 
-  if (!existing) {
-    // Create new submission with entry timestamp
-    await supabaseAdmin
+    const { data: existing } = await supabaseAdmin
       .from('rally_zone_submissions')
-      .insert({
-        participant_id: user.id,
-        zone_id: zoneId.toString(),
-        entry_timestamp: new Date().toISOString(),
-      });
-  }
+      .select('id, entry_timestamp')
+      .eq('participant_id', user.id)
+      .eq('zone_id', zoneId.toString())
+      .single();
 
-  return redirect('/dashboard/rally-submission');
+    if (!existing) {
+      await supabaseAdmin
+        .from('rally_zone_submissions')
+        .insert({
+          participant_id: user.id,
+          zone_id: zoneId.toString(),
+          entry_timestamp: new Date().toISOString(),
+        });
+    }
+
+    console.info('[zone.$zoneId] action success', { zoneId });
+    return redirect('/dashboard/rally-submission');
+  } catch (error) {
+    console.error('[zone.$zoneId] action error', error);
+    return { error: 'Unexpected error' };
+  }
 }
 
 export default function ZonePage() {

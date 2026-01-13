@@ -4,6 +4,8 @@ import { verifyWebhookSignature } from '~/lib/stripe.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 
 export async function action({ request }: ActionFunctionArgs) {
+  console.info('[api.webhook] action start', { method: request.method });
+
   if (request.method !== 'POST') {
     return {  error: 'Method not allowed',  status: 405 };
   }
@@ -42,13 +44,13 @@ export async function action({ request }: ActionFunctionArgs) {
         }
 
         // TODO: Send confirmation email here
-        console.log(`Payment completed for participant ${participantId}`);
+        console.info('[api.webhook] payment completed', { participantId });
       }
     }
 
     return {  received: true };
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('[api.webhook] action error', error);
     return {  error: 'Webhook signature verification failed', status: 400 };
   }
 }

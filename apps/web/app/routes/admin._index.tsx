@@ -127,7 +127,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link
             to="/admin/participants"
             className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors"
@@ -162,6 +162,42 @@ export default function AdminDashboard() {
             <div className="text-2xl mb-2">🏆</div>
             <h3 className="font-semibold text-gray-900">Klassement</h3>
             <p className="text-sm text-gray-600 mt-1">Live scoreboard</p>
+          </Link>
+
+          <Link
+            to="/admin/pending-scans"
+            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-yellow-400"
+          >
+            <div className="text-2xl mb-2">🔍</div>
+            <h3 className="font-semibold text-gray-900">Manual Validatie</h3>
+            <p className="text-sm text-gray-600 mt-1">Controleer scans</p>
+          </Link>
+
+          <Link
+            to="/admin/zone-control"
+            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-red-400"
+          >
+            <div className="text-2xl mb-2">🚦</div>
+            <h3 className="font-semibold text-gray-900">Zone Control</h3>
+            <p className="text-sm text-gray-600 mt-1">Open/sluit zones</p>
+          </Link>
+
+          <Link
+            to="/admin/manual-scan"
+            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-blue-400"
+          >
+            <div className="text-2xl mb-2">📝</div>
+            <h3 className="font-semibold text-gray-900">Manual Scan</h3>
+            <p className="text-sm text-gray-600 mt-1">Telefoon dood</p>
+          </Link>
+
+          <Link
+            to="/admin/event-markers"
+            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-green-400"
+          >
+            <div className="text-2xl mb-2">🗺️</div>
+            <h3 className="font-semibold text-gray-900">Event Markers</h3>
+            <p className="text-sm text-gray-600 mt-1">Live map events</p>
           </Link>
 
           <Link

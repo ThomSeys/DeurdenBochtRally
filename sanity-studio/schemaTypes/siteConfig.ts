@@ -28,9 +28,9 @@ export default defineType({
       title: 'Start Location Coordinates',
       type: 'object',
       fields: [
-        { name: 'lat', type: 'number', title: 'Latitude' },
-        { name: 'lng', type: 'number', title: 'Longitude' },
-        { name: 'label', type: 'string', title: 'Label' },
+        defineField({ name: 'lat', type: 'number', title: 'Latitude' }),
+        defineField({ name: 'lng', type: 'number', title: 'Longitude' }),
+        defineField({ name: 'label', type: 'string', title: 'Label' }),
       ],
       initialValue: {
         lat: 51.0967,
@@ -144,6 +144,15 @@ export default defineType({
       type: 'boolean',
       description: 'Prevent search engines from following links on this site',
       initialValue: true,
+    }),
+    defineField({
+      name: 'gpxRouteFile',
+      title: 'GPX Route File',
+      type: 'file',
+      description: 'Upload the main rally route GPX file for display on the live map',
+      options: {
+        accept: '.gpx',
+      },
     }),
     defineField({
       name: 'edition',
