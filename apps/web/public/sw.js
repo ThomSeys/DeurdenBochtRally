@@ -1,6 +1,6 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '7';
+const VERSION = '8';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
@@ -17,26 +17,54 @@ const PRECACHE_URLS = [
   '/offline.html',
 ];
 
-// Install event - cache core assets
+// API endpoints to pre-cache for offline functionality
+const PRECACHE_API_URLS = [
+  '/api/rally-zones',
+  '/api/check-ins',
+  '/api/event-markers',
+  '/api/gpx-route',
+];
+
+// Install event - cache core assets and API data
 self.addEventListener('install', (event) => {
   console.log('[SW] Install');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // Only cache URLs that actually exist as static files
-      return Promise.all(
-        PRECACHE_URLS.map((url) => 
-          fetch(url)
-            .then((res) => {
-              if (res.ok) {
-                cache.put(url, res);
-              }
-            })
-            .catch((err) => {
-              console.log(`[SW] Could not cache ${url}:`, err);
-            })
-        )
-      );
-    })
+    Promise.all([
+      // Cache HTML pages
+      caches.open(CACHE_NAME).then((cache) => {
+        return Promise.all(
+          PRECACHE_URLS.map((url) => 
+            fetch(url)
+              .then((res) => {
+                if (res.ok) {
+                  cache.put(url, res);
+                  console.log('[SW] Cached page:', url);
+                }
+              })
+              .catch((err) => {
+                console.log(`[SW] Could not cache page ${url}:`, err);
+              })
+          )
+        );
+      }),
+      // Cache API data
+      caches.open(API_CACHE).then((cache) => {
+        return Promise.all(
+          PRECACHE_API_URLS.map((url) =>
+            fetch(url)
+              .then((res) => {
+                if (res.ok) {
+                  cache.put(url, res);
+                  console.log('[SW] Cached API:', url);
+                }
+              })
+              .catch((err) => {
+                console.log(`[SW] Could not cache API ${url}:`, err);
+              })
+          )
+        );
+      }),
+    ])
   );
   self.skipWaiting();
 });
