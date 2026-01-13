@@ -158,7 +158,7 @@ export default function LiveMap() {
 
       {/* Offline warning if needed */}
       {isUsingCache && (
-        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3 relative z-40">
           <p className="text-sm text-yellow-800">
             📡 Offline modus: Toont gecachte gegevens. Liveupdates beschikbaar als je verbonden bent.
           </p>
@@ -166,8 +166,8 @@ export default function LiveMap() {
       )}
 
       {/* Page Header */}
-      <div className="bg-gradient-to-r h-full from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white relative z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">🗺️ Live Rally Kaart</h1>

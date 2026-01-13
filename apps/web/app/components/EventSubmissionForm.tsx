@@ -101,7 +101,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
+    <div className="fixed inset-0 z-40 flex items-end md:items-center md:justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/30 cursor-pointer"
@@ -110,7 +110,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
 
       {/* Sheet */}
       <div
-        className="relative w-full bg-white rounded-t-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+        className="relative w-full bg-white rounded-t-3xl md:rounded-lg shadow-2xl p-6 max-h-[90vh] md:max-h-[85vh] overflow-y-auto md:max-w-2xl md:w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

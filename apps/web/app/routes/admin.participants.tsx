@@ -227,10 +227,10 @@ export default function AdminParticipants() {
 
       {/* Detail Modal */}
       {selectedParticipant && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center md:justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg w-full md:max-w-2xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto my-auto">
+            <div className="p-4 md:p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
                 {selectedParticipant.first_name} {selectedParticipant.last_name}
               </h2>
               <button
@@ -240,8 +240,8 @@ export default function AdminParticipants() {
                 ×
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 md:p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Email</label>
                   <p className="text-gray-900">{selectedParticipant.email}</p>

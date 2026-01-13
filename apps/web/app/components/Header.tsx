@@ -9,7 +9,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-primary-600 shadow-lg sticky top-0 z-50">
+    <header className="bg-primary-600 shadow-lg sticky top-0 z-[1100]">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -54,7 +54,7 @@ export default function Header() {
                       className="fixed inset-0"
                       onClick={() => setUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-[900]">
                       <Link
                         to="/rally"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

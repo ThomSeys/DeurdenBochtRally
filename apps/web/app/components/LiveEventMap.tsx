@@ -8,6 +8,7 @@ interface RallyZone {
   startLocation: { lat: number; lng: number; label?: string };
   endLocation: { lat: number; lng: number; label?: string };
   is_open: boolean;
+  order: number;
   gpxRoute?: {
     asset: {
       url: string;
@@ -460,10 +461,13 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         }
         .leaflet-container {
           font-family: system-ui, -apple-system, sans-serif;
-          z-index: 1 !important;
+          z-index: auto !important;
         }
         .leaflet-pane {
-          z-index: 1 !important;
+          z-index: auto !important;
+        }
+        .leaflet-popup-pane {
+          z-index: 20 !important;
         }
       `}</style>
     </>

@@ -200,7 +200,6 @@ async function staleWhileRevalidateAPI(request) {
     );
   }
 }
-}
 
 // Network-first strategy for CSS/JS (so you get latest styles)
 async function networkFirstForAssets(request) {
