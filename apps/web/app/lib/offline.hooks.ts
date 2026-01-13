@@ -51,6 +51,8 @@ export function useOfflineStatus(): UseOfflineState {
 
 /**
  * Hook to fetch data with offline fallback
+ * Uses stale-while-revalidate: returns cached data immediately,
+ * updates in background if online
  */
 import { fetchWithOfflineFallback, type OfflineResponse } from './offline.utils';
 
@@ -80,9 +82,11 @@ export function useFetchOffline<T>(
           setIsOffline(result.isOffline);
           setError(null);
         } else if (!result.isCached && result.isOffline) {
+          // Only show error if we're offline AND have no cached data
           setError(new Error('No data available offline'));
           setIsOffline(true);
         }
+        // Always set isLoading to false - we have data or we show error
         setIsLoading(false);
       }
     })();

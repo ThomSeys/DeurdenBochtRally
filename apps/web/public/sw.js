@@ -1,6 +1,6 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '4';
+const VERSION = '5';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
@@ -90,32 +90,48 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(cacheFirstForAssets(request));
 });
 
-// Network-first strategy for API calls
+// Stale-while-revalidate strategy for API calls
+// Always return cached data immediately, update in background
 async function networkFirstForAPI(request) {
+  const cache = await caches.open(API_CACHE);
+  
+  // Always check cache first - serve immediately if available
+  const cached = await cache.match(request);
+  if (cached) {
+    // If we have cached data, return it immediately
+    // Then fetch fresh data in background and update cache
+    fetch(request.clone()).then((response) => {
+      if (response && response.ok) {
+        cache.put(request, response.clone());
+        console.log('[SW] Updated cache for:', request.url);
+      }
+    }).catch(() => {
+      // Silently fail background update if offline
+    });
+    
+    return cached;
+  }
+  
+  // No cache available, must fetch from network
   try {
     const response = await fetch(request.clone());
     if (response.ok) {
       // Cache successful API responses
-      const cache = await caches.open(API_CACHE);
       cache.put(request, response.clone());
     }
     return response;
   } catch (error) {
-    // Return cached API response if offline
-    const cached = await caches.match(request);
-    if (cached) {
-      console.log('[SW] Serving cached API:', request.url);
-      return cached;
-    }
-    // Return offline error
+    // Network failed and no cache - return empty array fallback
+    console.log('[SW] API fetch failed, no cache available:', request.url);
     return new Response(
-      JSON.stringify({ error: 'Offline', offline: true }),
+      JSON.stringify([]),
       { 
-        status: 503,
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
       }
     );
   }
+}
 }
 
 // Network-first strategy for CSS/JS (so you get latest styles)

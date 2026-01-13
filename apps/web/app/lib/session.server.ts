@@ -55,13 +55,25 @@ export async function getUser(request: Request) {
   const userId = await getUserId(request);
   if (userId === undefined) return null;
 
-  const { data } = await supabase
-    .from('participants')
-    .select('*, is_admin')
-    .eq('id', userId)
-    .single();
+  try {
+    const { data } = await supabase
+      .from('participants')
+      .select('*, is_admin')
+      .eq('id', userId)
+      .single();
 
-  return data;
+    return data;
+  } catch (error) {
+    // If offline or network error, return a default user object
+    // This allows the app to work offline with cached data
+    console.warn('[session] getUser failed, returning default user:', error);
+    return {
+      id: userId,
+      is_admin: false,
+      first_name: 'User',
+      last_name: '',
+    };
+  }
 }
 
 export async function requireAdmin(request: Request) {
