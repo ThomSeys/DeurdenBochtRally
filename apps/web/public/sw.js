@@ -3,23 +3,11 @@ const CACHE_NAME = 'ddb-rally-v1';
 const RUNTIME_CACHE = 'ddb-runtime';
 const API_CACHE = 'ddb-api-v1';
 
-// Assets to cache on install
+// Static assets to cache on install
 const PRECACHE_URLS = [
   '/',
-  '/zones',
-  '/dashboard',
-  '/offline.html',
   '/manifest.json',
-];
-
-// API endpoints that should be cached
-const CACHEABLE_APIS = [
-  '/api/rally-zones',
-  '/api/check-ins',
-  '/api/event-markers',
-  '/api/gpx-route',
-  '/api/leaderboard',
-  '/api/documents',
+  '/offline.html',
 ];
 
 // Install event - cache core assets
@@ -27,7 +15,20 @@ self.addEventListener('install', (event) => {
   console.log('[SW] Install');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_URLS);
+      // Only cache URLs that actually exist as static files
+      return Promise.all(
+        PRECACHE_URLS.map((url) => 
+          fetch(url)
+            .then((res) => {
+              if (res.ok) {
+                cache.put(url, res);
+              }
+            })
+            .catch((err) => {
+              console.log(`[SW] Could not cache ${url}:`, err);
+            })
+        )
+      );
     })
   );
   self.skipWaiting();

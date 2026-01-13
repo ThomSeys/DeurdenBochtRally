@@ -207,7 +207,7 @@ export default function LiveMap() {
       </div>
 
       {/* Event Submission Form */}
-      <EventSubmissionForm onSubmitSuccess={() => revalidator.revalidate()} userLocation={userLocation} />
+      <EventSubmissionForm userLocation={userLocation} />
 
       <Footer />
     </div>

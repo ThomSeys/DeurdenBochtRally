@@ -64,6 +64,9 @@ export function useFetchOffline<T>(
   const [isCached, setIsCached] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
 
+  // Extract cacheKey to use in dependency array
+  const cacheKey = options?.cacheKey || url;
+
   useEffect(() => {
     let isMounted = true;
 
@@ -87,7 +90,7 @@ export function useFetchOffline<T>(
     return () => {
       isMounted = false;
     };
-  }, [url, options]);
+  }, [url, cacheKey]); // Only depend on url and cacheKey
 
   return { data, error, isLoading, isCached, isOffline };
 }
