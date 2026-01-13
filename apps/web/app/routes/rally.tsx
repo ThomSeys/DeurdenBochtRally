@@ -15,10 +15,15 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const edition = await getActiveEdition();
-  const rallyZones = edition ? await getRallyZones(edition._id) : [];
+  try {
+    const edition = await getActiveEdition();
+    const rallyZones = edition ? await getRallyZones(edition._id) : [];
 
-  return {  edition, rallyZones };
+    return { edition, rallyZones };
+  } catch (error) {
+    console.log('[Rally] Offline or error:', error);
+    return { edition: null, rallyZones: [] };
+  }
 }
 
 const colorClasses = {

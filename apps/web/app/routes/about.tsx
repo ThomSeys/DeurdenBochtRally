@@ -14,13 +14,18 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const edition = await getActiveEdition();
-  const siteConfig = await getSiteConfig();
-  const schedule = edition ? await getScheduleItems(edition._id) : [];
-  const benefits = edition ? await getBenefitItems(edition._id) : [];
-  const faq = edition ? await getFAQItems(edition._id) : [];
+  try {
+    const edition = await getActiveEdition();
+    const siteConfig = await getSiteConfig();
+    const schedule = edition ? await getScheduleItems(edition._id) : [];
+    const benefits = edition ? await getBenefitItems(edition._id) : [];
+    const faq = edition ? await getFAQItems(edition._id) : [];
 
-  return { edition, siteConfig, schedule, benefits, faq };
+    return { edition, siteConfig, schedule, benefits, faq };
+  } catch (error) {
+    console.log('[About] Offline or error:', error);
+    return { edition: null, siteConfig: null, schedule: [], benefits: [], faq: [] };
+  }
 }
 
 export default function About() {
