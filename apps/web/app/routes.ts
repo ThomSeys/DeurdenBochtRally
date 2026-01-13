@@ -22,4 +22,5 @@ export default [
   route("api/webhook", "routes/api.webhook.tsx"),
   route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"),
   route("api/rally-submission", "routes/api.rally-submission.tsx"),
+  route("api/qrcode", "routes/api.qrcode.tsx"),
 ] satisfies RouteConfig;

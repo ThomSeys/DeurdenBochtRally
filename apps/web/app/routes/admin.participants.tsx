@@ -261,9 +261,19 @@ export default function AdminParticipants() {
                   <label className="text-sm font-medium text-gray-500">Betaald Bedrag</label>
                   <p className="text-gray-900">€{selectedParticipant.amount_paid}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">QR Code</label>
-                  <p className="text-gray-900 font-mono text-sm">{selectedParticipant.qr_code}</p>
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-gray-500 block mb-2">QR Code</label>
+                  <div className="space-y-2">
+                    <img 
+                      src={selectedParticipant.qr_code_image_url || `/api/qrcode?text=${encodeURIComponent(selectedParticipant.qr_code)}`}
+                      alt="QR Code" 
+                      className="w-48 h-48 border border-gray-300 rounded"
+                      onError={(e) => {
+                        e.currentTarget.src = `/api/qrcode?text=${encodeURIComponent(selectedParticipant.qr_code)}`;
+                      }}
+                    />
+                    <p className="text-xs text-gray-500 font-mono">{selectedParticipant.qr_code}</p>
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Inschrijving</label>

@@ -8,7 +8,7 @@ import Footer from '~/components/Footer';
 import { getActiveEdition, getPricingTiers } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createCheckoutSession } from '~/lib/stripe.server';
-import { generateQRCode } from '~/lib/qrcode.server';
+import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
 import { FORMULA_PRICES } from '~/lib/utils';
 
 export const meta: MetaFunction = () => {
@@ -127,6 +127,20 @@ export async function action({ request }: ActionFunctionArgs) {
     // Clean up auth user if participant creation fails
     await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
     return {  error: 'Er ging iets mis bij het registreren. Probeer opnieuw.', status: 500 };
+  }
+
+  // Generate and save QR code image
+  try {
+    const qrCodeImageUrl = await generateAndSaveQRCode(qrCode, participant.id);
+    
+    // Update participant with QR code image URL
+    await supabaseAdmin
+      .from('participants')
+      .update({ qr_code_image_url: qrCodeImageUrl })
+      .eq('id', participant.id);
+  } catch (qrError) {
+    console.error('QR code generation error:', qrError);
+    // Continue even if QR code generation fails - emails can use API endpoint as fallback
   }
 
   // Check if payment bypass is enabled (for development)

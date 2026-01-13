@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { useLoaderData, Link, Form } from 'react-router';
+import { useState } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
@@ -110,6 +111,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Dashboard() {
   const { user, submission, documents, completedZones, isBochtenkoning } = useLoaderData<typeof loader>();
+  const [qrCodeUrl, setQrCodeUrl] = useState(`/api/qrcode?text=${encodeURIComponent(user.qr_code)}` || user.qr_code_image_url);
+
 
   const documentsByCategory = {
     route: documents?.filter((d: any) => d.category === 'route') || [],
@@ -163,10 +166,16 @@ export default function Dashboard() {
               QR-code
             </h3>
             <div className="bg-gray-50 p-4 rounded text-center">
-              <p className="font-mono text-lg font-bold text-primary-600 mb-2">
+              <img 
+                src={qrCodeUrl}
+                alt="QR Code" 
+                className="w-full max-w-[200px] mx-auto mb-2"
+                onError={() => setQrCodeUrl(`/api/qrcode?text=${encodeURIComponent(user.qr_code)}`)}
+              />
+              <p className="text-xs text-gray-600 font-mono mb-1">
                 {user.qr_code}
               </p>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 font-semibold">
                 Toon dit bij de start
               </p>
             </div>

@@ -66,6 +66,7 @@ export type Database = {
           payment_status: string
           phone: string
           qr_code: string
+          qr_code_image_url: string | null
           ride_type: string
           stripe_payment_id: string | null
           is_admin: boolean | null
@@ -88,6 +89,7 @@ export type Database = {
           payment_status?: string
           phone: string
           qr_code: string
+          qr_code_image_url?: string | null
           ride_type: string
           stripe_payment_id?: string | null
           is_admin?: boolean | null
@@ -110,6 +112,7 @@ export type Database = {
           payment_status?: string
           phone?: string
           qr_code?: string
+          qr_code_image_url?: string | null
           ride_type?: string
           stripe_payment_id?: string | null
           is_admin?: boolean | null
