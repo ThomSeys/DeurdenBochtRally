@@ -23,4 +23,5 @@ export default [
   route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"),
   route("api/rally-submission", "routes/api.rally-submission.tsx"),
   route("api/qrcode", "routes/api.qrcode.tsx"),
+  route('check-in/:participantId', 'routes/check-in.$participantId.tsx'),
 ] satisfies RouteConfig;
