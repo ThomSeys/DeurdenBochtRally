@@ -7,60 +7,135 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .offline-banner {
+      background: #fbbf24;
+      color: #78350f;
+      padding: 12px 16px;
+      text-align: center;
+      font-weight: 500;
+      border-bottom: 1px solid #f59e0b;
+    }
+    .container {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      text-align: center;
+      min-height: calc(100vh - 56px);
       padding: 20px;
     }
-    .container {
+    .content {
       max-width: 500px;
+      text-align: center;
     }
     .icon {
       font-size: 80px;
       margin-bottom: 20px;
     }
     h1 {
-      font-size: 32px;
-      margin: 0 0 16px 0;
+      font-size: 28px;
+      margin: 0 0 12px 0;
+      color: #111827;
     }
     p {
-      font-size: 18px;
-      opacity: 0.9;
+      font-size: 16px;
+      color: #6b7280;
       line-height: 1.6;
+      margin: 0 0 20px 0;
     }
-    .retry-button {
-      margin-top: 30px;
-      padding: 12px 32px;
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+    .btn-secondary {
       background: white;
       color: #667eea;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s;
+      border: 2px solid #667eea;
     }
-    .retry-button:active {
-      transform: scale(0.95);
+    .btn-secondary:hover {
+      background: #f9fafb;
+    }
+    .status {
+      margin-top: 30px;
+      padding: 12px;
+      background: white;
+      border-radius: 6px;
+      border-left: 4px solid #fbbf24;
+    }
+    .status-item {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 4px 0;
+    }
+    .status-item.cached {
+      color: #059669;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="icon">📡</div>
-    <h1>Je bent offline</h1>
-    <p>
-      Geen verbinding met het internet. Je check-ins worden lokaal opgeslagen 
-      en automatisch gesynchroniseerd wanneer je weer online bent.
-    </p>
-    <button class="retry-button" onclick="window.location.reload()">
-      Probeer opnieuw
-    </button>
+  <div class="offline-banner">
+    📡 Je bent offline - functies werken beperkt
   </div>
+  
+  <div class="container">
+    <div class="content">
+      <div class="icon">🏍️</div>
+      <h1>Offline Modus Actief</h1>
+      <p>
+        Je hebt geen internetverbinding. Je kunt nog steeds:
+      </p>
+      <ul style="text-align: left; max-width: 300px; margin: 0 auto 20px;">
+        <li>✓ Eerder geladen rally-informatie bekijken</li>
+        <li>✓ Check-ins invoeren (worden later gesynchroniseerd)</li>
+        <li>✓ Lokale kaarten raadplegen</li>
+      </ul>
+      
+      <div class="buttons">
+        <button class="btn-primary" onclick="goHome()">
+          Ga naar startpagina
+        </button>
+        <button class="btn-secondary" onclick="window.location.reload()">
+          Probeer opnieuw
+        </button>
+      </div>
+      
+      <div class="status">
+        <div class="status-item">Wachtend op verbinding...</div>
+        <div class="status-item cached">✓ Lokale gegevens beschikbaar</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goHome() {
+      window.location.href = '/';
+    }
+    
+    // Monitor for online status
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
 </body>
 </html>

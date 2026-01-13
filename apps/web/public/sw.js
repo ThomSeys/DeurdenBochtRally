@@ -66,15 +66,14 @@ self.addEventListener('fetch', (event) => {
     return event.respondWith(networkFirstForAPI(request));
   }
 
+  // Handle navigation (HTML pages) - try network, fallback to cache, then offline.html
+  if (request.mode === 'navigate') {
+    return event.respondWith(networkFirstForNav(request));
+  }
+
   // Handle CSS and JS - network first to get latest styles/scripts
   if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
     return event.respondWith(networkFirstForAssets(request));
-  }
-
-  // Skip service worker for navigation - let browser handle it naturally
-  // This allows React Router to work properly with page transitions
-  if (request.mode === 'navigate') {
-    return; // Don't intercept navigation
   }
 
   // Cache images and other static assets (cache-first)
@@ -106,6 +105,49 @@ async function networkFirstForAPI(request) {
         headers: { 'Content-Type': 'application/json' }
       }
     );
+  }
+}
+
+// Network-first strategy for navigation (HTML pages)
+async function networkFirstForNav(request) {
+  try {
+    // Try to fetch from network
+    const response = await fetch(request.clone());
+    
+    // Cache successful HTML responses for offline use
+    if (response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text/html') || !contentType) {
+        const cache = await caches.open(RUNTIME_CACHE);
+        cache.put(request, response.clone());
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    console.log('[SW] Network failed, trying cache:', request.url);
+    
+    // Try to return cached version of requested page
+    const cached = await caches.match(request);
+    if (cached) {
+      console.log('[SW] Serving cached page:', request.url);
+      return cached;
+    }
+    
+    // If no specific page cached, return home page (it has React app shell)
+    // The React app will load cached API data client-side
+    const homeCache = await caches.match('/');
+    if (homeCache) {
+      console.log('[SW] Serving home page as fallback');
+      return homeCache;
+    }
+    
+    // Last resort
+    console.log('[SW] No cache available, returning error');
+    return new Response('Page not available offline', { 
+      status: 503,
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 }
 
