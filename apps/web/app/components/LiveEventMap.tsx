@@ -139,7 +139,14 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         if (gpxRouteUrl && !gpxLayerRef.current) {
           try {
             const response = await fetch(gpxRouteUrl);
-            const gpxText = await response.text();
+            const data = await response.json();
+            const gpxText = data.content;
+            
+            if (!gpxText) {
+              console.log('[Map] No GPX content available');
+              return;
+            }
+
             const parser = new DOMParser();
             const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
             

@@ -1,6 +1,6 @@
 // Service Worker for offline functionality
 // Version number to force updates (increment when you want to bust cache)
-const VERSION = '8';
+const VERSION = '9';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 const RUNTIME_CACHE = `ddb-runtime-v${VERSION}`;
 const API_CACHE = `ddb-api-v${VERSION}`;
