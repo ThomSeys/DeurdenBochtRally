@@ -111,7 +111,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Dashboard() {
   const { user, submission, documents, completedZones, isBochtenkoning } = useLoaderData<typeof loader>();
-  const [qrCodeUrl, setQrCodeUrl] = useState(`/api/qrcode?text=${encodeURIComponent(user.qr_code)}` || user.qr_code_image_url);
+  const checkInUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${user.id}`;
+  const [qrCodeUrl, setQrCodeUrl] = useState(`/api/qrcode?text=${encodeURIComponent(checkInUrl)}` || user.qr_code_image_url);
 
 
   const documentsByCategory = {
@@ -167,10 +168,10 @@ export default function Dashboard() {
             </h3>
             <div className="bg-gray-50 p-4 rounded text-center">
               <img 
-                src={qrCodeUrl}
+                src={qrCodeUrl || ''}
                 alt="QR Code" 
                 className="w-full max-w-[200px] mx-auto mb-2"
-                onError={() => setQrCodeUrl(`/api/qrcode?text=${encodeURIComponent(user.qr_code)}`)}
+                onError={() => setQrCodeUrl(`/api/qrcode?text=${encodeURIComponent(checkInUrl)}`)}
               />
               <p className="text-xs text-gray-600 font-mono mb-1">
                 {user.qr_code}

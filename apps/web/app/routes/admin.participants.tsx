@@ -265,11 +265,11 @@ export default function AdminParticipants() {
                   <label className="text-sm font-medium text-gray-500 block mb-2">QR Code</label>
                   <div className="space-y-2">
                     <img 
-                      src={selectedParticipant.qr_code_image_url || `/api/qrcode?text=${encodeURIComponent(selectedParticipant.qr_code)}`}
+                      src={selectedParticipant.qr_code_image_url || `/api/qrcode?text=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${selectedParticipant.id}`)}`}
                       alt="QR Code" 
                       className="w-48 h-48 border border-gray-300 rounded"
                       onError={(e) => {
-                        e.currentTarget.src = `/api/qrcode?text=${encodeURIComponent(selectedParticipant.qr_code)}`;
+                        e.currentTarget.src = `/api/qrcode?text=${encodeURIComponent(`${window.location.origin}/check-in/${selectedParticipant.id}`)}`;
                       }}
                     />
                     <p className="text-xs text-gray-500 font-mono">{selectedParticipant.qr_code}</p>

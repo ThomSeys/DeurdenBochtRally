@@ -97,6 +97,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
   // Generate QR code
   const qrCode = generateQRCode();
+  const participantId = authData.user.id;
+  
+  // Generate QR code URL for check-in
+  const qrCodeUrl = `${new URL(request.url).origin}/check-in/${participantId}`;
 
   // Get price
   const amount = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
@@ -105,7 +109,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const { data: participant, error: dbError } = await supabaseAdmin
     .from('participants')
     .insert({
-      id: authData.user.id,
+      id: participantId,
       first_name: firstName,
       last_name: lastName,
       email: email.toLowerCase(),
@@ -129,9 +133,9 @@ export async function action({ request }: ActionFunctionArgs) {
     return {  error: 'Er ging iets mis bij het registreren. Probeer opnieuw.', status: 500 };
   }
 
-  // Generate and save QR code image
+  // Generate and save QR code image with check-in URL
   try {
-    const qrCodeImageUrl = await generateAndSaveQRCode(qrCode, participant.id);
+    const qrCodeImageUrl = await generateAndSaveQRCode(qrCodeUrl, participant.id);
     
     // Update participant with QR code image URL
     await supabaseAdmin
