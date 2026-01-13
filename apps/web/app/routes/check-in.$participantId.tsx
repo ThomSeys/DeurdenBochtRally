@@ -1,6 +1,6 @@
-import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
-import { useLoaderData, redirect } from 'react-router';
-import { supabase } from '~/lib/supabase.server';
+import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
+import { useLoaderData, Form, useActionData } from 'react-router';
+import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 
 export const meta: MetaFunction = () => {
@@ -8,6 +8,30 @@ export const meta: MetaFunction = () => {
     { title: 'Check-in - Deur Den Bocht' },
   ];
 };
+
+export async function action({ params, request }: ActionFunctionArgs) {
+  const { participantId } = params;
+  
+  if (!participantId) {
+    return { error: 'Participant ID is required' };
+  }
+
+  // Check in the participant
+  const { error: updateError } = await supabaseAdmin
+    .from('participants')
+    .update({ 
+      checked_in: true,
+      checked_in_at: new Date().toISOString()
+    })
+    .eq('id', participantId);
+
+  if (updateError) {
+    console.error('Check-in error:', updateError);
+    return { error: 'Er ging iets mis bij het inchecken' };
+  }
+
+  return { success: true };
+}
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { participantId } = params;
@@ -36,6 +60,44 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 export default function CheckIn() {
   const data = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+
+  // Show success message after check-in
+  if (actionData?.success) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-8 text-center">
+            <div className="text-6xl mb-4">✅</div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Check-in Geslaagd!</h1>
+            <p className="text-gray-700 text-lg mb-6">
+              Welkom bij Deur Den Bocht! Geniet van de rit!
+            </p>
+            <div className="text-primary-600 text-lg font-semibold">
+              🏍️ Veel plezier!
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error from action
+  if (actionData?.error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-8 text-center">
+            <div className="text-6xl mb-4">❌</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Fout</h1>
+            <p className="text-gray-700">{actionData.error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if ('error' in data) {
     return (
@@ -134,12 +196,14 @@ export default function CheckIn() {
           </div>
 
           <div className="text-center">
-            <a
-              href={`/admin/check-in?participant=${participant.id}`}
-              className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors"
-            >
-              Bevestig Check-in
-            </a>
+            <Form method="post">
+              <button
+                type="submit"
+                className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors"
+              >
+                Bevestig Check-in
+              </button>
+            </Form>
             <p className="text-sm text-gray-600 mt-4">
               Deze QR code moet gescand worden door een admin
             </p>
