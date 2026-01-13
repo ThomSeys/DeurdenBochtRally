@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Form, useNavigation, redirect } from 'react-router';
+import { useState, useRef } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
@@ -73,6 +74,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
       return { error: 'Invalid request' };
     }
 
+    const formData = await request.formData();
+    const entryLatitude = formData.get('entryLatitude') ? parseFloat(formData.get('entryLatitude') as string) : null;
+    const entryLongitude = formData.get('entryLongitude') ? parseFloat(formData.get('entryLongitude') as string) : null;
+    const entryAccuracy = formData.get('entryAccuracy') ? parseFloat(formData.get('entryAccuracy') as string) : null;
+
     const { data: existing } = await supabaseAdmin
       .from('rally_zone_submissions')
       .select('id, entry_timestamp')
@@ -87,7 +93,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
           participant_id: user.id,
           zone_id: zoneId.toString(),
           entry_timestamp: new Date().toISOString(),
+          entry_latitude: entryLatitude,
+          entry_longitude: entryLongitude,
+          entry_accuracy: entryAccuracy,
         });
+
+      console.info('[zone.$zoneId] submission created with GPS', { 
+        zoneId, 
+        latitude: entryLatitude, 
+        longitude: entryLongitude,
+        accuracy: entryAccuracy 
+      });
     }
 
     console.info('[zone.$zoneId] action success', { zoneId });
@@ -102,6 +118,8 @@ export default function ZonePage() {
   const { zone, zoneId, alreadyStarted } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const isStarting = navigation.state === 'submitting';
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -203,20 +221,51 @@ export default function ZonePage() {
               </a>
             </div>
           ) : (
-            <Form method="post" className="text-center">
+            <form ref={formRef} method="post" className="text-center">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Klaar om te starten?</h3>
               <p className="text-gray-600 mb-6">
                 Door op "Start Zone" te klikken, registreer je dat je deze zone begint.
                 Je kunt daarna de code invoeren in het dashboard.
               </p>
+              {locationError && (
+                <p className="text-sm text-orange-600 mb-4">
+                  ⚠️ {locationError} - Je kunt toch doorgaan
+                </p>
+              )}
               <button
                 type="submit"
                 disabled={isStarting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        // Add GPS data to form
+                        const formData = new FormData(formRef.current!);
+                        formData.append('entryLatitude', position.coords.latitude.toString());
+                        formData.append('entryLongitude', position.coords.longitude.toString());
+                        formData.append('entryAccuracy', position.coords.accuracy.toString());
+                        
+                        // Submit with GPS data
+                        formRef.current?.submit();
+                      },
+                      (error) => {
+                        console.warn('Location error:', error);
+                        setLocationError('GPS kon niet worden bepaald');
+                        // Submit without GPS
+                        formRef.current?.submit();
+                      }
+                    );
+                  } else {
+                    // Geolocation not available, submit without GPS
+                    formRef.current?.submit();
+                  }
+                }}
                 className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-lg font-bold text-lg transition-colors"
               >
                 {isStarting ? 'Bezig...' : '🏁 Start Zone'}
               </button>
-            </Form>
+            </form>
           )}
         </div>
       </div>

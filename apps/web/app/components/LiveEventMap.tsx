@@ -8,6 +8,11 @@ interface RallyZone {
   startLocation: { lat: number; lng: number; label?: string };
   endLocation: { lat: number; lng: number; label?: string };
   is_open: boolean;
+  gpxRoute?: {
+    asset: {
+      url: string;
+    };
+  };
 }
 
 interface EventMarker {
@@ -21,13 +26,33 @@ interface EventMarker {
   updatedAt: string;
 }
 
+interface CheckIn {
+  participant_id: string;
+  zone_id: number;
+  entry_latitude: number;
+  entry_longitude: number;
+  answer_latitude: number | null;
+  answer_longitude: number | null;
+  created_at: string;
+  participants?: {
+    first_name: string;
+    last_name: string;
+    motorcycle_brand: string;
+    motorcycle_model: string;
+  };
+}
+
 interface LiveEventMapProps {
   rallyZones: RallyZone[];
   eventMarkers: EventMarker[];
   gpxRouteUrl?: string;
+  checkIns?: CheckIn[];
+  showCheckIns?: boolean;
+  showZoneRoutes?: boolean;
+  showEventMarkers?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -147,6 +172,50 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl }: 
           }
         }
 
+        // Load individual zone GPX routes
+        rallyZones.forEach(async (zone) => {
+          if (zone.gpxRoute?.asset?.url) {
+            try {
+              const response = await fetch(zone.gpxRoute.asset.url);
+              const gpxText = await response.text();
+              const parser = new DOMParser();
+              const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
+              
+              const trackPoints: [number, number][] = [];
+              const trkpts = gpxDoc.querySelectorAll('trkpt');
+              
+              trkpts.forEach((pt) => {
+                const lat = parseFloat(pt.getAttribute('lat') || '0');
+                const lon = parseFloat(pt.getAttribute('lon') || '0');
+                if (lat && lon) {
+                  trackPoints.push([lat, lon]);
+                }
+              });
+
+              if (trackPoints.length > 0) {
+                // Get zone color for the route
+                const colorMap: Record<string, string> = {
+                  green: '#22c55e',
+                  yellow: '#eab308',
+                  orange: '#f97316',
+                  red: '#ef4444',
+                };
+                const zoneColor = colorMap[zone.color] || '#4F46E5';
+
+                // Add zone route with dashed line
+                L.default.polyline(trackPoints, {
+                  color: zoneColor,
+                  weight: 3,
+                  opacity: 0.5,
+                  dashArray: '5, 5',
+                }).addTo(mapRef.current);
+              }
+            } catch (error) {
+              console.error(`Error loading GPX for zone ${zone.title}:`, error);
+            }
+          }
+        });
+
         // Clear existing markers (except route and user marker)
         mapRef.current.eachLayer((layer: any) => {
           if (
@@ -157,21 +226,79 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl }: 
           }
         });
 
-        // Add rally zone markers
-        rallyZones.forEach((zone) => {
-          // Skip zones without coordinates
-          if (!zone.startLocation || !zone.endLocation) {
-            console.warn(`Zone ${zone.title} missing startLocation or endLocation`);
-            return;
+
+        // Add check-in markers
+        if (showCheckIns) {
+          checkIns.forEach((checkIn) => {
+            console.log('[LiveEventMap] Processing check-in:', checkIn);
+          if (checkIn.entry_latitude && checkIn.entry_longitude) {
+            // Entry point (start)
+            const entryIcon = L.default.divIcon({
+              html: `<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">📍</div>`,
+              className: '',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+            });
+
+            L.default.marker([checkIn.entry_latitude, checkIn.entry_longitude], { icon: entryIcon })
+              .addTo(mapRef.current)
+              .bindPopup(`
+                <div style="min-width: 200px;">
+                  <strong>${checkIn.participants?.first_name} ${checkIn.participants?.last_name}</strong><br/>
+                  <span style="color: #666; font-size: 12px;">
+                    ${checkIn.participants?.motorcycle_brand} ${checkIn.participants?.motorcycle_model}
+                  </span><br/>
+                  <span style="color: #10b981; font-weight: bold; font-size: 11px;">📍 Zone Entry</span><br/>
+                  <span style="color: #666; font-size: 11px;">
+                    ${new Date(checkIn.created_at).toLocaleTimeString()}
+                  </span>
+                </div>
+              `);
           }
 
-          const colorMap: Record<string, string> = {
-            green: '#22c55e',
-            yellow: '#eab308',
-            orange: '#f97316',
-            red: '#ef4444',
-          };
-          const color = colorMap[zone.color] || '#4F46E5';
+          // Answer/submission point (if exists)
+          if (checkIn.answer_latitude && checkIn.answer_longitude) {
+            const answerIcon = L.default.divIcon({
+              html: `<div style="background-color: #f59e0b; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">✓</div>`,
+              className: '',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+            });
+
+            L.default.marker([checkIn.answer_latitude, checkIn.answer_longitude], { icon: answerIcon })
+              .addTo(mapRef.current)
+              .bindPopup(`
+                <div style="min-width: 200px;">
+                  <strong>${checkIn.participants?.first_name} ${checkIn.participants?.last_name}</strong><br/>
+                  <span style="color: #666; font-size: 12px;">
+                    ${checkIn.participants?.motorcycle_brand} ${checkIn.participants?.motorcycle_model}
+                  </span><br/>
+                  <span style="color: #f59e0b; font-weight: bold; font-size: 11px;">✓ Code Submission</span><br/>
+                  <span style="color: #666; font-size: 11px;">
+                    ${new Date(checkIn.created_at).toLocaleTimeString()}
+                  </span>
+                </div>
+              `);
+          }
+          });
+        }
+
+        // Add rally zone markers
+        if (showZoneRoutes) {
+          rallyZones.forEach((zone) => {
+            // Skip zones without coordinates
+            if (!zone.startLocation || !zone.endLocation) {
+              console.warn(`Zone ${zone.title} missing startLocation or endLocation`);
+              return;
+            }
+
+            const colorMap: Record<string, string> = {
+              green: '#22c55e',
+              yellow: '#eab308',
+              orange: '#f97316',
+              red: '#ef4444',
+            };
+            const color = colorMap[zone.color] || '#4F46E5';
 
           // Start point marker
           const startIcon = L.default.divIcon({
@@ -237,8 +364,10 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl }: 
             }
           ).addTo(mapRef.current);
         });
+        } // Close showZoneRoutes conditional
 
         // Add event markers
+        if (showEventMarkers) {
         eventMarkers.forEach((marker) => {
           const severityColors: Record<string, string> = {
             low: '#4F46E5',
@@ -277,6 +406,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl }: 
               </div>
             `);
         });
+        } // Close showEventMarkers conditional
 
         // Update user location marker
         if (userLocation) {
@@ -302,7 +432,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl }: 
         setMapError('Failed to initialize map');
       }
     });
-  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation]);
+  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers]);
 
   if (mapError) {
     return (

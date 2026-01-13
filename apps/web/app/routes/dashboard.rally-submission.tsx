@@ -2,7 +2,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react
 
 import { redirect } from 'react-router';
 import { Form, useActionData, useLoaderData, Link } from 'react-router';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { calculateRallyPoints } from '~/lib/utils';
@@ -152,6 +152,24 @@ export async function action({ request }: ActionFunctionArgs) {
     rz8_code: formData.get('rz8_code') as string | null,
   };
 
+  // Collect GPS data for each zone
+  const zoneGpsData: Record<number, { lat: number; lng: number; accuracy: number } | null> = {};
+  for (let i = 1; i <= 8; i++) {
+    const lat = formData.get(`rz${i}_answer_lat`);
+    const lng = formData.get(`rz${i}_answer_lng`);
+    const accuracy = formData.get(`rz${i}_answer_accuracy`);
+    
+    if (lat && lng && accuracy) {
+      zoneGpsData[i] = {
+        lat: parseFloat(lat as string),
+        lng: parseFloat(lng as string),
+        accuracy: parseFloat(accuracy as string),
+      };
+    } else {
+      zoneGpsData[i] = null;
+    }
+  }
+
   // Guard check: Verify that user has started each zone before allowing submission
     const { data: zoneEntries } = await supabaseAdmin
       .from('rally_zone_submissions')
@@ -186,6 +204,31 @@ export async function action({ request }: ActionFunctionArgs) {
           error: `Je kunt geen code indienen voor Rally Zone ${i} zonder de zone eerst te hebben gestart. Start de zone door naar de start locatie te rijden.`,
           status: 403
         };
+      }
+
+      // Update the zone submission with answer GPS data if available
+      const gpsData = zoneGpsData[i];
+      if (gpsData) {
+        const { error: updateError } = await supabaseAdmin
+          .from('rally_zone_submissions')
+          .update({
+            answer_latitude: gpsData.lat,
+            answer_longitude: gpsData.lng,
+            answer_accuracy: gpsData.accuracy,
+            answer_timestamp: new Date().toISOString(),
+          })
+          .eq('participant_id', userId)
+          .eq('zone_id', i.toString());
+
+        if (updateError) {
+          console.warn(`[dashboard.rally-submission] failed to update GPS for zone ${i}:`, updateError);
+        } else {
+          console.info(`[dashboard.rally-submission] updated answer GPS for zone ${i}`, { 
+            lat: gpsData.lat, 
+            lng: gpsData.lng, 
+            accuracy: gpsData.accuracy 
+          });
+        }
       }
     }
   }
@@ -287,6 +330,8 @@ export default function RallySubmission() {
   const [startKmLocked, setStartKmLocked] = useState(submission?.start_km_locked || false);
   const [endKmLocked, setEndKmLocked] = useState(submission?.end_km_locked || false);
   const [showExplanationModal, setShowExplanationModal] = useState(false);
+  const [zoneGpsData, setZoneGpsData] = useState<Record<number, { lat: number; lng: number; accuracy: number } | null>>({});
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Calculate total distance when both values are available
   const calculateDistance = () => {
@@ -457,7 +502,56 @@ export default function RallySubmission() {
                 </nav>
               </div>
 
-              <Form method="post" className="space-y-6">
+              <form 
+                ref={formRef}
+                method="post" 
+                className="space-y-6"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  
+                  // Capture GPS for all zones that have codes
+                  let pendingRequests = 0;
+                  let completedRequests = 0;
+                  
+                  for (let i = 1; i <= 8; i++) {
+                    const codeInput = formRef.current?.querySelector(`input[name="rz${i}_code"]`) as HTMLInputElement;
+                    if (codeInput && codeInput.value.trim()) {
+                      pendingRequests++;
+                    }
+                  }
+                  
+                  if (pendingRequests > 0 && 'geolocation' in navigator) {
+                    // Capture GPS location
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        // Add GPS data to all zone code inputs
+                        for (let i = 1; i <= 8; i++) {
+                          const codeInput = formRef.current?.querySelector(`input[name="rz${i}_code"]`) as HTMLInputElement;
+                          if (codeInput && codeInput.value.trim()) {
+                            const latInput = formRef.current?.querySelector(`input[name="rz${i}_answer_lat"]`) as HTMLInputElement;
+                            const lngInput = formRef.current?.querySelector(`input[name="rz${i}_answer_lng"]`) as HTMLInputElement;
+                            const accuracyInput = formRef.current?.querySelector(`input[name="rz${i}_answer_accuracy"]`) as HTMLInputElement;
+                            
+                            if (latInput) latInput.value = position.coords.latitude.toString();
+                            if (lngInput) lngInput.value = position.coords.longitude.toString();
+                            if (accuracyInput) accuracyInput.value = position.coords.accuracy.toString();
+                          }
+                        }
+                        // Submit the form
+                        formRef.current?.submit();
+                      },
+                      (error) => {
+                        console.warn('Location error:', error);
+                        // Submit without GPS if geolocation fails
+                        formRef.current?.submit();
+                      }
+                    );
+                  } else {
+                    // No codes submitted or geolocation not available, submit as-is
+                    formRef.current?.submit();
+                  }
+                }}
+              >
                 {/* Zone Input Cards */}
                 {zones.map((zone) => {
                   const zoneScore = getZoneSubmission(zone.id);
@@ -663,7 +757,16 @@ export default function RallySubmission() {
                     Codes opslaan
                   </button>
                 </div>
-              </Form>
+                
+                {/* Hidden GPS inputs for each zone */}
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((zoneId) => (
+                  <div key={`gps-${zoneId}`} style={{ display: 'none' }}>
+                    <input type="hidden" name={`rz${zoneId}_answer_lat`} />
+                    <input type="hidden" name={`rz${zoneId}_answer_lng`} />
+                    <input type="hidden" name={`rz${zoneId}_answer_accuracy`} />
+                  </div>
+                ))}
+              </form>
             </div>
           </div>
 

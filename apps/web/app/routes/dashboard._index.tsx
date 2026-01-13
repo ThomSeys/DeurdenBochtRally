@@ -35,6 +35,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select('*')
     .order('category', { ascending: true });
 
+  // Fetch GPX route file
+  const siteConfig = await sanityClient.fetch(`
+    *[_type == "siteConfig"][0] {
+      gpxRouteFile {
+        asset-> {
+          url
+        }
+      }
+    }
+  `);
+
   // Count completed zones
   const completedZones = submission
     ? [
@@ -108,11 +119,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const eventDate = process.env.EVENT_DATE || '2026-05-16';
 
-  return { user, submission, documents, completedZones, isBochtenkoning, eventDate };
+  return { 
+    user, 
+    submission, 
+    documents, 
+    completedZones, 
+    isBochtenkoning, 
+    eventDate,
+    gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
+  };
 }
 
 export default function Dashboard() {
-  const { user, submission, documents, completedZones, isBochtenkoning, eventDate } = useLoaderData<typeof loader>();
+  const { user, submission, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl } = useLoaderData<typeof loader>();
   const checkInUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${user.id}`;
   const [qrCodeUrl, setQrCodeUrl] = useState(`/api/qrcode?text=${encodeURIComponent(checkInUrl)}` || user.qr_code_image_url);
 
@@ -256,27 +275,24 @@ export default function Dashboard() {
               <span className="text-2xl mr-2">🗺️</span>
               GPX Routes
             </h3>
-            {documentsByCategory.route.length > 0 ? (
-              <ul className="space-y-2">
-                {documentsByCategory.route.map((doc: any) => (
-                  <li key={doc.id}>
-                    <a
-                      href={doc.file_url}
-                      download
-                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <div>
-                        <div className="font-medium text-gray-900">{doc.title}</div>
-                        {doc.description && (
-                          <div className="text-sm text-gray-600">{doc.description}</div>
-                        )}
-                      </div>
-                      <span className="text-primary-600">↓</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
+            <ul className="space-y-2">
+              {gpxRouteUrl && (
+                <li>
+                  <a
+                    href={gpxRouteUrl}
+                    download="deur-den-bocht-route.gpx"
+                    className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 rounded-lg transition-colors border border-primary-200"
+                  >
+                    <div>
+                      <div className="font-medium text-primary-900">Official Rally Route</div>
+                      <div className="text-sm text-primary-700">Complete GPX file for navigation</div>
+                    </div>
+                    <span className="text-primary-600">↓</span>
+                  </a>
+                </li>
+              )}
+            </ul>
+            {!gpxRouteUrl && documentsByCategory.route.length === 0 && (
               <p className="text-gray-500">Nog geen routes beschikbaar</p>
             )}
           </div>

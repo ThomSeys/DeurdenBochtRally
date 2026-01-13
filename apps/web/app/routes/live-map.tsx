@@ -3,6 +3,7 @@ import { type LoaderFunctionArgs } from 'react-router';
 import { useLoaderData, useRevalidator } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { sanityClient } from '~/lib/sanity.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
@@ -24,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Live map is only available on the event day', { status: 403 });
   }
 
-  // Fetch rally zones
+  // Fetch rally zones with GPX routes
   const rallyZones = await sanityClient.fetch(`
     *[_type == "rallyZone"] | order(order asc) {
       _id,
@@ -33,9 +34,38 @@ export async function loader({ request }: LoaderFunctionArgs) {
       color,
       startLocation,
       endLocation,
-      "is_open": coalesce(is_open, true)
+      "is_open": coalesce(is_open, true),
+      gpxRoute {
+        asset-> {
+          url
+        }
+      }
     }
   `);
+
+  // Fetch check-ins for visualization with participant info
+  const { data: checkIns, error: checkInError } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select(`
+      participant_id,
+      zone_id,
+      entry_latitude,
+      entry_longitude,
+      answer_latitude,
+      answer_longitude,
+      created_at,
+      participants!rally_zone_submissions_participant_id_fkey (
+        first_name,
+        last_name,
+        motorcycle_brand,
+        motorcycle_model
+      )
+    `);
+
+  if (checkInError) {
+    console.error('[live-map] checkIn fetch error:', checkInError);
+  }
+  console.info('[live-map] checkIns fetched:', { count: checkIns?.length, error: checkInError, sample: checkIns?.[0] });
 
   // Fetch event markers
   const eventMarkers = await sanityClient.fetch(`
@@ -65,6 +95,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     console.info('[live-map] loader success', {
       zones: rallyZones?.length ?? 0,
       markers: eventMarkers?.length ?? 0,
+      checkIns: checkIns?.length ?? 0,
+      checkInsData: checkIns,
       hasGpx: Boolean(siteConfig?.gpxRouteFile?.asset?.url),
       isAdmin,
       isEventDay,
@@ -74,6 +106,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       rallyZones,
       eventMarkers,
       gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
+      checkIns: checkIns || [],
       isAdmin,
       isEventDay,
     };
@@ -84,10 +117,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function LiveMap() {
-  const { rallyZones, eventMarkers, gpxRouteUrl, isAdmin, isEventDay } = useLoaderData<typeof loader>();
+  const { rallyZones, eventMarkers, gpxRouteUrl, checkIns, isAdmin, isEventDay } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showCheckIns, setShowCheckIns] = useState(true);
+  const [showZoneRoutes, setShowZoneRoutes] = useState(true);
+  const [showEventMarkers, setShowEventMarkers] = useState(true);
 
   // Get user's location
   useEffect(() => {
@@ -145,36 +181,67 @@ export default function LiveMap() {
           rallyZones={rallyZones}
           eventMarkers={eventMarkers}
           gpxRouteUrl={gpxRouteUrl}
+          checkIns={checkIns}
+          showCheckIns={showCheckIns}
+          showZoneRoutes={showZoneRoutes}
+          showEventMarkers={showEventMarkers}
         />
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-20">
-          <h3 className="font-semibold text-gray-900 mb-2">Legenda</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Legenda</h3>
           <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-primary-600 border-2 border-white rounded-full shadow"></div>
-              <span>Rally Zones</span>
+            <div className="border-b pb-2">
+              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                <span style={{opacity: showZoneRoutes ? 1 : 0.5}}>Rally Zones:</span>
+              </div>
+              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                <div className="w-3 h-3 bg-primary-600 rounded-full"></div>
+                <span>Zone Routes</span>
+              </div>
+              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                <span>S / E</span>
+                <span>Start / Eind Punten</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-purple-600 border-2 border-white rounded-full shadow"></div>
-              <span>Uw Locatie</span>
+
+            <div className="border-b pb-2">
+              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowCheckIns(!showCheckIns)}>
+                <span style={{opacity: showCheckIns ? 1 : 0.5}}>Check-ins ({checkIns?.length || 0})</span>
+              </div>
+              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
+                <div style={{ background: '#10b981', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
+                <span>📍 Zone Start</span>
+              </div>
+              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
+                <div style={{ background: '#f59e0b', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
+                <span>✓ Code Indiening</span>
+              </div>
             </div>
+
+            <div className="border-b pb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-purple-600 border-2 border-white rounded-full shadow"></div>
+                <span>Uw Locatie</span>
+              </div>
+            </div>
+
             {eventMarkers.length > 0 && (
-              <>
-                <div className="border-t pt-2 mt-2">
-                  <div className="font-medium text-gray-700 mb-1">Live Evenementen:</div>
+              <div>
+                <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowEventMarkers(!showEventMarkers)}>
+                  <span style={{opacity: showEventMarkers ? 1 : 0.5}}>Live Evenementen ({eventMarkers.length})</span>
                 </div>
                 {Array.from(new Set(eventMarkers.map((m: any) => m.type))).map((type: any) => (
-                  <div key={type} className="flex items-center gap-2 pl-2">
+                  <div key={type} className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showEventMarkers ? 1 : 0.5}} onClick={() => setShowEventMarkers(!showEventMarkers)}>
                     <span>{getEventTypeEmoji(type)}</span>
-                    <span className="capitalize">{type}</span>
+                    <span className="capitalize text-xs">{type}</span>
                   </div>
                 ))}
-              </>
+              </div>
             )}
           </div>
-          {eventMarkers.length === 0 && (
-            <p className="text-xs text-gray-500 mt-2">Geen actieve evenementen</p>
+          {eventMarkers.length === 0 && checkIns.length === 0 && (
+            <p className="text-xs text-gray-500 mt-2">Geen actieve evenementen of check-ins</p>
           )}
         </div>
       </div>
@@ -188,7 +255,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -201,7 +268,7 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl }: any) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Kaart laden...</p>
         </div>
       </div>
@@ -213,6 +280,10 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl }: any) {
       rallyZones={rallyZones}
       eventMarkers={eventMarkers}
       gpxRouteUrl={gpxRouteUrl}
+      checkIns={checkIns}
+      showCheckIns={showCheckIns}
+      showZoneRoutes={showZoneRoutes}
+      showEventMarkers={showEventMarkers}
     />
   );
 }

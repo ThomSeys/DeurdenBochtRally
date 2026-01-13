@@ -124,6 +124,15 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'gpxRoute',
+      title: 'Zone GPX Route',
+      type: 'file',
+      description: 'GPX file for this rally zone loop (optional)',
+      options: {
+        accept: '.gpx',
+      },
+    }),
+    defineField({
       name: 'image',
       title: 'Zone Image',
       type: 'image',
