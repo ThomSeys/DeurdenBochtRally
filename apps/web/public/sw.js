@@ -316,3 +316,79 @@ function deleteSubmission(db, id) {
     request.onsuccess = () => resolve();
   });
 }
+
+// Handle push notifications
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push notification received');
+  
+  if (!event.data) {
+    console.log('[SW] Push event with no data');
+    return;
+  }
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body || '',
+      icon: data.icon || '/icon-192.png',
+      badge: data.badge || '/icon-96.png',
+      tag: data.tag || 'default',
+      requireInteraction: data.requireInteraction || false,
+      data: data.data || {},
+      actions: data.actions || [],
+      vibrate: [200, 100, 200],
+    };
+
+    console.log('[SW] Showing notification:', { title: data.title, ...options });
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Notificatie', options)
+    );
+  } catch (error) {
+    console.error('[SW] Error handling push notification:', error);
+  }
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event.notification.tag);
+  event.notification.close();
+
+  // Handle action clicks
+  if (event.action === 'view') {
+    event.waitUntil(
+      clients.matchAll({ type: 'window' }).then((clientList) => {
+        // Check if window is already open
+        for (const client of clientList) {
+          if (client.url === '/' && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Open new window if not found
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
+    );
+  } else {
+    // Default action - open app
+    event.waitUntil(
+      clients.matchAll({ type: 'window' }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url === '/' && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
+    );
+  }
+});
+
+// Handle notification close (optional)
+self.addEventListener('notificationclose', (event) => {
+  console.log('[SW] Notification closed:', event.notification.tag);
+});
+
