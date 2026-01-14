@@ -373,10 +373,17 @@ export default function AdminEventMarkers() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Form method="post" className="inline">
+                        <Form 
+                          method="post" 
+                          className="inline"
+                          onSubmit={() => {
+                            setTimeout(() => revalidator.revalidate(), 100);
+                          }}
+                        >
                           <input type="hidden" name="intent" value="toggle" />
                           <input type="hidden" name="id" value={marker._id} />
                           <input type="hidden" name="isActive" value={marker.isActive.toString()} />
+                          <input type="hidden" name="title" value={marker.title} />
                           <button
                             type="submit"
                             className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -393,7 +400,13 @@ export default function AdminEventMarkers() {
                         {new Date(marker.createdAt).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Form method="post" className="inline">
+                        <Form 
+                          method="post" 
+                          className="inline"
+                          onSubmit={() => {
+                            setTimeout(() => revalidator.revalidate(), 100);
+                          }}
+                        >
                           <input type="hidden" name="intent" value="delete" />
                           <input type="hidden" name="id" value={marker._id} />
                           <button
