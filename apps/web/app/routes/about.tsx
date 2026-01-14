@@ -173,7 +173,7 @@ export default function About() {
         </section>
       )}
 
-      <Footer />
+      <Footer siteConfig={siteConfig} edition={edition} />
     </div>
   );
 }

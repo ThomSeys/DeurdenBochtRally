@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { type LoaderFunctionArgs } from 'react-router';
 import { useLoaderData, useRevalidator } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { sanityClient } from '~/lib/sanity.server';
+import { sanityClient, getActiveEdition } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
@@ -92,6 +92,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   `);
 
+  // Fetch active edition
+  const edition = await getActiveEdition();
+
     console.info('[live-map] loader success', {
       zones: rallyZones?.length ?? 0,
       markers: eventMarkers?.length ?? 0,
@@ -109,6 +112,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       checkIns: checkIns || [],
       isAdmin,
       isEventDay,
+      siteConfig,
+      edition,
     };
   } catch (error) {
     console.error('[live-map] loader error', error);
@@ -117,7 +122,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function LiveMap() {
-  const { rallyZones, eventMarkers, gpxRouteUrl, checkIns, isAdmin, isEventDay } = useLoaderData<typeof loader>();
+  const { rallyZones, eventMarkers, gpxRouteUrl, checkIns, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -249,7 +254,7 @@ export default function LiveMap() {
       {/* Event Submission Form */}
       <EventSubmissionForm onSubmitSuccess={() => revalidator.revalidate()} userLocation={userLocation} />
 
-      <Footer />
+      <Footer siteConfig={siteConfig} edition={edition} />
     </div>
   );
 }

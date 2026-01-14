@@ -1,6 +1,13 @@
 import { Link } from 'react-router';
+import { useLoaderData } from 'react-router';
 
-export default function Footer() {
+export default function Footer({ siteConfig, edition }: { siteConfig?: any; edition?: any }) {
+  const eventDate = edition?.eventDate ? new Date(edition.eventDate).toLocaleDateString('nl-BE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).split('/').reverse().join(' ') : null;
+
   return (
     <footer className="bg-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -16,9 +23,9 @@ export default function Footer() {
                 <div className="text-sm text-gray-400 uppercase">VZW DDB</div>
               </div>
             </div>
-            <p className="text-gray-300 mb-2">Den tweede keer Deur den Bocht</p>
-            <p className="text-white font-semibold mb-1">📅 ZONDAG 16 MEI 2026</p>
-            <p className="text-gray-400">Tot aan café Belami, Aalter!</p>
+            <p className="text-gray-300 mb-2">{siteConfig?.eventTagline || 'Den tweede keer Deur den Bocht'}</p>
+            {eventDate && <p className="text-white font-semibold mb-1">📅 ZONDAG {eventDate}</p>}
+            <p className="text-gray-400">{siteConfig?.contactLocation || 'Tot aan café Belami, Aalter!'}</p>
           </div>
 
           {/* Navigation */}
@@ -47,20 +54,26 @@ export default function Footer() {
           <div>
             <h4 className="font-bold mb-4 uppercase text-sm tracking-wide">Contact</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li className="flex items-center space-x-2">
-                <span>📧</span>
-                <a href="mailto:info@deurdenbocht.be" className="hover:text-white transition-colors">
-                  info@deurdenbocht.be
-                </a>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span>📱</span>
-                <span>Via WhatsApp groep</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span>📍</span>
-                <span>Café Den Belami, Aalter</span>
-              </li>
+              {siteConfig?.contactEmail && (
+                <li className="flex items-center space-x-2">
+                  <span>📧</span>
+                  <a href={`mailto:${siteConfig.contactEmail}`} className="hover:text-white transition-colors">
+                    {siteConfig.contactEmail}
+                  </a>
+                </li>
+              )}
+              {siteConfig?.contactWhatsapp && (
+                <li className="flex items-center space-x-2">
+                  <span>📱</span>
+                  <span>{siteConfig.contactWhatsapp}</span>
+                </li>
+              )}
+              {siteConfig?.contactLocation && (
+                <li className="flex items-center space-x-2">
+                  <span>📍</span>
+                  <span>{siteConfig.contactLocation}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>

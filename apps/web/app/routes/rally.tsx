@@ -4,7 +4,7 @@ import { useLoaderData, Link } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
-import { getActiveEdition, getRallyZones } from '~/lib/sanity.server';
+import { getActiveEdition, getRallyZones, getSiteConfig } from '~/lib/sanity.server';
 import { urlFor } from '~/lib/sanity';
 
 export const meta: MetaFunction = () => {
@@ -17,8 +17,9 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const edition = await getActiveEdition();
   const rallyZones = edition ? await getRallyZones(edition._id) : [];
+  const siteConfig = await getSiteConfig();
 
-  return {  edition, rallyZones };
+  return {  edition, rallyZones, siteConfig };
 }
 
 const colorClasses = {
@@ -29,7 +30,7 @@ const colorClasses = {
 };
 
 export default function Rally() {
-  const { edition, rallyZones } = useLoaderData<typeof loader>();
+  const { edition, rallyZones, siteConfig } = useLoaderData<typeof loader>();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -212,7 +213,7 @@ export default function Rally() {
         </section>
       )}
 
-      <Footer />
+      <Footer siteConfig={siteConfig} edition={edition} />
     </div>
   );
 }

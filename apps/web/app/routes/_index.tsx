@@ -50,13 +50,11 @@ export default function Index() {
         {/* Background overlay - lighter to show image */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-primary-900/50 to-black/70 z-10"></div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 h-full flex items-center justify-center py-32 md:py-48 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 h-full flex items-center justify-center py-32 md:py-48">
           <div className="text-center">
             {/* VZW Logo Badge */}
-            <div className="inline-flex items-center justify-center mb-8">
-              <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-full p-6">
-                <div className="text-6xl">🏍</div>
-              </div>
+            <div className="inline-flex items-center justify-center mb-8 bg-white/10 backdrop-blur-md border-2 border-white/30 rounded-2xl p-8 sm:p-12 hover:bg-white/20 transition-all duration-300">
+              <img src="/logo.svg" alt="Deur Den Bocht Logo" className="w-32 sm:w-40 md:w-48 h-auto" style={{ filter: 'brightness(0) invert(1)' }} />
             </div>
 
             {heroSection?.title ? (
@@ -231,8 +229,8 @@ export default function Index() {
                 />
               ) : (
                 <div className="text-center">
-                  <span className="text-8xl">🏍️</span>
-                  <p className="text-gray-500 mt-4">Afbeelding komt hier</p>
+                  <img src="/logo.svg" alt="Deur Den Bocht Logo" className="w-48 h-48 mx-auto mb-4" />
+                  <p className="text-gray-500">Afbeelding komt hier</p>
                 </div>
               )}
             </div>
@@ -302,7 +300,7 @@ export default function Index() {
           <div className="text-center mb-12">
             {rallyInfoSection?.title ? (
               <>
-                <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
+                <h2 className="text-4xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                   {rallyInfoSection.title}
                 </h2>
                 {rallyInfoSection.content && (
@@ -313,7 +311,7 @@ export default function Index() {
               </>
             ) : (
               <>
-                <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
+                <h2 className="text-xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                   Het Bochtenboek & De Rally
                 </h2>
                 <p className="text-xl text-gray-700 max-w-3xl mx-auto">
@@ -394,7 +392,7 @@ export default function Index() {
         </section>
       )}
 
-      <Footer />
+      <Footer siteConfig={siteConfig} edition={edition} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Form, useActionData, useLoaderData } from 'react-router';
 import { useState } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
-import { getActiveEdition, getPricingTiers } from '~/lib/sanity.server';
+import { getActiveEdition, getPricingTiers, getSiteConfig } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
@@ -26,8 +26,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const pricing = await getPricingTiers(edition._id);
+  const siteConfig = await getSiteConfig();
 
-  return {  edition, pricing };
+  return {  edition, pricing, siteConfig };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -180,7 +181,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Registration() {
-  const { edition, pricing } = useLoaderData<typeof loader>();
+  const { edition, pricing, siteConfig } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [selectedFormula, setSelectedFormula] = useState<string>('with_meals');
   const [selectedRideType, setSelectedRideType] = useState<string>('free');
@@ -443,7 +444,7 @@ export default function Registration() {
         </div>
       </div>
 
-      <Footer />
+      <Footer siteConfig={siteConfig} edition={edition} />
     </div>
   );
 }

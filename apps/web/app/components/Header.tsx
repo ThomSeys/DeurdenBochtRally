@@ -33,9 +33,13 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-1 sm:space-x-3">
-            <div className={`${isTransparent ? 'bg-white/20 border border-white/40' : 'bg-white'} rounded-full p-2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-300`}>
-              <span className="text-xl sm:text-2xl">🏍</span>
-            </div>
+            {isTransparent ? (
+              <img src="/logo.svg" alt="Deur Den Bocht Logo" className="w-8 h-8 sm:w-10 sm:h-10" style={{ filter: 'brightness(0) invert(1)' }} />
+            ) : (
+              <div className="">
+                <img src="/logo.svg" alt="Deur Den Bocht Logo" className="w-8 h-8 sm:w-10 sm:h-10" style={{ filter: 'brightness(0) invert(1)' }}  />
+              </div>
+            )}
             <div className={`${isTransparent ? 'text-white' : 'text-white'}`}>
               <div className={`font-bold text-sm sm:text-xl tracking-wide uppercase ${isTransparent ? 'drop-shadow-lg' : ''}`}>Deur Den Bocht</div>
               <div className={`text-xs uppercase ${isTransparent ? 'text-white/90 drop-shadow-lg' : 'text-primary-100'}`}>Den Bochtenkoning Rally</div>
