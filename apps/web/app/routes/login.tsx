@@ -2,7 +2,7 @@ import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'reac
 
 import { Form, useActionData, useSearchParams, Link } from 'react-router';
 import React from 'react';
-import { supabase } from '~/lib/supabase.server';
+import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -41,10 +41,10 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     // Verify user is a participant with completed payment
-    const { data: participant } = await supabase
+    const { data: participant } = await supabaseAdmin
       .from('participants')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .eq('payment_status', 'completed')
       .single();
 
