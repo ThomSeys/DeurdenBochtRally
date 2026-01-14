@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 export function NotificationBell({ isTransparent }: { isTransparent?: boolean }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showPanel, setShowPanel] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<any>(null);
 
   useEffect(() => {
     // Listen for messages from service worker
@@ -98,6 +99,7 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
                       setNotifications((prev) =>
                         prev.map((n, i) => (i === idx ? { ...n, read: true } : n))
                       );
+                      setSelectedNotification(notif);
                     }}
                   >
                     <div className="flex gap-3">
@@ -140,6 +142,52 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
                 ))}
               </div>
             )}
+          </div>
+        </>
+      )}
+
+      {/* Notification Detail Modal */}
+      {selectedNotification && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setSelectedNotification(null)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-96 overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b flex justify-between items-start gap-4">
+                <h2 className="font-bold text-lg pr-4">{selectedNotification.title}</h2>
+                <button
+                  onClick={() => setSelectedNotification(null)}
+                  className="text-white hover:opacity-80 transition-opacity flex-shrink-0"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <p className="text-gray-700 whitespace-pre-wrap mb-4">
+                  {selectedNotification.body}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {new Date(selectedNotification.timestamp).toLocaleString('nl-NL')}
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="border-t p-4 flex justify-end gap-2">
+                <button
+                  onClick={() => setSelectedNotification(null)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium rounded-sm transition-colors"
+                >
+                  Sluiten
+                </button>
+              </div>
+            </div>
           </div>
         </>
       )}
