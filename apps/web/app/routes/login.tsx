@@ -1,6 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { Form, useActionData, useSearchParams, Link } from 'react-router';
+import React from 'react';
 import { supabase } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
 
@@ -16,34 +17,49 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     const formData = await request.formData();
     const email = formData.get('email');
-    const qrCode = formData.get('qrCode');
+    const password = formData.get('password');
 
-    if (typeof email !== 'string' || typeof qrCode !== 'string') {
+    if (typeof email !== 'string' || typeof password !== 'string') {
       return { 
-        error: 'Email en QR-code zijn verplicht',
+        error: 'Email en wachtwoord zijn verplicht',
         status: 400
       };
     }
 
+    // Authenticate with Supabase Auth
+    const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password,
+    });
+
+    if (authError || !user) {
+      console.error('[login] auth error', authError?.message);
+      return { 
+        error: 'Ongeldige inloggegevens. Controleer je email en wachtwoord.',
+        status: 401
+      };
+    }
+
+    // Verify user is a participant with completed payment
     const { data: participant } = await supabase
       .from('participants')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .eq('qr_code', qrCode)
+      .select('id')
+      .eq('user_id', user.id)
       .eq('payment_status', 'completed')
       .single();
 
     if (!participant) {
+      console.error('[login] participant not found or payment not completed');
       return { 
-        error: 'Ongeldige login gegevens. Controleer je email en QR-code.',
-        status: 400
+        error: 'Je account is niet actief. Controleer je betaling.',
+        status: 403
       };
     }
 
     const url = new URL(request.url);
     const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
 
-    console.info('[login] action success', { participantId: participant.id });
+    console.info('[login] action success', { userId: user.id, participantId: participant.id });
     return createUserSession(participant.id, redirectTo);
   } catch (error) {
     console.error('[login] action error', error);
@@ -54,6 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Login() {
   const actionData = useActionData<typeof action>();
   const [searchParams] = useSearchParams();
+  const [showPassword, setShowPassword] = React.useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
@@ -62,7 +79,7 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             🏍 Deur Den Bocht
           </h1>
-          <p className="text-gray-600">Login met je QR-code</p>
+          <p className="text-gray-600">Inloggen op je account</p>
         </div>
 
         {actionData?.error && (
@@ -88,20 +105,27 @@ export default function Login() {
           </div>
 
           <div>
-            <label htmlFor="qrCode" className="block text-sm font-medium text-gray-700 mb-2">
-              QR-code
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Wachtwoord
             </label>
-            <input
-              id="qrCode"
-              name="qrCode"
-              type="text"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
-              placeholder="Je hebt deze ontvangen via email"
-            />
-            <p className="mt-2 text-sm text-gray-500">
-              Je kreeg deze code in je bevestigingsmail na inschrijving
-            </p>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
           </div>
 
           <button
@@ -113,16 +137,15 @@ export default function Login() {
         </Form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>QR-code kwijt?</p>
-          <p className="mt-1">
-            Stuur een email naar{' '}
-            <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">
-              info@deurdenbocht.be
-            </a>
+          <p>
+            Nog geen account?{' '}
+            <Link to="/registration" className="text-primary-600 hover:underline font-medium">
+              Inschrijven
+            </Link>
           </p>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
           <Link to="/" className="text-sm text-primary-600 hover:underline">
             ← Terug naar homepagina
           </Link>
