@@ -10,45 +10,38 @@ import Header from '~/components/Header';
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  try {
-    // Get pending scans (valid = null)
-    const { data: pendingScans, error } = await supabaseAdmin
-      .from('rally_zone_submissions')
-      .select(`
-        *,
-        participants!rally_zone_submissions_participant_id_fkey (
-          id,
-          first_name,
-          last_name,
-          license_plate
-        )
-      `)
-      .is('valid', null)
-      .order('created_at', { ascending: true });
+  // Get pending scans (valid = null)
+  const { data: pendingScans } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select(`
+      *,
+      participants!inner (
+        id,
+        first_name,
+        last_name,
+        license_plate
+      )
+    `)
+    .is('valid', null)
+    .order('created_at', { ascending: true });
 
-    console.log('[pending-scans] Query result:', { count: pendingScans?.length, error });
+  // Get rally zones for reference
+  const rallyZones = await sanityClient.fetch(`
+    *[_type == "rallyZone"] | order(order asc) {
+      _id,
+      title,
+      "zoneNumber": order + 1,
+      "referencePhotoUrl": reference_photo.asset->url
+    }
+  `);
 
-    // Get rally zones for reference
-    const rallyZones = await sanityClient.fetch(`
-      *[_type == "rallyZone"] | order(order asc) {
-        _id,
-        title,
-        "zoneNumber": order + 1,
-        "referencePhotoUrl": reference_photo.asset->url
-      }
-    `);
+  // Create map for quick lookup
+  const zoneMap = new Map();
+  rallyZones.forEach((zone: any) => {
+    zoneMap.set(zone.zoneNumber.toString(), zone);
+  });
 
-    // Create map for quick lookup
-    const zoneMap = new Map();
-    rallyZones.forEach((zone: any) => {
-      zoneMap.set(zone.zoneNumber.toString(), zone);
-    });
-
-    return { pendingScans: pendingScans || [], zoneMap: Object.fromEntries(zoneMap) };
-  } catch (error) {
-    console.log('[AdminPendingScans] Offline:', error);
-    return { pendingScans: [], zoneMap: {} };
-  }
+  return { pendingScans: pendingScans || [], zoneMap: Object.fromEntries(zoneMap) };
 }
 
 export async function action({ request }: ActionFunctionArgs) {

@@ -8,7 +8,6 @@ interface RallyZone {
   startLocation: { lat: number; lng: number; label?: string };
   endLocation: { lat: number; lng: number; label?: string };
   is_open: boolean;
-  order: number;
   gpxRoute?: {
     asset: {
       url: string;
@@ -46,15 +45,14 @@ interface CheckIn {
 interface LiveEventMapProps {
   rallyZones: RallyZone[];
   eventMarkers: EventMarker[];
-  gpxContent?: string | null;
+  gpxRouteUrl?: string;
   checkIns?: CheckIn[];
-  isAdmin?: boolean;
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
   showEventMarkers?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, checkIns = [], isAdmin = false, showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -138,10 +136,12 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         if (!mapRef.current) return;
 
         // Load and display GPX route if available
-        if (gpxContent && !gpxLayerRef.current) {
+        if (gpxRouteUrl && !gpxLayerRef.current) {
           try {
+            const response = await fetch(gpxRouteUrl);
+            const gpxText = await response.text();
             const parser = new DOMParser();
-            const gpxDoc = parser.parseFromString(gpxContent, 'text/xml');
+            const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
             
             // Parse GPX track points
             const trackPoints: [number, number][] = [];
@@ -176,16 +176,8 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         rallyZones.forEach(async (zone) => {
           if (zone.gpxRoute?.asset?.url) {
             try {
-              // Fetch through our API to avoid CORS issues
-              const response = await fetch(`/api/zone-gpx/${zone.order}`);
-              const data = await response.json();
-              const gpxText = data.content;
-              
-              if (!gpxText) {
-                console.log(`[Map] No GPX content for zone ${zone.title}`);
-                return;
-              }
-
+              const response = await fetch(zone.gpxRoute.asset.url);
+              const gpxText = await response.text();
               const parser = new DOMParser();
               const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
               
@@ -235,8 +227,8 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         });
 
 
-        // Add check-in markers (only for admins)
-        if (showCheckIns && isAdmin) {
+        // Add check-in markers
+        if (showCheckIns) {
           checkIns.forEach((checkIn) => {
           if (checkIn.entry_latitude && checkIn.entry_longitude) {
             // Entry point (start)
@@ -293,7 +285,6 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         // Add rally zone markers
         if (showZoneRoutes) {
           rallyZones.forEach((zone) => {
-
             // Skip zones without coordinates
             if (!zone.startLocation || !zone.endLocation) {
               console.warn(`Zone ${zone.title} missing startLocation or endLocation`);
@@ -328,38 +319,35 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
             ? '<span style="color: #22c55e; font-weight: bold;">✓ Open</span>'
             : '<span style="color: #ef4444; font-weight: bold;">✗ Closed</span>';
 
-          // Only show start/end markers for admins
-          if (isAdmin) {
-            L.default.marker([zone.startLocation.lat, zone.startLocation.lng], { icon: startIcon })
-              .addTo(mapRef.current)
-              .bindPopup(`
-                <div style="min-width: 200px;">
-                  <strong style="font-size: 16px;">${zone.title}</strong><br/>
-                  <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
-                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                    ${statusBadge}
-                  </div>
-                  <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                    📍 Start Point
-                  </div>
+          L.default.marker([zone.startLocation.lat, zone.startLocation.lng], { icon: startIcon })
+            .addTo(mapRef.current)
+            .bindPopup(`
+              <div style="min-width: 200px;">
+                <strong style="font-size: 16px;">${zone.title}</strong><br/>
+                <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                  ${statusBadge}
                 </div>
-              `);
+                <div style="margin-top: 4px; color: #666; font-size: 12px;">
+                  📍 Start Point
+                </div>
+              </div>
+            `);
 
-            L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
-              .addTo(mapRef.current)
-              .bindPopup(`
-                <div style="min-width: 200px;">
-                  <strong style="font-size: 16px;">${zone.title}</strong><br/>
-                  <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
-                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                    ${statusBadge}
-                  </div>
-                  <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                    🏁 End Point
-                  </div>
+          L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
+            .addTo(mapRef.current)
+            .bindPopup(`
+              <div style="min-width: 200px;">
+                <strong style="font-size: 16px;">${zone.title}</strong><br/>
+                <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                  ${statusBadge}
                 </div>
-              `);
-          }
+                <div style="margin-top: 4px; color: #666; font-size: 12px;">
+                  🏁 End Point
+                </div>
+              </div>
+            `);
 
           // Draw line between start and end
           L.default.polyline(
@@ -443,7 +431,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         setMapError('Failed to initialize map');
       }
     });
-  }, [isClient, rallyZones, eventMarkers, gpxContent, userLocation, showCheckIns, showZoneRoutes, showEventMarkers]);
+  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers]);
 
   if (mapError) {
     return (
@@ -466,13 +454,10 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxContent, che
         }
         .leaflet-container {
           font-family: system-ui, -apple-system, sans-serif;
-          z-index: auto !important;
+          z-index: 1 !important;
         }
         .leaflet-pane {
-          z-index: auto !important;
-        }
-        .leaflet-popup-pane {
-          z-index: 20 !important;
+          z-index: 1 !important;
         }
       `}</style>
     </>

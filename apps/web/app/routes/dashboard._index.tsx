@@ -22,33 +22,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  try {
-    // Get rally submission if exists
-    const { data: submission } = await supabase
-      .from('rally_submissions')
-      .select('*')
-      .eq('participant_id', user.id)
-      .single();
+  // Get rally submission if exists
+  const { data: submission } = await supabase
+    .from('rally_submissions')
+    .select('*')
+    .eq('participant_id', user.id)
+    .single();
 
-    // Get documents
-    const { data: documents } = await supabase
-      .from('documents')
-      .select('*')
-      .order('category', { ascending: true });
+  // Get documents
+  const { data: documents } = await supabase
+    .from('documents')
+    .select('*')
+    .order('category', { ascending: true });
 
-    // Fetch GPX route file
-    const siteConfig = await sanityClient.fetch(`
-      *[_type == "siteConfig"][0] {
-        gpxRouteFile {
-          asset-> {
-            url
-          }
+  // Fetch GPX route file
+  const siteConfig = await sanityClient.fetch(`
+    *[_type == "siteConfig"][0] {
+      gpxRouteFile {
+        asset-> {
+          url
         }
       }
-    `);
+    }
+  `);
 
-    // Count completed zones
-    const completedZones = submission
+  // Count completed zones
+  const completedZones = submission
     ? [
         submission.rz1_code,
         submission.rz2_code,
@@ -129,20 +128,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     eventDate,
     gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
   };
-  } catch (error) {
-    // If offline or error, return minimal data so page can still render
-    console.log('[Dashboard] Offline or error, returning cached user data:', error);
-    const eventDate = process.env.EVENT_DATE || '2026-05-16';
-    return {
-      user,
-      submission: null,
-      documents: [],
-      completedZones: 0,
-      isBochtenkoning: false,
-      eventDate,
-      gpxRouteUrl: null,
-    };
-  }
 }
 
 export default function Dashboard() {

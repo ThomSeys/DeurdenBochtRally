@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { type LoaderFunctionArgs } from 'react-router';
-import { useLoaderData } from 'react-router';
+import { useLoaderData, useRevalidator } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { useFetchOffline } from '~/lib/offline.hooks';
-import type { RallyZone } from '~/lib/api.client';
+import { sanityClient } from '~/lib/sanity.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
@@ -15,70 +15,110 @@ export async function loader({ request }: LoaderFunctionArgs) {
     await requireUserId(request);
     const user = await getUser(request);
 
-    const EVENT_DATE = process.env.EVENT_DATE || '2026-05-16';
-    const today = new Date().toISOString().split('T')[0];
-    const isEventDay = today === EVENT_DATE;
-    const isAdmin = user?.is_admin || false;
+  const EVENT_DATE = process.env.EVENT_DATE || '2026-05-16';
+  const today = new Date().toISOString().split('T')[0];
+  const isEventDay = today === EVENT_DATE;
+  const isAdmin = user?.is_admin || false;
 
-    // Only allow access on event day OR if user is admin
-    if (!isEventDay && !isAdmin) {
-      throw new Response('Live map is only available on the event day', { status: 403 });
+  // Only allow access on event day OR if user is admin
+  if (!isEventDay && !isAdmin) {
+    throw new Response('Live map is only available on the event day', { status: 403 });
+  }
+
+  // Fetch rally zones with GPX routes
+  const rallyZones = await sanityClient.fetch(`
+    *[_type == "rallyZone"] | order(order asc) {
+      _id,
+      title,
+      location,
+      color,
+      startLocation,
+      endLocation,
+      "is_open": coalesce(is_open, true),
+      gpxRoute {
+        asset-> {
+          url
+        }
+      }
     }
+  `);
+
+  // Fetch check-ins for visualization with participant info
+  const { data: checkIns, error: checkInError } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select(`
+      participant_id,
+      zone_id,
+      entry_latitude,
+      entry_longitude,
+      answer_latitude,
+      answer_longitude,
+      created_at,
+      participants!rally_zone_submissions_participant_id_fkey (
+        first_name,
+        last_name,
+        motorcycle_brand,
+        motorcycle_model
+      )
+    `);
+
+  if (checkInError) {
+    console.error('[live-map] checkIn fetch error:', checkInError);
+  }
+  console.info('[live-map] checkIns fetched:', { count: checkIns?.length, error: checkInError, sample: checkIns?.[0] });
+
+  // Fetch event markers
+  const eventMarkers = await sanityClient.fetch(`
+    *[_type == "eventMarker" && isActive == true] | order(createdAt desc) {
+      _id,
+      title,
+      description,
+      type,
+      location,
+      severity,
+      createdAt,
+      updatedAt
+    }
+  `);
+
+  // Fetch GPX route file
+  const siteConfig = await sanityClient.fetch(`
+    *[_type == "siteConfig"][0] {
+      gpxRouteFile {
+        asset-> {
+          url
+        }
+      }
+    }
+  `);
 
     console.info('[live-map] loader success', {
+      zones: rallyZones?.length ?? 0,
+      markers: eventMarkers?.length ?? 0,
+      checkIns: checkIns?.length ?? 0,
+      checkInsData: checkIns,
+      hasGpx: Boolean(siteConfig?.gpxRouteFile?.asset?.url),
       isAdmin,
       isEventDay,
     });
 
     return {
+      rallyZones,
+      eventMarkers,
+      gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
+      checkIns: checkIns || [],
       isAdmin,
       isEventDay,
     };
   } catch (error) {
-    console.log('[LiveMap] Offline or error:', error);
-    // Allow viewing in offline mode (default to non-event-day)
-    return {
-      isAdmin: false,
-      isEventDay: false,
-    };
+    console.error('[live-map] loader error', error);
+    throw error;
   }
 }
 
 export default function LiveMap() {
-  const { isAdmin, isEventDay } = useLoaderData<typeof loader>();
-  
-  // Fetch data client-side with offline support
-  const { 
-    data: rallyZones,
-    isLoading: zonesLoading,
-    isCached: zonesCached,
-    error: zonesError,
-  } = useFetchOffline<RallyZone[]>('/api/rally-zones', { cacheKey: 'rally-zones' });
-  
-  const {
-    data: checkIns,
-    isCached: checkInsCached,
-  } = useFetchOffline<any[]>('/api/check-ins', { cacheKey: 'check-ins' });
-  
-  const {
-    data: eventMarkers,
-    isCached: markersCached,
-  } = useFetchOffline<any[]>('/api/event-markers', { cacheKey: 'event-markers' });
-  
-  const {
-    data: gpxData,
-  } = useFetchOffline<{ content: string | null }>('/api/gpx-route', { cacheKey: 'gpx-route' });
-
-  // Debug logging
-  useEffect(() => {
-    console.log('[LiveMap] State:', { 
-      zonesLoading, 
-      hasRallyZones: !!rallyZones, 
-      zonesLength: rallyZones?.length,
-      zonesError: zonesError?.message 
-    });
-  }, [zonesLoading, rallyZones, zonesError]);
-
+  const { rallyZones, eventMarkers, gpxRouteUrl, checkIns, isAdmin, isEventDay } = useLoaderData<typeof loader>();
+  const revalidator = useRevalidator();
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showCheckIns, setShowCheckIns] = useState(true);
@@ -102,72 +142,23 @@ export default function LiveMap() {
     }
   }, []);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 30 seconds to get new event markers
   useEffect(() => {
     const interval = setInterval(() => {
-      // Refetch in background
-      fetch('/api/check-ins').catch(() => {});
-      fetch('/api/event-markers').catch(() => {});
+      revalidator.revalidate();
       setLastUpdate(new Date());
-    }, 30000); // 30 seconds
+    }, 10000); // 10 seconds
 
     return () => clearInterval(interval);
-  }, []);
-
-  if (zonesLoading || !rallyZones) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            {zonesError ? (
-              <>
-                <p className="text-red-600 font-medium">Fout bij laden van kaart</p>
-                <p className="text-sm text-gray-500 mt-2">{zonesError.message}</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="mt-4 px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
-                >
-                  Opnieuw proberen
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">
-                  {zonesCached ? 'Offline - Kaart laden...' : 'Kaart aan het laden...'}
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  {zonesCached && 'Offline gegevens beschikbaar'}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show message if using cached data
-  const isUsingCache = zonesCached || checkInsCached || markersCached;
-  const allDataMissing = !rallyZones || !checkIns || !eventMarkers;
+  }, [revalidator]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      {/* Offline warning if needed */}
-      {isUsingCache && (
-        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3 relative z-40">
-          <p className="text-sm text-yellow-800">
-            📡 Offline modus: Toont gecachte gegevens. Liveupdates beschikbaar als je verbonden bent.
-          </p>
-        </div>
-      )}
-
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white relative z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="bg-gradient-to-r h-full from-primary-600 to-primary-700 text-white">
+        <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">🗺️ Live Rally Kaart</h1>
@@ -188,9 +179,9 @@ export default function LiveMap() {
       <div className="relative" style={{ height: '80vh' }}>
         <LiveEventMapComponent
           rallyZones={rallyZones}
-          eventMarkers={eventMarkers || []}
-          gpxContent={gpxData?.content}
-          checkIns={checkIns || []}
+          eventMarkers={eventMarkers}
+          gpxRouteUrl={gpxRouteUrl}
+          checkIns={checkIns}
           showCheckIns={showCheckIns}
           showZoneRoutes={showZoneRoutes}
           showEventMarkers={showEventMarkers}
@@ -235,12 +226,12 @@ export default function LiveMap() {
               </div>
             </div>
 
-            {(eventMarkers?.length || 0) > 0 && (
+            {eventMarkers.length > 0 && (
               <div>
                 <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowEventMarkers(!showEventMarkers)}>
-                  <span style={{opacity: showEventMarkers ? 1 : 0.5}}>Live Evenementen ({eventMarkers?.length || 0})</span>
+                  <span style={{opacity: showEventMarkers ? 1 : 0.5}}>Live Evenementen ({eventMarkers.length})</span>
                 </div>
-                {Array.from(new Set((eventMarkers || []).map((m: any) => m.type))).map((type: any) => (
+                {Array.from(new Set(eventMarkers.map((m: any) => m.type))).map((type: any) => (
                   <div key={type} className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showEventMarkers ? 1 : 0.5}} onClick={() => setShowEventMarkers(!showEventMarkers)}>
                     <span>{getEventTypeEmoji(type)}</span>
                     <span className="capitalize text-xs">{type}</span>
@@ -249,14 +240,14 @@ export default function LiveMap() {
               </div>
             )}
           </div>
-          {(eventMarkers?.length || 0) === 0 && (checkIns?.length || 0) === 0 && (
+          {eventMarkers.length === 0 && checkIns.length === 0 && (
             <p className="text-xs text-gray-500 mt-2">Geen actieve evenementen of check-ins</p>
           )}
         </div>
       </div>
 
       {/* Event Submission Form */}
-      <EventSubmissionForm userLocation={userLocation} />
+      <EventSubmissionForm onSubmitSuccess={() => revalidator.revalidate()} userLocation={userLocation} />
 
       <Footer />
     </div>
@@ -264,7 +255,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, gpxContent, checkIns, showCheckIns, showZoneRoutes, showEventMarkers }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -288,7 +279,7 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxContent, checkIns,
     <MapComponent
       rallyZones={rallyZones}
       eventMarkers={eventMarkers}
-      gpxContent={gpxContent}
+      gpxRouteUrl={gpxRouteUrl}
       checkIns={checkIns}
       showCheckIns={showCheckIns}
       showZoneRoutes={showZoneRoutes}

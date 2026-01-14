@@ -14,84 +14,79 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  try {
-    // Get rally zones with points from Sanity
-    const rallyZones = await sanityClient.fetch(
-      `*[_type == "rallyZone"] | order(order asc) {
-        order,
-        points,
-        validAnswers
-      }`
-    );
+  // Get rally zones with points from Sanity
+  const rallyZones = await sanityClient.fetch(
+    `*[_type == "rallyZone"] | order(order asc) {
+      order,
+      points,
+      validAnswers
+    }`
+  );
 
-    // Get all rally submissions with codes
-    const { data: submissions } = await supabaseAdmin
-      .from('rally_submissions')
-      .select(`
-        participant_id,
-        rz1_code, rz2_code, rz3_code, rz4_code,
-        rz5_code, rz6_code, rz7_code, rz8_code,
-        participants!inner (
-          id,
-          first_name,
-          last_name,
-          email,
-          motorcycle_brand,
-          motorcycle_model,
-          license_plate
-        )
-      `);
+  // Get all rally submissions with codes
+  const { data: submissions } = await supabaseAdmin
+    .from('rally_submissions')
+    .select(`
+      participant_id,
+      rz1_code, rz2_code, rz3_code, rz4_code,
+      rz5_code, rz6_code, rz7_code, rz8_code,
+      participants!inner (
+        id,
+        first_name,
+        last_name,
+        email,
+        motorcycle_brand,
+        motorcycle_model,
+        license_plate
+      )
+    `);
 
-    // Get shadow scores for all participants
-    const { data: shadowScores } = await supabaseAdmin
-      .from('rally_zone_submissions')
-      .select('participant_id, zone_id, shadow_score');
+  // Get shadow scores for all participants
+  const { data: shadowScores } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('participant_id, zone_id, shadow_score');
 
-    // Calculate leaderboard
-    const leaderboard = (submissions || []).map(submission => {
-      let basicPoints = 0;
-      let shadowTotal = 0;
+  // Calculate leaderboard
+  const leaderboard = (submissions || []).map(submission => {
+    let basicPoints = 0;
+    let shadowTotal = 0;
 
-      // Calculate basic points (correct answers)
-      for (let i = 1; i <= 8; i++) {
-        const code = submission[`rz${i}_code` as keyof typeof submission] as string | null;
-        if (code) {
-          const zone = rallyZones[i - 1];
-          const isCorrect = zone?.validAnswers?.some((answer: string) => 
-            answer.toLowerCase() === code.toLowerCase()
-          );
-          if (isCorrect && zone?.points) {
-            basicPoints += zone.points;
-          }
+    // Calculate basic points (correct answers)
+    for (let i = 1; i <= 8; i++) {
+      const code = submission[`rz${i}_code` as keyof typeof submission] as string | null;
+      if (code) {
+        const zone = rallyZones[i - 1];
+        const isCorrect = zone?.validAnswers?.some((answer: string) => 
+          answer.toLowerCase() === code.toLowerCase()
+        );
+        if (isCorrect && zone?.points) {
+          basicPoints += zone.points;
         }
       }
+    }
 
-      // Calculate shadow score total
-      const participantShadowScores = shadowScores?.filter(
-        s => s.participant_id === submission.participant_id
-      ) || [];
-      shadowTotal = participantShadowScores.reduce((sum, s) => sum + (s.shadow_score || 0), 0);
+    // Calculate shadow score total
+    const participantShadowScores = shadowScores?.filter(
+      s => s.participant_id === submission.participant_id
+    ) || [];
+    shadowTotal = participantShadowScores.reduce((sum, s) => sum + (s.shadow_score || 0), 0);
 
-      return {
-        participant: submission.participants,
-        basicPoints,
-        shadowTotal,
-        totalScore: basicPoints + shadowTotal
-      };
-    }).sort((a, b) => b.totalScore - a.totalScore);
+    return {
+      participant: submission.participants,
+      basicPoints,
+      shadowTotal,
+      totalScore: basicPoints + shadowTotal
+    };
+  }).sort((a, b) => b.totalScore - a.totalScore);
 
-    // Get participants without submissions
-    const participantIds = submissions?.map(s => s.participant_id) || [];
-    const { data: noScores } = await supabaseAdmin
-      .from('participants')
-      .select('id, first_name, last_name, email')
-      .not('id', 'in', participantIds.length > 0 ? `(${participantIds.join(',')})` : '(null)');
+  // Get participants without submissions
+  const participantIds = submissions?.map(s => s.participant_id) || [];
+  const { data: noScores } = await supabaseAdmin
+    .from('participants')
+    .select('id, first_name, last_name, email')
+    .not('id', 'in', participantIds.length > 0 ? `(${participantIds.join(',')})` : '(null)');
 
-    return { leaderboard, noScores: noScores || [] };
-  } catch (error) {
-    console.log('[AdminLeaderboard] Offline:', error);
-    return { leaderboard: [], noScores: [] };
-  }
+  return { leaderboard, noScores: noScores || [] };
 }
 
 export async function action({ request }: ActionFunctionArgs) {

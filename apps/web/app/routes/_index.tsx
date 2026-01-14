@@ -15,21 +15,15 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  try {
-    const userId = await getUserId(request);
-    const edition = await getActiveEdition();
-    const siteConfig = await getSiteConfig();
-    const stats = edition ? await getStats(edition._id) : [];
-    const pricing = edition ? await getPricingTiers(edition._id) : [];
-    const sponsors = edition ? await getSponsors(edition._id) : [];
-    const pageContent = edition ? await getPageContent('homepage', edition._id) : [];
+  const userId = await getUserId(request);
+  const edition = await getActiveEdition();
+  const siteConfig = await getSiteConfig();
+  const stats = edition ? await getStats(edition._id) : [];
+  const pricing = edition ? await getPricingTiers(edition._id) : [];
+  const sponsors = edition ? await getSponsors(edition._id) : [];
+  const pageContent = edition ? await getPageContent('homepage', edition._id) : [];
 
-    return { userId, edition, siteConfig, stats, pricing, sponsors, pageContent };
-  } catch (error) {
-    console.log('[Home] Offline or error:', error);
-    const userId = await getUserId(request);
-    return { userId, edition: null, siteConfig: null, stats: [], pricing: [], sponsors: [], pageContent: [] };
-  }
+  return {  userId, edition, siteConfig, stats, pricing, sponsors, pageContent };
 }
 
 export default function Index() {

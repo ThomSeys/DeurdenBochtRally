@@ -29,13 +29,5 @@ export default [
   route("api/rally-submission", "routes/api.rally-submission.tsx"),
   route("api/qrcode", "routes/api.qrcode.tsx"),
   route("api/events/submit", "routes/api.events.submit.tsx"),
-  route("api/rally-zones", "routes/api.rally-zones.tsx"),
-  route("api/check-ins", "routes/api.check-ins.tsx"),
-  route("api/event-markers", "routes/api.event-markers.tsx"),
-  route("api/gpx-route", "routes/api.gpx-route.tsx"),
-  route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),
-  route("api/leaderboard", "routes/api.leaderboard.tsx"),
-  route("api/participant", "routes/api.participant.tsx"),
-  route("api/documents", "routes/api.documents.tsx"),
   route('check-in/:participantId', 'routes/check-in.$participantId.tsx'),
 ] satisfies RouteConfig;

@@ -47,27 +47,22 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response('Participant ID is required', { status: 400 });
   }
 
-  try {
-    // Get participant info
-    const { data: participant, error } = await supabase
-      .from('participants')
-      .select('id, first_name, last_name, email, motorcycle_brand, motorcycle_model, license_plate, formula, ride_type, checked_in')
-      .eq('id', participantId)
-      .single();
+  // Get participant info
+  const { data: participant, error } = await supabase
+    .from('participants')
+    .select('id, first_name, last_name, email, motorcycle_brand, motorcycle_model, license_plate, formula, ride_type, checked_in')
+    .eq('id', participantId)
+    .single();
 
-    if (error || !participant) {
-      return { error: 'Deelnemer niet gevonden', participant: null };
-    }
-
-    if (participant.checked_in) {
-      return { success: true, alreadyCheckedIn: true, participant };
-    }
-
-    return { participant, alreadyCheckedIn: false };
-  } catch (error) {
-    console.log('[CheckIn] Offline:', error);
-    return { error: 'Offline modus', participant: null };
+  if (error || !participant) {
+    return { error: 'Deelnemer niet gevonden', participant: null };
   }
+
+  if (participant.checked_in) {
+    return { success: true, alreadyCheckedIn: true, participant };
+  }
+
+  return { participant, alreadyCheckedIn: false };
 }
 
 export default function CheckIn() {
