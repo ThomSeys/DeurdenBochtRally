@@ -90,6 +90,19 @@ export const notificationTemplates = {
     body: 'Het evenement is officieel begonnen. Veel plezier!',
     tag: 'rally-start',
   },
+
+  rallyEnd: {
+    title: '🏁 Rally Afgelopen!',
+    body: 'Dank je wel voor je deelname! Bekijk je resultaten op de leaderboard.',
+    tag: 'rally-end',
+  },
+
+  weatherWarning: {
+    title: '⛈️ Weerswaarschuwing',
+    body: 'Pas op! Er staat slecht weer op komst. Ride safe!',
+    tag: 'weather-warning',
+    requireInteraction: true,
+  },
   
   zoneOpened: (zoneNumber: number, zoneName: string) => ({
     title: `🎯 Rally Zone ${zoneNumber} Geopend`,
@@ -114,6 +127,12 @@ export const notificationTemplates = {
     actions: [
       { action: 'view-map', title: 'Bekijk Map', icon: '/icon-map.png' },
     ],
+  }),
+
+  eventResolved: (eventTitle: string) => ({
+    title: `✅ Incident Opgelost`,
+    body: `${eventTitle} is nu opgelost.`,
+    tag: 'event-resolved',
   }),
 
   leaderboardUpdate: (rank: number) => ({

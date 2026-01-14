@@ -43,11 +43,20 @@ export async function action({ request }: ActionFunctionArgs) {
       case 'rally-start':
         notification = notificationTemplates.rallyStart;
         break;
-      case 'zone-1-open':
-        notification = notificationTemplates.zoneOpened(1, 'De Scheldemeander');
+      case 'rally-end':
+        notification = notificationTemplates.rallyEnd;
+        break;
+      case 'weather-warning':
+        notification = notificationTemplates.weatherWarning;
+        break;
+      case 'leaderboard-update':
+        notification = notificationTemplates.leaderboardUpdate(1);
         break;
       case 'reminder-24h':
         notification = notificationTemplates.reminder(24);
+        break;
+      case 'reminder-1h':
+        notification = notificationTemplates.reminder(1);
         break;
       case 'custom':
         notification = {
@@ -131,24 +140,49 @@ export default function AdminPushNotifications() {
                 🏁 Rally Gestart
               </button>
             </Form>
-
             <Form method="post">
-              <input type="hidden" name="type" value="zone-1-open" />
+              <input type="hidden" name="type" value="rally-end" />
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-sm font-medium transition-colors"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-sm font-medium transition-colors"
               >
-                🎯 Zone 1 Geopend
+                🏁 Rally Afgelopen
               </button>
             </Form>
-
+            <Form method="post">
+              <input type="hidden" name="type" value="weather-warning" />
+              <button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-sm font-medium transition-colors"
+              >
+                ⛈️ Weerswarning
+              </button>
+            </Form>
+            <Form method="post">
+              <input type="hidden" name="type" value="leaderboard-update" />
+              <button
+                type="submit"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-sm font-medium transition-colors"
+              >
+                🏆 Leaderboard Update
+              </button>
+            </Form>
             <Form method="post">
               <input type="hidden" name="type" value="reminder-24h" />
               <button
                 type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-sm font-medium transition-colors"
+              >
+                ⏰ 24u Herinnering
+              </button>
+            </Form>
+            <Form method="post">
+              <input type="hidden" name="type" value="reminder-1h" />
+              <button
+                type="submit"
                 className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-sm font-medium transition-colors"
               >
-                ⏰ 24u Reminder
+                ⏰ 1u Herinnering
               </button>
             </Form>
           </div>

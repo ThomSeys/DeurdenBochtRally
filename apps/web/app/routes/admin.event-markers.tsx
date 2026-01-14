@@ -3,6 +3,8 @@ import { type LoaderFunctionArgs, type ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useRevalidator, Form } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { sanityClient } from '~/lib/sanity.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
+import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -44,8 +46,27 @@ export async function action({ request }: ActionFunctionArgs) {
     if (intent === 'toggle') {
       const id = formData.get('id') as string;
       const isActive = formData.get('isActive') === 'true';
+      const title = formData.get('title') as string;
 
       await sanityClient.patch(id).set({ isActive: !isActive, updatedAt: new Date().toISOString() }).commit();
+
+      // Send push notification when event is resolved (toggled inactive)
+      if (isActive) {
+        try {
+          const { data: subscriptions } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('endpoint, keys')
+            .eq('is_active', true);
+
+          if (subscriptions && subscriptions.length > 0) {
+            const notification = notificationTemplates.eventResolved(title);
+            await sendBulkPushNotifications(subscriptions, notification);
+            console.info('[admin.event-markers] event resolved notification sent');
+          }
+        } catch (pushError) {
+          console.error('[admin.event-markers] error sending event resolved notification', pushError);
+        }
+      }
 
       console.info('[admin.event-markers] action success', { intent, id });
       return { success: true };
@@ -83,6 +104,24 @@ export async function action({ request }: ActionFunctionArgs) {
           _ref: editionId,
         },
       });
+
+      // Send push notification for critical events
+      if (severity === 'critical' || severity === 'high') {
+        try {
+          const { data: subscriptions } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('endpoint, keys')
+            .eq('is_active', true);
+
+          if (subscriptions && subscriptions.length > 0) {
+            const notification = notificationTemplates.criticalEvent(title, description);
+            await sendBulkPushNotifications(subscriptions, notification);
+            console.info('[admin.event-markers] critical event notification sent');
+          }
+        } catch (pushError) {
+          console.error('[admin.event-markers] error sending critical event notification', pushError);
+        }
+      }
 
       console.info('[admin.event-markers] action success', { intent });
       return { success: true };

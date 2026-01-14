@@ -1,6 +1,8 @@
 import { type LoaderFunctionArgs } from 'react-router';
 import { requireUserId } from '~/lib/session.server';
 import { sanityClient } from '~/lib/sanity.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
+import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
 
 export async function action({ request }: LoaderFunctionArgs) {
   console.info('[api.events.submit] action start', { method: request.method });
@@ -68,6 +70,24 @@ export async function action({ request }: LoaderFunctionArgs) {
     const result = await sanityClient.create(eventMarker);
 
     console.info('[api.events.submit] action success', { eventId: result._id });
+
+    // Send push notification for critical events
+    if (severity === 'critical' || severity === 'high') {
+      try {
+        const { data: subscriptions } = await supabaseAdmin
+          .from('push_subscriptions')
+          .select('endpoint, keys')
+          .eq('is_active', true);
+
+        if (subscriptions && subscriptions.length > 0) {
+          const notification = notificationTemplates.criticalEvent(title, description);
+          await sendBulkPushNotifications(subscriptions, notification);
+          console.info('[api.events.submit] critical event notification sent');
+        }
+      } catch (pushError) {
+        console.error('[api.events.submit] error sending critical event notification', pushError);
+      }
+    }
 
     return Response.json(
       {
