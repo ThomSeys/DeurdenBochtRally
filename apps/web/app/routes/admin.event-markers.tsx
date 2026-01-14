@@ -124,12 +124,37 @@ export async function action({ request }: ActionFunctionArgs) {
       const severity = formData.get('severity') as string;
       const editionId = formData.get('editionId') as string;
 
+      // Validation
+      if (!title || !description || !type || isNaN(lat) || isNaN(lng) || !severity || !editionId) {
+        console.error('[admin.event-markers] create validation failed', { 
+          title: !!title, 
+          description: !!description,
+          type: !!type,
+          lat: !isNaN(lat),
+          lng: !isNaN(lng),
+          severity: !!severity,
+          editionId: !!editionId
+        });
+        return { success: false, error: 'Missing or invalid fields' };
+      }
+
+      console.info('[admin.event-markers] creating event marker', { 
+        title, 
+        lat, 
+        lng, 
+        severity,
+        editionId 
+      });
+
       await sanityClient.create({
         _type: 'eventMarker',
         title,
         description,
         type,
-        location: { lat, lng },
+        location: { 
+          lat, 
+          lng 
+        },
         severity,
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -149,7 +174,11 @@ export async function action({ request }: ActionFunctionArgs) {
             .eq('is_active', true);
 
           if (subscriptions && subscriptions.length > 0) {
-            const notification = notificationTemplates.criticalEvent(title, description);
+            const notification = notificationTemplates.criticalEvent(title, description, {
+              type,
+              severity,
+              source: 'admin',
+            });
             await sendBulkPushNotifications(subscriptions, notification);
             console.info('[admin.event-markers] critical event notification sent');
           }
@@ -282,7 +311,7 @@ export default function AdminEventMarkers() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Latitude
+                    Latitude <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="number"
@@ -292,13 +321,14 @@ export default function AdminEventMarkers() {
                     min="-90"
                     max="90"
                     className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="51.0967"
+                    placeholder="bijv. 51.0967"
                   />
+                  <p className="text-xs text-gray-500 mt-1">De breedtegraad van de locatie</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Longitude
+                    Longitude <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="number"
@@ -308,8 +338,9 @@ export default function AdminEventMarkers() {
                     min="-180"
                     max="180"
                     className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="3.4400"
+                    placeholder="bijv. 3.4400"
                   />
+                  <p className="text-xs text-gray-500 mt-1">De lengtegraad van de locatie</p>
                 </div>
 
                 <div>
