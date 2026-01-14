@@ -1,5 +1,6 @@
 import { Link, useMatches, Form } from 'react-router';
 import { useState, useEffect } from 'react';
+import { NotificationBell } from './NotificationBell';
 
 export default function Header({ transparent, fixed }: { transparent?: boolean; fixed?: boolean }) {
   const matches = useMatches();
@@ -138,8 +139,9 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Mobile menu button and notification bell */}
+          <div className="md:hidden flex items-center gap-2">
+            <NotificationBell isTransparent={isTransparent} />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-white p-2"
@@ -154,6 +156,11 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               </svg>
             </button>
           </div>
+        </div>
+
+        {/* Desktop notification bell - in nav area */}
+        <div className="hidden md:flex absolute right-8 top-1/2 transform -translate-y-1/2">
+          <NotificationBell isTransparent={isTransparent} />
         </div>
 
         {/* Mobile menu */}
