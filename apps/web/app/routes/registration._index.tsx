@@ -99,7 +99,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const qrCode = generateQRCode();
     const participantId = authData.user.id;
     const qrCodeUrl = `${new URL(request.url).origin}/check-in/${participantId}`;
-    const amount = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
+    const amountInCents = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
+    const amount = amountInCents / 100; // Convert from cents to euros
 
     const { data: participant, error: dbError } = await supabaseAdmin
       .from('participants')
