@@ -384,7 +384,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
             iconAnchor: [20, 20],
           });
 
-          const severityLabel = marker.severity.toUpperCase();
+          const severityLabel = getSeverityLabel(marker.severity);
           const timeAgo = getTimeAgo(new Date(marker.createdAt));
 
           L.default.marker([marker.location.lat, marker.location.lng], { icon: eventIcon })
@@ -467,7 +467,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
 function getEventTypeIcon(type: string, color: string): { svg: string; label: string } {
   const iconMap: Record<string, { svg: string; label: string }> = {
     closure: {
-      label: 'Closure',
+      label: 'Wegafsluiting',
       svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <rect x="4" y="6" width="16" height="12" fill="none" stroke="${color}" stroke-width="2" rx="2"/>
         <line x1="4" y1="10" x2="20" y2="10" stroke="${color}" stroke-width="2"/>
@@ -476,7 +476,7 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
       </svg>`,
     },
     accident: {
-      label: 'Accident',
+      label: 'Ongeval',
       svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2 L22 7 L22 12 Q22 18 12 22 Q2 18 2 12 L2 7 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
         <line x1="12" y1="10" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
@@ -491,7 +491,7 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
       </svg>`,
     },
     flood: {
-      label: 'Flood',
+      label: 'Overstroomde Weg',
       svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M3 16 Q6 12 9 16 Q12 12 15 16 Q18 12 21 16" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
         <path d="M3 11 Q6 7 9 11 Q12 7 15 11 Q18 7 21 11" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
@@ -499,7 +499,7 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
       </svg>`,
     },
     warning: {
-      label: 'Warning',
+      label: 'Waarschuwing',
       svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2 L22 20 L2 20 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
         <line x1="12" y1="9" x2="12" y2="14" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
@@ -527,7 +527,7 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
   };
   
   const defaultIcon = {
-    label: 'Marker',
+    label: 'Markering',
     svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2 C7 2 3 6 3 11 C3 17 12 22 12 22 C12 22 21 17 21 11 C21 6 17 2 12 2 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
       <circle cx="12" cy="11" r="3" fill="${color}"/>
@@ -537,14 +537,24 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
   return iconMap[type] || defaultIcon;
 }
 
+function getSeverityLabel(severity: string): string {
+  const severityMap: Record<string, string> = {
+    low: 'Laag',
+    medium: 'Gemiddeld',
+    high: 'Hoog',
+    critical: 'Kritiek',
+  };
+  return severityMap[severity] || severity.charAt(0).toUpperCase() + severity.slice(1);
+}
+
 function getTimeAgo(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(minutes / 60);
 
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
+  if (minutes < 1) return 'Net';
+  if (minutes < 60) return `${minutes}m geleden`;
+  if (hours < 24) return `${hours}u geleden`;
   return date.toLocaleDateString();
 }
