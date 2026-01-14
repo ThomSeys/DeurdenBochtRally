@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   isRouteErrorResponse,
   Links,
@@ -65,7 +66,48 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const [notification, setNotification] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    // Listen for messages from service worker
+    if ('serviceWorker' in navigator) {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'NOTIFICATION_CLICKED') {
+          setNotification(event.data.notification);
+          // Auto-dismiss after 5 seconds
+          setTimeout(() => setNotification(null), 5000);
+        }
+      };
+
+      navigator.serviceWorker.addEventListener('message', handleMessage);
+      return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+    }
+  }, []);
+
+  return (
+    <>
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-4 max-w-sm border-l-4 border-primary-600 animate-in slide-in-from-top-2">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900">{notification.title}</h3>
+              <p className="text-gray-600 text-sm mt-1">{notification.body}</p>
+              {notification.data?.message && (
+                <p className="text-gray-500 text-xs mt-2 italic">{notification.data.message}</p>
+              )}
+            </div>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

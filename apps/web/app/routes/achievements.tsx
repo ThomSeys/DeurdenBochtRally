@@ -158,9 +158,9 @@ export default function Achievements() {
   const { achievements, unlockedIds, stats } = useLoaderData<typeof loader>();
 
   const categories: Record<string, { name: string; color: string }> = {
-    completion: { name: '🎯 Voltooiing', color: 'from-blue-500 to-blue-600' },
-    special: { name: '⭐ Speciaal', color: 'from-purple-500 to-purple-600' },
-    social: { name: '👥 Sociaal', color: 'from-pink-500 to-pink-600' },
+    completion: { name: 'Voltooiing', color: 'from-blue-500 to-blue-600' },
+    special: { name: 'Speciaal', color: 'from-purple-500 to-purple-600' },
+    social: { name: 'Sociaal', color: 'from-pink-500 to-pink-600' },
   };
 
   const groupedAchievements = achievements.reduce((acc: any, achievement: any) => {
@@ -238,7 +238,7 @@ export default function Achievements() {
         {/* Achievements by Category */}
         {Object.entries(groupedAchievements).map(([category, categoryAchievements]: [string, any]) => (
           <div key={category} className="mb-12">
-            <div className={`inline-block mb-6 px-6 py-3 rounded-sm bg-gradient-to-r ${categories[category]?.color || 'from-gray-500 to-gray-600'} text-white shadow-lg`}>
+            <div className={`inline-block mb-6 font-bold uppercase py-3 rounded-sm text-primary-600`}>
               <h2 className="text-2xl font-bold">
                 {categories[category]?.name || category}
               </h2>
@@ -251,9 +251,9 @@ export default function Achievements() {
                 return (
                   <div 
                     key={achievement.id}
-                    className={`group relative rounded-sm shadow-xl overflow-hidden transition-all duration-300 transform hover:scale-105 ${
+                    className={`group relative rounded-sm shadow-xl overflow-hidden transition-all duration-300 ${
                       isUnlocked 
-                        ? 'bg-gradient-to-br from-white via-yellow-50 to-yellow-100 border-2 border-yellow-400 shadow-yellow-200' 
+                        ? 'bg-gradient-to-br from-white via-yellow-50 to-yellow-100 border-2 border-yellow-400' 
                         : 'bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-300 hover:border-gray-400'
                     }`}
                   >
@@ -264,7 +264,7 @@ export default function Achievements() {
                     <div className="p-6">
                       {/* Icon and Status */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className={`transition-transform duration-300 ${isUnlocked ? 'group-hover:scale-110' : ''}`}>
+                        <div className={`transition-transform duration-300 ${isUnlocked ? '' : ''}`}>
                           <AchievementIcon name={achievement.name} isUnlocked={isUnlocked} />
                         </div>
                         {isUnlocked && (

@@ -354,37 +354,34 @@ self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification clicked:', event.notification.tag);
   event.notification.close();
 
-  // Handle action clicks
-  if (event.action === 'view') {
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        // Check if window is already open
-        for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
-            return client.focus();
-          }
+  // Store notification in sessionStorage so app can display it
+  const notificationData = {
+    title: event.notification.title,
+    body: event.notification.body,
+    tag: event.notification.tag,
+    data: event.notification.data,
+    timestamp: Date.now(),
+  };
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Check if window is already open
+      for (const client of clientList) {
+        if (client.url === '/' && 'focus' in client) {
+          // Send notification data to existing client
+          client.postMessage({
+            type: 'NOTIFICATION_CLICKED',
+            notification: notificationData,
+          });
+          return client.focus();
         }
-        // Open new window if not found
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-    );
-  } else {
-    // Default action - open app
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-    );
-  }
+      }
+      // Open new window if not found
+      if (clients.openWindow) {
+        return clients.openWindow('/?notification=' + encodeURIComponent(JSON.stringify(notificationData)));
+      }
+    })
+  );
 });
 
 // Handle notification close (optional)
