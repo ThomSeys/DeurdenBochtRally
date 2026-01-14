@@ -1,9 +1,9 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
-import { useLoaderData, Form, useActionData } from 'react-router';
+import { useLoaderData, Form, useActionData, useRevalidator } from 'react-router';
 import { requireUserId } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Fotogalerij - Deur Den Bocht' }];
@@ -47,28 +47,79 @@ export async function action({ request }: ActionFunctionArgs) {
   if (action === 'like') {
     const photoId = formData.get('photo_id') as string;
     
+    console.info('[gallery] like action start', { photoId, userId });
+
     // Toggle like
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: checkError } = await supabaseAdmin
       .from('photo_likes')
       .select('id')
       .eq('photo_id', photoId)
       .eq('participant_id', userId)
       .single();
 
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('[gallery] error checking existing like', checkError);
+      return { error: 'Error checking like status' };
+    }
+
     if (existing) {
       // Unlike
-      await supabaseAdmin.from('photo_likes').delete().eq('id', existing.id);
-      await supabaseAdmin.rpc('decrement_photo_likes', { photo_id: photoId });
+      console.info('[gallery] unliking photo', { photoId });
+      const { error: deleteError } = await supabaseAdmin
+        .from('photo_likes')
+        .delete()
+        .eq('id', existing.id);
+
+      if (deleteError) {
+        console.error('[gallery] error deleting like', deleteError);
+        return { error: 'Error removing like' };
+      }
+
+      // Decrement like count - try RPC first, fall back to direct update
+      const { error: rpcError } = await supabaseAdmin.rpc('decrement_photo_likes', { photo_id: photoId });
+      if (rpcError) {
+        console.warn('[gallery] RPC decrement failed, using direct update', rpcError);
+        await supabaseAdmin
+          .from('participant_photos')
+          .update({ likes_count: (await supabaseAdmin.from('participant_photos').select('likes_count').eq('id', photoId).single()).data?.likes_count - 1 || 0 })
+          .eq('id', photoId);
+      }
+
+      console.info('[gallery] unlike successful');
     } else {
       // Like
-      await supabaseAdmin.from('photo_likes').insert({
+      console.info('[gallery] liking photo', { photoId });
+      const { error: insertError } = await supabaseAdmin.from('photo_likes').insert({
         photo_id: photoId,
         participant_id: userId,
       });
-      await supabaseAdmin.rpc('increment_photo_likes', { photo_id: photoId });
+
+      if (insertError) {
+        console.error('[gallery] error inserting like', insertError);
+        return { error: 'Error adding like' };
+      }
+
+      // Increment like count - try RPC first, fall back to direct update
+      const { error: rpcError } = await supabaseAdmin.rpc('increment_photo_likes', { photo_id: photoId });
+      if (rpcError) {
+        console.warn('[gallery] RPC increment failed, using direct update', rpcError);
+        const { data: photo } = await supabaseAdmin
+          .from('participant_photos')
+          .select('likes_count')
+          .eq('id', photoId)
+          .single();
+        
+        await supabaseAdmin
+          .from('participant_photos')
+          .update({ likes_count: (photo?.likes_count || 0) + 1 })
+          .eq('id', photoId);
+      }
+
+      console.info('[gallery] like successful');
     }
 
     return { success: true };
+  }
   }
 
   if (action === 'upload') {
@@ -152,7 +203,16 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Gallery() {
   const { photos, myPhotos, userId } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const revalidator = useRevalidator();
   const [showUpload, setShowUpload] = useState(false);
+
+  // Revalidate data after like action succeeds
+  useEffect(() => {
+    if (actionData?.success) {
+      console.info('[gallery] like successful, revalidating data');
+      revalidator.revalidate();
+    }
+  }, [actionData?.success, revalidator]);
 
   return (
     <div className="min-h-screen bg-gray-50">
