@@ -341,8 +341,27 @@ self.addEventListener('push', (event) => {
 
     console.log('[SW] Showing notification:', { title: data.title, ...options });
     
+    // Notify all open clients about the new notification
+    const notificationData = {
+      title: data.title || 'Notificatie',
+      body: data.body || '',
+      tag: data.tag || 'default',
+      timestamp: Date.now(),
+    };
+
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Notificatie', options)
+      Promise.all([
+        self.registration.showNotification(data.title || 'Notificatie', options),
+        // Notify all open clients
+        self.clients.matchAll({ type: 'window' }).then((clientList) => {
+          clientList.forEach((client) => {
+            client.postMessage({
+              type: 'PUSH_RECEIVED',
+              notification: notificationData,
+            });
+          });
+        }),
+      ])
     );
   } catch (error) {
     console.error('[SW] Error handling push notification:', error);

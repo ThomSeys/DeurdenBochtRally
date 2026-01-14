@@ -66,16 +66,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [notification, setNotification] = React.useState<any>(null);
+  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [showNotificationPanel, setShowNotificationPanel] = React.useState(false);
 
   React.useEffect(() => {
     // Listen for messages from service worker
     if ('serviceWorker' in navigator) {
       const handleMessage = (event: MessageEvent) => {
-        if (event.data.type === 'NOTIFICATION_CLICKED') {
-          setNotification(event.data.notification);
-          // Auto-dismiss after 5 seconds
-          setTimeout(() => setNotification(null), 5000);
+        if (event.data.type === 'PUSH_RECEIVED') {
+          // Add to notifications list
+          setNotifications((prev) => [event.data.notification, ...prev].slice(0, 10));
+        } else if (event.data.type === 'NOTIFICATION_CLICKED') {
+          // Show clicked notification
+          setShowNotificationPanel(false);
         }
       };
 
@@ -84,27 +87,80 @@ export default function App() {
     }
   }, []);
 
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   return (
     <>
-      {notification && (
-        <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-4 max-w-sm border-l-4 border-primary-600 animate-in slide-in-from-top-2">
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex-1">
-              <h3 className="font-bold text-gray-900">{notification.title}</h3>
-              <p className="text-gray-600 text-sm mt-1">{notification.body}</p>
-              {notification.data?.message && (
-                <p className="text-gray-500 text-xs mt-2 italic">{notification.data.message}</p>
+      {/* Notification Bell Icon in Header */}
+      <div className="fixed top-4 right-4 z-40">
+        <div className="relative">
+          <button
+            onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+            className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors"
+            title="Notificaties"
+          >
+            <span className="text-2xl">🔔</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Notification Popover */}
+          {showNotificationPanel && (
+            <div className="absolute top-12 right-0 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg">Notificaties</h3>
+                  <button
+                    onClick={() => setShowNotificationPanel(false)}
+                    className="text-white hover:opacity-80"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <p className="text-sm">Geen notificaties</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {notifications.map((notif, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4 hover:bg-gray-50 cursor-pointer transition-colors border-l-4 border-primary-600"
+                      onClick={() => {
+                        setNotifications((prev) =>
+                          prev.map((n, i) => (i === idx ? { ...n, read: true } : n))
+                        );
+                      }}
+                    >
+                      <div className="flex gap-2">
+                        <span className="text-lg flex-shrink-0">📬</span>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm truncate">
+                            {notif.title}
+                          </h4>
+                          <p className="text-gray-600 text-sm line-clamp-2 mt-1">
+                            {notif.body}
+                          </p>
+                          <p className="text-gray-400 text-xs mt-2">
+                            {new Date(notif.timestamp).toLocaleTimeString('nl-NL')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            <button
-              onClick={() => setNotification(null)}
-              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
-            >
-              ✕
-            </button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
+
       <Outlet />
     </>
   );
