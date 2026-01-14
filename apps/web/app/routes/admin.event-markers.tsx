@@ -28,12 +28,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Fetch current edition
   const edition = await sanityClient.fetch(`
-    *[_type == "edition" && year == "2026"][0] {
+    *[_type == "edition" && isActive == true][0] {
       _id
     }
   `);
 
-  return { eventMarkers, editionId: edition?._id };
+  console.info('[admin.event-markers] loader', { 
+    editionId: edition?._id, 
+    hasEdition: !!edition,
+    markersCount: eventMarkers?.length 
+  });
+
+  return { eventMarkers, editionId: edition?._id || null };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -204,11 +210,26 @@ export default function AdminEventMarkers() {
           </div>
         </div>
 
+        {/* Edition Warning */}
+        {!editionId && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-sm p-4 mb-6">
+            <p className="text-yellow-800">
+              ⚠️ Geen actieve editie gevonden. Maak eerst een actieve editie aan in Sanity voordat je evenementmarkeringen kunt toevoegen.
+            </p>
+          </div>
+        )}
+
         {/* Create Form */}
-        {showForm && (
+        {showForm && editionId && (
           <div className="bg-white rounded-sm shadow-md p-6 mb-6">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 break-words">Evenementmarkering Aanmaken</h2>
-            <Form method="post" onSubmit={() => setShowForm(false)}>
+            <Form 
+              method="post" 
+              onSubmit={() => {
+                setShowForm(false);
+                setTimeout(() => revalidator.revalidate(), 100);
+              }}
+            >
               <input type="hidden" name="intent" value="create" />
               <input type="hidden" name="editionId" value={editionId} />
               
