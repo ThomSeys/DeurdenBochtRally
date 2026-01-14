@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { useLoaderData, Link, Form } from 'react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
@@ -146,6 +146,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Dashboard() {
   const { user, submission, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl } = useLoaderData<typeof loader>();
   const [qrError, setQrError] = useState(false);
+  const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
+
+  // Check if already subscribed to push notifications
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.getSubscription();
+          setIsNotificationSubscribed(!!subscription);
+        } catch (err) {
+          console.log('Could not check notification subscription:', err);
+        }
+      }
+    };
+    checkSubscription();
+  }, []);
 
   const documentsByCategory = {
     route: documents?.filter((d: any) => d.category === 'route') || [],
@@ -169,7 +186,8 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Push Notifications Setup Banner */}
+        {/* Push Notifications Setup Banner - Only show if not subscribed */}
+        {!isNotificationSubscribed && (
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-sm shadow p-6 mb-8">
           <div className="flex items-start gap-4">
             <div className="text-4xl">🔔</div>
@@ -249,12 +267,13 @@ export default function Dashboard() {
                       }
 
                       alert('✅ Notificaties ingeschakeld! Je ontvangt nu updates.');
+                      setIsNotificationSubscribed(true);
                     } catch (err) {
                       console.error('Notification setup error:', err);
                       alert(`Fout bij notificaties: ${err instanceof Error ? err.message : 'Onbekende fout'}`);
                     }
                   }}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-sm transition-colors"
+                  className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-sm transition-colors"
                 >
                   ✓ Notificaties inschakelen
                 </button>
@@ -268,6 +287,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
