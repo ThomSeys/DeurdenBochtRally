@@ -375,13 +375,13 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
             critical: '#dc2626',
           };
           const color = severityColors[marker.severity] || '#6b7280';
-          const emoji = getEventTypeEmoji(marker.type);
+          const icon = getEventTypeIcon(marker.type, 'white');
 
           const eventIcon = L.default.divIcon({
-            html: `<div style="background-color: ${color}; width: 36px; height: 36px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 18px; animation: pulse 2s infinite;">${emoji}</div>`,
+            html: `<div style="background-color: ${color}; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;">${icon.svg}</div>`,
             className: '',
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
           });
 
           const severityLabel = marker.severity.toUpperCase();
@@ -392,7 +392,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
             .bindPopup(`
               <div style="min-width: 250px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                  <span style="font-size: 24px;">${emoji}</span>
+                  <div style="width: 32px; height: 32px; background-color: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${icon.svg}</div>
                   <strong style="font-size: 16px;">${marker.title}</strong>
                 </div>
                 <p style="margin: 8px 0; color: #374151;">${marker.description}</p>
@@ -464,17 +464,77 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
   );
 }
 
-function getEventTypeEmoji(type: string): string {
-  const emojiMap: Record<string, string> = {
-    closure: '🚧',
-    accident: '🚨',
-    stop: '⛔',
-    flood: '🌊',
-    warning: '⚠️',
-    info: 'ℹ️',
-    station: '💧',
+function getEventTypeIcon(type: string, color: string): { svg: string; label: string } {
+  const iconMap: Record<string, { svg: string; label: string }> = {
+    closure: {
+      label: 'Closure',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="6" width="16" height="12" fill="none" stroke="${color}" stroke-width="2" rx="2"/>
+        <line x1="4" y1="10" x2="20" y2="10" stroke="${color}" stroke-width="2"/>
+        <line x1="10" y1="6" x2="10" y2="18" stroke="${color}" stroke-width="2"/>
+        <line x1="14" y1="6" x2="14" y2="18" stroke="${color}" stroke-width="2"/>
+      </svg>`,
+    },
+    accident: {
+      label: 'Accident',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L22 7 L22 12 Q22 18 12 22 Q2 18 2 12 L2 7 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="12" y1="10" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="19" r="1.5" fill="${color}"/>
+      </svg>`,
+    },
+    stop: {
+      label: 'Stop',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+        <line x1="4" y1="12" x2="20" y2="12" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    },
+    flood: {
+      label: 'Flood',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 16 Q6 12 9 16 Q12 12 15 16 Q18 12 21 16" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 11 Q6 7 9 11 Q12 7 15 11 Q18 7 21 11" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <rect x="2" y="18" width="20" height="3" fill="${color}" opacity="0.5"/>
+      </svg>`,
+    },
+    warning: {
+      label: 'Warning',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L22 20 L2 20 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="12" y1="9" x2="12" y2="14" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="18" r="1" fill="${color}"/>
+      </svg>`,
+    },
+    info: {
+      label: 'Info',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12" y2="8.5" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="11" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    },
+    station: {
+      label: 'Station',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 8 L4 18 C4 19.1 4.9 20 6 20 L18 20 C19.1 20 20 19.1 20 18 L20 8" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="8" y1="4" x2="8" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="4" x2="12" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="4" x2="16" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="14" x2="20" y2="14" stroke="${color}" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+      </svg>`,
+    },
   };
-  return emojiMap[type] || '📍';
+  
+  const defaultIcon = {
+    label: 'Marker',
+    svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2 C7 2 3 6 3 11 C3 17 12 22 12 22 C12 22 21 17 21 11 C21 6 17 2 12 2 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="11" r="3" fill="${color}"/>
+    </svg>`,
+  };
+  
+  return iconMap[type] || defaultIcon;
 }
 
 function getTimeAgo(date: Date): string {

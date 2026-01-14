@@ -7,14 +7,86 @@ interface EventSubmissionFormProps {
 
 type FormStep = 'button' | 'type' | 'details';
 
+function getEventTypeIcon(type: string, color: string): { svg: string; label: string } {
+  const iconMap: Record<string, { svg: string; label: string }> = {
+    closure: {
+      label: 'Wegafzetting',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="6" width="16" height="12" fill="none" stroke="${color}" stroke-width="2" rx="2"/>
+        <line x1="4" y1="10" x2="20" y2="10" stroke="${color}" stroke-width="2"/>
+        <line x1="10" y1="6" x2="10" y2="18" stroke="${color}" stroke-width="2"/>
+        <line x1="14" y1="6" x2="14" y2="18" stroke="${color}" stroke-width="2"/>
+      </svg>`,
+    },
+    accident: {
+      label: 'Ongeluk',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L22 7 L22 12 Q22 18 12 22 Q2 18 2 12 L2 7 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="12" y1="10" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="19" r="1.5" fill="${color}"/>
+      </svg>`,
+    },
+    stop: {
+      label: 'Stop',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+        <line x1="4" y1="12" x2="20" y2="12" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    },
+    flood: {
+      label: 'Overstroomd',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 16 Q6 12 9 16 Q12 12 15 16 Q18 12 21 16" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 11 Q6 7 9 11 Q12 7 15 11 Q18 7 21 11" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <rect x="2" y="18" width="20" height="3" fill="${color}" opacity="0.5"/>
+      </svg>`,
+    },
+    warning: {
+      label: 'Waarschuwing',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L22 20 L2 20 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="12" y1="9" x2="12" y2="14" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="18" r="1" fill="${color}"/>
+      </svg>`,
+    },
+    info: {
+      label: 'Info',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12" y2="8.5" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="11" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    },
+    station: {
+      label: 'Station',
+      svg: `<svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 8 L4 18 C4 19.1 4.9 20 6 20 L18 20 C19.1 20 20 19.1 20 18 L20 8" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="8" y1="4" x2="8" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="4" x2="12" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="4" x2="16" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="14" x2="20" y2="14" stroke="${color}" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+      </svg>`,
+    },
+  };
+  return iconMap[type] || { label: 'Marker', svg: `` };
+}
+
+function getSubmitButtonIcon(color: string): string {
+  return `<svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2 L22 7 L22 12 Q22 18 12 22 Q2 18 2 12 L2 7 Z" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="12" y1="8" x2="12" y2="16" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="8" y1="12" x2="16" y2="12" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`;
+}
+
 const eventTypes = [
-  { value: 'closure', icon: '🚧', label: 'Wegafzetting', color: 'bg-red-100 hover:bg-red-200' },
-  { value: 'accident', icon: '🚨', label: 'Ongeluk', color: 'bg-red-100 hover:bg-red-200' },
-  { value: 'stop', icon: '⛔', label: 'Stop', color: 'bg-orange-100 hover:bg-orange-200' },
-  { value: 'flood', icon: '🌊', label: 'Overstroomd', color: 'bg-blue-100 hover:bg-blue-200' },
-  { value: 'warning', icon: '⚠️', label: 'Waarschuwing', color: 'bg-yellow-100 hover:bg-yellow-200' },
-  { value: 'info', icon: 'ℹ️', label: 'Info', color: 'bg-gray-100 hover:bg-gray-200' },
-  { value: 'station', icon: '💧', label: 'Station', color: 'bg-blue-100 hover:bg-blue-200' },
+  { value: 'closure', label: 'Wegafzetting', color: 'bg-red-100 hover:bg-red-200' },
+  { value: 'accident', label: 'Ongeluk', color: 'bg-red-100 hover:bg-red-200' },
+  { value: 'stop', label: 'Stop', color: 'bg-orange-100 hover:bg-orange-200' },
+  { value: 'flood', label: 'Overstroomd', color: 'bg-blue-100 hover:bg-blue-200' },
+  { value: 'warning', label: 'Waarschuwing', color: 'bg-yellow-100 hover:bg-yellow-200' },
+  { value: 'info', label: 'Info', color: 'bg-gray-100 hover:bg-gray-200' },
+  { value: 'station', label: 'Station', color: 'bg-blue-100 hover:bg-blue-200' },
 ];
 
 export default function EventSubmissionForm({ onSubmitSuccess, userLocation: propLocation }: EventSubmissionFormProps) {
@@ -94,9 +166,8 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
         onClick={() => setStep('type')}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-primary-600 to-primary-700 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
         title="Rapporteer een evenement"
-      >
-        <span className="text-2xl">🚨</span>
-      </button>
+        dangerouslySetInnerHTML={{ __html: getSubmitButtonIcon('white') }}
+      />
     );
   }
 
@@ -115,7 +186,10 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">🚨 Rapporteer Evenement</h2>
+          <div className="flex items-center gap-3">
+            <div dangerouslySetInnerHTML={{ __html: getSubmitButtonIcon('#DC2626') }} />
+            <h2 className="text-2xl font-bold text-gray-900">Rapporteer Evenement</h2>
+          </div>
           <button
             onClick={() => setStep('button')}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -135,28 +209,30 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
             {/* Event Type Selection with Icons */}
             <div>
               <p className="text-sm font-medium text-gray-700 mb-4">Selecteer evenement type</p>
-              <div className="grid grid-cols-4 gap-3">
-                {eventTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => {
-                      setFormData({ ...formData, type: type.value });
-                      setStep('details');
-                    }}
-                    className={`p-4 rounded-sm text-center transition-all ${type.color}`}
-                  >
-                    <div className="text-3xl mb-2">{type.icon}</div>
-                    <div className="text-xs font-medium text-gray-700">{type.label}</div>
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {eventTypes.map((type) => {
+                  const icon = getEventTypeIcon(type.value, '#374151');
+                  return (
+                    <button
+                      key={type.value}
+                      onClick={() => {
+                        setFormData({ ...formData, type: type.value });
+                        setStep('details');
+                      }}
+                      className={`p-4 rounded-sm text-center transition-all ${type.color}`}
+                    >
+                      <div className="mb-2 flex justify-center" dangerouslySetInnerHTML={{ __html: icon.svg }} />
+                      <div className="text-xs font-medium text-gray-700 truncate">{type.label}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Severity - Colored Soft Tiles */}
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-3">Ernst</p>
+            <div>              <p className="text-sm font-medium text-gray-700 mb-3">Ernst</p>
               <div className="grid grid-cols-4 gap-2">
                 <button
                   type="button"

@@ -236,12 +236,6 @@ export default function LiveMap() {
                 <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowEventMarkers(!showEventMarkers)}>
                   <span style={{opacity: showEventMarkers ? 1 : 0.5}}>Live Evenementen ({eventMarkers.length})</span>
                 </div>
-                {Array.from(new Set(eventMarkers.map((m: any) => m.type))).map((type: any) => (
-                  <div key={type} className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showEventMarkers ? 1 : 0.5}} onClick={() => setShowEventMarkers(!showEventMarkers)}>
-                    <span>{getEventTypeEmoji(type)}</span>
-                    <span className="capitalize text-xs">{type}</span>
-                  </div>
-                ))}
               </div>
             )}
           </div>
@@ -291,6 +285,79 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns
       showEventMarkers={showEventMarkers}
     />
   );
+}
+
+function getEventTypeIcon(type: string, color: string): { svg: string; label: string } {
+  const iconMap: Record<string, { svg: string; label: string }> = {
+    closure: {
+      label: 'Closure',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="6" width="16" height="12" fill="none" stroke="${color}" stroke-width="2" rx="2"/>
+        <line x1="4" y1="10" x2="20" y2="10" stroke="${color}" stroke-width="2"/>
+        <line x1="10" y1="6" x2="10" y2="18" stroke="${color}" stroke-width="2"/>
+        <line x1="14" y1="6" x2="14" y2="18" stroke="${color}" stroke-width="2"/>
+      </svg>`,
+    },
+    accident: {
+      label: 'Accident',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L22 7 L22 12 Q22 18 12 22 Q2 18 2 12 L2 7 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="12" y1="10" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="19" r="1.5" fill="${color}"/>
+      </svg>`,
+    },
+    stop: {
+      label: 'Stop',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+        <line x1="4" y1="12" x2="20" y2="12" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    },
+    flood: {
+      label: 'Flood',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 16 Q6 12 9 16 Q12 12 15 16 Q18 12 21 16" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 11 Q6 7 9 11 Q12 7 15 11 Q18 7 21 11" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <rect x="2" y="18" width="20" height="3" fill="${color}" opacity="0.5"/>
+      </svg>`,
+    },
+    warning: {
+      label: 'Warning',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2 L22 20 L2 20 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="12" y1="9" x2="12" y2="14" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="18" r="1" fill="${color}"/>
+      </svg>`,
+    },
+    info: {
+      label: 'Info',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12" y2="8.5" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="11" x2="12" y2="16" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    },
+    station: {
+      label: 'Station',
+      svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 8 L4 18 C4 19.1 4.9 20 6 20 L18 20 C19.1 20 20 19.1 20 18 L20 8" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="8" y1="4" x2="8" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="4" x2="12" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="4" x2="16" y2="8" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4" y1="14" x2="20" y2="14" stroke="${color}" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+      </svg>`,
+    },
+  };
+  
+  const defaultIcon = {
+    label: 'Marker',
+    svg: `<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2 C7 2 3 6 3 11 C3 17 12 22 12 22 C12 22 21 17 21 11 C21 6 17 2 12 2 Z" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="11" r="3" fill="${color}"/>
+    </svg>`,
+  };
+  
+  return iconMap[type] || defaultIcon;
 }
 
 function getEventTypeEmoji(type: string): string {
