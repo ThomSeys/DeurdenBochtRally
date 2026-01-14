@@ -74,19 +74,35 @@ export async function action({ request }: LoaderFunctionArgs) {
     // Send push notification for critical events
     if (severity === 'critical' || severity === 'high') {
       try {
-        const { data: subscriptions } = await supabaseAdmin
+        console.info('[api.events.submit] fetching subscriptions for critical event...');
+        const { data: subscriptions, error: subscriptionError } = await supabaseAdmin
           .from('push_subscriptions')
           .select('endpoint, keys')
           .eq('is_active', true);
 
+        console.info('[api.events.submit] subscriptions query result', { 
+          count: subscriptions?.length || 0,
+          error: subscriptionError?.message,
+          subscriptions: subscriptions?.slice(0, 2) // log first 2 for debugging
+        });
+
+        if (subscriptionError) {
+          console.error('[api.events.submit] error fetching subscriptions', subscriptionError);
+        }
+
         if (subscriptions && subscriptions.length > 0) {
           const notification = notificationTemplates.criticalEvent(title, description);
-          await sendBulkPushNotifications(subscriptions, notification);
-          console.info('[api.events.submit] critical event notification sent');
+          console.info('[api.events.submit] sending notification to', subscriptions.length, 'subscribers');
+          const result = await sendBulkPushNotifications(subscriptions, notification);
+          console.info('[api.events.submit] critical event notification result', result);
+        } else {
+          console.warn('[api.events.submit] no active subscriptions found');
         }
       } catch (pushError) {
         console.error('[api.events.submit] error sending critical event notification', pushError);
       }
+    } else {
+      console.info('[api.events.submit] event severity not critical/high, skipping notification', { severity });
     }
 
     return Response.json(

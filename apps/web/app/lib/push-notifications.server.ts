@@ -71,14 +71,38 @@ export async function sendBulkPushNotifications(
   subscriptions: Array<{ endpoint: string; keys: any }>,
   notification: PushNotificationOptions
 ) {
+  console.info('[push] bulk send starting', { total: subscriptions.length });
+  
   const results = await Promise.allSettled(
-    subscriptions.map(sub => sendPushNotification(sub, notification))
+    subscriptions.map((sub, index) => {
+      console.info('[push] sending to subscription', { 
+        index, 
+        endpoint: sub.endpoint?.substring(0, 50) + '...',
+        hasKeys: !!sub.keys 
+      });
+      return sendPushNotification(sub, notification);
+    })
   );
 
-  const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+  const successful = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
   const failed = results.length - successful;
 
   console.info('[push] bulk send complete', { total: results.length, successful, failed });
+
+  // Log failed results
+  results.forEach((result, idx) => {
+    if (result.status === 'rejected') {
+      console.error('[push] subscription failed (rejected)', { 
+        index: idx, 
+        reason: result.reason?.message || result.reason 
+      });
+    } else if (!result.value?.success) {
+      console.warn('[push] subscription failed (not success)', { 
+        index: idx, 
+        error: result.value?.error?.message || result.value?.error 
+      });
+    }
+  });
 
   return { successful, failed, results };
 }
