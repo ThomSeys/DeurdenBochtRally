@@ -120,7 +120,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return { success: true };
   }
-  }
 
   if (action === 'upload') {
     const file = formData.get('image') as File;
