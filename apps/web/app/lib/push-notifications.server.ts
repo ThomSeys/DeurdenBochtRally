@@ -143,11 +143,22 @@ export const notificationTemplates = {
     tag: `zone-${zoneNumber}-closed`,
   }),
 
-  criticalEvent: (eventTitle: string, eventDescription: string) => ({
-    title: `🚨 ${eventTitle}`,
-    body: eventDescription,
+  criticalEvent: (eventTitle: string, eventDescription: string, options?: { type?: string; severity?: string; source?: string }) => ({
+    title: `${eventTitle}`,
+    body: [
+      eventDescription,
+      options?.type && `📍 Type: ${options.type}`,
+      options?.severity && `⚠️ Ernstniveau: ${options.severity === 'critical' ? 'Kritiek' : options.severity === 'high' ? 'Hoog' : 'Normaal'}`,
+      options?.source === 'live-map' && '📡 Gemeld via Live Kaart',
+    ]
+      .filter(Boolean)
+      .join('\n'),
     tag: 'critical-event',
     requireInteraction: true,
+    data: {
+      link: '/live-map',
+      source: options?.source || 'admin',
+    },
     actions: [
       { action: 'view-map', title: 'Bekijk Map', icon: '/icon-map.png' },
     ],

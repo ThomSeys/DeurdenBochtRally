@@ -91,7 +91,11 @@ export async function action({ request }: LoaderFunctionArgs) {
         }
 
         if (subscriptions && subscriptions.length > 0) {
-          const notification = notificationTemplates.criticalEvent(title, description);
+          const notification = notificationTemplates.criticalEvent(title, description, {
+            type,
+            severity,
+            source: 'live-map',
+          });
           console.info('[api.events.submit] sending notification to', subscriptions.length, 'subscribers');
           const result = await sendBulkPushNotifications(subscriptions, notification);
           console.info('[api.events.submit] critical event notification result', result);
