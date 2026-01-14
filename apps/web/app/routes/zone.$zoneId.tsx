@@ -127,7 +127,7 @@ export default function ZonePage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Zone Header */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        <div className="bg-white rounded-sm shadow-lg overflow-hidden mb-6">
           {zone.imageUrl && (
             <div className="h-64 overflow-hidden">
               <img
@@ -164,7 +164,7 @@ export default function ZonePage() {
         </div>
 
         {/* Instructions */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Instructies</h2>
           
           <div className="space-y-4">
@@ -193,9 +193,9 @@ export default function ZonePage() {
 
         {/* Map */}
         {zone.startPoint && zone.endPoint && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Kaart</h2>
-            <div className="h-96 rounded-lg overflow-hidden">
+            <div className="h-96 rounded-sm overflow-hidden">
               <MapView
                 startPoint={zone.startPoint}
                 endPoint={zone.endPoint}
@@ -205,7 +205,7 @@ export default function ZonePage() {
         )}
 
         {/* Start Button */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white rounded-sm shadow-lg p-6">
           {alreadyStarted ? (
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
@@ -215,7 +215,7 @@ export default function ZonePage() {
               <p className="text-gray-600 mb-4">Veel succes met deze zone.</p>
               <a
                 href="/dashboard/rally-submission"
-                className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-bold transition-colors"
+                className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-sm font-bold transition-colors"
               >
                 Terug naar Dashboard
               </a>
@@ -261,7 +261,7 @@ export default function ZonePage() {
                     formRef.current?.submit();
                   }
                 }}
-                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-lg font-bold text-lg transition-colors"
+                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-sm font-bold text-lg transition-colors"
               >
                 {isStarting ? 'Bezig...' : '🏁 Start Zone'}
               </button>

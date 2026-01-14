@@ -52,22 +52,22 @@ export default function Rally() {
             Hoe werkt het?
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-sm shadow">
               <div className="text-3xl mb-3">1️⃣</div>
               <h3 className="font-bold text-lg mb-2">Je ziet een RZ-bordje</h3>
               <p className="text-gray-700">Tijdens de rit zie je borden langs de route met "RZ" erop</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-sm shadow">
               <div className="text-3xl mb-3">2️⃣</div>
               <h3 className="font-bold text-lg mb-2">Verlaat de hoofdroute</h3>
               <p className="text-gray-700">Kies ervoor om de rally zone te doen of door te rijden</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-sm shadow">
               <div className="text-3xl mb-3">3️⃣</div>
               <h3 className="font-bold text-lg mb-2">Volg het Bochtenboek</h3>
               <p className="text-gray-700">Geschreven aanwijzingen leiden je naar een checkpunt</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-sm shadow">
               <div className="text-3xl mb-3">4️⃣</div>
               <h3 className="font-bold text-lg mb-2">Noteer de code</h3>
               <p className="text-gray-700">Op het checkpunt vind je een codewoord dat je noteert</p>
@@ -87,7 +87,7 @@ export default function Rally() {
               {rallyZones.map((zone: any) => (
                 <div
                   key={zone._id}
-                  className={`border-l-4 rounded-lg shadow-lg overflow-hidden ${
+                  className={`border-l-4 rounded-sm shadow-lg overflow-hidden ${
                     colorClasses[zone.color as keyof typeof colorClasses] || colorClasses.green
                   }`}
                 >
@@ -100,7 +100,7 @@ export default function Rally() {
                         <p className="text-gray-700 font-semibold">{zone.location}</p>
                       </div>
                       <div className="text-right">
-                        <div className="inline-block bg-white px-4 py-2 rounded-lg shadow">
+                        <div className="inline-block bg-white px-4 py-2 rounded-sm shadow">
                           <span className="text-sm text-gray-600">Punten</span>
                           <div className="text-2xl font-bold text-primary-600">{zone.points}</div>
                         </div>
@@ -112,11 +112,10 @@ export default function Rally() {
                     )}
 
                     {/* Map View */}
-                    {zone.startLocation && zone.endLocation && (
-                      <div className="rounded-lg overflow-hidden shadow-md border border-gray-300 mb-6">
+                    {zone.startLocation && (
+                      <div className="rounded-sm overflow-hidden shadow-md border border-gray-300 mb-6">
                         <MapView
                           startPoint={zone.startLocation}
-                          endPoint={zone.endLocation}
                           className="h-80 w-full"
                         />
                       </div>
@@ -157,7 +156,7 @@ export default function Rally() {
           <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
             Puntensysteem
           </h2>
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white rounded-sm shadow-lg overflow-hidden">
             <table className="w-full">
               <thead className="bg-primary-600 text-white">
                 <tr>
@@ -182,17 +181,9 @@ export default function Rally() {
                   <td className="px-6 py-4">Meer dan 500 km</td>
                   <td className="px-6 py-4 text-right font-bold">+10</td>
                 </tr>
-                <tr>
-                  <td className="px-6 py-4">Geen snelwegen</td>
-                  <td className="px-6 py-4 text-right font-bold">+10</td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="px-6 py-4">Regen 😄</td>
-                  <td className="px-6 py-4 text-right font-bold">+5</td>
-                </tr>
                 <tr className="bg-primary-50">
                   <td className="px-6 py-4 font-bold">Maximum totaal</td>
-                  <td className="px-6 py-4 text-right font-bold text-2xl text-primary-600">165</td>
+                  <td className="px-6 py-4 text-right font-bold text-2xl text-primary-600">150</td>
                 </tr>
               </tbody>
             </table>
@@ -213,7 +204,7 @@ export default function Rally() {
             </p>
             <Link
               to="/registration"
-              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-sm text-lg font-semibold transition-colors"
             >
               Inschrijven
             </Link>

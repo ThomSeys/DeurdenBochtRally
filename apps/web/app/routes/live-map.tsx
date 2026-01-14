@@ -188,7 +188,7 @@ export default function LiveMap() {
         />
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-20">
+        <div className="absolute bottom-4 left-4 bg-white rounded-sm shadow-lg p-4 max-w-xs z-20">
           <h3 className="font-semibold text-gray-900 mb-3">Legenda</h3>
           <div className="space-y-2 text-sm">
             <div className="border-b pb-2">

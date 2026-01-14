@@ -68,7 +68,7 @@ export default function RegistrationSuccess() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
+      <div className="max-w-2xl w-full bg-white rounded-sm shadow-xl p-8">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">✅</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -79,7 +79,7 @@ export default function RegistrationSuccess() {
           </p>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <div className="bg-gray-50 rounded-sm p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Je gegevens</h2>
           <dl className="space-y-2">
             <div className="flex justify-between">
@@ -105,9 +105,9 @@ export default function RegistrationSuccess() {
           </dl>
         </div>
 
-        <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 mb-6">
+        <div className="bg-primary-50 border border-primary-200 rounded-sm p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Je QR-code</h2>
-          <div className="bg-white p-4 rounded-lg text-center mb-4">
+          <div className="bg-white p-4 rounded-sm text-center mb-4">
             <p className="font-mono text-2xl font-bold text-primary-600 mb-2">
               {participant.qr_code}
             </p>
@@ -121,7 +121,7 @@ export default function RegistrationSuccess() {
           </p>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-sm p-4 mb-6">
           <h3 className="font-semibold text-green-900 mb-2">📧 Check je email</h3>
           <p className="text-sm text-green-800">
             Je ontvangt binnenkort een bevestigingsmail met alle informatie en je QR-code.
@@ -149,13 +149,13 @@ export default function RegistrationSuccess() {
         <div className="mt-8 flex gap-4">
           <Link
             to="/dashboard"
-            className="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 px-4 rounded-sm transition-colors"
           >
             Ga naar Dashboard
           </Link>
           <Link
             to="/"
-            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 text-center font-semibold py-3 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 text-center font-semibold py-3 px-4 rounded-sm transition-colors"
           >
             Terug naar Home
           </Link>

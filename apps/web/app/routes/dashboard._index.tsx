@@ -149,7 +149,7 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-lg shadow-lg p-8 text-white mb-8">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-sm shadow-lg p-8 text-white mb-8">
           <h1 className="text-3xl font-bold mb-2">
             Welkom, {user.first_name}! 👋
           </h1>
@@ -160,7 +160,7 @@ export default function Dashboard() {
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">✅</span>
               Inschrijving
@@ -182,7 +182,7 @@ export default function Dashboard() {
           </div>
 
           {/* QR Code */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">📱</span>
               QR-code
@@ -204,7 +204,7 @@ export default function Dashboard() {
           </div>
 
           {/* Rally Progress */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">🏆</span>
               Rally Status
@@ -212,7 +212,7 @@ export default function Dashboard() {
             {submission ? (
               <div className="space-y-3 text-sm">
                 {isBochtenkoning && (
-                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-lg p-3 mb-3">
+                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-sm p-3 mb-3">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-3xl">👑</span>
                       <div className="text-center">
@@ -243,7 +243,7 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Live Map - ONLY visible on event day or for admins */}
           {(user.is_admin || new Date().toISOString().split('T')[0] === eventDate) && (
-            <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white md:col-span-2">
+            <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-sm shadow-lg p-6 text-white md:col-span-2">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-xl mb-2 flex items-center">
@@ -261,7 +261,7 @@ export default function Dashboard() {
                 </div>
                 <Link
                   to="/live-map"
-                  className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg"
+                  className="bg-white text-primary-600 px-6 py-3 rounded-sm font-semibold hover:bg-primary-50 transition-colors shadow-lg"
                 >
                   Open Map →
                 </Link>
@@ -270,7 +270,7 @@ export default function Dashboard() {
           )}
 
           {/* Routes */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">🗺️</span>
               GPX Routes
@@ -281,7 +281,7 @@ export default function Dashboard() {
                   <a
                     href={gpxRouteUrl}
                     download="deur-den-bocht-route.gpx"
-                    className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 rounded-lg transition-colors border border-primary-200"
+                    className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 rounded-sm transition-colors border border-primary-200"
                   >
                     <div>
                       <div className="font-medium text-primary-900">Official Rally Route</div>
@@ -298,7 +298,7 @@ export default function Dashboard() {
           </div>
 
           {/* Rally Book */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">📕</span>
               Bochtenboek
@@ -310,7 +310,7 @@ export default function Dashboard() {
                     <a
                       href={doc.file_url}
                       download
-                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-sm transition-colors"
                     >
                       <div>
                         <div className="font-medium text-gray-900">{doc.title}</div>
@@ -329,7 +329,7 @@ export default function Dashboard() {
           </div>
 
           {/* Maps */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">🗺</span>
               Kaarten
@@ -341,7 +341,7 @@ export default function Dashboard() {
                     <a
                       href={doc.file_url}
                       download
-                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-sm transition-colors"
                     >
                       <div>
                         <div className="font-medium text-gray-900">{doc.title}</div>
@@ -360,7 +360,7 @@ export default function Dashboard() {
           </div>
 
           {/* Instructions */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-2">📋</span>
               Instructies & Info
@@ -372,7 +372,7 @@ export default function Dashboard() {
                     <a
                       href={doc.file_url}
                       download
-                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-sm transition-colors"
                     >
                       <div>
                         <div className="font-medium text-gray-900">{doc.title}</div>
@@ -392,7 +392,7 @@ export default function Dashboard() {
         </div>
 
         {/* Rally Submission CTA */}
-        <div className="bg-primary-50 border-2 border-primary-200 rounded-lg p-6 text-center">
+        <div className="bg-primary-50 border-2 border-primary-200 rounded-sm p-6 text-center">
           <h3 className="text-xl font-bold text-gray-900 mb-2">
             Rally codes indienen
           </h3>
@@ -401,7 +401,7 @@ export default function Dashboard() {
           </p>
           <Link
             to="/dashboard/rally-submission"
-            className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-sm font-semibold transition-colors"
           >
             {submission ? 'Codes bijwerken' : 'Codes indienen'}
           </Link>

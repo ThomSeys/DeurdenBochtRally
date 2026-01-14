@@ -85,7 +85,7 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Totaal Deelnemers</p>
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Betaald</p>
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Ingecheckt</p>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Rally Inzendingen</p>
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link
             to="/admin/participants"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <div className="text-2xl mb-2">👥</div>
             <h3 className="font-semibold text-gray-900">Deelnemers</h3>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/submissions"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <div className="text-2xl mb-2">📝</div>
             <h3 className="font-semibold text-gray-900">Inzendingen</h3>
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/check-in"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <div className="text-2xl mb-2">✅</div>
             <h3 className="font-semibold text-gray-900">Check-in</h3>
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/leaderboard"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <div className="text-2xl mb-2">🏆</div>
             <h3 className="font-semibold text-gray-900">Klassement</h3>
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/pending-scans"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-yellow-400"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-yellow-400"
           >
             <div className="text-2xl mb-2">🔍</div>
             <h3 className="font-semibold text-gray-900">Manual Validatie</h3>
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/zone-control"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-red-400"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-red-400"
           >
             <div className="text-2xl mb-2">🚦</div>
             <h3 className="font-semibold text-gray-900">Zone Control</h3>
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/manual-scan"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-blue-400"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-blue-400"
           >
             <div className="text-2xl mb-2">📝</div>
             <h3 className="font-semibold text-gray-900">Manual Scan</h3>
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/event-markers"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors border-2 border-green-400"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-green-400"
           >
             <div className="text-2xl mb-2">🗺️</div>
             <h3 className="font-semibold text-gray-900">Event Markers</h3>
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/settings"
-            className="bg-white hover:bg-gray-50 rounded-lg shadow p-6 transition-colors"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <div className="text-2xl mb-2">⚙️</div>
             <h3 className="font-semibold text-gray-900">Instellingen</h3>
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Participants */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white rounded-sm shadow">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">Recente Inschrijvingen</h2>
             </div>
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Top Scorers */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white rounded-sm shadow">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">Top 10 Klassement</h2>
             </div>

@@ -38,7 +38,7 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
   }, [isClient]);
 
   useEffect(() => {
-    if (!isClient || !mapContainerRef.current || !startPoint || !endPoint) return;
+    if (!isClient || !mapContainerRef.current || !startPoint) return;
 
     // Dynamically import Leaflet only on client side
     import('leaflet').then((L) => {
@@ -92,10 +92,11 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
         .addTo(mapRef.current)
         .bindPopup('<strong>Start punt</strong><br/>Verlaat hier de hoofdroute');
 
-      L.default.marker([endPoint.lat, endPoint.lng], { icon: endIcon })
-        .addTo(mapRef.current)
-        .bindPopup('<strong>Eind punt</strong><br/>Voeg hier terug op de hoofdroute');
-
+      if (endPoint) {
+        L.default.marker([endPoint.lat, endPoint.lng], { icon: endIcon })
+          .addTo(mapRef.current)
+          .bindPopup('<strong>Eind punt</strong><br/>Voeg hier terug op de hoofdroute');
+      }
       // Add user location marker if available
       if (userLocation) {
         if (userMarkerRef.current) {
@@ -114,25 +115,29 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
           .bindPopup('<strong>Je locatie</strong>');
       }
 
-      // Draw a line between start and end
-      L.default.polyline(
-        [
-          [startPoint.lat, startPoint.lng],
-          [endPoint.lat, endPoint.lng],
-        ],
-        {
-          color: '#0d9488',
-          weight: 3,
-          opacity: 0.7,
-          dashArray: '10, 5',
-        }
-      ).addTo(mapRef.current);
+      // Draw a line between start and end (only if endPoint exists)
+      if (endPoint) {
+        L.default.polyline(
+          [
+            [startPoint.lat, startPoint.lng],
+            [endPoint.lat, endPoint.lng],
+          ],
+          {
+            color: '#0d9488',
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '10, 5',
+          }
+        ).addTo(mapRef.current);
+      }
 
       // Fit bounds to show both markers
-      const bounds = L.default.latLngBounds([
-        [startPoint.lat, startPoint.lng],
-        [endPoint.lat, endPoint.lng],
-      ]);
+      const bounds = endPoint
+        ? L.default.latLngBounds([
+            [startPoint.lat, startPoint.lng],
+            [endPoint.lat, endPoint.lng],
+          ])
+        : L.default.latLngBounds([[startPoint.lat, startPoint.lng]]);
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
     });
 
@@ -148,15 +153,15 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
 
   if (!isClient) {
     return (
-      <div className={`${className} bg-gray-100 rounded-lg flex items-center justify-center text-gray-500`}>
+      <div className={`${className} bg-gray-100 rounded-sm flex items-center justify-center text-gray-500`}>
         <p className="text-sm">Kaart wordt geladen...</p>
       </div>
     );
   }
 
-  if (!startPoint || !endPoint) {
+  if (!startPoint) {
     return (
-      <div className={`${className} bg-gray-100 rounded-lg flex items-center justify-center text-gray-500`}>
+      <div className={`${className} bg-gray-100 rounded-sm flex items-center justify-center text-gray-500`}>
         <p className="text-sm">Geen kaart beschikbaar</p>
       </div>
     );

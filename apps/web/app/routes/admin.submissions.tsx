@@ -75,8 +75,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     
     // Check correctness
     const submittedCode = code.toLowerCase().trim();
-    const correctCode = correctAnswers[zoneId] || '';
-    const validCodes = validAnswersMap[zoneId] || [];
+    const correctCode = correctAnswers[zoneId - 1] || '';
+    const validCodes = validAnswersMap[zoneId - 1] || [];
     const isCorrect = submittedCode === correctCode || validCodes.includes(submittedCode);
     
     // Apply filters
@@ -139,7 +139,7 @@ export default function AdminSubmissions() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-sm shadow p-6 mb-6">
           <Form method="get" className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
               <label htmlFor="zone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -181,7 +181,7 @@ export default function AdminSubmissions() {
         </div>
 
         {/* Submissions Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-sm shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">

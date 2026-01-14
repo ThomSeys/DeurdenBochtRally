@@ -143,7 +143,7 @@ export default function AdminPendingScans() {
         )}
 
         {/* Stats */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-white rounded-sm shadow p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending Validations</p>
@@ -155,7 +155,7 @@ export default function AdminPendingScans() {
 
         {/* Pending Scans List */}
         {pendingScans.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className="bg-white rounded-sm shadow p-12 text-center">
             <div className="text-6xl mb-4">✅</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">All Clear!</h2>
             <p className="text-gray-600">No scans pending manual validation</p>
@@ -167,7 +167,7 @@ export default function AdminPendingScans() {
               const participant = scan.participants;
 
               return (
-                <div key={scan.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div key={scan.id} className="bg-white rounded-sm shadow-lg overflow-hidden">
                   <div className="p-6">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -262,7 +262,7 @@ export default function AdminPendingScans() {
                         {scan.proof_photo_url ? (
                           <div>
                             <label className="text-sm font-medium text-gray-700 mb-2 block">Proof Photo:</label>
-                            <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                            <div className="border-2 border-gray-200 rounded-sm overflow-hidden">
                               <img 
                                 src={scan.proof_photo_url} 
                                 alt="Proof" 
@@ -273,7 +273,7 @@ export default function AdminPendingScans() {
                             <p className="text-xs text-gray-500 mt-1">Click to enlarge</p>
                           </div>
                         ) : (
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                          <div className="border-2 border-dashed border-gray-300 rounded-sm p-8 text-center">
                             <p className="text-gray-400">No proof photo uploaded</p>
                           </div>
                         )}
@@ -282,7 +282,7 @@ export default function AdminPendingScans() {
                         {zone?.referencePhotoUrl && (
                           <div>
                             <label className="text-sm font-medium text-gray-700 mb-2 block">Reference Photo:</label>
-                            <div className="border-2 border-primary-200 rounded-lg overflow-hidden">
+                            <div className="border-2 border-primary-200 rounded-sm overflow-hidden">
                               <img 
                                 src={zone.referencePhotoUrl} 
                                 alt="Reference" 
@@ -323,7 +323,7 @@ export default function AdminPendingScans() {
                             <button
                               type="submit"
                               disabled={isSubmitting}
-                              className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50"
+                              className="px-6 py-2 bg-red-600 text-white rounded-sm font-semibold hover:bg-red-700 disabled:opacity-50"
                             >
                               {isSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
                             </button>
@@ -333,7 +333,7 @@ export default function AdminPendingScans() {
                                 setRejectingId(null);
                                 setRejectReason('');
                               }}
-                              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300"
+                              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-sm font-semibold hover:bg-gray-300"
                             >
                               Cancel
                             </button>
@@ -347,7 +347,7 @@ export default function AdminPendingScans() {
                             <button
                               type="submit"
                               disabled={isSubmitting}
-                              className="w-full px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+                              className="w-full px-6 py-3 bg-green-600 text-white rounded-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
                             >
                               ✓ Approve Scan
                             </button>
@@ -357,7 +357,7 @@ export default function AdminPendingScans() {
                             type="button"
                             onClick={() => setRejectingId(scan.id)}
                             disabled={isSubmitting}
-                            className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                            className="flex-1 px-6 py-3 bg-red-600 text-white rounded-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
                           >
                             ✗ Reject Scan
                           </button>

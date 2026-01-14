@@ -125,9 +125,9 @@ export default function AdminManualScan() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Manual Scan Entry</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Handmatige Scan Invoer</h1>
           <p className="mt-2 text-gray-600">
-            Create a manual scan entry for riders with phone issues (Scenario 5: Telefoon Dood)
+            Maak een handmatige scaninvoer voor rijders met telefoonproblemen (Scenario 5: Telefoon Dood)
           </p>
         </div>
 
@@ -145,14 +145,14 @@ export default function AdminManualScan() {
                 onClick={() => window.location.reload()}
                 className="text-sm underline hover:no-underline"
               >
-                Add Another
+                Voeg Ander In
               </button>
             </div>
           </div>
         )}
 
         {/* Info Box */}
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-sm p-4">
           <h3 className="font-bold text-blue-900 mb-2">ℹ️ Manual Entry Rules</h3>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Manual entries receive <strong>rhythm_score = 0</strong> (no timing advantage)</li>
@@ -164,7 +164,7 @@ export default function AdminManualScan() {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-sm shadow-lg p-8">
           <Form method="post" className="space-y-6">
             {/* Participant Selection */}
             <div>
@@ -264,7 +264,7 @@ export default function AdminManualScan() {
             </div>
 
             {/* Warning */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-sm p-4">
               <p className="text-sm text-yellow-800">
                 <strong>⚠️ Warning:</strong> Manual entries bypass GPS validation and receive zero rhythm score. 
                 Only use this for legitimate phone failures confirmed by safety crew.
@@ -276,14 +276,14 @@ export default function AdminManualScan() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
               >
                 {isSubmitting ? 'Creating Manual Entry...' : 'Create Manual Scan Entry'}
               </button>
               <button
                 type="button"
                 onClick={() => window.history.back()}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300"
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-sm font-semibold hover:bg-gray-300"
               >
                 Cancel
               </button>
@@ -292,7 +292,7 @@ export default function AdminManualScan() {
         </div>
 
         {/* Statistics */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <div className="mt-8 bg-white rounded-sm shadow p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>

@@ -153,27 +153,27 @@ export default function AdminZoneControl() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Zone Control Panel</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Zonebeheerpaneel</h1>
           <p className="mt-2 text-gray-600">
-            Open or close rally zones in case of road closures, safety issues, or other problems
+            Open of sluit rallyzones in geval van wegafsluitingen, veiligheidskwesties of andere problemen
           </p>
         </div>
 
         {actionData?.error && (
           <div className="mb-6 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {actionData.error}
+            Fout: {actionData.error}
           </div>
         )}
 
         {actionData?.success && (
           <div className="mb-6 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded">
-            {actionData.success}
+            Succes: {actionData.success}
           </div>
         )}
 
         {/* Stats */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Open Zones</p>
@@ -182,10 +182,10 @@ export default function AdminZoneControl() {
               <div className="text-4xl">✅</div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Closed Zones</p>
+                <p className="text-sm text-gray-600">Gesloten Zones</p>
                 <p className="text-3xl font-bold text-red-600">{closedZones.length}</p>
               </div>
               <div className="text-4xl">🚫</div>
@@ -194,9 +194,9 @@ export default function AdminZoneControl() {
         </div>
 
         {/* Zone List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
+        <div className="bg-white rounded-sm shadow overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Rally Zones</h2>
+            <h2 className="text-xl font-bold text-gray-900">Rallyzones</h2>
           </div>
           <div className="divide-y divide-gray-200">
             {rallyZones.map((zone: any) => (
@@ -212,7 +212,7 @@ export default function AdminZoneControl() {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {zone.is_open !== false ? '✓ Open' : '✗ Closed'}
+                        {zone.is_open !== false ? '✓ Open' : '✗ Gesloten'}
                       </span>
                       <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                         zone.color === 'green' ? 'bg-green-100 text-green-800' :
@@ -225,7 +225,7 @@ export default function AdminZoneControl() {
                     </div>
                     <p className="text-gray-600">{zone.location}</p>
                     <p className="text-sm text-gray-500 mt-1">
-                      Geofence: {zone.radius_m || 30}m radius
+                      Geofence: {zone.radius_m || 30}m straal
                     </p>
                   </div>
 
@@ -238,14 +238,14 @@ export default function AdminZoneControl() {
                         <input 
                           type="hidden" 
                           name="reason" 
-                          value="Road closure or safety issue" 
+                          value="Wegafsluiting of veiligheidsprobleem" 
                         />
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                          className="px-6 py-2 bg-red-400 text-white rounded-sm font-semibold hover:bg-red-500 disabled:opacity-50 transition-colors"
                         >
-                          🚫 Close Zone
+                          Zone Sluiten
                         </button>
                       </Form>
                     ) : (
@@ -256,9 +256,9 @@ export default function AdminZoneControl() {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+                          className="px-6 py-2 bg-green-400 text-white rounded-sm font-semibold hover:bg-green-500 disabled:opacity-50 transition-colors"
                         >
-                          ✓ Reopen Zone
+                          Zone Heropenen
                         </button>
                       </Form>
                     )}
@@ -270,14 +270,14 @@ export default function AdminZoneControl() {
         </div>
 
         {/* Closure Log */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-sm shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Recent Activity</h2>
+            <h2 className="text-xl font-bold text-gray-900">Recente Activiteit</h2>
           </div>
           <div className="divide-y divide-gray-200">
             {closureLog.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
-                No zone closures recorded yet
+                Nog geen zonesluitingen geregistreerd
               </div>
             ) : (
               closureLog.map((log: any) => (
@@ -287,39 +287,39 @@ export default function AdminZoneControl() {
                       <p className="font-semibold text-gray-900">
                         Zone {log.zone_id} 
                         {log.reopened_at ? (
-                          <span className="text-green-600"> reopened</span>
+                          <span className="text-green-600"> heropend</span>
                         ) : (
-                          <span className="text-red-600"> closed</span>
+                          <span className="text-red-600"> gesloten</span>
                         )}
                       </p>
                       {log.reason && (
                         <p className="text-sm text-gray-600 mt-1">
-                          Reason: {log.reason}
+                          Reden: {log.reason}
                         </p>
                       )}
                       <div className="text-sm text-gray-500 mt-2 space-y-1">
                         {log.closed_at && (
                           <p>
-                            Closed: {new Date(log.closed_at).toLocaleString('nl-BE', {
+                            Gesloten: {new Date(log.closed_at).toLocaleString('nl-BE', {
                               dateStyle: 'short',
                               timeStyle: 'short'
                             })}
                             {log.closed_by_user && (
                               <span className="ml-2">
-                                by {log.closed_by_user.first_name} {log.closed_by_user.last_name}
+                                door {log.closed_by_user.first_name} {log.closed_by_user.last_name}
                               </span>
                             )}
                           </p>
                         )}
                         {log.reopened_at && (
                           <p>
-                            Reopened: {new Date(log.reopened_at).toLocaleString('nl-BE', {
+                            Heropend: {new Date(log.reopened_at).toLocaleString('nl-BE', {
                               dateStyle: 'short',
                               timeStyle: 'short'
                             })}
                             {log.reopened_by_user && (
                               <span className="ml-2">
-                                by {log.reopened_by_user.first_name} {log.reopened_by_user.last_name}
+                                door {log.reopened_by_user.first_name} {log.reopened_by_user.last_name}
                               </span>
                             )}
                           </p>
@@ -331,7 +331,7 @@ export default function AdminZoneControl() {
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {log.reopened_at ? 'Resolved' : 'Active'}
+                      {log.reopened_at ? 'Opgelost' : 'Actief'}
                     </span>
                   </div>
                 </div>
@@ -341,14 +341,14 @@ export default function AdminZoneControl() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-blue-900 mb-2">ℹ️ How Zone Closures Work</h3>
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-sm p-6">
+          <h3 className="font-bold text-blue-900 mb-2">ℹ️ Hoe Zonesluitingen Werken</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• When a zone is closed, riders cannot submit new scans for that zone</li>
-            <li>• Closed zones receive average shadow scores automatically</li>
-            <li>• The closure is logged with timestamp and reason</li>
-            <li>• Zones can be reopened when the issue is resolved</li>
-            <li>• Use this for road closures, safety issues, or event disruptions</li>
+            <li>• Wanneer een zone gesloten is, kunnen rijders geen nieuwe scans voor die zone indienen</li>
+            <li>• Gesloten zones ontvangen automatisch gemiddelde shadow scores</li>
+            <li>• De sluiting wordt gelogd met tijdstempel en reden</li>
+            <li>• Zones kunnen heropend worden wanneer het probleem is opgelost</li>
+            <li>• Gebruik dit voor wegafsluitingen, veiligheidskwesties of evenementstremomingen</li>
           </ul>
         </div>
       </div>

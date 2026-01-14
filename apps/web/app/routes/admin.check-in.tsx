@@ -222,7 +222,7 @@ export default function AdminCheckIn() {
           </div>
           <Link
             to="/admin"
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
           >
             ← Terug naar Dashboard
           </Link>
@@ -231,7 +231,7 @@ export default function AdminCheckIn() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Check-in Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="bg-white rounded-sm shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Deelnemer Check-in</h2>
 
               {actionData?.error && (
@@ -253,7 +253,7 @@ export default function AdminCheckIn() {
               )}
 
               {actionData?.participant && (
-                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-sm p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Deelnemer Informatie</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -304,7 +304,7 @@ export default function AdminCheckIn() {
                     value={selectedParticipant}
                     onChange={(e) => setSelectedParticipant(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
                   >
                     <option value="">-- Kies een deelnemer --</option>
                     {uncheckedParticipants.map((participant: any) => (
@@ -322,7 +322,7 @@ export default function AdminCheckIn() {
                 </div>
 
                 {selectedParticipantData && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-sm p-4">
                     <p className="text-sm text-gray-600">Geselecteerde deelnemer:</p>
                     <p className="font-medium text-gray-900 text-lg">
                       {selectedParticipantData.first_name} {selectedParticipantData.last_name}
@@ -336,7 +336,7 @@ export default function AdminCheckIn() {
                 <button
                   type="submit"
                   disabled={!selectedParticipant}
-                  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-bold text-lg transition-colors"
+                  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-sm font-bold text-lg transition-colors"
                 >
                   Check In
                 </button>
@@ -344,7 +344,7 @@ export default function AdminCheckIn() {
             </div>
 
             {/* Manual Zone Check-in */}
-            <div className="bg-white rounded-lg shadow-lg p-8 mt-8">
+            <div className="bg-white rounded-sm shadow-lg p-8 mt-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Handmatige Rally Zone Check-in</h2>
               <p className="text-gray-600 mb-6">
                 Vul rally zone codes in voor deelnemers die een zone bezocht hebben maar de code niet zelf hebben ingevoerd.
@@ -363,7 +363,7 @@ export default function AdminCheckIn() {
                     value={selectedZoneParticipant}
                     onChange={(e) => handleZoneParticipantChange(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">-- Kies een deelnemer --</option>
                     {checkedInParticipants.map((participant: any) => (
@@ -385,7 +385,7 @@ export default function AdminCheckIn() {
                     onChange={(e) => setSelectedZone(e.target.value)}
                     required
                     disabled={!selectedZoneParticipant}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
                   >
                     <option value="">-- Kies een zone --</option>
                     {availableZones.map((zone) => (
@@ -409,7 +409,7 @@ export default function AdminCheckIn() {
                 <button
                   type="submit"
                   disabled={!selectedZoneParticipant || !selectedZone}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-bold text-lg transition-colors"
+                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-sm font-bold text-lg transition-colors"
                 >
                   Registreer Zone Check-in
                 </button>
@@ -419,19 +419,19 @@ export default function AdminCheckIn() {
 
           {/* Today's Check-ins */}
           <div>
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-600">Vandaag Ingecheckt</p>
                 <p className="text-5xl font-bold text-primary-600 mt-2">{checkInCount}</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-600">Totaal Ingecheckt</p>
                   <p className="text-5xl font-bold text-primary-600 mt-2">{checkedInParticipants.length}</p>
                 </div>
             </div>
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-sm shadow">
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-bold text-gray-900">Recente Check-ins</h3>
               </div>

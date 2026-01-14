@@ -37,24 +37,20 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-
+      <Header fixed transparent={true} />
+      
       {/* Hero Section */}
-      <section className="relative bg-gray-900 text-white py-32 md:py-48 overflow-hidden">
-        {/* Background image if exists */}
-        {siteConfig?.heroBackgroundImage && (
-          <div className="absolute inset-0 z-0">
-            <img
-              src={urlFor(siteConfig.heroBackgroundImage).width(1920).height(1080).url()}
-              alt="Hero background"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        {/* Background with overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 z-0"></div>
+      <section 
+        className="relative text-white min-h-screen overflow-hidden bg-cover bg-center bg-fixed"
+        style={siteConfig?.heroBackgroundImage ? {
+          backgroundImage: `url('${urlFor(siteConfig.heroBackgroundImage).width(1920).height(1080).url()}')`,
+          backgroundAttachment: 'fixed'
+        } : { backgroundColor: '#000000' }}
+      >
+        {/* Background overlay - lighter to show image */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-primary-900/50 to-black/70 z-10"></div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 h-full flex items-center justify-center py-32 md:py-48 pt-20">
           <div className="text-center">
             {/* VZW Logo Badge */}
             <div className="inline-flex items-center justify-center mb-8">
@@ -64,22 +60,22 @@ export default function Index() {
             </div>
 
             {heroSection?.title ? (
-              <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight whitespace-pre-line">
+              <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tight whitespace-pre-line gradient-text">
                 {heroSection.title}
               </h1>
             ) : (
-              <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight">
+              <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tight gradient-text">
                 DEN BOCHTENKONING<br />RALLY 2026
               </h1>
             )}
             
-            <p className="text-3xl md:text-4xl mb-8 font-bold tracking-wider">
+            <p className="text-3xl md:text-4xl mb-8 font-black tracking-wider text-primary-100">
               DEUR DEN BOCHT
             </p>
             
             {edition && (
-              <div className="inline-block bg-primary-600 px-8 py-3 rounded-lg mb-12">
-                <p className="text-xl font-bold">
+              <div className="inline-block bg-white/10 backdrop-blur-md border-2 border-white/30 px-8 py-4 rounded-sm mb-12 hover:bg-white/20 transition-all duration-300">
+                <p className="text-2xl md:text-3xl font-black text-white uppercase tracking-wide">
                   ZONDAG {new Date(edition.eventDate).toLocaleDateString('nl-BE', {
                     year: 'numeric',
                     month: '2-digit',
@@ -90,18 +86,18 @@ export default function Index() {
             )}
             
             {/* Hero CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
               {!userId && edition?.registrationOpen && (
                 <Link
                   to="/registration"
-                  className="bg-white hover:bg-gray-100 text-gray-900 px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors shadow-lg"
+                  className="bg-white hover:bg-primary-50 text-primary-600 px-10 py-4 rounded-sm text-lg font-black uppercase transition-all duration-300 shadow-xl hover:shadow-2xl"
                 >
                   Nu inschrijven
                 </Link>
               )}
               <Link
                 to="/about"
-                className="bg-white/10 backdrop-blur-sm hover:bg-white/20 border-2 border-white/30 text-white px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors"
+                className="bg-white/15 backdrop-blur-md hover:bg-white/25 border-2 border-white/40 text-white px-10 py-4 rounded-sm text-lg font-black uppercase transition-all duration-300 hover:border-white/60"
               >
                 Meer info over het event
               </Link>
@@ -115,7 +111,7 @@ export default function Index() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {ctaSection?.title ? (
             <>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight">
                 {ctaSection.title}
               </h2>
               {ctaSection.content && (
@@ -126,7 +122,7 @@ export default function Index() {
             </>
           ) : (
             <>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight">
                 GADE MEE?
               </h2>
               <p className="text-xl md:text-2xl text-gray-700 mb-8">
@@ -138,14 +134,14 @@ export default function Index() {
             {edition?.registrationOpen && (
               <Link
                 to="/registration"
-                className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors shadow-lg"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-4 rounded-sm text-lg font-bold uppercase transition-colors shadow-lg"
               >
                 Nu inschrijven
               </Link>
             )}
             <Link
               to="/about"
-              className="bg-white border-2 border-gray-300 hover:border-primary-600 text-gray-900 px-10 py-4 rounded-lg text-lg font-bold uppercase transition-colors"
+              className="bg-white border-2 border-gray-300 hover:border-primary-600 text-gray-900 px-10 py-4 rounded-sm text-lg font-bold uppercase transition-colors"
             >
               Meer info
             </Link>
@@ -159,7 +155,7 @@ export default function Index() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat: any) => (
-                <div key={stat._id} className="bg-white rounded-lg p-8 text-center shadow-md hover:shadow-lg transition-shadow">
+                <div key={stat._id} className="bg-white rounded-sm border-l-2 border-primary-600 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
                   <div className="text-5xl mb-4">{stat.icon}</div>
                   <div className="text-4xl font-extrabold text-primary-600 mb-2">
                     {stat.value}
@@ -179,11 +175,11 @@ export default function Index() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             {whatIsSection?.title ? (
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                 {whatIsSection.title}
               </h2>
             ) : (
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                 Wat is Deur Den Bocht?
               </h2>
             )}
@@ -249,7 +245,7 @@ export default function Index() {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                 Kies je formule
               </h2>
             </div>
@@ -258,24 +254,25 @@ export default function Index() {
               {pricing.map((tier: any) => (
                 <div
                   key={tier._id}
-                  className={`bg-white rounded-2xl p-10 ${
+                  className={`bg-white rounded-sm p-10 ${
                     tier.highlighted 
-                      ? 'border-4 border-yellow-400 shadow-2xl transform scale-105' 
+                      ? 'bg-gradient-to-r from-primary-600 to-primary-400 shadow-2xl text-white' 
                       : 'border border-gray-200 shadow-lg'
-                  } transition-transform hover:scale-105`}
+                  } `}
                 >
                   {tier.icon && <div className="text-5xl mb-6 text-center">{tier.icon}</div>}
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4 text-center uppercase">
+                  <h3 className={"text-3xl font-bold mb-4 text-center uppercase " + (tier.highlighted ? "text-white" : "text-gray-900")}>
                     {tier.name}
                   </h3>
                   <div className="text-center mb-8">
-                    <span className="text-5xl font-extrabold text-primary-600">€{tier.price}</span>
+                    <span className={"text-5xl font-extrabold " + (tier.highlighted ? "text-white" : "text-primary-600")}>€{tier.price}</span>
                   </div>
+                  <hr className="mb-8" />
                   {tier.features && (
                     <ul className="space-y-4">
                       {tier.features.map((feature: string, idx: number) => (
                         <li key={idx} className="flex items-start">
-                          <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                          <span className={"text-primary-600 font-bold text-xl mr-3 " + (tier.highlighted ? "text-white" : "")}>✓</span>
                           <span className="text-lg">{feature}</span>
                         </li>
                       ))}
@@ -289,7 +286,7 @@ export default function Index() {
               <div className="text-center mt-12">
                 <Link
                   to="/registration"
-                  className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-lg text-xl font-bold uppercase transition-colors shadow-lg"
+                  className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-sm text-xl font-bold uppercase transition-colors shadow-lg"
                 >
                   Nu inschrijven
                 </Link>
@@ -305,7 +302,7 @@ export default function Index() {
           <div className="text-center mb-12">
             {rallyInfoSection?.title ? (
               <>
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                   {rallyInfoSection.title}
                 </h2>
                 {rallyInfoSection.content && (
@@ -316,7 +313,7 @@ export default function Index() {
               </>
             ) : (
               <>
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 uppercase">
+                <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
                   Het Bochtenboek & De Rally
                 </h2>
                 <p className="text-xl text-gray-700 max-w-3xl mx-auto">
@@ -328,23 +325,23 @@ export default function Index() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="bg-gray-50 p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition-shadow">
-              <div className="text-6xl mb-6">🗺️</div>
-              <h3 className="text-2xl font-bold mb-4">8 Rally Zones</h3>
+            <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+              <div className="text-7xl mb-6">🗺️</div>
+              <h3 className="text-2xl font-black mb-4">8 Rally Zones</h3>
               <p className="text-gray-600 text-lg">
                 Optionele lussen langs de route met unieke uitdagingen en verborgen parels
               </p>
             </div>
-            <div className="bg-gray-50 p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition-shadow">
-              <div className="text-6xl mb-6">📕</div>
-              <h3 className="text-2xl font-bold mb-4">Het Bochtenboek</h3>
+            <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+              <div className="text-7xl mb-6">📕</div>
+              <h3 className="text-2xl font-black mb-4">Het Bochtenboek</h3>
               <p className="text-gray-600 text-lg">
                 Geschreven aanwijzingen in plaats van GPS-pijlen. Echt navigeren, echt avontuur.
               </p>
             </div>
-            <div className="bg-gray-50 p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition-shadow">
-              <div className="text-6xl mb-6">🏆</div>
-              <h3 className="text-2xl font-bold mb-4">165 punten mogelijk</h3>
+            <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+              <div className="text-7xl mb-6">🏆</div>
+              <h3 className="text-2xl font-black mb-4">165 punten mogelijk</h3>
               <p className="text-gray-600 text-lg">
                 Verzamel punten en word gekroond tot Den Bochtenkoning van 2026
               </p>
@@ -354,7 +351,7 @@ export default function Index() {
           <div className="text-center">
             <Link
               to="/rally"
-              className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-lg text-xl font-bold uppercase transition-colors shadow-lg"
+              className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-sm text-xl font-bold uppercase transition-colors shadow-lg"
             >
               Ontdek alle Rally Zones
             </Link>
@@ -376,7 +373,7 @@ export default function Index() {
                   href={sponsor.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all grayscale hover:grayscale-0 flex items-center justify-center"
+                  className="bg-white p-6 rounded-sm shadow-md border-l-2 border-primary-600 hover:shadow-lg transition-all grayscale hover:grayscale-0 flex items-center justify-center"
                 >
                   {sponsor.logo ? (
                     <img

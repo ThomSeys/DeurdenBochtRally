@@ -50,7 +50,7 @@ export default function About() {
             </h2>
             <div className="space-y-6">
               {schedule.map((item: any, index: number) => (
-                <div key={item._id} className={`bg-white rounded-lg shadow-lg p-6 border-l-4 border-${item.color || 'primary'}-600`}>
+                <div key={item._id} className={`bg-white rounded-sm shadow-lg p-6 border-l-4 border-${item.color || 'primary'}-600`}>
                   <div className="flex items-start">
                     {item.icon && <span className="text-4xl mr-4">{item.icon}</span>}
                     <div className="flex-1">
@@ -75,7 +75,7 @@ export default function About() {
                           <MapView
                             startPoint={siteConfig.startLocation}
                             endPoint={siteConfig.startLocation}
-                            className="h-64 rounded-lg"
+                            className="h-64 rounded-sm"
                           />
                         </div>
                       )}
@@ -103,7 +103,7 @@ export default function About() {
                 </h3>
                 <div className="grid md:grid-cols-3 gap-6 mb-12">
                   {everyoneBenefits.map((benefit: any) => (
-                    <div key={benefit._id} className="bg-white p-6 rounded-lg shadow text-center">
+                    <div key={benefit._id} className="bg-white p-6 rounded-sm shadow text-center">
                       <div className="text-4xl mb-3">{benefit.icon}</div>
                       <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
                       <p className="text-gray-600">{benefit.description}</p>
@@ -120,7 +120,7 @@ export default function About() {
                 </h3>
                 <div className="grid md:grid-cols-3 gap-6">
                   {winnerBenefits.map((benefit: any) => (
-                    <div key={benefit._id} className="bg-primary-50 p-6 rounded-lg shadow-lg border-2 border-primary-600 text-center">
+                    <div key={benefit._id} className="bg-primary-50 p-6 rounded-sm shadow-lg border-2 border-primary-600 text-center">
                       <div className="text-4xl mb-3">{benefit.icon}</div>
                       <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
                       <p className="text-gray-600">{benefit.description}</p>
@@ -142,7 +142,7 @@ export default function About() {
             </h2>
             <div className="space-y-4">
               {faq.map((item: any) => (
-                <details key={item._id} className="bg-white rounded-lg shadow p-6">
+                <details key={item._id} className="bg-white rounded-sm shadow p-6">
                   <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex items-center">
                     {item.icon && <span className="mr-2">{item.icon}</span>}
                     {item.question}
@@ -165,7 +165,7 @@ export default function About() {
             </p>
             <Link
               to="/registration"
-              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-sm text-lg font-semibold transition-colors"
             >
               Inschrijven
             </Link>

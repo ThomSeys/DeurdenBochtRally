@@ -118,7 +118,7 @@ export default function ParticipantSubmissions() {
         </div>
 
         {/* Participant Header */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-sm shadow p-6 mb-6">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -143,7 +143,7 @@ export default function ParticipantSubmissions() {
 
         {/* Additional Rally Info */}
         {rallySubmission && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">Totale afstand:</span>
@@ -169,25 +169,25 @@ export default function ParticipantSubmissions() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-sm shadow p-4">
             <div className="text-sm text-gray-600">Zones Ingevuld</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
               {submissions.length} / 8
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-sm shadow p-4">
             <div className="text-sm text-gray-600">Totale Afstand</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
               {rallySubmission?.total_distance || 0} km
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-sm shadow p-4">
             <div className="text-sm text-gray-600">Rally Punten</div>
             <div className="text-2xl font-bold text-green-600 mt-1">
               {score.total_points}
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-sm shadow p-4">
             <div className="text-sm text-gray-600">Ingediend</div>
             <div className="text-sm font-bold text-gray-900 mt-1">
               {rallySubmission?.submitted_at 
@@ -200,7 +200,7 @@ export default function ParticipantSubmissions() {
         {/* Submissions by Zone */}
         <div className="space-y-6">
           {zoneIds.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
+            <div className="bg-white rounded-sm shadow p-12 text-center text-gray-500">
               <div className="text-4xl mb-4">📝</div>
               <p>Deze deelnemer heeft nog geen rally codes ingediend</p>
             </div>
@@ -210,7 +210,7 @@ export default function ParticipantSubmissions() {
               const submission = zoneSubmissions[0]; // Only one submission per zone in this data structure
 
               return (
-                <div key={zoneId} className="bg-white rounded-lg shadow overflow-hidden">
+                <div key={zoneId} className="bg-white rounded-sm shadow overflow-hidden">
                   <div className="bg-primary-50 px-6 py-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-xl font-bold text-gray-900">Rally Zone {zoneId}</h2>

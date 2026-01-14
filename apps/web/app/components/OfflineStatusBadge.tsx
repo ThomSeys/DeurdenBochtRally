@@ -8,7 +8,7 @@ export function OfflineStatusBadge() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-amber-50 border border-amber-200">
+    <div className="fixed bottom-4 right-4 flex items-center gap-2 px-3 py-2 rounded-sm shadow-lg bg-amber-50 border border-amber-200">
       <div
         className={`w-2 h-2 rounded-full ${
           isOnline ? 'bg-green-500' : 'bg-red-500'

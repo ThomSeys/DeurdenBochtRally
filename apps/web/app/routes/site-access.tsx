@@ -51,7 +51,7 @@ export default function SiteAccessPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg shadow-2xl p-8">
+        <div className="bg-white rounded-sm shadow-2xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Deur Den Bocht 2026
@@ -78,7 +78,7 @@ export default function SiteAccessPage() {
                 type="password"
                 autoFocus
                 autoComplete="off"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Voer wachtwoord in..."
               />
             </div>
@@ -91,7 +91,7 @@ export default function SiteAccessPage() {
 
             <button
               type="submit"
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-bold transition-colors"
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-sm font-bold transition-colors"
             >
               Toegang verkrijgen
             </button>

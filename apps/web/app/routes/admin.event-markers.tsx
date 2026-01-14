@@ -107,29 +107,29 @@ export default function AdminEventMarkers() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Event Markers</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Evenementmarkeringen</h1>
               <p className="mt-1 text-sm text-gray-500">
-                Manage live event markers displayed on the rally map
+                Beheer live evenementmarkeringen die op de rallykaart worden weergegeven
               </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowForm(!showForm)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors font-medium"
               >
-                {showForm ? '✕ Cancel' : '+ Add Marker'}
+                {showForm ? '✕ Annuleren' : '+ Markering Toevoegen'}
               </button>
               <a
                 href="/live-map"
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                className="px-4 py-2 bg-gray-600 text-white rounded-sm hover:bg-gray-700 transition-colors font-medium"
               >
-                🗺️ View Map
+                🗺️ Bekijk Kaart
               </a>
               <a
                 href="/admin"
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-sm hover:bg-gray-200 transition-colors font-medium"
               >
-                ← Back
+                ← Terug
               </a>
             </div>
           </div>
@@ -137,8 +137,8 @@ export default function AdminEventMarkers() {
 
         {/* Create Form */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Create Event Marker</h2>
+          <div className="bg-white rounded-sm shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4">Evenementmarkering Aanmaken</h2>
             <Form method="post" onSubmit={() => setShowForm(false)}>
               <input type="hidden" name="intent" value="create" />
               <input type="hidden" name="editionId" value={editionId} />
@@ -146,47 +146,47 @@ export default function AdminEventMarkers() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title
+                    Titel
                   </label>
                   <input
                     type="text"
                     name="title"
                     required
                     maxLength={50}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Road Closure"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="bv. Wegafsluiting bij Kerkstraat"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Type
+                    Evenementtype
                   </label>
                   <select
                     name="type"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="closure">🚧 Road Closure</option>
-                    <option value="accident">🚨 Accident</option>
+                    <option value="closure">🚧 Wegafsluiting</option>
+                    <option value="accident">🚨 Ongeval</option>
                     <option value="stop">⛔ Stop</option>
-                    <option value="flood">🌊 Flooded Road</option>
-                    <option value="warning">⚠️ Warning</option>
-                    <option value="info">ℹ️ Information</option>
-                    <option value="station">💧 Water/Fuel Station</option>
+                    <option value="flood">🌊 Overstroomde Weg</option>
+                    <option value="warning">⚠️ Waarschuwing</option>
+                    <option value="info">ℹ️ Informatie</option>
+                    <option value="station">💧 Water/Tank Station</option>
                   </select>
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
+                    Beschrijving
                   </label>
                   <textarea
                     name="description"
                     required
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Detailed information about the event"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Gedetailleerde informatie over het evenement"
                   />
                 </div>
 
@@ -201,7 +201,7 @@ export default function AdminEventMarkers() {
                     step="any"
                     min="-90"
                     max="90"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="51.0967"
                   />
                 </div>
@@ -217,24 +217,24 @@ export default function AdminEventMarkers() {
                     step="any"
                     min="-180"
                     max="180"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="3.4400"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Severity
+                    Ernstniveau
                   </label>
                   <select
                     name="severity"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="low">Low</option>
+                    <option value="low">Laag</option>
                     <option value="medium" selected>Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
+                    <option value="high">Hoog</option>
+                    <option value="critical">Kritiek</option>
                   </select>
                 </div>
               </div>
@@ -242,9 +242,9 @@ export default function AdminEventMarkers() {
               <div className="mt-6">
                 <button
                   type="submit"
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-sm hover:bg-blue-700 transition-colors font-medium"
                 >
-                  Create Event Marker
+                  Evenementmarkering Aanmaken
                 </button>
               </div>
             </Form>
@@ -252,11 +252,11 @@ export default function AdminEventMarkers() {
         )}
 
         {/* Markers List */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-sm shadow-md overflow-hidden">
           {eventMarkers.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <p className="text-lg">No event markers yet</p>
-              <p className="text-sm mt-2">Click "Add Marker" to create one</p>
+              <p className="text-lg">Nog geen evenementmarkeringen</p>
+              <p className="text-sm mt-2">Klik op "Markering Toevoegen" om er een aan te maken</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -264,22 +264,22 @@ export default function AdminEventMarkers() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Event
+                      Evenement
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Location
+                      Locatie
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Severity
+                      Ernstniveau
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created
+                      Aangemaakt
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      Acties
                     </th>
                   </tr>
                 </thead>
@@ -316,7 +316,7 @@ export default function AdminEventMarkers() {
                                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                             }`}
                           >
-                            {marker.isActive ? '✓ Active' : '✗ Inactive'}
+                            {marker.isActive ? '✓ Actief' : '✗ Inactief'}
                           </button>
                         </Form>
                       </td>
@@ -330,13 +330,13 @@ export default function AdminEventMarkers() {
                           <button
                             type="submit"
                             onClick={(e) => {
-                              if (!confirm('Are you sure you want to delete this marker?')) {
+                              if (!confirm('Weet je zeker dat je deze markering wilt verwijderen?')) {
                                 e.preventDefault();
                               }
                             }}
                             className="text-red-600 hover:text-red-900"
                           >
-                            Delete
+                            Verwijderen
                           </button>
                         </Form>
                       </td>

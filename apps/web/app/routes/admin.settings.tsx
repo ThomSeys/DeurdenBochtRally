@@ -82,7 +82,7 @@ export default function AdminSettings() {
         )}
 
         {/* Current Admins */}
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
+        <div className="bg-white rounded-sm shadow overflow-hidden mb-8">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Admin Gebruikers ({admins.length})</h2>
           </div>
@@ -117,7 +117,7 @@ export default function AdminSettings() {
         </div>
 
         {/* All Participants */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-sm shadow overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Alle Deelnemers</h2>
             <p className="text-sm text-gray-600 mt-1">Klik om admin rechten toe te kennen</p>

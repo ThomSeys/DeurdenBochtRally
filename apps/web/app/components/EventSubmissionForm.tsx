@@ -143,7 +143,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                       setFormData({ ...formData, type: type.value });
                       setStep('details');
                     }}
-                    className={`p-4 rounded-lg text-center transition-all ${type.color}`}
+                    className={`p-4 rounded-sm text-center transition-all ${type.color}`}
                   >
                     <div className="text-3xl mb-2">{type.icon}</div>
                     <div className="text-xs font-medium text-gray-700">{type.label}</div>
@@ -161,7 +161,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, severity: 'low' })}
-                  className={`p-3 rounded-lg transition-all font-medium text-sm ${
+                  className={`p-3 rounded-sm transition-all font-medium text-sm ${
                     formData.severity === 'low'
                       ? 'bg-green-300/40 border-2 border-green-500 ring-2 ring-green-400'
                       : 'bg-green-100/50 border-2 border-transparent hover:bg-green-100/70'
@@ -172,7 +172,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, severity: 'medium' })}
-                  className={`p-3 rounded-lg transition-all font-medium text-sm ${
+                  className={`p-3 rounded-sm transition-all font-medium text-sm ${
                     formData.severity === 'medium'
                       ? 'bg-yellow-300/40 border-2 border-yellow-500 ring-2 ring-yellow-400'
                       : 'bg-yellow-100/50 border-2 border-transparent hover:bg-yellow-100/70'
@@ -183,7 +183,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, severity: 'high' })}
-                  className={`p-3 rounded-lg transition-all font-medium text-sm ${
+                  className={`p-3 rounded-sm transition-all font-medium text-sm ${
                     formData.severity === 'high'
                       ? 'bg-orange-300/40 border-2 border-orange-500 ring-2 ring-orange-400'
                       : 'bg-orange-100/50 border-2 border-transparent hover:bg-orange-100/70'
@@ -194,7 +194,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, severity: 'critical' })}
-                  className={`p-3 rounded-lg transition-all font-medium text-sm ${
+                  className={`p-3 rounded-sm transition-all font-medium text-sm ${
                     formData.severity === 'critical'
                       ? 'bg-red-300/40 border-2 border-red-500 ring-2 ring-red-400'
                       : 'bg-red-100/50 border-2 border-transparent hover:bg-red-100/70'
@@ -216,7 +216,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Beschrijf het evenement kort"
                 maxLength={50}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">{formData.title.length}/50</p>
             </div>
@@ -231,13 +231,13 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Meer informatie..."
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Location Status */}
             {userLocation && (
-              <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+              <div className="p-3 rounded-sm bg-green-50 border border-green-200">
                 <p className="text-sm text-green-700">
                   ✓ Locatie: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
                 </p>
@@ -246,7 +246,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
 
             {/* Error */}
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+              <div className="p-3 rounded-sm bg-red-50 border border-red-200">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
@@ -256,14 +256,14 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
               <button
                 type="button"
                 onClick={() => setStep('type')}
-                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50 transition-colors font-medium"
               >
                 Terug
               </button>
               <button
                 type="submit"
                 disabled={loading || !userLocation}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-sm hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
               >
                 {loading ? 'Verzenden...' : 'Verzenden'}
               </button>

@@ -454,7 +454,7 @@ export default function RallySubmission() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Form Area - Left/Center */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="bg-white rounded-sm shadow-lg p-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Rally Codes Indienen
               </h1>
@@ -572,7 +572,7 @@ export default function RallySubmission() {
 
                         {/* Map View */}
                         {rallyZones[zone.id - 1]?.startLocation && rallyZones[zone.id - 1]?.endLocation && (
-                          <div className="rounded-lg overflow-hidden shadow-md border border-gray-200">
+                          <div className="rounded-sm overflow-hidden shadow-md border border-gray-200">
                             <MapView
                               key={`map-${zone.id}-${activeZone}`}
                               startPoint={rallyZones[zone.id - 1].startLocation}
@@ -594,14 +594,14 @@ export default function RallySubmission() {
                             name={`rz${zone.id}_code`}
                             type="text"
                             defaultValue={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg uppercase"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg uppercase"
                             placeholder="Vul hier de code in..."
                           />
                         </div>
 
                         {/* Zone Shadow Score Display */}
                         {zoneScore?.shadow_score !== null && zoneScore?.shadow_score !== undefined && (
-                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border border-gray-200">
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-sm p-5 border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
                               <h3 className="text-sm font-semibold text-gray-700 flex items-center">
                                 <span className="text-lg mr-2">🎯</span>
@@ -626,7 +626,7 @@ export default function RallySubmission() {
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
                                     className="bg-blue-500 h-2 rounded-full transition-all"
-                                    style={{ width: `${((zoneScore.rhythm_score || 0) / 50) * 100}%` }}
+                                    style={{ width: `${(zoneScore.rhythm_score || 0)}%` }}
                                   />
                                 </div>
                               </div>
@@ -643,7 +643,7 @@ export default function RallySubmission() {
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
                                     className="bg-green-500 h-2 rounded-full transition-all"
-                                    style={{ width: `${((zoneScore.view_score || 0) / 50) * 100}%` }}
+                                    style={{ width: `${(zoneScore.view_score || 0)}%` }}
                                   />
                                 </div>
                               </div>
@@ -657,7 +657,7 @@ export default function RallySubmission() {
                             type="button"
                             onClick={() => setActiveZone(Math.max(1, activeZone - 1))}
                             disabled={activeZone === 1}
-                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-sm hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             ← Vorige
                           </button>
@@ -665,7 +665,7 @@ export default function RallySubmission() {
                             type="button"
                             onClick={() => setActiveZone(Math.min(8, activeZone + 1))}
                             disabled={activeZone === 8}
-                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-sm hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             Volgende →
                           </button>
@@ -704,7 +704,7 @@ export default function RallySubmission() {
                         defaultValue={startKm}
                         onBlur={handleStartKmBlur}
                         disabled={startKmLocked}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="Bijv. 12345.6"
                       />
                       {!startKmLocked && (
@@ -727,7 +727,7 @@ export default function RallySubmission() {
                         defaultValue={endKm}
                         onBlur={handleEndKmBlur}
                         disabled={endKmLocked}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="Bijv. 12845.3"
                       />
                       {!endKmLocked && (
@@ -752,7 +752,7 @@ export default function RallySubmission() {
                 <div className="pt-6 border-t">
                   <button
                     type="submit"
-                    className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
+                    className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-sm text-lg transition-colors"
                   >
                     Codes opslaan
                   </button>
@@ -774,7 +774,7 @@ export default function RallySubmission() {
           <div className="lg:col-span-1">
             {/* Total Shadow Score Card */}
             {submission?.shadow_total !== null && submission?.shadow_total !== undefined && (
-              <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 mb-6 text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-sm shadow-lg p-6 mb-6 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 opacity-10 text-9xl">🏆</div>
                 <div className="relative z-10">
                   <div className="text-sm font-semibold mb-1 flex items-center justify-between">
@@ -811,7 +811,7 @@ export default function RallySubmission() {
             )}
 
             {/* Scoreboard */}
-            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+            <div className="bg-white rounded-sm shadow-lg p-6 sticky top-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Klassement</h2>
               
               {scoreboard.length === 0 ? (
@@ -827,7 +827,7 @@ export default function RallySubmission() {
                       <div
                         key={index}
                         className={`
-                          p-3 rounded-lg transition-colors
+                          p-3 rounded-sm transition-colors
                           ${index === 0 ? 'bg-yellow-50' : ''}
                           ${index === 1 ? 'bg-gray-50' : ''}
                           ${index === 2 ? 'bg-orange-50' : ''}
@@ -876,7 +876,7 @@ export default function RallySubmission() {
       {/* Shadow Score Explanation Modal */}
       {showExplanationModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-sm shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">
                 {shadowScoreExplanation?.title || 'Hoe werkt de Schaduwscore?'}
@@ -918,7 +918,7 @@ export default function RallySubmission() {
             <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t">
               <button
                 onClick={() => setShowExplanationModal(false)}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-sm transition-colors"
               >
                 Begrepen!
               </button>

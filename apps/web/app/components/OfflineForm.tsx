@@ -83,7 +83,7 @@ export function OfflineForm({
       {children}
 
       {!isOnline() && (
-        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-sm">
           <p className="text-sm text-amber-800">
             <span className="font-semibold">📳 Je bent offline</span> - inzendingen
             worden opgeslagen en verzonden wanneer je weer online bent.
@@ -92,7 +92,7 @@ export function OfflineForm({
       )}
 
       {queuedCount > 0 && (
-        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-sm">
           <p className="text-sm text-blue-800">
             <span className="font-semibold">⏳ {queuedCount} wachtend</span> om
             verzonden te worden.
@@ -101,13 +101,13 @@ export function OfflineForm({
       )}
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-sm">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-sm">
           <p className="text-sm text-green-800">{success}</p>
         </div>
       )}

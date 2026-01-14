@@ -1,25 +1,44 @@
 import { Link, useMatches, Form } from 'react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function Header() {
+export default function Header({ transparent, fixed }: { transparent?: boolean; fixed?: boolean }) {
   const matches = useMatches();
   const rootMatch = matches.find(m => m.id === 'root');
   const user = (rootMatch?.data as any)?.user;
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 250);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isClient]);
+
+  const isTransparent = transparent && !isScrolled && isClient;
 
   return (
-    <header className="bg-primary-600 shadow-lg sticky top-0 z-50">
+    <header className={`${isTransparent ? 'bg-transparent backdrop-blur-sm border-b border-white/10' : 'bg-primary-600 shadow-lg'} ${fixed ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1100] transition-all duration-300`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <div className="bg-white rounded-full p-2 w-12 h-12 flex items-center justify-center">
+            <div className={`${isTransparent ? 'bg-white/20 border border-white/40' : 'bg-white'} rounded-full p-2 w-12 h-12 flex items-center justify-center transition-all duration-300`}>
               <span className="text-2xl">🏍</span>
             </div>
-            <div className="text-white">
-              <div className="font-bold text-xl tracking-wide uppercase">Deur Den Bocht</div>
-              <div className="text-xs text-primary-100 uppercase">Den Bochtenkoning Rally</div>
+            <div className={`${isTransparent ? 'text-white' : 'text-white'}`}>
+              <div className={`font-bold text-xl tracking-wide uppercase ${isTransparent ? 'drop-shadow-lg' : ''}`}>Deur Den Bocht</div>
+              <div className={`text-xs uppercase ${isTransparent ? 'text-white/90 drop-shadow-lg' : 'text-primary-100'}`}>Den Bochtenkoning Rally</div>
             </div>
           </Link>
 
@@ -27,13 +46,13 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               to="/"
-              className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors"
+              className={`text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
             >
               Home
             </Link>
             <Link
               to="/about"
-              className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors"
+              className={`text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
             >
               Over het event
             </Link>
@@ -41,7 +60,7 @@ export default function Header() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center space-x-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors"
+                  className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
                 >
                   <span>{user.first_name}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +73,7 @@ export default function Header() {
                       className="fixed inset-0"
                       onClick={() => setUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg py-2 z-50">
                       <Link
                         to="/rally"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

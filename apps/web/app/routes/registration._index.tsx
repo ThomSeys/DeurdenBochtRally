@@ -196,7 +196,7 @@ export default function Registration() {
 
       <div className="flex-grow bg-gray-50 py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="bg-white rounded-sm shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Inschrijven</h1>
             <p className="text-gray-600 mb-8">
               Vul je gegevens in om je in te schrijven voor Deur Den Bocht {edition.year}
@@ -222,7 +222,7 @@ export default function Registration() {
                       name="firstName"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -234,7 +234,7 @@ export default function Registration() {
                       name="lastName"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export default function Registration() {
                       name="email"
                       type="email"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -260,7 +260,7 @@ export default function Registration() {
                       name="phone"
                       type="tel"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   
                 <div className="mt-4">
@@ -273,7 +273,7 @@ export default function Registration() {
                     type="password"
                     required
                     minLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Minstens 6 karakters"
                   />
                   <p className="mt-1 text-sm text-gray-500">
@@ -297,7 +297,7 @@ export default function Registration() {
                       name="motorcycleBrand"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="bv. BMW, Honda, Yamaha..."
                     />
                   </div>
@@ -310,7 +310,7 @@ export default function Registration() {
                       name="motorcycleModel"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="bv. R1250GS, CB500X..."
                     />
                   </div>
@@ -324,7 +324,7 @@ export default function Registration() {
                     name="licensePlate"
                     type="text"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase"
                     placeholder="1-ABC-123"
                   />
                 </div>
@@ -337,7 +337,7 @@ export default function Registration() {
                   {pricing.map((tier: any) => (
                     <label
                       key={tier._id}
-                      className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+                      className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
                         selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')
                           ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
                           : 'border-gray-300'
@@ -378,7 +378,7 @@ export default function Registration() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Kies je rittype *</h2>
                 <div className="grid md:grid-cols-2 gap-4">
                   <label
-                    className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+                    className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
                       selectedRideType === 'free'
                         ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
                         : 'border-gray-300'
@@ -402,7 +402,7 @@ export default function Registration() {
                   </label>
 
                   <label
-                    className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+                    className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
                       selectedRideType === 'guided'
                         ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
                         : 'border-gray-300'
@@ -430,7 +430,7 @@ export default function Registration() {
               <div className="pt-6 border-t">
                 <button
                   type="submit"
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors"
+                  className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-sm text-lg transition-colors"
                 >
                   Doorgaan naar betaling
                 </button>

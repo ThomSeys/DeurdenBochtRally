@@ -64,14 +64,14 @@ export default function AdminParticipants() {
           </div>
           <Link
             to="/admin"
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
           >
             ← Terug naar Dashboard
           </Link>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-sm shadow p-6 mb-6">
           <Form method="get" className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
@@ -83,7 +83,7 @@ export default function AdminParticipants() {
                 type="text"
                 defaultValue={searchQuery}
                 placeholder="Naam, email, kenteken..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -95,7 +95,7 @@ export default function AdminParticipants() {
                 id="payment"
                 name="payment"
                 defaultValue={paymentFilter}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">Alle</option>
                 <option value="completed">Betaald</option>
@@ -112,7 +112,7 @@ export default function AdminParticipants() {
                 id="checkedIn"
                 name="checkedIn"
                 defaultValue={checkedInFilter}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">Alle</option>
                 <option value="true">Ingecheckt</option>
@@ -123,7 +123,7 @@ export default function AdminParticipants() {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-sm font-medium transition-colors"
               >
                 Filteren
               </button>
@@ -132,7 +132,7 @@ export default function AdminParticipants() {
         </div>
 
         {/* Participants Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-sm shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -223,7 +223,7 @@ export default function AdminParticipants() {
       {/* Detail Modal */}
       {selectedParticipant && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">
                 {selectedParticipant.first_name} {selectedParticipant.last_name}
@@ -287,7 +287,7 @@ export default function AdminParticipants() {
               <div className="pt-4 border-t border-gray-200">
                 <Link
                   to={`/admin/participants/${selectedParticipant.id}/submissions`}
-                  className="block w-full bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 rounded-lg transition-colors"
+                  className="block w-full bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 rounded-sm transition-colors"
                 >
                   📝 Bekijk Rally Antwoorden
                 </Link>
