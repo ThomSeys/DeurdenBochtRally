@@ -8,6 +8,14 @@ import { sanityClient } from '~/lib/sanity.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import Header from '~/components/Header';
 
+declare global {
+  interface Window {
+    ENV?: {
+      VAPID_PUBLIC_KEY?: string;
+    };
+  }
+}
+
 export const meta: MetaFunction = () => {
   return [
     { title: 'Dashboard - Deur Den Bocht' },
@@ -161,6 +169,106 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Push Notifications Setup Banner */}
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-sm shadow p-6 mb-8">
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">🔔</div>
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900 text-lg mb-2">
+                Mis geen updates meer!
+              </h3>
+              <p className="text-gray-700 mb-4">
+                Ontvang push notificaties voor rally updates, zone openings, en meer. Blijf altijd op de hoogte!
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  onClick={async () => {
+                    try {
+                      // Check if notifications are supported
+                      if (!('Notification' in window)) {
+                        alert('Je browser ondersteunt notificaties niet.');
+                        return;
+                      }
+
+                      // Request permission
+                      const permission = await Notification.requestPermission();
+                      if (permission !== 'granted') {
+                        alert('Je moet notificaties toestaan.');
+                        return;
+                      }
+
+                      // Register service worker
+                      if (!('serviceWorker' in navigator)) {
+                        alert('Je browser ondersteunt service workers niet.');
+                        return;
+                      }
+
+                      const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/',
+                      });
+
+                      // Get VAPID key
+                      const vapidPublicKey = (window.ENV as any)?.VITE_VAPID_PUBLIC_KEY;
+                      if (!vapidPublicKey) {
+                        alert('Notificaties zijn niet geconfigureerd. Neem contact op met admin.');
+                        return;
+                      }
+
+                      // Convert VAPID key
+                      const urlBase64ToUint8Array = (base64String: string) => {
+                        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                        const rawData = window.atob(base64);
+                        const outputArray = new Uint8Array(rawData.length);
+                        for (let i = 0; i < rawData.length; ++i) {
+                          outputArray[i] = rawData.charCodeAt(i);
+                        }
+                        return outputArray;
+                      };
+
+                      // Subscribe to push
+                      const subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                      });
+
+                      // Send to server
+                      const response = await fetch('/api/push-subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'subscribe',
+                          subscription: subscription.toJSON(),
+                        }),
+                      });
+
+                      if (!response.ok) {
+                        const error = await response.text();
+                        alert(`Fout: ${error}`);
+                        return;
+                      }
+
+                      alert('✅ Notificaties ingeschakeld! Je ontvangt nu updates.');
+                    } catch (err) {
+                      console.error('Notification setup error:', err);
+                      alert(`Fout bij notificaties: ${err instanceof Error ? err.message : 'Onbekende fout'}`);
+                    }
+                  }}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-sm transition-colors"
+                >
+                  ✓ Notificaties inschakelen
+                </button>
+                <a
+                  href="/dashboard/rally-submission"
+                  className="px-6 py-2 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-sm hover:bg-blue-50 transition-colors"
+                >
+                  Later
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
           <div className="bg-white rounded-sm shadow p-6">
@@ -246,6 +354,42 @@ export default function Dashboard() {
               </p>
             )}
           </div>
+        </div>
+
+        {/* New Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Link
+            to="/gallery"
+            className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:scale-105 transition-transform"
+          >
+            <div className="text-4xl mb-3">📸</div>
+            <h3 className="font-bold text-xl mb-2">Fotogalerij</h3>
+            <p className="text-sm text-purple-100">
+              Deel jouw rally momenten en bekijk foto's van andere deelnemers!
+            </p>
+          </Link>
+
+          <Link
+            to="/achievements"
+            className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:scale-105 transition-transform"
+          >
+            <div className="text-4xl mb-3">🏆</div>
+            <h3 className="font-bold text-xl mb-2">Achievements</h3>
+            <p className="text-sm text-yellow-100">
+              Ontgrendel achievements door deel te nemen en punten te verzamelen!
+            </p>
+          </Link>
+
+          <Link
+            to="/certificates/completion"
+            className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white hover:scale-105 transition-transform"
+          >
+            <div className="text-4xl mb-3">📜</div>
+            <h3 className="font-bold text-xl mb-2">Certificaat</h3>
+            <p className="text-sm text-green-100">
+              Download je deelname certificaat na het voltooien van de rally!
+            </p>
+          </Link>
         </div>
 
         {/* Documents Section */}

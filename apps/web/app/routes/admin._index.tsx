@@ -201,6 +201,24 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            to="/admin/gallery"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-purple-400"
+          >
+            <div className="text-2xl mb-2">📸</div>
+            <h3 className="font-semibold text-gray-900">Fotogalerij</h3>
+            <p className="text-sm text-gray-600 mt-1">Beheer foto's</p>
+          </Link>
+
+          <Link
+            to="/admin/push-notifications"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-orange-400"
+          >
+            <div className="text-2xl mb-2">🔔</div>
+            <h3 className="font-semibold text-gray-900">Push Notifications</h3>
+            <p className="text-sm text-gray-600 mt-1">Verstuur updates</p>
+          </Link>
+
+          <Link
             to="/admin/settings"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >

@@ -10,6 +10,8 @@ import Header from '~/components/Header';
 import { sanityClient } from '~/lib/sanity.server';
 import PortableText from '~/components/PortableText';
 import MapView from '~/components/MapView';
+import { sendEmail, rallySubmissionEmail } from '~/lib/email.server';
+import { checkAndUnlockAchievements } from '~/lib/achievements.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -312,6 +314,46 @@ export async function action({ request }: ActionFunctionArgs) {
         return {  error: 'Er ging iets mis bij het opslaan. Probeer opnieuw.', status: 500 };
       }
   }
+
+    // Get participant details for email
+    const { data: participant } = await supabaseAdmin
+      .from('participants')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (participant) {
+      // Get leaderboard rank
+      const { data: leaderboard } = await supabaseAdmin
+        .rpc('get_leaderboard');
+      
+      const rank = leaderboard?.findIndex((entry: any) => entry.participant_id === userId) + 1;
+
+      // Send rally submission confirmation email
+      const email = rallySubmissionEmail({
+        ...participant,
+        total_points: totalPoints,
+        zones_completed: completedZones,
+        total_distance: totalDistance || 0,
+        rank: rank > 0 ? rank : undefined,
+      });
+
+      await sendEmail({
+        to: participant.email,
+        ...email,
+      });
+
+      // Log email
+      await supabaseAdmin.from('email_logs').insert({
+        participant_id: userId,
+        email_type: 'rally_submission',
+        recipient_email: participant.email,
+        subject: email.subject,
+      });
+
+      // Check and unlock achievements
+      await checkAndUnlockAchievements(userId);
+    }
 
     console.info('[dashboard.rally-submission] action success', { action });
     return redirect('/dashboard?success=rally');

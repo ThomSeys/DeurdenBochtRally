@@ -38,6 +38,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
+  
   return (
     <html lang="nl">
       <head>
@@ -45,6 +47,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify({
+              VITE_VAPID_PUBLIC_KEY: vapidPublicKey,
+            })};`,
+          }}
+        />
       </head>
       <body className="antialiased">
         {children}

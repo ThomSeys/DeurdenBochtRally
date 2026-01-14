@@ -30,4 +30,10 @@ export default [
   route("api/qrcode", "routes/api.qrcode.tsx"),
   route("api/events/submit", "routes/api.events.submit.tsx"),
   route('check-in/:participantId', 'routes/check-in.$participantId.tsx'),
+  route("certificates/:type", "routes/certificates.$type.tsx"),
+  route("achievements", "routes/achievements.tsx"),
+  route("gallery", "routes/gallery.tsx"),
+  route("admin/gallery", "routes/admin.gallery.tsx"),
+  route("admin/push-notifications", "routes/admin.push-notifications.tsx"),
+  route("api/push-subscribe", "routes/api.push-subscribe.tsx"),
 ] satisfies RouteConfig;
