@@ -81,6 +81,10 @@ export async function requireAdmin(request: Request) {
 }
 
 export async function logout(request: Request) {
+  // Sign out from Supabase Auth
+  await supabase.auth.signOut();
+
+  // Destroy the session cookie
   const session = await getUserSession(request);
   return redirect('/', {
     headers: {

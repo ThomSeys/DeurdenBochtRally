@@ -57,12 +57,11 @@ export function PushNotificationButton() {
       const response = await fetch('/api/push-subscribe', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           action: 'subscribe',
-          subscription: JSON.stringify(subscription),
-          user_agent: navigator.userAgent,
+          subscription: subscription.toJSON(),
         }),
       });
 
@@ -91,9 +90,9 @@ export function PushNotificationButton() {
         await fetch('/api/push-subscribe', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
-          body: new URLSearchParams({
+          body: JSON.stringify({
             action: 'unsubscribe',
             endpoint: subscription.endpoint,
           }),
