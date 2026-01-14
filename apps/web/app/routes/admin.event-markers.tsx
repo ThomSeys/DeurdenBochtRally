@@ -74,7 +74,34 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (intent === 'delete') {
       const id = formData.get('id') as string;
+      const resolutionMessage = formData.get('resolutionMessage') as string;
+
+      // Fetch event details before deleting
+      const event = await sanityClient.getDocument(id);
+
+      // Delete from Sanity
       await sanityClient.delete(id);
+
+      // Send notification if event was critical/high severity
+      if (event && (event.severity === 'critical' || event.severity === 'high')) {
+        try {
+          const { data: subscriptions } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('endpoint, keys')
+            .eq('is_active', true);
+
+          if (subscriptions && subscriptions.length > 0) {
+            const notification = notificationTemplates.eventCancelled(
+              event.title,
+              resolutionMessage || undefined
+            );
+            await sendBulkPushNotifications(subscriptions, notification);
+            console.info('[admin.event-markers] event cancellation notification sent');
+          }
+        } catch (pushError) {
+          console.error('[admin.event-markers] error sending event cancellation notification', pushError);
+        }
+      }
 
       console.info('[admin.event-markers] action success', { intent, id });
       return { success: true };
@@ -369,8 +396,26 @@ export default function AdminEventMarkers() {
                           <button
                             type="submit"
                             onClick={(e) => {
-                              if (!confirm('Weet je zeker dat je deze markering wilt verwijderen?')) {
+                              const resolutionMessage = prompt(
+                                'Voer een bericht in voor de deelnemers (optioneel):\n\nBijvoorbeeld: "Probleem opgelost" of "Weg is weer vrij"'
+                              );
+                              if (resolutionMessage === null) {
+                                // User clicked cancel
                                 e.preventDefault();
+                                return;
+                              }
+                              // Add resolution message to form
+                              const form = e.currentTarget.form;
+                              if (form) {
+                                const existingInput = form.querySelector('input[name="resolutionMessage"]');
+                                if (existingInput) {
+                                  existingInput.remove();
+                                }
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'resolutionMessage';
+                                input.value = resolutionMessage;
+                                form.appendChild(input);
                               }
                             }}
                             className="text-red-600 hover:text-red-900"

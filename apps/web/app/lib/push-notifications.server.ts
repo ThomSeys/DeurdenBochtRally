@@ -164,10 +164,22 @@ export const notificationTemplates = {
     ],
   }),
 
-  eventResolved: (eventTitle: string) => ({
+  eventResolved: (eventTitle: string, resolutionMessage?: string) => ({
     title: `✅ Incident Opgelost`,
-    body: `${eventTitle} is nu opgelost.`,
+    body: resolutionMessage || `${eventTitle} is nu opgelost.`,
     tag: 'event-resolved',
+    data: {
+      link: '/live-map',
+    },
+  }),
+
+  eventCancelled: (eventTitle: string, resolutionMessage?: string) => ({
+    title: `🔔 Incident Verwijderd`,
+    body: resolutionMessage || `${eventTitle} is verwijderd van de kaart.`,
+    tag: 'event-cancelled',
+    data: {
+      link: '/live-map',
+    },
   }),
 
   leaderboardUpdate: (rank: number) => ({
