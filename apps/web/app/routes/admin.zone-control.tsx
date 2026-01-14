@@ -153,68 +153,68 @@ export default function AdminZoneControl() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Zonebeheerpaneel</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Zonebeheerpaneel</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600 break-words">
             Open of sluit rallyzones in geval van wegafsluitingen, veiligheidskwesties of andere problemen
           </p>
         </div>
 
         {actionData?.error && (
-          <div className="mb-6 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded text-sm break-words">
             Fout: {actionData.error}
           </div>
         )}
 
         {actionData?.success && (
-          <div className="mb-6 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded text-sm break-words">
             Succes: {actionData.success}
           </div>
         )}
 
         {/* Stats */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
           <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Open Zones</p>
-                <p className="text-3xl font-bold text-green-600">{openZones.length}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Open Zones</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600">{openZones.length}</p>
               </div>
-              <div className="text-4xl">✅</div>
+              <div className="text-3xl sm:text-4xl">✅</div>
             </div>
           </div>
           <div className="bg-white rounded-sm shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Gesloten Zones</p>
-                <p className="text-3xl font-bold text-red-600">{closedZones.length}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Gesloten Zones</p>
+                <p className="text-2xl sm:text-3xl font-bold text-red-600">{closedZones.length}</p>
               </div>
-              <div className="text-4xl">🚫</div>
+              <div className="text-3xl sm:text-4xl">🚫</div>
             </div>
           </div>
         </div>
 
         {/* Zone List */}
         <div className="bg-white rounded-sm shadow overflow-hidden mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Rallyzones</h2>
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 break-words">Rallyzones</h2>
           </div>
           <div className="divide-y divide-gray-200">
             {rallyZones.map((zone: any) => (
-              <div key={zone._id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-gray-900">
+              <div key={zone._id} className="p-4 sm:p-6 hover:bg-gray-50">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 break-words">
                         RZ{zone.zoneNumber} – {zone.title}
                       </h3>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                         zone.is_open !== false
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
                         {zone.is_open !== false ? '✓ Open' : '✗ Gesloten'}
                       </span>
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium whitespace-nowrap flex-shrink-0 ${
                         zone.color === 'green' ? 'bg-green-100 text-green-800' :
                         zone.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
                         zone.color === 'orange' ? 'bg-orange-100 text-orange-800' :

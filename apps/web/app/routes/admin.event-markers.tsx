@@ -105,29 +105,29 @@ export default function AdminEventMarkers() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Evenementmarkeringen</h1>
-              <p className="mt-1 text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Evenementmarkeringen</h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-500 break-words">
                 Beheer live evenementmarkeringen die op de rallykaart worden weergegeven
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 flex-wrap">
               <button
                 onClick={() => setShowForm(!showForm)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors font-medium"
+                className="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors font-medium text-sm whitespace-nowrap"
               >
                 {showForm ? '✕ Annuleren' : '+ Markering Toevoegen'}
               </button>
               <a
                 href="/live-map"
-                className="px-4 py-2 bg-gray-600 text-white rounded-sm hover:bg-gray-700 transition-colors font-medium"
+                className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-sm hover:bg-gray-700 transition-colors font-medium text-sm whitespace-nowrap"
               >
                 🗺️ Bekijk Kaart
               </a>
               <a
                 href="/admin"
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-sm hover:bg-gray-200 transition-colors font-medium"
+                className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-sm hover:bg-gray-200 transition-colors font-medium text-sm whitespace-nowrap"
               >
                 ← Terug
               </a>
@@ -138,7 +138,7 @@ export default function AdminEventMarkers() {
         {/* Create Form */}
         {showForm && (
           <div className="bg-white rounded-sm shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Evenementmarkering Aanmaken</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 break-words">Evenementmarkering Aanmaken</h2>
             <Form method="post" onSubmit={() => setShowForm(false)}>
               <input type="hidden" name="intent" value="create" />
               <input type="hidden" name="editionId" value={editionId} />

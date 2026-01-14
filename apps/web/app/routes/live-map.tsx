@@ -159,10 +159,10 @@ export default function LiveMap() {
       {/* Page Header */}
       <div className="bg-gradient-to-r h-full from-primary-600 to-primary-700 text-white">
         <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">🗺️ Live Rally Kaart</h1>
-              <p className="mt-2 text-primary-100">
+              <h1 className="text-2xl sm:text-3xl font-bold break-words">🗺️ Live Rally Kaart</h1>
+              <p className="mt-2 text-primary-100 break-words text-sm sm:text-base">
                 Real-time overzicht van de rally zones en evenementen
                 {!isEventDay && isAdmin && (
                   <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">

@@ -36,8 +36,8 @@ export default function About() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold mb-4">Over het Event</h1>
-          <p className="text-xl">Alles wat je moet weten over Deur Den Bocht</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 break-words">Over het Event</h1>
+          <p className="text-lg sm:text-xl break-words">Alles wat je moet weten over Deur Den Bocht</p>
         </div>
       </section>
 
@@ -45,7 +45,7 @@ export default function About() {
       {schedule && schedule.length > 0 && (
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 break-words">
               Programma
             </h2>
             <div className="space-y-6">
@@ -54,9 +54,9 @@ export default function About() {
                   <div className="flex items-start">
                     {item.icon && <span className="text-4xl mr-4">{item.icon}</span>}
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-2xl font-bold text-gray-900">{item.title}</h3>
-                        <span className="text-lg font-semibold text-primary-600">{item.time}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{item.title}</h3>
+                        <span className="text-base sm:text-lg font-semibold text-primary-600 whitespace-nowrap">{item.time}</span>
                       </div>
                       <p className="text-gray-700 mb-4">{item.description}</p>
                       {item.details && item.details.length > 0 && (
@@ -92,7 +92,7 @@ export default function About() {
       {benefits && benefits.length > 0 && (
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4 break-words">
               Wat krijg je?
             </h2>
             
@@ -137,15 +137,15 @@ export default function About() {
       {faq && faq.length > 0 && (
         <section className="py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 break-words">
               Veelgestelde Vragen
             </h2>
             <div className="space-y-4">
               {faq.map((item: any) => (
                 <details key={item._id} className="bg-white rounded-sm shadow p-6">
-                  <summary className="font-semibold text-lg text-gray-900 cursor-pointer flex items-center">
-                    {item.icon && <span className="mr-2">{item.icon}</span>}
-                    {item.question}
+                  <summary className="font-semibold text-base sm:text-lg text-gray-900 cursor-pointer flex items-start gap-2 break-words">
+                    {item.icon && <span className="mr-2 flex-shrink-0 mt-1">{item.icon}</span>}
+                    <span>{item.question}</span>
                   </summary>
                   <p className="mt-4 text-gray-700 pl-6">{item.answer}</p>
                 </details>
@@ -159,8 +159,8 @@ export default function About() {
       {edition?.registrationOpen && (
         <section className="py-16 bg-primary-600 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">Klaar voor het avontuur?</h2>
-            <p className="text-xl mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 break-words">Klaar voor het avontuur?</h2>
+            <p className="text-base sm:text-lg md:text-xl mb-8 break-words">
               Schrijf je nu in en zeker je plaats voor Deur Den Bocht
             </p>
             <Link

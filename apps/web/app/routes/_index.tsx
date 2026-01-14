@@ -60,22 +60,22 @@ export default function Index() {
             </div>
 
             {heroSection?.title ? (
-              <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tight whitespace-pre-line gradient-text">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-6 tracking-tight whitespace-pre-line gradient-text break-words">
                 {heroSection.title}
               </h1>
             ) : (
-              <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tight gradient-text">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-6 tracking-tight gradient-text break-words">
                 DEN BOCHTENKONING<br />RALLY 2026
               </h1>
             )}
             
-            <p className="text-3xl md:text-4xl mb-8 font-black tracking-wider text-primary-100">
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-8 font-black tracking-wider text-primary-100 break-words">
               DEUR DEN BOCHT
             </p>
             
             {edition && (
-              <div className="inline-block bg-white/10 backdrop-blur-md border-2 border-white/30 px-8 py-4 rounded-sm mb-12 hover:bg-white/20 transition-all duration-300">
-                <p className="text-2xl md:text-3xl font-black text-white uppercase tracking-wide">
+              <div className="inline-block bg-white/10 backdrop-blur-md border-2 border-white/30 px-4 sm:px-8 py-3 sm:py-4 rounded-sm mb-12 hover:bg-white/20 transition-all duration-300">
+                <p className="text-lg sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wide break-words">
                   ZONDAG {new Date(edition.eventDate).toLocaleDateString('nl-BE', {
                     year: 'numeric',
                     month: '2-digit',
@@ -111,21 +111,21 @@ export default function Index() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {ctaSection?.title ? (
             <>
-              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight break-words">
                 {ctaSection.title}
               </h2>
               {ctaSection.content && (
-                <div className="text-xl md:text-2xl text-gray-700 mb-8">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mb-8 break-words">
                   <PortableText value={ctaSection.content} />
                 </div>
               )}
             </>
           ) : (
             <>
-              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight break-words">
                 GADE MEE?
               </h2>
-              <p className="text-xl md:text-2xl text-gray-700 mb-8">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mb-8 break-words">
                 TOT AAN CAFÉ DEN BELAMI, AALTER!
               </p>
             </>
@@ -156,11 +156,11 @@ export default function Index() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat: any) => (
                 <div key={stat._id} className="bg-white rounded-sm border-l-2 border-primary-600 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
-                  <div className="text-5xl mb-4">{stat.icon}</div>
-                  <div className="text-4xl font-extrabold text-primary-600 mb-2">
+                  <div className="text-4xl sm:text-5xl mb-4">{stat.icon}</div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary-600 mb-2 break-words">
                     {stat.value}
                   </div>
-                  <div className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                  <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider break-words">
                     {stat.label}
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function Index() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             {whatIsSection?.title ? (
-              <h2 className="text-6xl md:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-gray-900 mb-4 gradient-text tracking-tight uppercase break-words">
                 {whatIsSection.title}
               </h2>
             ) : (

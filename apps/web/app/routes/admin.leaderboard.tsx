@@ -127,16 +127,16 @@ export default function AdminLeaderboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Leaderboard Beheer</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Leaderboard Beheer</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2 break-words">
             {leaderboard.length} deelnemers met scores
           </p>
         </div>
 
         {/* Leaderboard Table */}
         <div className="bg-white rounded-sm shadow overflow-hidden mb-8">
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Klassement</h2>
+          <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 break-words">Klassement</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

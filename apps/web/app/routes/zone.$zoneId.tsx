@@ -139,11 +139,11 @@ export default function ZonePage() {
           )}
           
           <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-3xl font-bold text-gray-900">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
                 Zone {zoneId}: {zone.title}
               </h1>
-              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap flex-shrink-0 ${
                 zone.color === 'green' ? 'bg-green-100 text-green-800' :
                 zone.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
                 zone.color === 'orange' ? 'bg-orange-100 text-orange-800' :
@@ -153,10 +153,10 @@ export default function ZonePage() {
               </span>
             </div>
             
-            <p className="text-lg text-gray-700 mb-4">{zone.description}</p>
+            <p className="text-base sm:text-lg text-gray-700 mb-4 break-words">{zone.description}</p>
             
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-              <p className="text-sm font-medium text-blue-800">
+              <p className="text-xs sm:text-sm font-medium text-blue-800 break-words">
                 📍 {zone.location}
               </p>
             </div>
@@ -165,7 +165,7 @@ export default function ZonePage() {
 
         {/* Instructions */}
         <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Instructies</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 break-words">Instructies</h2>
           
           <div className="space-y-4">
             <div>
@@ -194,7 +194,7 @@ export default function ZonePage() {
         {/* Map */}
         {zone.startPoint && zone.endPoint && (
           <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Kaart</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 break-words">Kaart</h2>
             <div className="h-96 rounded-sm overflow-hidden">
               <MapView
                 startPoint={zone.startPoint}
