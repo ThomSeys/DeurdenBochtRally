@@ -13,6 +13,7 @@ import { getUser } from "~/lib/session.server";
 import { requireSitePassword } from "~/lib/site-password.server";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
