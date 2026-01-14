@@ -63,8 +63,8 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
             onClick={() => setShowPanel(false)}
           />
 
-          {/* Popover */}
-          <div className="absolute top-full right-0 mt-2 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-40 max-h-96 overflow-y-auto">
+          {/* Popover - Responsive positioning */}
+          <div className="fixed sm:absolute sm:top-full sm:right-0 sm:mt-2 left-2 right-2 sm:left-auto sm:right-0 sm:w-96 z-40 w-auto max-w-[calc(80vw-1rem)] bg-white rounded-lg shadow-2xl border border-gray-200 max-h-96 overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-lg">Notificaties</h3>
