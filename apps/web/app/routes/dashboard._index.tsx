@@ -118,6 +118,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const eventDate = process.env.EVENT_DATE || '2026-05-16';
+  
+  // Generate QR code URL on server to avoid hydration mismatch
+  const checkInUrl = `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}/check-in/${user.id}`;
+  const qrCodeUrl = `/api/qrcode?text=${encodeURIComponent(checkInUrl)}`;
 
   return { 
     user, 
@@ -127,14 +131,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     isBochtenkoning, 
     eventDate,
     gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
+    qrCodeUrl,
   };
 }
 
 export default function Dashboard() {
-  const { user, submission, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl } = useLoaderData<typeof loader>();
-  const checkInUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/check-in/${user.id}`;
-  const [qrCodeUrl, setQrCodeUrl] = useState(`/api/qrcode?text=${encodeURIComponent(checkInUrl)}` || user.qr_code_image_url);
-
+  const { user, submission, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl } = useLoaderData<typeof loader>();
+  const [qrError, setQrError] = useState(false);
 
   const documentsByCategory = {
     route: documents?.filter((d: any) => d.category === 'route') || [],
@@ -188,12 +191,18 @@ export default function Dashboard() {
               QR-code
             </h3>
             <div className="bg-gray-50 p-4 rounded text-center">
-              <img 
-                src={qrCodeUrl || ''}
-                alt="QR Code" 
-                className="w-full max-w-[200px] mx-auto mb-2"
-                onError={() => setQrCodeUrl(`/api/qrcode?text=${encodeURIComponent(checkInUrl)}`)}
-              />
+              {!qrError && qrCodeUrl ? (
+                <img 
+                  src={qrCodeUrl}
+                  alt="QR Code" 
+                  className="w-full max-w-[200px] mx-auto mb-2"
+                  onError={() => setQrError(true)}
+                />
+              ) : (
+                <div className="w-full max-w-[200px] mx-auto mb-2 bg-gray-200 rounded flex items-center justify-center" style={{height: '200px'}}>
+                  <span className="text-gray-500 text-sm">QR code niet beschikbaar</span>
+                </div>
+              )}
               <p className="text-xs text-gray-600 font-mono mb-1">
                 {user.qr_code}
               </p>
