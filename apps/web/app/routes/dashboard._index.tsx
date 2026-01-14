@@ -380,7 +380,7 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Link
             to="/gallery"
-            className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:scale-105 transition-transform"
+            className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white"
           >
             <div className="text-4xl mb-3">📸</div>
             <h3 className="font-bold text-xl mb-2">Fotogalerij</h3>
@@ -391,7 +391,7 @@ export default function Dashboard() {
 
           <Link
             to="/achievements"
-            className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:scale-105 transition-transform"
+            className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white"
           >
             <div className="text-4xl mb-3">🏆</div>
             <h3 className="font-bold text-xl mb-2">Achievements</h3>
@@ -402,7 +402,7 @@ export default function Dashboard() {
 
           <Link
             to="/certificates/completion"
-            className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white hover:scale-105 transition-transform"
+            className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white"
           >
             <div className="text-4xl mb-3">📜</div>
             <h3 className="font-bold text-xl mb-2">Certificaat</h3>
