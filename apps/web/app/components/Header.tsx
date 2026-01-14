@@ -42,7 +42,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
           </Link>
 
           {/* Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             <Link
               to="/"
               className={`text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
@@ -56,16 +56,18 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               Over het event
             </Link>
             {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
-                >
-                  <span>{user.first_name}</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+              <>
+                <NotificationBell isTransparent={isTransparent} />
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
+                  >
+                    <span>{user.first_name}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 {userMenuOpen && (
                   <>
                     <div
@@ -114,7 +116,8 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     </div>
                   </>
                 )}
-              </div>
+                </div>
+              </>
             ) : (
               <>
                 <Link
@@ -150,11 +153,6 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               </svg>
             </button>
           </div>
-        </div>
-
-        {/* Desktop notification bell - in nav area */}
-        <div className="hidden md:flex absolute right-8 top-1/2 transform -translate-y-1/2">
-          <NotificationBell isTransparent={isTransparent} />
         </div>
 
         {/* Mobile menu */}
