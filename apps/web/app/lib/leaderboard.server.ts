@@ -14,14 +14,15 @@ export interface ParticipantRank {
  * Returns map of participantId -> ParticipantRank
  */
 export async function calculateLeaderboard(): Promise<Map<string, ParticipantRank>> {
-  // Get rally zones with points from Sanity
-  const rallyZones = await sanityClient.fetch(
-    `*[_type == "rallyZone"] | order(order asc) {
-      order,
-      points,
-      validAnswers
-    }`
-  );
+  try {
+    // Get rally zones with points from Sanity
+    const rallyZones = await sanityClient.fetch(
+      `*[_type == "rallyZone"] | order(order asc) {
+        order,
+        points,
+        validAnswers
+      }`
+    );
 
   // Get all rally submissions with codes
   const { data: submissions } = await supabaseAdmin
@@ -88,6 +89,11 @@ export async function calculateLeaderboard(): Promise<Map<string, ParticipantRan
   });
 
   return rankMap;
+  } catch (error) {
+    console.error('[leaderboard] Error calculating leaderboard:', error);
+    // Return empty map on error instead of crashing
+    return new Map();
+  }
 }
 
 /**
