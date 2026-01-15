@@ -1,0 +1,198 @@
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
+import { useLoaderData } from 'react-router';
+import { supabaseAdmin } from '~/lib/supabase.server';
+import { useState } from 'react';
+import Header from '~/components/Header';
+
+export const meta: MetaFunction = () => {
+  return [{ title: 'Notification History - Deur Den Bocht' }];
+};
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { requireUserId } = await import('~/lib/session.server');
+  const userId = await requireUserId(request);
+
+  const url = new URL(request.url);
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+  const offset = parseInt(url.searchParams.get('offset') || '0');
+
+  // Get user's push subscription
+  const { data: subscription } = await supabaseAdmin
+    .from('push_subscriptions')
+    .select('id')
+    .eq('user_id', userId)
+    .single();
+
+  if (!subscription) {
+    return { notifications: [], total: 0, limit, offset };
+  }
+
+  // Get delivery log for this subscription
+  const { data: notifications, count } = await supabaseAdmin
+    .from('push_delivery_log')
+    .select(
+      `
+      id,
+      subscription_id,
+      notification_id,
+      delivered_at,
+      failed_reason,
+      push_notifications_history (
+        id,
+        title,
+        body,
+        event_type,
+        sent_at
+      )
+    `,
+      { count: 'exact' }
+    )
+    .eq('subscription_id', subscription.id)
+    .order('delivered_at', { ascending: false, foreignTable: 'push_delivery_log' })
+    .range(offset, offset + limit - 1);
+
+  return {
+    notifications: notifications || [],
+    total: count || 0,
+    limit,
+    offset,
+  };
+}
+
+export default function DashboardNotificationHistory() {
+  const { notifications, total, limit, offset } = useLoaderData<typeof loader>();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const handlePageChange = (newOffset: number) => {
+    const params = new URLSearchParams();
+    params.set('offset', newOffset.toString());
+    params.set('limit', (limit || 20).toString());
+    window.location.search = params.toString();
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">🔔 Je Meldingen</h1>
+          <p className="text-gray-600 mt-2">Bekijk de geschiedenis van meldingen die je hebt ontvangen</p>
+        </div>
+
+        {notifications.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-600">Je hebt nog geen meldingen ontvangen.</p>
+          </div>
+        ) : (
+          <>
+            {/* Notifications Table */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Titel</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Ontvangen</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Acties</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {notifications.map((notif: any) => (
+                    <tr key={notif.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {notif.push_notifications_history?.title || 'Melding'}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                          {notif.push_notifications_history?.event_type || 'custom'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            notif.delivered_at
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {notif.delivered_at ? '✅ Bezorgd' : `❌ ${notif.failed_reason || 'Mislukt'}`}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {notif.delivered_at
+                          ? new Date(notif.delivered_at).toLocaleDateString('nl-NL', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <button
+                          onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                          className="text-primary-600 hover:text-primary-800 font-medium"
+                        >
+                          {expandedId === notif.id ? 'Verbergen' : 'Details'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Expanded Details */}
+              {expandedId &&
+                notifications.find((n: any) => n.id === expandedId) && (
+                  <div className="bg-gray-50 px-6 py-4 border-t">
+                    <div className="space-y-2">
+                      <p>
+                        <strong>Titel:</strong>{' '}
+                        {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.title}
+                      </p>
+                      <p>
+                        <strong>Bericht:</strong>{' '}
+                        {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.body}
+                      </p>
+                      {notifications.find((n: any) => n.id === expandedId)?.failed_reason && (
+                        <p>
+                          <strong>Reden:</strong> {notifications.find((n: any) => n.id === expandedId)?.failed_reason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            {/* Pagination */}
+            {total > limit && (
+              <div className="mt-6 flex gap-2 justify-between">
+                <button
+                  onClick={() => handlePageChange(Math.max(0, (offset ?? 0) - (limit ?? 20)))}
+                  disabled={(offset ?? 0) === 0}
+                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
+                >
+                  ← Vorige
+                </button>
+                <span className="py-2">
+                  Pagina {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} van{' '}
+                  {Math.ceil(total / (limit ?? 20))}
+                </span>
+                <button
+                  onClick={() => handlePageChange((offset ?? 0) + (limit ?? 20))}
+                  disabled={(offset ?? 0) + (limit ?? 20) >= total}
+                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
+                >
+                  Volgende →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
