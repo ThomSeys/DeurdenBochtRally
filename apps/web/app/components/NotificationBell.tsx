@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router';
 
 export function NotificationBell({ isTransparent }: { isTransparent?: boolean }) {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -142,6 +143,17 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
                 ))}
               </div>
             )}
+
+            {/* View All Link */}
+            <div className="sticky bottom-0 border-t bg-gray-50">
+              <Link
+                to="/dashboard/notification-history"
+                onClick={() => setShowPanel(false)}
+                className="block w-full text-center py-3 text-primary-600 hover:text-primary-700 hover:bg-gray-100 font-medium text-sm transition-colors"
+              >
+                Bekijk alle meldingen →
+              </Link>
+            </div>
           </div>
         </>
       )}

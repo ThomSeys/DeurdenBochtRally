@@ -16,27 +16,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const limit = parseInt(url.searchParams.get('limit') || '20');
   const offset = parseInt(url.searchParams.get('offset') || '0');
 
-  // Get user's push subscription
-  const { data: subscription } = await supabaseAdmin
-    .from('push_subscriptions')
-    .select('id')
-    .eq('user_id', userId)
-    .single();
-
-  if (!subscription) {
-    return { notifications: [], total: 0, limit, offset };
-  }
-
-  // Get delivery log for this subscription
+  // Get delivery log for this participant
   const { data: notifications, count } = await supabaseAdmin
     .from('push_delivery_log')
     .select(
       `
       id,
-      subscription_id,
-      notification_id,
-      delivered_at,
-      failed_reason,
+      notification_history_id,
+      delivery_status,
+      error_message,
+      first_attempt_at,
       push_notifications_history (
         id,
         title,
@@ -47,8 +36,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `,
       { count: 'exact' }
     )
-    .eq('subscription_id', subscription.id)
-    .order('delivered_at', { ascending: false, foreignTable: 'push_delivery_log' })
+    .eq('participant_id', userId)
+    .order('first_attempt_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
   return {
@@ -112,17 +101,17 @@ export default function DashboardNotificationHistory() {
                       <td className="px-6 py-4 text-sm">
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
-                            notif.delivered_at
+                            notif.delivery_status === 'success'
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {notif.delivered_at ? '✅ Bezorgd' : `❌ ${notif.failed_reason || 'Mislukt'}`}
+                          {notif.delivery_status === 'success' ? '✅ Bezorgd' : `❌ ${notif.error_message || 'Mislukt'}`}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {notif.delivered_at
-                          ? new Date(notif.delivered_at).toLocaleDateString('nl-NL', {
+                        {notif.first_attempt_at
+                          ? new Date(notif.first_attempt_at).toLocaleDateString('nl-NL', {
                               year: 'numeric',
                               month: 'short',
                               day: 'numeric',
@@ -157,9 +146,9 @@ export default function DashboardNotificationHistory() {
                         <strong>Bericht:</strong>{' '}
                         {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.body}
                       </p>
-                      {notifications.find((n: any) => n.id === expandedId)?.failed_reason && (
+                      {notifications.find((n: any) => n.id === expandedId)?.error_message && (
                         <p>
-                          <strong>Reden:</strong> {notifications.find((n: any) => n.id === expandedId)?.failed_reason}
+                          <strong>Reden:</strong> {notifications.find((n: any) => n.id === expandedId)?.error_message}
                         </p>
                       )}
                     </div>
