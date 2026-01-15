@@ -153,9 +153,11 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     try {
+      const host = new URL(request.url).host;
       const session = await createCheckoutSession({
         email: email.toLowerCase(),
         amount: amount / 100,
+        host,
         metadata: {
           participantId: participant.id,
           formula,

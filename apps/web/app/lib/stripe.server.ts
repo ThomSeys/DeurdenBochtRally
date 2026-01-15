@@ -12,11 +12,14 @@ export async function createCheckoutSession({
   email,
   amount,
   metadata,
+  host,
 }: {
   email: string;
   amount: number;
   metadata: Record<string, string>;
+  host: string;
 }) {
+  const baseUrl = `https://${host}`;
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card', 'bancontact', 'ideal'],
     line_items: [
@@ -35,8 +38,8 @@ export async function createCheckoutSession({
       },
     ],
     mode: 'payment',
-    success_url: `${process.env.APP_URL}/registration/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.APP_URL}/registration`,
+    success_url: `${baseUrl}/registration/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/registration`,
     customer_email: email,
     metadata,
   });
