@@ -102,7 +102,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
 
   if (request.method !== 'POST') {
-    return { error: 'Method not allowed' };
+    return { error: 'Methode niet toegestaan' };
   }
 
   try {
@@ -115,7 +115,7 @@ export async function action({ request }: ActionFunctionArgs) {
       
       const templateNotif = (notificationTemplates as any)[templateType];
       if (!templateNotif) {
-        return { error: 'Template not found' };
+        return { error: 'Sjabloon niet gevonden' };
       }
 
       // Get current template notification
@@ -133,7 +133,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       if (!subscriptions || subscriptions.length === 0) {
-        return { error: 'No active subscriptions found' };
+        return { error: 'Geen actieve abonnementen gevonden' };
       }
 
       // Special handling for leaderboard update - personalize with each participant's rank
@@ -229,7 +229,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const eventType = formData.get('eventType') as string;
 
       if (!title || !body) {
-        return { error: 'Title and body are required' };
+        return { error: 'Titel en bericht zijn verplicht' };
       }
 
       const { data: subscriptions, error } = await supabaseAdmin
@@ -243,7 +243,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       if (!subscriptions || subscriptions.length === 0) {
-        return { error: 'No active subscriptions found' };
+        return { error: 'Geen actieve abonnementen gevonden' };
       }
 
       // Special handling for leaderboard update
@@ -339,7 +339,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const manualUserIds = formData.getAll('manualUserIds') as string[];
 
       if (!title || !body) {
-        return { error: 'Title and body are required' };
+        return { error: 'Titel en bericht zijn verplicht' };
       }
 
       const criteria: any = {};
@@ -350,7 +350,7 @@ export async function action({ request }: ActionFunctionArgs) {
       if (manualUserIds.length > 0) criteria.participant_ids = manualUserIds;
 
       if (Object.keys(criteria).length === 0) {
-        return { error: 'Please select at least one filter criteria' };
+        return { error: 'Selecteer minimaal één filtercriterium' };
       }
 
       // Get targeted subscriptions
@@ -367,7 +367,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('is_active', true);
 
       if (error || !subscriptions) {
-        return { error: 'Could not fetch subscriptions' };
+        return { error: 'Kon abonnementen niet ophalen' };
       }
 
       let filtered = subscriptions;
@@ -392,7 +392,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       if (filtered.length === 0) {
-        return { error: 'No subscriptions match target criteria' };
+        return { error: 'Geen abonnementen voldoen aan de doelcriteria' };
       }
 
       // Special handling for leaderboard
@@ -480,12 +480,12 @@ export async function action({ request }: ActionFunctionArgs) {
       const historyId = formData.get('historyId');
 
       if (!historyId) {
-        return { error: 'Missing historyId' };
+        return { error: 'historyId ontbreekt' };
       }
 
       const historyIdNumber = parseInt(historyId as string);
       if (isNaN(historyIdNumber)) {
-        return { error: 'Invalid historyId' };
+        return { error: 'Ongeldige historyId' };
       }
 
       const { data: notification } = await supabaseAdmin
@@ -495,7 +495,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .single();
 
       if (!notification) {
-        return { error: 'Notification not found' };
+        return { error: 'Melding niet gevonden' };
       }
 
       const { data: failedDeliveries } = await supabaseAdmin
@@ -506,7 +506,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .lt('delivery_attempt', 3);
 
       if (!failedDeliveries || failedDeliveries.length === 0) {
-        return { error: 'No failed deliveries to retry' };
+        return { error: 'Geen mislukte afleveringen om opnieuw te proberen' };
       }
 
       const { data: subscriptions } = await supabaseAdmin
@@ -516,7 +516,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('is_active', true);
 
       if (!subscriptions || subscriptions.length === 0) {
-        return { error: 'No active subscriptions found for retry' };
+        return { error: 'Geen actieve abonnementen gevonden voor opnieuw' };
       }
 
       const results = await sendBulkPushNotifications(subscriptions, {
@@ -554,10 +554,10 @@ export async function action({ request }: ActionFunctionArgs) {
       };
     }
 
-    return { error: 'Unknown action' };
+    return { error: 'Onbekende actie' };
   } catch (error: any) {
     console.error('[admin.push-notifications] Error:', error);
-    return { error: error.message || 'Internal server error' };
+    return { error: error.message || 'Interne serverfout' };
   }
 }
 
