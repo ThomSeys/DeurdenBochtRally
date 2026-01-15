@@ -215,16 +215,7 @@ export default function AdminDashboard() {
           >
             <div className="text-2xl mb-2">🔔</div>
             <h3 className="font-semibold text-gray-900">Push Notifications</h3>
-            <p className="text-sm text-gray-600 mt-1">Verstuur updates</p>
-          </Link>
-
-          <Link
-            to="/admin/push-history"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-orange-500"
-          >
-            <div className="text-2xl mb-2">📊</div>
-            <h3 className="font-semibold text-gray-900">Push History</h3>
-            <p className="text-sm text-gray-600 mt-1">Bekijk verzonden berichten</p>
+            <p className="text-sm text-gray-600 mt-1">Templates, broadcast & targeted</p>
           </Link>
 
           <Link
@@ -232,7 +223,7 @@ export default function AdminDashboard() {
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <div className="text-2xl mb-2">⚙️</div>
-            <h3 className="font-semibold text-gray-900">Instellingen</h3>
+            <h3 className="font-semibold text-gray-900">Settings</h3>
             <p className="text-sm text-gray-600 mt-1">Admin gebruikers</p>
           </Link>
         </div>
