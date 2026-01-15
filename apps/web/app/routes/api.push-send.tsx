@@ -1,10 +1,11 @@
 import type { ActionFunctionArgs } from 'react-router';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import type { Database } from '~/lib/database.types';
-import { sendPushNotificationWithHistory, sendTargetedPushNotification, notificationTemplates } from '~/lib/push-notifications-enhanced.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const { requireAdmin, requireUserId } = await import('~/lib/session.server');
+  const { sendPushNotificationWithHistory, sendTargetedPushNotification } = await import('~/lib/push-notifications-enhanced.server');
+  
   await requireAdmin(request);
   const userId = await requireUserId(request);
 
