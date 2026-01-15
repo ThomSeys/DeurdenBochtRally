@@ -137,7 +137,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       // Special handling for leaderboard update - personalize with each participant's rank
-      if (templateType === 'leaderboard') {
+      if (templateType === 'leaderboardUpdate') {
         console.info('[admin.push-notifications] Personalizing leaderboard updates for broadcast');
         
         const { getParticipantRanks } = await import('~/lib/leaderboard.server');
@@ -483,10 +483,15 @@ export async function action({ request }: ActionFunctionArgs) {
         return { error: 'Missing historyId' };
       }
 
+      const historyIdNumber = parseInt(historyId as string);
+      if (isNaN(historyIdNumber)) {
+        return { error: 'Invalid historyId' };
+      }
+
       const { data: notification } = await supabaseAdmin
         .from('push_notifications_history')
         .select('*')
-        .eq('id', historyId)
+        .eq('id', historyIdNumber)
         .single();
 
       if (!notification) {
@@ -496,7 +501,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const { data: failedDeliveries } = await supabaseAdmin
         .from('push_delivery_log')
         .select('subscription_endpoint, participant_id')
-        .eq('notification_history_id', historyId)
+        .eq('notification_history_id', historyIdNumber)
         .eq('delivery_status', 'failed')
         .lt('delivery_attempt', 3);
 
@@ -524,7 +529,7 @@ export async function action({ request }: ActionFunctionArgs) {
         const attempt = await supabaseAdmin
           .from('push_delivery_log')
           .select('delivery_attempt')
-          .eq('notification_history_id', historyId)
+          .eq('notification_history_id', historyIdNumber)
           .eq('subscription_endpoint', failed.subscription_endpoint)
           .single();
 
@@ -536,7 +541,7 @@ export async function action({ request }: ActionFunctionArgs) {
             delivery_attempt: nextAttempt,
             last_attempt_at: new Date().toISOString(),
           })
-          .eq('notification_history_id', historyId)
+          .eq('notification_history_id', historyIdNumber)
           .eq('subscription_endpoint', failed.subscription_endpoint);
       }
 
