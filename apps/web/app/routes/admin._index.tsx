@@ -3,6 +3,7 @@ import { useLoaderData, Link } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [
@@ -110,7 +111,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-600">Totaal Deelnemers</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalParticipants}</p>
               </div>
-              <div className="text-4xl">👥</div>
+              <Icon name="users" className="w-10 h-10 text-gray-600" />
             </div>
           </div>
 
@@ -120,7 +121,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-600">Betaald</p>
                 <p className="text-3xl font-bold text-green-600 mt-2">{stats.paidParticipants}</p>
               </div>
-              <div className="text-4xl">💰</div>
+              <Icon name="money" className="w-10 h-10 text-green-600" />
             </div>
           </div>
 
@@ -130,7 +131,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-600">Ingecheckt</p>
                 <p className="text-3xl font-bold text-blue-600 mt-2">{stats.checkedInParticipants}</p>
               </div>
-              <div className="text-4xl">✅</div>
+              <Icon name="check" className="w-10 h-10 text-blue-600" />
             </div>
           </div>
 
@@ -140,7 +141,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-600">Rally Inzendingen</p>
                 <p className="text-3xl font-bold text-primary-600 mt-2">{stats.totalSubmissions}</p>
               </div>
-              <div className="text-4xl">🏁</div>
+              <Icon name="flag" className="w-10 h-10 text-primary-600" />
             </div>
           </div>
         </div>
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
             to="/admin/participants"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <div className="text-2xl mb-2">👥</div>
+            <Icon name="users" className="w-8 h-8 text-gray-700 mb-2" />
             <h3 className="font-semibold text-gray-900">Deelnemers</h3>
             <p className="text-sm text-gray-600 mt-1">Beheer alle deelnemers</p>
           </Link>
@@ -160,7 +161,7 @@ export default function AdminDashboard() {
             to="/admin/submissions"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <div className="text-2xl mb-2">📝</div>
+            <Icon name="document" className="w-8 h-8 text-gray-700 mb-2" />
             <h3 className="font-semibold text-gray-900">Inzendingen</h3>
             <p className="text-sm text-gray-600 mt-1">Bekijk rally codes</p>
           </Link>
@@ -169,7 +170,7 @@ export default function AdminDashboard() {
             to="/admin/check-in"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <div className="text-2xl mb-2">✅</div>
+            <Icon name="check" className="w-8 h-8 text-gray-700 mb-2" />
             <h3 className="font-semibold text-gray-900">Check-in</h3>
             <p className="text-sm text-gray-600 mt-1">Scan QR codes</p>
           </Link>
@@ -178,7 +179,7 @@ export default function AdminDashboard() {
             to="/admin/leaderboard"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <div className="text-2xl mb-2">🏆</div>
+            <Icon name="trophy" className="w-8 h-8 text-gray-700 mb-2" />
             <h3 className="font-semibold text-gray-900">Klassement</h3>
             <p className="text-sm text-gray-600 mt-1">Live scoreboard</p>
           </Link>
@@ -187,7 +188,7 @@ export default function AdminDashboard() {
             to="/admin/pending-scans"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-yellow-400"
           >
-            <div className="text-2xl mb-2">🔍</div>
+            <Icon name="search" className="w-8 h-8 text-yellow-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Manual Validatie</h3>
             <p className="text-sm text-gray-600 mt-1">Controleer scans</p>
           </Link>
@@ -196,7 +197,7 @@ export default function AdminDashboard() {
             to="/admin/zone-control"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-red-400"
           >
-            <div className="text-2xl mb-2">🚦</div>
+            <Icon name="target" className="w-8 h-8 text-red-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Zone Control</h3>
             <p className="text-sm text-gray-600 mt-1">Open/sluit zones</p>
           </Link>
@@ -205,7 +206,7 @@ export default function AdminDashboard() {
             to="/admin/manual-scan"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-blue-400"
           >
-            <div className="text-2xl mb-2">📝</div>
+            <Icon name="document" className="w-8 h-8 text-blue-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Manual Scan</h3>
             <p className="text-sm text-gray-600 mt-1">Telefoon dood</p>
           </Link>
@@ -214,7 +215,7 @@ export default function AdminDashboard() {
             to="/admin/event-markers"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-green-400"
           >
-            <div className="text-2xl mb-2">🗺️</div>
+            <Icon name="map" className="w-8 h-8 text-green-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Event Markers</h3>
             <p className="text-sm text-gray-600 mt-1">Live map events</p>
           </Link>
@@ -223,7 +224,7 @@ export default function AdminDashboard() {
             to="/admin/gallery"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-purple-400"
           >
-            <div className="text-2xl mb-2">📸</div>
+            <Icon name="camera" className="w-8 h-8 text-purple-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Fotogalerij</h3>
             <p className="text-sm text-gray-600 mt-1">Beheer foto's</p>
           </Link>
@@ -232,7 +233,7 @@ export default function AdminDashboard() {
             to="/admin/push-notifications"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-orange-400"
           >
-            <div className="text-2xl mb-2">🔔</div>
+            <Icon name="bell" className="w-6 h-6 text-orange-500 mb-2" />
             <h3 className="font-semibold text-gray-900">Push Notifications</h3>
             <p className="text-sm text-gray-600 mt-1">Templates, broadcast & targeted</p>
           </Link>
@@ -241,7 +242,7 @@ export default function AdminDashboard() {
             to="/admin/settings"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <div className="text-2xl mb-2">⚙️</div>
+            <Icon name="settings" className="w-6 h-6 text-gray-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Settings</h3>
             <p className="text-sm text-gray-600 mt-1">Admin gebruikers</p>
           </Link>
@@ -313,7 +314,11 @@ export default function AdminDashboard() {
                         <p className="text-lg font-bold text-primary-600">{scorer.final_score?.toFixed(2)}</p>
                         <p className="text-xs text-gray-500">
                           {scorer.total_points} pts + {scorer.shadow_total?.toFixed(0) || 0} shadow
-                          {scorer.achievement_points > 0 && ` + ${scorer.achievement_points} 🏆`}
+                          {scorer.achievement_points > 0 && (
+                            <span className="inline-flex items-center gap-1">
+                              + {scorer.achievement_points} <Icon name="trophy" className="w-4 h-4 inline text-yellow-500" />
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>

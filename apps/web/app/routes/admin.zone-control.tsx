@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form, useActionData, useNavigation, useRevalidator } from 'react-router';
+import { useLoaderData, Form, useActionData, useNavigation, useRevalidator, Link } from 'react-router';
 import React from 'react';
 import { requireAdmin } from '~/lib/session.server';
 import { getUser } from '~/lib/session.server';
@@ -8,6 +8,7 @@ import { sanityClient } from '~/lib/sanity.server';
 import { createClient as createSanityClient } from '@sanity/client';
 import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 // Create writable Sanity client
 const sanityWriteClient = createSanityClient({
@@ -58,6 +59,17 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!admin) {
       return { error: 'Not authorized' };
     }
+    const rallyZones = await sanityClient.fetch(`
+      *[_type == "rallyZone"] | order(order asc) {
+        _id,
+        title,
+        "zoneNumber": order + 1,
+        location,
+        "is_open": coalesce(is_open, true),
+        radius_m,
+        color
+      }
+    `);
 
     const formData = await request.formData();
     const intent = formData.get('intent');
@@ -189,11 +201,19 @@ export default function AdminZoneControl() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Zonebeheerpaneel</h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600 break-words">
-            Open of sluit rallyzones in geval van wegafsluitingen, veiligheidskwesties of andere problemen
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Zonebeheerpaneel</h1>
+            <p className="mt-2 text-sm sm:text-base text-gray-600 break-words">
+              Open of sluit rallyzones in geval van wegafsluitingen, veiligheidskwesties of andere problemen
+            </p>
+          </div>
+          <Link
+            to="/admin"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+          >
+            ← Terug naar Dashboard
+          </Link>
         </div>
 
         {actionData?.error && (
@@ -216,7 +236,7 @@ export default function AdminZoneControl() {
                 <p className="text-xs sm:text-sm text-gray-600">Open Zones</p>
                 <p className="text-2xl sm:text-3xl font-bold text-green-600">{openZones.length}</p>
               </div>
-              <div className="text-3xl sm:text-4xl">✅</div>
+              <Icon name="check" className="w-12 h-12 sm:w-16 sm:h-16 text-green-600" />
             </div>
           </div>
           <div className="bg-white rounded-sm shadow p-6">
@@ -225,7 +245,7 @@ export default function AdminZoneControl() {
                 <p className="text-xs sm:text-sm text-gray-600">Gesloten Zones</p>
                 <p className="text-2xl sm:text-3xl font-bold text-red-600">{closedZones.length}</p>
               </div>
-              <div className="text-3xl sm:text-4xl">🚫</div>
+              <Icon name="ban" className="w-12 h-12 sm:w-16 sm:h-16 text-red-600" />
             </div>
           </div>
         </div>
@@ -379,7 +399,9 @@ export default function AdminZoneControl() {
 
         {/* Info Box */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-sm p-6">
-          <h3 className="font-bold text-blue-900 mb-2">ℹ️ Hoe Zonesluitingen Werken</h3>
+          <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+            <Icon name="info" className="w-5 h-5" /> Hoe Zonesluitingen Werken
+          </h3>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Wanneer een zone gesloten is, kunnen rijders geen nieuwe scans voor die zone indienen</li>
             <li>• Gesloten zones ontvangen automatisch gemiddelde shadow scores</li>

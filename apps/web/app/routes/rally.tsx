@@ -6,6 +6,7 @@ import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
 import { getActiveEdition, getRallyZones, getSiteConfig } from '~/lib/sanity.server';
 import { urlFor } from '~/lib/sanity';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [
@@ -54,22 +55,18 @@ export default function Rally() {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-sm shadow">
-              <div className="text-3xl mb-3">1️⃣</div>
               <h3 className="font-bold text-lg mb-2">Je ziet een RZ-bordje</h3>
               <p className="text-gray-700">Tijdens de rit zie je borden langs de route met "RZ" erop</p>
             </div>
             <div className="bg-white p-6 rounded-sm shadow">
-              <div className="text-3xl mb-3">2️⃣</div>
               <h3 className="font-bold text-lg mb-2">Verlaat de hoofdroute</h3>
               <p className="text-gray-700">Kies ervoor om de rally zone te doen of door te rijden</p>
             </div>
             <div className="bg-white p-6 rounded-sm shadow">
-              <div className="text-3xl mb-3">3️⃣</div>
               <h3 className="font-bold text-lg mb-2">Volg het Bochtenboek</h3>
               <p className="text-gray-700">Geschreven aanwijzingen leiden je naar een checkpunt</p>
             </div>
             <div className="bg-white p-6 rounded-sm shadow">
-              <div className="text-3xl mb-3">4️⃣</div>
               <h3 className="font-bold text-lg mb-2">Noteer de code</h3>
               <p className="text-gray-700">Op het checkpunt vind je een codewoord dat je noteert</p>
             </div>
@@ -132,7 +129,9 @@ export default function Rally() {
                         <p className="text-gray-700">{zone.lus}</p>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 mb-2">📍 CHECKPUNT</h4>
+                        <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                          <Icon name="marker" className="w-5 h-5" /> CHECKPUNT
+                        </h4>
                         <p className="text-gray-700">{zone.checkpoint}</p>
                         <p className="text-sm text-gray-600 mt-1">
                           Code: <em>{zone.codeHint}</em>

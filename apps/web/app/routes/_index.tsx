@@ -6,6 +6,7 @@ import PortableText from '~/components/PortableText';
 import { getActiveEdition, getSiteConfig, getStats, getPricingTiers, getSponsors, getPageContent } from '~/lib/sanity.server';
 import { urlFor } from '~/lib/sanity';
 import { getUserId } from '~/lib/session.server';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
@@ -154,8 +155,7 @@ export default function Index() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat: any) => (
                 <div key={stat._id} className="bg-white rounded-sm border-l-2 border-primary-600 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
-                  <div className="text-4xl sm:text-5xl mb-4">{stat.icon}</div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary-600 mb-2 break-words">
+                  <div className="text-6xl sm:text-3xl md:text-4xl font-extrabold text-primary-600 mb-2 break-words">
                     {stat.value}
                   </div>
                   <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider break-words">
@@ -215,7 +215,7 @@ export default function Index() {
                     </li>
                   </ul>
                   <p className="text-xl text-gray-900 font-semibold mt-8">
-                    Aan het einde van de dag kronen we: <strong className="text-primary-600">🏆 DEN BOCHTENKONING</strong>
+                    Aan het einde van de dag kronen we: <strong className="text-primary-600 inline-flex items-center gap-1"><Icon name="trophy" className="w-5 h-5 inline" /> DEN BOCHTENKONING</strong>
                   </p>
                 </>
               )}
@@ -324,7 +324,7 @@ export default function Index() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <div className="text-7xl mb-6">🗺️</div>
+              <Icon name="map" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
               <h3 className="text-2xl font-black mb-4">8 Rally Zones</h3>
               <p className="text-gray-600 text-lg">
                 Optionele lussen langs de route met unieke uitdagingen en verborgen parels
@@ -338,7 +338,7 @@ export default function Index() {
               </p>
             </div>
             <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <div className="text-7xl mb-6">🏆</div>
+              <Icon name="trophy" className="w-20 h-20 mb-6 mx-auto text-yellow-500" />
               <h3 className="text-2xl font-black mb-4">165 punten mogelijk</h3>
               <p className="text-gray-600 text-lg">
                 Verzamel punten en word gekroond tot Den Bochtenkoning van 2026

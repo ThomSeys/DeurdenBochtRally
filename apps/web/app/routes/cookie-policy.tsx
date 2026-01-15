@@ -1,6 +1,7 @@
 import { type MetaFunction } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [

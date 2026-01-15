@@ -7,6 +7,7 @@ import { supabase } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 declare global {
   interface Window {
@@ -187,7 +188,7 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-sm shadow-lg p-8 text-white mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            Welkom, {user.first_name}! 👋
+            Welkom, {user.first_name}!
           </h1>
           <p className="text-xl">
             Klaar voor een dag vol bochten en avontuur?
@@ -198,7 +199,7 @@ export default function Dashboard() {
         {!isNotificationSubscribed && (
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-sm shadow p-6 mb-8">
           <div className="flex items-start gap-4">
-            <div className="text-4xl">🔔</div>
+            <Icon name="bell" className="w-10 h-10 flex-shrink-0 text-blue-600" />
             <div className="flex-1">
               <h3 className="font-bold text-gray-900 text-lg mb-2">
                 Mis geen updates meer!
@@ -274,7 +275,7 @@ export default function Dashboard() {
                         return;
                       }
 
-                      alert('✅ Notificaties ingeschakeld! Je ontvangt nu updates.');
+                      alert('Notificaties ingeschakeld! Je ontvangt nu updates.');
                       setIsNotificationSubscribed(true);
                     } catch (err) {
                       console.error('Notification setup error:', err);
@@ -301,7 +302,7 @@ export default function Dashboard() {
         <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
           <div className="flex items-center justify-between gap-6">
             <div className="flex items-start gap-4">
-              <div className="text-6xl">🏁</div>
+              <Icon name="flag" className="w-16 h-16 flex-shrink-0" />
               <div>
                 <h2 className="text-3xl font-bold mb-2">Rally Codes Indienen</h2>
                 <p className="text-primary-100 text-lg">
@@ -311,7 +312,7 @@ export default function Dashboard() {
                 </p>
                 {submission && (
                   <p className="text-primary-50 text-sm mt-2 font-semibold">
-                    💪 Totaal punten: <span className="text-2xl">{submission?.total_points}</span>
+                    Totaal punten: <span className="text-2xl">{submission?.total_points}</span>
                   </p>
                 )}
               </div>
@@ -329,8 +330,8 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
           <div className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">✅</span>
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Icon name="check" className="w-6 h-6 text-green-600" />
               Inschrijving
             </h3>
             <dl className="space-y-2 text-sm">
@@ -351,8 +352,8 @@ export default function Dashboard() {
 
           {/* QR Code */}
           <div className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">📱</span>
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Icon name="phone" className="w-6 h-6 text-primary-600" />
               QR-code
             </h3>
             <div className="bg-gray-50 p-4 rounded text-center">
@@ -379,8 +380,8 @@ export default function Dashboard() {
 
           {/* Rally Progress */}
           <div className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">🏆</span>
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Icon name="trophy" className="w-6 h-6 text-yellow-600" />
               Rally Status
             </h3>
             {submission ? (
@@ -388,7 +389,7 @@ export default function Dashboard() {
                 {isBochtenkoning && (
                   <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-sm p-3 mb-3">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-3xl">👑</span>
+                      <Icon name="crown" className="w-8 h-8 text-yellow-500" />
                       <div className="text-center">
                         <div className="font-bold text-yellow-800 text-base">Bochtenkoning!</div>
                         <div className="text-xs text-yellow-700">Je staat op #1</div>
@@ -419,7 +420,7 @@ export default function Dashboard() {
             to="/gallery"
             className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white"
           >
-            <div className="text-4xl mb-3">📸</div>
+            <Icon name="camera" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Fotogalerij</h3>
             <p className="text-sm text-purple-100">
               Deel jouw rally momenten en bekijk foto's van andere deelnemers!
@@ -430,7 +431,7 @@ export default function Dashboard() {
             to="/achievements"
             className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white"
           >
-            <div className="text-4xl mb-3">🏆</div>
+            <Icon name="trophy" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Achievements</h3>
             <p className="text-sm text-yellow-100">
               Ontgrendel achievements door deel te nemen en punten te verzamelen!
@@ -441,7 +442,7 @@ export default function Dashboard() {
             to="/certificates/completion"
             className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white"
           >
-            <div className="text-4xl mb-3">📜</div>
+            <Icon name="document" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Certificaat</h3>
             <p className="text-sm text-green-100">
               Download je deelname certificaat na het voltooien van de rally!
@@ -456,8 +457,8 @@ export default function Dashboard() {
             <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-sm shadow-lg p-6 text-white md:col-span-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-xl mb-2 flex items-center">
-                    <span className="text-3xl mr-3">🗺️</span>
+                  <h3 className="font-semibold text-xl mb-2 flex items-center gap-3">
+                    <Icon name="map" className="w-8 h-8" />
                     Live Rally Map
                   </h3>
                   <p className="text-blue-100 text-sm mb-4">
@@ -481,8 +482,8 @@ export default function Dashboard() {
 
           {/* Routes */}
           <div className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">🗺️</span>
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Icon name="map" className="w-6 h-6 text-primary-600" />
               GPX Routes
             </h3>
             <ul className="space-y-2">
@@ -510,7 +511,7 @@ export default function Dashboard() {
           {/* Rally Book */}
           <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">📕</span>
+              <Icon name="book" className="w-6 h-6 mr-2" />
               Bochtenboek
             </h3>
             {documentsByCategory.rally_book.length > 0 ? (
@@ -541,7 +542,7 @@ export default function Dashboard() {
           {/* Maps */}
           <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">🗺</span>
+              <Icon name="map" className="w-6 h-6 mr-2" />
               Kaarten
             </h3>
             {documentsByCategory.map.length > 0 ? (
@@ -572,7 +573,7 @@ export default function Dashboard() {
           {/* Instructions */}
           <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">📋</span>
+              <Icon name="clipboard" className="w-6 h-6 mr-2" />
               Instructies & Info
             </h3>
             {documentsByCategory.instruction.length > 0 ? (
@@ -605,7 +606,8 @@ export default function Dashboard() {
         <div className="mt-8 text-center text-gray-600">
           <p className="mb-2">Hulp nodig?</p>
           <p>
-            📧 <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">
+            <Icon name="mail" className="w-5 h-5 inline mr-1" />
+            <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">
               info@deurdenbocht.be
             </a>
           </p>

@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form, redirect } from 'react-router';
+import { useLoaderData, Form, redirect, Link } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
@@ -126,11 +126,19 @@ export default function AdminLeaderboard() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Leaderboard Beheer</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2 break-words">
-            {leaderboard.length} deelnemers met scores
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Leaderboard Beheer</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-2 break-words">
+              {leaderboard.length} deelnemers met scores
+            </p>
+          </div>
+          <Link
+            to="/admin"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+          >
+            ← Terug naar Dashboard
+          </Link>
         </div>
 
         {/* Leaderboard Table */}

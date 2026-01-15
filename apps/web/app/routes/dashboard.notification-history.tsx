@@ -3,6 +3,7 @@ import { useLoaderData } from 'react-router';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { useState } from 'react';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Notification History - Deur Den Bocht' }];
@@ -65,7 +66,10 @@ export default function DashboardNotificationHistory() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">🔔 Je Meldingen</h1>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Icon name="bell" className="w-8 h-8" />
+            Je Meldingen
+          </h1>
           <p className="text-gray-600 mt-2">Bekijk de geschiedenis van meldingen die je hebt ontvangen</p>
         </div>
 
@@ -106,7 +110,17 @@ export default function DashboardNotificationHistory() {
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {notif.delivery_status === 'success' ? '✅ Bezorgd' : `❌ ${notif.error_message || 'Mislukt'}`}
+                          {notif.delivery_status === 'success' ? (
+                            <span className="flex items-center gap-1">
+                              <Icon name="check" className="w-4 h-4 text-green-600" />
+                              Bezorgd
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <Icon name="x" className="w-4 h-4 text-red-600" />
+                              {notif.error_message || 'Mislukt'}
+                            </span>
+                          )}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">

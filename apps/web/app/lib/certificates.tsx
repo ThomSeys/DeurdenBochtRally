@@ -99,8 +99,6 @@ export function CompletionCertificate({
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.border}>
-          <Text style={styles.title}>🏍️</Text>
-          <Text style={styles.title}>CERTIFICAAT VAN DEELNAME</Text>
           <Text style={styles.subtitle}>Deur Den Bocht 2026</Text>
           
           <Text style={styles.recipientLabel}>Dit certificaat wordt uitgereikt aan</Text>

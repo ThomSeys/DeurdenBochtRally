@@ -110,7 +110,7 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
 
     if (!userLocation) {
       console.warn('Submit attempt without location');
-      setError('📍 Locatie niet beschikbaar. Controleer of locatiediensten ingeschakeld zijn.');
+      setError('Locatie niet beschikbaar. Controleer of locatiediensten ingeschakeld zijn.');
       return;
     }
 

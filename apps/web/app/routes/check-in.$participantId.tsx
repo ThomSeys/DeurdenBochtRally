@@ -76,13 +76,14 @@ export default function CheckIn() {
         <Header />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-green-50 border-2 border-green-200 rounded-sm p-8 text-center">
-            <div className="text-6xl mb-4">✅</div>
+            <Icon name="check" className="w-16 h-16 text-green-600 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Check-in Geslaagd!</h1>
             <p className="text-gray-700 text-lg mb-6">
               Welkom bij Deur Den Bocht! Geniet van de rit!
             </p>
-            <div className="text-primary-600 text-lg font-semibold">
-              🏍️ Veel plezier!
+            <div className="text-primary-600 text-lg font-semibold flex items-center justify-center gap-2">
+              <Icon name="motorcycle" className="w-6 h-6" />
+              Veel plezier!
             </div>
           </div>
         </div>
@@ -97,7 +98,7 @@ export default function CheckIn() {
         <Header />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-red-50 border-2 border-red-200 rounded-sm p-8 text-center">
-            <div className="text-6xl mb-4">❌</div>
+            <Icon name="x" className="w-16 h-16 text-red-600 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Fout</h1>
             <p className="text-gray-700">{actionData.error}</p>
           </div>
@@ -159,7 +160,7 @@ export default function CheckIn() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white border-2 border-gray-200 rounded-sm p-8">
           <div className="text-center mb-8">
-            <div className="text-6xl mb-4">🏍️</div>
+            <Icon name="motorcycle" className="w-16 h-16 mx-auto mb-4 text-primary-600" />
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Check-in Bevestiging</h1>
             <p className="text-gray-600">Bevestig de gegevens om in te checken</p>
           </div>
@@ -189,14 +190,22 @@ export default function CheckIn() {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Formule</label>
-                <p className="text-gray-900">
-                  {participant.formula === 'with_meals' ? '🍽️ Met maaltijden' : '☕ Alleen ontbijt'}
+                <p className="text-gray-900 flex items-center gap-2">
+                  {participant.formula === 'with_meals' ? (
+                    <><Icon name="utensils" className="w-4 h-4" /> Met maaltijden</>
+                  ) : (
+                    <><Icon name="coffee" className="w-4 h-4" /> Alleen ontbijt</>
+                  )}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Rit Type</label>
-                <p className="text-gray-900">
-                  {participant.ride_type === 'guided' ? '👥 Begeleide rit' : '🏍️ Vrije rit'}
+                <p className="text-gray-900 flex items-center gap-2">
+                  {participant.ride_type === 'guided' ? (
+                    <><Icon name="users" className="w-4 h-4" /> Begeleide rit</>
+                  ) : (
+                    <><Icon name="motorcycle" className="w-4 h-4" /> Vrije rit</>
+                  )}
                 </p>
               </div>
             </div>

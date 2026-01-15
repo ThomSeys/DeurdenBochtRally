@@ -7,6 +7,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
+import { Icon } from '~/components/Icon';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   console.info('[live-map] loader start');
@@ -166,7 +167,10 @@ export default function LiveMap() {
         <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold break-words">🗺️ Live Rally Kaart</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold break-words flex items-center gap-2">
+                <Icon name="map" className="w-8 h-8" />
+                Live Rally Kaart
+              </h1>
               <p className="mt-2 text-primary-100 break-words text-sm sm:text-base">
                 Real-time overzicht van de rally zones en evenementen
                 {!isEventDay && isAdmin && (
@@ -216,7 +220,10 @@ export default function LiveMap() {
               </div>
               <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
                 <div style={{ background: '#10b981', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
-                <span>📍 Zone Start</span>
+                <span className="flex items-center gap-1">
+                  <Icon name="marker" className="w-3 h-3" />
+                  Zone Start
+                </span>
               </div>
               <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
                 <div style={{ background: '#f59e0b', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>

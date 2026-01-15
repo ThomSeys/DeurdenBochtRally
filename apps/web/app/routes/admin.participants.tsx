@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [
@@ -175,11 +176,19 @@ export default function AdminParticipants() {
                       <div className="text-sm text-gray-500">{participant.motorcycle_model}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {participant.formula === 'with_meals' ? '🍽️ Met maaltijden' : '☕ Alleen ontbijt'}
+                      <span className="text-sm text-gray-900 flex items-center gap-1">
+                        {participant.formula === 'with_meals' ? (
+                          <><Icon name="utensils" className="w-4 h-4" /> Met maaltijden</>
+                        ) : (
+                          <><Icon name="coffee" className="w-4 h-4" /> Alleen ontbijt</>
+                        )}
                       </span>
-                      <div className="text-sm text-gray-500">
-                        {participant.ride_type === 'guided' ? '👥 Begeleide rit' : '🏍️ Vrij'}
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        {participant.ride_type === 'guided' ? (
+                          <><Icon name="users" className="w-4 h-4" /> Begeleide rit</>
+                        ) : (
+                          <><Icon name="motorcycle" className="w-4 h-4" /> Vrij</>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -289,7 +298,7 @@ export default function AdminParticipants() {
                   to={`/admin/participants/${selectedParticipant.id}/submissions`}
                   className="block w-full bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 rounded-sm transition-colors"
                 >
-                  📝 Bekijk Rally Antwoorden
+                  <Icon name="document" className="w-4 h-4 inline" /> Bekijk Rally Antwoorden
                 </Link>
               </div>
             </div>

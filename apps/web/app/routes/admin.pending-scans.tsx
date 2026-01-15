@@ -1,11 +1,12 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form, useActionData, useNavigation } from 'react-router';
+import { useLoaderData, Form, useActionData, useNavigation, Link } from 'react-router';
 import { useState } from 'react';
 import { requireAdmin } from '~/lib/session.server';
 import { getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -123,11 +124,19 @@ export default function AdminPendingScans() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Manual Scan Validation</h1>
-          <p className="mt-2 text-gray-600">
-            Review and approve/reject scans that require manual validation
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Manual Scan Validation</h1>
+            <p className="mt-2 text-gray-600">
+              Review and approve/reject scans that require manual validation
+            </p>
+          </div>
+          <Link
+            to="/admin"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+          >
+            ← Terug naar Dashboard
+          </Link>
         </div>
 
         {actionData?.error && (
@@ -149,14 +158,14 @@ export default function AdminPendingScans() {
               <p className="text-sm text-gray-600">Pending Validations</p>
               <p className="text-3xl font-bold text-primary-600">{pendingScans.length}</p>
             </div>
-            <div className="text-4xl">⏳</div>
+            <div className="text-4xl"><Icon name="hourglass" className="w-10 h-10 text-primary-600" /></div>
           </div>
         </div>
 
         {/* Pending Scans List */}
         {pendingScans.length === 0 ? (
           <div className="bg-white rounded-sm shadow p-12 text-center">
-            <div className="text-6xl mb-4">✅</div>
+            <Icon name="check" className="w-24 h-24 text-green-600" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">All Clear!</h2>
             <p className="text-gray-600">No scans pending manual validation</p>
           </div>

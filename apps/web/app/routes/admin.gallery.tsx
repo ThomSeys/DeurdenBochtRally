@@ -3,6 +3,7 @@ import { useLoaderData, Form, Link, useActionData } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Foto Beheer - Admin - Deur Den Bocht' }];
@@ -76,7 +77,9 @@ export default function AdminGallery() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">📸 Foto Beheer</h1>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Icon name="camera" className="w-8 h-8" /> Foto Beheer
+            </h1>
             <p className="text-gray-600 mt-2">
               {pendingCount} foto{pendingCount !== 1 ? "'s" : ''} wacht{pendingCount === 1 ? '' : 'en'} op goedkeuring
             </p>
@@ -105,7 +108,7 @@ export default function AdminGallery() {
         {pendingPhotos.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              ⏳ In behandeling 
+              <Icon name="hourglass" className="w-6 h-6" /> In behandeling 
               <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
                 {pendingPhotos.length}
               </span>
@@ -131,7 +134,9 @@ export default function AdminGallery() {
                       <p className="text-gray-700 mb-2 text-sm">{photo.caption}</p>
                     )}
                     {photo.location && (
-                      <p className="text-sm text-gray-600 mb-3">📍 {photo.location}</p>
+                      <p className="text-sm text-gray-600 mb-3 flex items-center gap-1">
+                        <Icon name="marker" className="w-4 h-4" /> {photo.location}
+                      </p>
                     )}
                     
                     <div className="text-xs text-gray-500 mb-4">
@@ -144,9 +149,9 @@ export default function AdminGallery() {
                         <input type="hidden" name="photo_id" value={photo.id} />
                         <button
                           type="submit"
-                          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-sm text-sm font-medium transition-colors"
+                          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-sm text-sm font-medium transition-colors flex items-center justify-center gap-1"
                         >
-                          ✓ Goedkeuren
+                          <Icon name="checkSimple" className="w-4 h-4" /> Goedkeuren
                         </button>
                       </Form>
                       <Form method="post" className="flex-1">
@@ -154,9 +159,9 @@ export default function AdminGallery() {
                         <input type="hidden" name="photo_id" value={photo.id} />
                         <button
                           type="submit"
-                          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-sm text-sm font-medium transition-colors"
+                          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-sm text-sm font-medium transition-colors flex items-center justify-center gap-1"
                         >
-                          ✕ Afwijzen
+                          <Icon name="x" className="w-4 h-4" /> Afwijzen
                         </button>
                       </Form>
                     </div>
@@ -170,7 +175,7 @@ export default function AdminGallery() {
         {/* Approved Photos */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            ✓ Goedgekeurd
+            <Icon name="checkSimple" className="w-6 h-6 text-green-600" /> Goedgekeurd
             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
               {approvedPhotos.length}
             </span>
@@ -178,7 +183,7 @@ export default function AdminGallery() {
           
           {approvedPhotos.length === 0 ? (
             <div className="bg-white rounded-sm shadow p-12 text-center">
-              <div className="text-6xl mb-4">📸</div>
+              <Icon name="camera" className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">Nog geen goedgekeurde foto's</p>
             </div>
           ) : (
@@ -198,8 +203,8 @@ export default function AdminGallery() {
                       <p className="text-xs text-gray-700 mb-2 line-clamp-2">{photo.caption}</p>
                     )}
                     <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
-                      <span>❤️ {photo.likes_count}</span>
-                      {photo.is_featured && <span>⭐ Featured</span>}
+                      <span><Icon name="heart" className="w-4 h-4 inline-block mr-1" /> {photo.likes_count}</span>
+                      {photo.is_featured && <span className="flex items-center gap-1"><Icon name="star" className="w-4 h-4 text-yellow-500" /> Featured</span>}
                     </div>
                     
                     <div className="flex gap-1">
@@ -215,7 +220,7 @@ export default function AdminGallery() {
                               : 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800'
                           }`}
                         >
-                          {photo.is_featured ? '- Featured' : '⭐ Feature'}
+                          {photo.is_featured ? '- Goedgekeurd' : 'Goedgekeurd'}
                         </button>
                       </Form>
                       <Form method="post">
@@ -226,7 +231,7 @@ export default function AdminGallery() {
                           className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded text-xs font-medium transition-colors"
                           onClick={(e) => !confirm('Weet je zeker dat je deze foto wilt verwijderen?') && e.preventDefault()}
                         >
-                          🗑️
+                          <Icon name="trash" className="w-4 h-4" />
                         </button>
                       </Form>
                     </div>

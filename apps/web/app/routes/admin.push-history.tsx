@@ -1,8 +1,9 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, useFetcher } from 'react-router';
+import { useLoaderData, useFetcher, Link } from 'react-router';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import type { Database } from '~/lib/database.types';
 import { useState } from 'react';
+import { Icon } from '~/components/Icon';
 
 export const handle = { title: 'Push Notifications History - Admin' };
 
@@ -199,9 +200,22 @@ export default function AdminPushHistory() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">🔔 Push Notifications Center</h1>
-          <p className="text-gray-600 mt-2">Send notifications, track history, and manage targeted messaging</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Push Notifications Center
+            </h1>
+            <p className="text-gray-600 mt-2">Send notifications, track history, and manage targeted messaging</p>
+          </div>
+          <Link
+            to="/admin"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+          >
+            ← Terug naar Dashboard
+          </Link>
         </div>
 
         {result?.error && (
@@ -212,8 +226,11 @@ export default function AdminPushHistory() {
 
         {result?.success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-800">
-              ✅ Message sent successfully! Sent: {result.sent}, Failed: {result.failed}, Expired: {result.expired}
+            <p className="text-green-800 flex items-center gap-2">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Message sent successfully! Sent: {result.sent}, Failed: {result.failed}, Expired: {result.expired}
             </p>
           </div>
         )}
@@ -222,33 +239,42 @@ export default function AdminPushHistory() {
         <div className="flex gap-4 mb-6 border-b overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setSelectedTab('history')}
-            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'history'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            📊 History
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            History
           </button>
           <button
             onClick={() => setSelectedTab('broadcast')}
-            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'broadcast'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            📢 Broadcast
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+            Broadcast
           </button>
           <button
             onClick={() => setSelectedTab('send-targeted')}
-            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'send-targeted'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            🎯 Targeted
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+            </svg>
+            Targeted
           </button>
         </div>
 
@@ -308,7 +334,9 @@ export default function AdminPushHistory() {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <div className="text-xs">
-                          <p>✅ {notif.success_count}/{notif.recipient_count}</p>
+                          <p className="flex items-center gap-1">
+                            <Icon name="check" className="w-4 h-4 text-green-600" /> {notif.success_count}/{notif.recipient_count}
+                          </p>
                           {(notif.failed_count ?? 0) > 0 && <p className="text-red-600">❌ {notif.failed_count}</p>}
                           {(notif.expired_count ?? 0) > 0 && <p className="text-gray-600">⏱️ {notif.expired_count}</p>}
                         </div>

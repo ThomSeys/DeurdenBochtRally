@@ -1,10 +1,11 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form, useActionData, useNavigation } from 'react-router';
+import { useLoaderData, Form, useActionData, useNavigation, Link } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -48,7 +49,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const proofPhotoUrl = formData.get('proofPhotoUrl') as string;
 
     if (!participantId || !zoneId || !timestamp) {
-      return { error: 'Please fill in all required fields' };
+      return { error: 'Vul alstublieft alle verplichte velden in' };
     }
 
     const { data: existing } = await supabaseAdmin
@@ -59,7 +60,7 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (existing) {
-      return { error: `This participant already has a submission for Zone ${zoneId}` };
+      return { error: `Deze deelnemer heeft al een inzending voor Zone ${zoneId}` };
     }
 
     const { data, error } = await supabaseAdmin
@@ -87,7 +88,7 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (error) {
-      throw new Error('Failed to create manual entry: ' + error.message);
+      throw new Error('Aanmaken handmatige invoer mislukt: ' + error.message);
     }
 
     const { data: participant } = await supabaseAdmin
@@ -124,11 +125,19 @@ export default function AdminManualScan() {
       <Header />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Handmatige Scan Invoer</h1>
-          <p className="mt-2 text-gray-600">
-            Maak een handmatige scaninvoer voor rijders met telefoonproblemen (Scenario 5: Telefoon Dood)
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Handmatige Scan Invoer</h1>
+            <p className="mt-2 text-gray-600">
+              Maak een handmatige scaninvoer voor rijders met telefoonproblemen (Scenario 5: Telefoon Dood)
+            </p>
+          </div>
+          <Link
+            to="/admin"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+          >
+            ← Terug naar Dashboard
+          </Link>
         </div>
 
         {actionData?.error && (
@@ -153,13 +162,15 @@ export default function AdminManualScan() {
 
         {/* Info Box */}
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-sm p-4">
-          <h3 className="font-bold text-blue-900 mb-2">ℹ️ Manual Entry Rules</h3>
+          <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+            <Icon name="info" className="w-5 h-5" /> Handmatige Invoer Regels
+          </h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Manual entries receive <strong>rhythm_score = 0</strong> (no timing advantage)</li>
-            <li>• No GPS coordinates recorded (not penalized for location)</li>
-            <li>• Entry is automatically approved by the creating admin</li>
-            <li>• Use only when rider's phone has failed or battery is dead</li>
-            <li>• Safety crew should note: name, time, zone, and take photo if possible</li>
+            <li>• Handmatige invoer krijgt <strong>rhythm_score = 0</strong> (geen timing voordeel)</li>
+            <li>• Geen GPS coördinaten opgenomen (niet gestraft voor locatie)</li>
+            <li>• Invoer wordt automatisch goedgekeurd door de aanmakende beheerder</li>
+            <li>• Gebruik alleen wanneer de telefoon van de rijder defect of leeg is</li>
+            <li>• Veiligheidsteam moet noteren: naam, tijd, zone, en foto nemen indien mogelijk</li>
           </ul>
         </div>
 
@@ -169,7 +180,7 @@ export default function AdminManualScan() {
             {/* Participant Selection */}
             <div>
               <label htmlFor="participantId" className="block text-sm font-medium text-gray-700 mb-2">
-                Rider <span className="text-red-600">*</span>
+                Rijder <span className="text-red-600">*</span>
               </label>
               <select
                 id="participantId"
@@ -177,7 +188,7 @@ export default function AdminManualScan() {
                 required
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               >
-                <option value="">Select a rider...</option>
+                <option value="">Selecteer een rijder...</option>
                 {participants.map((p: any) => (
                   <option key={p.id} value={p.id}>
                     {p.first_name} {p.last_name} ({p.license_plate})
@@ -197,7 +208,7 @@ export default function AdminManualScan() {
                 required
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               >
-                <option value="">Select a zone...</option>
+                <option value="">Selecteer een zone...</option>
                 {rallyZones.map((zone: any) => (
                   <option 
                     key={zone._id} 
@@ -205,7 +216,7 @@ export default function AdminManualScan() {
                     disabled={zone.is_open === false}
                   >
                     RZ{zone.zoneNumber} – {zone.title}
-                    {zone.is_open === false && ' (CLOSED)'}
+                    {zone.is_open === false && ' (GESLOTEN)'}
                   </option>
                 ))}
               </select>
@@ -225,14 +236,14 @@ export default function AdminManualScan() {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
               <p className="mt-1 text-sm text-gray-500">
-                When did the rider reach this checkpoint?
+                Wanneer bereikte de rijder dit controlepunt?
               </p>
             </div>
 
             {/* Photo URL (optional) */}
             <div>
               <label htmlFor="proofPhotoUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                Proof Photo URL <span className="text-gray-500">(optional)</span>
+                Bewijs Foto URL <span className="text-gray-500">(optioneel)</span>
               </label>
               <input
                 type="url"
@@ -242,32 +253,34 @@ export default function AdminManualScan() {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
               <p className="mt-1 text-sm text-gray-500">
-                If safety crew took a photo, paste the URL here
+                Als het veiligheidsteam een foto nam, plak hier de URL
               </p>
             </div>
 
             {/* Notes */}
             <div>
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                Notes <span className="text-gray-500">(optional)</span>
+                Notities <span className="text-gray-500">(optioneel)</span>
               </label>
               <textarea
                 id="notes"
                 name="notes"
                 rows={3}
-                placeholder="e.g., Phone battery dead, confirmed by safety crew at 14:30"
+                placeholder="bijv. Telefoon batterij leeg, bevestigd door veiligheidsteam om 14:30"
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
               <p className="mt-1 text-sm text-gray-500">
-                Add any relevant context about why this manual entry was needed
+                Voeg relevante context toe over waarom deze handmatige invoer nodig was
               </p>
             </div>
 
             {/* Warning */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-sm p-4">
               <p className="text-sm text-yellow-800">
-                <strong>⚠️ Warning:</strong> Manual entries bypass GPS validation and receive zero rhythm score. 
-                Only use this for legitimate phone failures confirmed by safety crew.
+                <strong className="flex items-center gap-1">
+                  <Icon name="warning" className="w-5 h-5 inline" /> Waarschuwing:
+                </strong> Handmatige invoer omzeilt GPS validatie en krijgt nul ritme score. 
+                Gebruik dit alleen voor legitieme telefoon defecten bevestigd door het veiligheidsteam.
               </p>
             </div>
 
@@ -278,14 +291,14 @@ export default function AdminManualScan() {
                 disabled={isSubmitting}
                 className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
               >
-                {isSubmitting ? 'Creating Manual Entry...' : 'Create Manual Scan Entry'}
+                {isSubmitting ? 'Handmatige Invoer Aanmaken...' : 'Handmatige Scan Invoer Aanmaken'}
               </button>
               <button
                 type="button"
                 onClick={() => window.history.back()}
                 className="px-6 py-3 bg-gray-200 text-gray-700 rounded-sm font-semibold hover:bg-gray-300"
               >
-                Cancel
+                Annuleren
               </button>
             </div>
           </Form>
@@ -293,14 +306,14 @@ export default function AdminManualScan() {
 
         {/* Statistics */}
         <div className="mt-8 bg-white rounded-sm shadow p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Snelle Statistieken</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Active Riders</p>
+              <p className="text-sm text-gray-600">Actieve Rijders</p>
               <p className="text-2xl font-bold text-primary-600">{participants.length}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Zones</p>
+              <p className="text-sm text-gray-600">Totaal Zones</p>
               <p className="text-2xl font-bold text-primary-600">{rallyZones.length}</p>
             </div>
             <div>
@@ -310,7 +323,7 @@ export default function AdminManualScan() {
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Closed Zones</p>
+              <p className="text-sm text-gray-600">Gesloten Zones</p>
               <p className="text-2xl font-bold text-red-600">
                 {rallyZones.filter((z: any) => z.is_open === false).length}
               </p>

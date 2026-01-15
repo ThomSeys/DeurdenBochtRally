@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { redirect } from 'react-router';
-import { Form, useActionData, useLoaderData, Link } from 'react-router';
+import { Form, useActionData, useLoaderData, Link, useRevalidator } from 'react-router';
 import { useState, useRef } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
@@ -12,6 +12,7 @@ import PortableText from '~/components/PortableText';
 import MapView from '~/components/MapView';
 import { sendEmail, rallySubmissionEmail } from '~/lib/email.server';
 import { checkAndUnlockAchievements } from '~/lib/achievements.server';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [
@@ -104,11 +105,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
   // Handle immediate odometer updates
   if (action === 'update_odometer') {
+    console.log('[odometer] Update request received');
     const startKm = formData.get('start_km');
     const endKm = formData.get('end_km');
     const startKmLocked = formData.get('start_km_locked') === 'true';
     const endKmLocked = formData.get('end_km_locked') === 'true';
     const totalDistance = formData.get('total_distance');
+    
+    console.log('[odometer] Data:', { startKm, endKm, startKmLocked, endKmLocked, totalDistance });
 
     // Check if existing submission exists
     const { data: existing } = await supabaseAdmin
@@ -129,6 +133,9 @@ export async function action({ request }: ActionFunctionArgs) {
     if (totalDistance) {
       updateData.total_distance = parseFloat(totalDistance as string);
     }
+    
+    console.log('[odometer] Update data:', updateData);
+    console.log('[odometer] Existing submission:', existing);
 
     if (existing) {
       const { error } = await supabaseAdmin
@@ -137,9 +144,10 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('participant_id', userId);
 
       if (error) {
-        console.error('Update odometer error:', error);
+        console.error('[odometer] Update error:', error);
         return { error: 'Er ging iets mis bij het opslaan.', status: 500 };
       }
+      console.log('[odometer] Successfully updated existing submission');
     } else {
       const { error } = await supabaseAdmin
         .from('rally_submissions')
@@ -149,11 +157,19 @@ export async function action({ request }: ActionFunctionArgs) {
         });
 
       if (error) {
-        console.error('Insert odometer error:', error);
+        console.error('[odometer] Insert error:', error);
         return { error: 'Er ging iets mis bij het opslaan.', status: 500 };
       }
+      console.log('[odometer] Successfully inserted new submission');
     }
 
+    // Check and unlock achievements when total distance is set
+    if (totalDistance) {
+      console.log('[odometer] Checking achievements after distance update');
+      await checkAndUnlockAchievements(userId);
+    }
+
+    console.log('[odometer] Returning success response');
     return { success: true };
   }
 
@@ -341,7 +357,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const { data: leaderboard } = await supabaseAdmin
         .rpc('get_leaderboard');
       
-      const rank = leaderboard?.findIndex((entry: any) => entry.participant_id === userId) + 1;
+      const rank = leaderboard ? leaderboard.findIndex((entry: any) => entry.participant_id === userId) + 1 : 0;
 
       // Send rally submission confirmation email
       const email = rallySubmissionEmail({
@@ -380,6 +396,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function RallySubmission() {
   const { user, submission, zoneSubmissions, scoreboard, shadowScoreExplanation, rallyZones } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const revalidator = useRevalidator();
   const [activeZone, setActiveZone] = useState(1);
   const [startKm, setStartKm] = useState(submission?.start_km?.toString() || '');
   const [endKm, setEndKm] = useState(submission?.end_km?.toString() || '');
@@ -416,14 +433,21 @@ export default function RallySubmission() {
         formData.append('start_km', value);
         formData.append('start_km_locked', 'true');
         
+        console.log('[client] Sending start km update:', { value, locked: true });
+        
         const response = await fetch(window.location.pathname, {
           method: 'POST',
           body: formData,
         });
         
+        console.log('[client] Response status:', response.status);
+        const responseData = await response.json().catch(() => null);
+        console.log('[client] Response data:', responseData);
+        
         if (response.ok) {
           setStartKm(value);
           setStartKmLocked(true);
+          revalidator.revalidate();
         } else {
           alert('Er ging iets mis bij het opslaan. Probeer opnieuw.');
           e.target.value = startKm;
@@ -469,14 +493,21 @@ export default function RallySubmission() {
           formData.append('total_distance', distance.toString());
         }
         
+        console.log('[client] Sending end km update:', { value, locked: true, distance });
+        
         const response = await fetch(window.location.pathname, {
           method: 'POST',
           body: formData,
         });
         
+        console.log('[client] Response status:', response.status);
+        const responseData = await response.json().catch(() => null);
+        console.log('[client] Response data:', responseData);
+        
         if (response.ok) {
           setEndKm(value);
           setEndKmLocked(true);
+          revalidator.revalidate();
         } else {
           alert('Er ging iets mis bij het opslaan. Probeer opnieuw.');
           e.target.value = endKm;
@@ -659,8 +690,8 @@ export default function RallySubmission() {
                         {zoneScore?.shadow_score !== null && zoneScore?.shadow_score !== undefined && (
                           <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-sm p-5 border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-sm font-semibold text-gray-700 flex items-center">
-                                <span className="text-lg mr-2">🎯</span>
+                              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <Icon name="target" className="w-5 h-5 text-primary-600" />
                                 Zone Score
                               </h3>
                               <span className="text-2xl font-bold text-primary-600">
@@ -671,8 +702,8 @@ export default function RallySubmission() {
                             <div className="space-y-3">
                               <div>
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="text-xs font-medium text-gray-600 flex items-center">
-                                    <span className="mr-1">⏱️</span>
+                                  <span className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                                    <Icon name="clock" className="w-3 h-3" />
                                     Ritme
                                   </span>
                                   <span className="text-sm font-semibold text-gray-900">
@@ -689,7 +720,7 @@ export default function RallySubmission() {
                               <div>
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs font-medium text-gray-600 flex items-center">
-                                    <span className="mr-1">👁️</span>
+                                    <Icon name="eye" className="w-4 h-4 mr-1" />
                                     Blik
                                   </span>
                                   <span className="text-sm font-semibold text-gray-900">
@@ -767,8 +798,9 @@ export default function RallySubmission() {
                         placeholder="Bijv. 12345.6"
                       />
                       {!startKmLocked && (
-                        <p className="mt-1 text-xs text-amber-600">
-                          ⚠️ Na invullen kan deze waarde niet meer worden aangepast
+                        <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
+                          <Icon name="warning" className="w-3 h-3" />
+                          Na invullen kan deze waarde niet meer worden aangepast
                         </p>
                       )}
                       <input type="hidden" name="start_km_locked" value={startKmLocked.toString()} />
@@ -790,8 +822,9 @@ export default function RallySubmission() {
                         placeholder="Bijv. 12845.3"
                       />
                       {!endKmLocked && (
-                        <p className="mt-1 text-xs text-amber-600">
-                          ⚠️ Na invullen kan deze waarde niet meer worden aangepast
+                        <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
+                          <Icon name="warning" className="w-3 h-3" />
+                          Na invullen kan deze waarde niet meer worden aangepast
                         </p>
                       )}
                       <input type="hidden" name="end_km_locked" value={endKmLocked.toString()} />
@@ -834,11 +867,13 @@ export default function RallySubmission() {
             {/* Total Shadow Score Card */}
             {submission?.shadow_total !== null && submission?.shadow_total !== undefined && (
               <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-sm shadow-lg p-6 mb-6 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 opacity-10 text-9xl">🏆</div>
+                <div className="absolute top-0 right-0 opacity-10">
+                  <Icon name="trophy" className="w-36 h-36" />
+                </div>
                 <div className="relative z-10">
                   <div className="text-sm font-semibold mb-1 flex items-center justify-between">
-                    <div className="flex items-center">
-                      <span className="mr-2">⚡</span>
+                    <div className="flex items-center gap-2">
+                      <Icon name="lightning" className="w-5 h-5" />
                       Je Schaduwscore
                     </div>
                     <button
@@ -847,7 +882,7 @@ export default function RallySubmission() {
                       className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
                       title="Uitleg schaduwscore"
                     >
-                      <span className="text-sm">ℹ️</span>
+                      <Icon name="info" className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex items-baseline space-x-2 mb-2">
@@ -860,10 +895,15 @@ export default function RallySubmission() {
                     />
                   </div>
                   <div className="text-xs text-primary-100 mt-2">
-                    {submission.shadow_total >= 600 ? '🔥 Uitstekend!' : 
-                     submission.shadow_total >= 400 ? '👍 Goed bezig!' : 
-                     submission.shadow_total >= 200 ? '💪 Blijf doorgaan!' : 
-                     '🎯 Eerste stappen'}
+                    {submission.shadow_total >= 600 ? (
+                      <span className="flex items-center gap-1"><Icon name="fire" className="w-3 h-3" /> Uitstekend!</span>
+                    ) : submission.shadow_total >= 400 ? (
+                      <span className="flex items-center gap-1"><Icon name="thumbsUp" className="w-3 h-3" /> Goed bezig!</span>
+                    ) : submission.shadow_total >= 200 ? (
+                      <span className="flex items-center gap-1"><Icon name="muscle" className="w-3 h-3" /> Blijf doorgaan!</span>
+                    ) : (
+                      <span className="flex items-center gap-1"><Icon name="target" className="w-3 h-3" /> Eerste stappen</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -896,9 +936,9 @@ export default function RallySubmission() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
                             <div className="flex items-center space-x-1">
-                              {index === 0 && <span className="text-lg">🏆</span>}
-                              {index === 1 && <span className="text-lg">🥈</span>}
-                              {index === 2 && <span className="text-lg">🥉</span>}
+                              {index === 0 && <Icon name="trophy" className="w-5 h-5 text-yellow-500" />}
+                              {index === 1 && <Icon name="medal" className="w-5 h-5 text-gray-400" />}
+                              {index === 2 && <Icon name="medal" className="w-5 h-5 text-orange-600" />}
                               <span className="text-sm font-bold text-gray-900">{index + 1}</span>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -934,7 +974,7 @@ export default function RallySubmission() {
 
       {/* Shadow Score Explanation Modal */}
       {showExplanationModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-[1100] flex items-center justify-center p-4">
           <div className="bg-white rounded-sm shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">
@@ -958,12 +998,18 @@ export default function RallySubmission() {
                     De Schaduwscore is een verborgen score die je prestaties tijdens de rally meet.
                     Deze score wordt berekend op basis van twee factoren:
                   </p>
-                  <h3>⏱️ Ritme (0-50 punten)</h3>
+                  <h3 className="flex items-center gap-2">
+                    <Icon name="clock" className="w-5 h-5" />
+                    Ritme (0-50 punten)
+                  </h3>
                   <p>
                     Meet hoe consistent je bent in je timing. Hoe dichter je bij de mediaan tijd van alle deelnemers zit,
                     hoe hoger je ritme score.
                   </p>
-                  <h3>👁️ Blik (0-50 punten)</h3>
+                  <h3 className="flex items-center gap-2">
+                    <Icon name="eye" className="w-5 h-5" />
+                    Blik (0-50 punten)
+                  </h3>
                   <p>
                     Meet hoe nauwkeurig en uniek je antwoorden zijn. Correcte antwoorden leveren punten op,
                     en unieke observaties worden extra beloond.

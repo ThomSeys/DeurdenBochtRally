@@ -4,6 +4,7 @@ import { requireUserId } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { useState, useEffect } from 'react';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Fotogalerij - Deur Den Bocht' }];
@@ -79,9 +80,15 @@ export async function action({ request }: ActionFunctionArgs) {
       const { error: rpcError } = await supabaseAdmin.rpc('decrement_photo_likes', { photo_id: photoId });
       if (rpcError) {
         console.warn('[gallery] RPC decrement failed, using direct update', rpcError);
+        const { data: photo } = await supabaseAdmin
+          .from('participant_photos')
+          .select('likes_count')
+          .eq('id', photoId)
+          .single();
+        
         await supabaseAdmin
           .from('participant_photos')
-          .update({ likes_count: (await supabaseAdmin.from('participant_photos').select('likes_count').eq('id', photoId).single()).data?.likes_count - 1 || 0 })
+          .update({ likes_count: Math.max((photo?.likes_count || 0) - 1, 0) })
           .eq('id', photoId);
       }
 
@@ -220,7 +227,7 @@ export default function Gallery() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">📸 Fotogalerij</h1>
+            <h1 className="text-3xl font-bold text-gray-900"><Icon name="camera" className="inline w-8 h-8 mr-2" /> Fotogalerij</h1>
             <p className="text-gray-600 mt-2">Deel jouw rally momenten!</p>
           </div>
           <button
@@ -296,7 +303,7 @@ export default function Gallery() {
               </button>
 
               <p className="text-sm text-gray-600">
-                ℹ️ Je foto wordt na goedkeuring door een admin zichtbaar voor iedereen.
+                <Icon name="info" className="w-5 h-5 inline" /> Je foto wordt na goedkeuring door een admin zichtbaar voor iedereen.
               </p>
             </Form>
           </div>
@@ -316,12 +323,18 @@ export default function Gallery() {
                   />
                   <div className="p-4">
                     {photo.caption && <p className="text-gray-900 mb-2">{photo.caption}</p>}
-                    {photo.location && <p className="text-sm text-gray-600">📍 {photo.location}</p>}
+                    {photo.location && (
+                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                        <Icon name="marker" className="w-4 h-4" /> {photo.location}
+                      </p>
+                    )}
                     <div className="mt-2 flex items-center justify-between">
                       <span className={`text-sm px-2 py-1 rounded ${photo.is_approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {photo.is_approved ? '✓ Goedgekeurd' : '⏳ In behandeling'}
                       </span>
-                      <span className="text-sm text-gray-600">❤️ {photo.likes_count}</span>
+                      <span className="text-sm text-gray-600 flex items-center gap-1">
+                        <Icon name="heart" className="w-4 h-4" /> {photo.likes_count}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -353,16 +366,20 @@ export default function Gallery() {
                     </div>
                   </div>
                   {photo.caption && <p className="text-gray-700 mb-2">{photo.caption}</p>}
-                  {photo.location && <p className="text-sm text-gray-600 mb-2">📍 {photo.location}</p>}
+                  {photo.location && (
+                    <p className="text-sm text-gray-600 mb-2 flex items-center gap-1">
+                      <Icon name="marker" className="w-4 h-4" /> {photo.location}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between mt-4">
                     <Form method="post" className="inline">
                       <input type="hidden" name="action" value="like" />
                       <input type="hidden" name="photo_id" value={photo.id} />
                       <button
                         type="submit"
-                        className="text-red-500 hover:text-red-600 font-medium"
+                        className="text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
                       >
-                        ❤️ {photo.likes_count}
+                        <Icon name="heart" className="w-5 h-5" /> {photo.likes_count}
                       </button>
                     </Form>
                     <span className="text-sm text-gray-500">

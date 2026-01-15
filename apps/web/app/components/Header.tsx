@@ -1,6 +1,7 @@
 import { Link, useMatches, Form } from 'react-router';
 import { useState, useEffect } from 'react';
 import { NotificationBell } from './NotificationBell';
+import { Icon } from '~/components/Icon';
 
 export default function Header({ transparent, fixed }: { transparent?: boolean; fixed?: boolean }) {
   const matches = useMatches();
@@ -77,10 +78,11 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg py-2 z-50">
                       <Link
                         to="/dashboard/rally-submission"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        🏁 Rally Codes Indienen
+                        <Icon name="flag" className="w-4 h-4" />
+                        Rally Codes Indienen
                       </Link>
                       <Link
                         to="/rally"
@@ -91,10 +93,11 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       </Link>
                       <Link
                         to="/live-map"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        🗺️ Live Kaart
+                        <Icon name="map" className="w-4 h-4" />
+                        Live Kaart
                       </Link>
                       <Link
                         to="/dashboard"
@@ -191,10 +194,11 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   </Link>
                   <Link
                     to="/live-map"
-                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    🗺️ Live Kaart
+                    <Icon name="map" className="w-4 h-4" />
+                    Live Kaart
                   </Link>
                   <Link
                     to="/dashboard"

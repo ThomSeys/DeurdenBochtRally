@@ -6,6 +6,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import MapView from '~/components/MapView';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
@@ -156,8 +157,9 @@ export default function ZonePage() {
             <p className="text-base sm:text-lg text-gray-700 mb-4 break-words">{zone.description}</p>
             
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-              <p className="text-xs sm:text-sm font-medium text-blue-800 break-words">
-                📍 {zone.location}
+              <p className="text-xs sm:text-sm font-medium text-blue-800 break-words flex items-center gap-2">
+                <Icon name="marker" className="w-4 h-4" />
+                {zone.location}
               </p>
             </div>
           </div>
@@ -174,14 +176,23 @@ export default function ZonePage() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">🔄 Lus</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <Icon name="refresh" className="w-5 h-5" />
+                Lus
+              </h3>
               <p className="text-gray-700 whitespace-pre-line">{zone.lus}</p>
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">🎯 Checkpoint</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <Icon name="target" className="w-5 h-5" />
+                Checkpoint
+              </h3>
               <p className="text-gray-700">{zone.checkpoint}</p>
-              <p className="text-sm text-gray-600 mt-1">💡 Tip: {zone.codeHint}</p>
+              <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                <Icon name="lightbulb" className="w-4 h-4" />
+                Tip: {zone.codeHint}
+              </p>
             </div>
 
             <div>
@@ -228,8 +239,9 @@ export default function ZonePage() {
                 Je kunt daarna de code invoeren in het dashboard.
               </p>
               {locationError && (
-                <p className="text-sm text-orange-600 mb-4">
-                  ⚠️ {locationError} - Je kunt toch doorgaan
+                <p className="text-sm text-orange-600 mb-4 flex items-center gap-1 justify-center">
+                  <Icon name="warning" className="w-4 h-4" />
+                  {locationError} - Je kunt toch doorgaan
                 </p>
               )}
               <button
@@ -261,9 +273,14 @@ export default function ZonePage() {
                     formRef.current?.submit();
                   }
                 }}
-                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-sm font-bold text-lg transition-colors"
+                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-sm font-bold text-lg transition-colors flex items-center gap-2 mx-auto"
               >
-                {isStarting ? 'Bezig...' : '🏁 Start Zone'}
+                {isStarting ? 'Bezig...' : (
+                  <>
+                    <Icon name="flag" className="w-6 h-6" />
+                    Start Zone
+                  </>
+                )}
               </button>
             </form>
           )}

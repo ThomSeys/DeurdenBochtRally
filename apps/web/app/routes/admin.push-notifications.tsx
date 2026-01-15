@@ -605,7 +605,12 @@ export default function AdminPushNotifications() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">🔔 Push Meldingen Centrum</h1>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Push Meldingen Centrum
+            </h1>
             <p className="text-gray-600 mt-2">
               {activeSubscriptions} actieve abonnementen • Stuur templates, aangepaste of gerichte berichten
             </p>
@@ -626,8 +631,11 @@ export default function AdminPushNotifications() {
 
         {result?.success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-800">
-              ✅ Bericht succesvol verzonden! Verzonden: {result.sent}, Mislukt: {result.failed}, Verlopen: {result.expired}
+            <p className="text-green-800 flex items-center gap-2">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Bericht succesvol verzonden! Verzonden: {result.sent}, Mislukt: {result.failed}, Verlopen: {result.expired}
             </p>
           </div>
         )}
@@ -636,43 +644,55 @@ export default function AdminPushNotifications() {
         <div className="flex gap-4 mb-6 border-b bg-white px-6 rounded-t-lg overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setSelectedTab('quick')}
-            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'quick'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            ⚡ Snelle Templates
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Snelle Templates
           </button>
           <button
             onClick={() => setSelectedTab('broadcast')}
-            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'broadcast'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            📢 Aangepaste Uitzending
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+            Aangepaste Uitzending
           </button>
           <button
             onClick={() => setSelectedTab('targeted')}
-            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'targeted'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            🎯 Gericht Bericht
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+            </svg>
+            Gericht Bericht
           </button>
           <button
             onClick={() => setSelectedTab('history')}
-            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
               selectedTab === 'history'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            📊 Geschiedenis
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Geschiedenis
           </button>
         </div>
 
@@ -686,9 +706,12 @@ export default function AdminPushNotifications() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  🏁 Rally Gestart
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                  </svg>
+                  Rally Gestart
                 </button>
               </fetcher.Form>
 
@@ -697,9 +720,12 @@ export default function AdminPushNotifications() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  🏁 Rally Beëindigd
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                  </svg>
+                  Rally Beëindigd
                 </button>
               </fetcher.Form>
 
@@ -708,9 +734,12 @@ export default function AdminPushNotifications() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  ⛈️ Weersmelding
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                  Weersmelding
                 </button>
               </fetcher.Form>
 
@@ -719,9 +748,12 @@ export default function AdminPushNotifications() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  🏆 Ranglijst Update
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  Ranglijst Update
                 </button>
               </fetcher.Form>
 
@@ -729,7 +761,12 @@ export default function AdminPushNotifications() {
             </div>
 
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">💡 Tips</h3>
+              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Tips
+              </h3>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Templates zijn voorgedefinieerde berichten verzonden naar alle actieve abonnees</li>
                 <li>• Gebruik voor kritieke aankondigingen en standaard rally-evenementen</li>
@@ -837,7 +874,12 @@ export default function AdminPushNotifications() {
 
               {/* Advanced Filters */}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-4">🎯 Geavanceerde Filters</h3>
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  Geavanceerde Filters
+                </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -972,10 +1014,29 @@ export default function AdminPushNotifications() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <div className="text-xs">
-                          <p>✅ {notif.success_count}/{notif.recipient_count}</p>
-                          {(notif.failed_count ?? 0) > 0 && <p className="text-red-600">❌ {notif.failed_count}</p>}
-                          {(notif.expired_count ?? 0) > 0 && <p className="text-gray-600">⏱️ {notif.expired_count}</p>}
+                        <div className="text-xs space-y-1">
+                          <p className="flex items-center gap-1">
+                            <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            {notif.success_count}/{notif.recipient_count}
+                          </p>
+                          {(notif.failed_count ?? 0) > 0 && (
+                            <p className="text-red-600 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              {notif.failed_count}
+                            </p>
+                          )}
+                          {(notif.expired_count ?? 0) > 0 && (
+                            <p className="text-gray-600 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {notif.expired_count}
+                            </p>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -1028,9 +1089,12 @@ export default function AdminPushNotifications() {
                         <button
                           type="submit"
                           disabled={isLoading}
-                          className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 disabled:opacity-50 font-medium"
+                          className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 disabled:opacity-50 font-medium flex items-center gap-1"
                         >
-                          🔄 Mislukte Opnieuw Proberen
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Mislukte Opnieuw Proberen
                         </button>
                       </fetcher.Form>
                     )}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { Icon } from '~/components/Icon';
 import { useLoaderData } from 'react-router';
 
 export default function Footer({ siteConfig, edition }: { siteConfig?: any; edition?: any }) {
@@ -24,7 +25,12 @@ export default function Footer({ siteConfig, edition }: { siteConfig?: any; edit
               </div>
             </div>
             <p className="text-gray-300 mb-2">{siteConfig?.eventTagline || 'Den tweede keer Deur den Bocht'}</p>
-            {eventDate && <p className="text-white font-semibold mb-1">📅 ZONDAG {eventDate}</p>}
+            {eventDate && (
+              <p className="text-white font-semibold mb-1 flex items-center justify-center gap-2">
+                <Icon name="calendar" className="w-5 h-5" />
+                ZONDAG {eventDate}
+              </p>
+            )}
             <p className="text-gray-400">{siteConfig?.contactLocation || 'Tot aan café Belami, Aalter!'}</p>
           </div>
 
@@ -64,13 +70,13 @@ export default function Footer({ siteConfig, edition }: { siteConfig?: any; edit
               )}
               {siteConfig?.contactWhatsapp && (
                 <li className="flex items-center space-x-2">
-                  <span>📱</span>
+                  <Icon name="phone" className="w-5 h-5" />
                   <span>{siteConfig.contactWhatsapp}</span>
                 </li>
               )}
               {siteConfig?.contactLocation && (
                 <li className="flex items-center space-x-2">
-                  <span>📍</span>
+                  <Icon name="marker" className="w-5 h-5" />
                   <span>{siteConfig.contactLocation}</span>
                 </li>
               )}

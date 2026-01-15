@@ -70,7 +70,7 @@ export default function RegistrationSuccess() {
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-sm shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">✅</div>
+          <Icon name="check" className="w-24 h-24 text-green-600 mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Inschrijving geslaagd!
           </h1>

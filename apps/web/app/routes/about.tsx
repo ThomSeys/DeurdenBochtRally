@@ -4,6 +4,7 @@ import { useLoaderData, Link } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
+import { Icon } from '~/components/Icon';
 import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig } from '~/lib/sanity.server';
 
 export const meta: MetaFunction = () => {
@@ -21,6 +22,28 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const faq = edition ? await getFAQItems(edition._id) : [];
 
   return { edition, siteConfig, schedule, benefits, faq };
+}
+
+// Map common benefit emoji icons to Icon component names
+function getBenefitIconName(icon: string): string {
+  const iconMap: Record<string, string> = {
+    '🍽️': 'utensils',
+    '☕': 'coffee',
+    '🏍️': 'motorcycle',
+    '📕': 'book',
+    '🗺️': 'map',
+    '🎁': 'award',
+    '🏆': 'award',
+    '🥇': 'trophy',
+    '💰': 'award',
+    '🎉': 'award',
+    '📸': 'camera',
+    '🎫': 'document',
+    '📋': 'clipboard',
+    '📍': 'marker',
+    '🎯': 'target',
+  };
+  return iconMap[icon] || 'award';
 }
 
 export default function About() {
@@ -52,7 +75,6 @@ export default function About() {
               {schedule.map((item: any, index: number) => (
                 <div key={item._id} className={`bg-white rounded-sm shadow-lg p-6 border-l-4 border-${item.color || 'primary'}-600`}>
                   <div className="flex items-start">
-                    {item.icon && <span className="text-4xl mr-4">{item.icon}</span>}
                     <div className="flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                         <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{item.title}</h3>
@@ -104,7 +126,7 @@ export default function About() {
                 <div className="grid md:grid-cols-3 gap-6 mb-12">
                   {everyoneBenefits.map((benefit: any) => (
                     <div key={benefit._id} className="bg-white p-6 rounded-sm shadow text-center">
-                      <div className="text-4xl mb-3">{benefit.icon}</div>
+                      <Icon name={getBenefitIconName(benefit.icon)} className="w-16 h-16 mx-auto mb-3 text-primary-600" />
                       <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
                       <p className="text-gray-600">{benefit.description}</p>
                     </div>
@@ -121,7 +143,7 @@ export default function About() {
                 <div className="grid md:grid-cols-3 gap-6">
                   {winnerBenefits.map((benefit: any) => (
                     <div key={benefit._id} className="bg-primary-50 p-6 rounded-sm shadow-lg border-2 border-primary-600 text-center">
-                      <div className="text-4xl mb-3">{benefit.icon}</div>
+                      <Icon name={getBenefitIconName(benefit.icon)} className="w-16 h-16 mx-auto mb-3 text-primary-600" />
                       <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
                       <p className="text-gray-600">{benefit.description}</p>
                     </div>

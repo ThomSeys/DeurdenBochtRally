@@ -3,6 +3,7 @@ import { useLoaderData, Link } from 'react-router';
 import { requireUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Achievements - Deur Den Bocht' }];
@@ -10,97 +11,173 @@ export const meta: MetaFunction = () => {
 
 // SVG Icons for achievements
 const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boolean }) => {
-  const className = `w-20 h-20 ${isUnlocked ? '' : 'opacity-40 grayscale'}`;
+  const className = `w-20 h-20 ${isUnlocked ? 'drop-shadow-lg' : 'opacity-40 grayscale'}`;
   
   const icons: Record<string, React.ReactElement> = {
-    'First Blood': (
+    'first_zone': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#FCD34D" stroke="#F59E0B" strokeWidth="3"/>
-        <path d="M50 20 L60 45 L85 48 L65 65 L70 90 L50 75 L30 90 L35 65 L15 48 L40 45 Z" fill="#F59E0B"/>
-        <text x="50" y="58" textAnchor="middle" fontSize="24" fill="#78350F" fontWeight="bold">1st</text>
+        <defs>
+          <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FCD34D" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+          <filter id="shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+          </filter>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#goldGradient)" stroke="#F59E0B" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="50" cy="50" r="35" fill="#D97706" opacity="0.3"/>
+        <path d="M45 25 L55 25 L55 35 L60 35 L50 20 L40 35 L45 35 Z" fill="#DC2626"/>
+        <rect x="40" y="35" width="20" height="4" fill="#DC2626"/>
+        <text x="50" y="68" textAnchor="middle" fontSize="42" fill="#78350F" fontWeight="bold" fontFamily="Arial, sans-serif">1</text>
       </svg>
     ),
-    'Halfway Hero': (
+    'half_complete': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#A5F3FC" stroke="#06B6D4" strokeWidth="3"/>
-        <path d="M50 15 L55 35 L75 35 L60 48 L65 68 L50 55 L35 68 L40 48 L25 35 L45 35 Z" fill="#0891B2"/>
-        <text x="50" y="58" textAnchor="middle" fontSize="20" fill="#164E63" fontWeight="bold">½</text>
+        <defs>
+          <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#7DD3FC" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#blueGradient)" stroke="#0891B2" strokeWidth="3" filter="url(#shadow)"/>
+        <path d="M 50 50 L 50 10 A 40 40 0 0 1 50 90 Z" fill="#0369A1" opacity="0.8"/>
+        <circle cx="50" cy="50" r="25" fill="#164E63" opacity="0.5"/>
+        <text x="50" y="63" textAnchor="middle" fontSize="38" fill="#164E63" fontWeight="bold" fontFamily="Arial, sans-serif">½</text>
       </svg>
     ),
-    'Zone Master': (
+    'all_zones': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#FDE68A" stroke="#F59E0B" strokeWidth="4"/>
-        <path d="M35 25 H65 L70 35 L50 55 L30 35 Z" fill="#D97706"/>
-        <path d="M30 45 H70 L65 55 H35 Z" fill="#F59E0B"/>
-        <path d="M28 60 H72 L68 75 H32 Z" fill="#D97706"/>
-        <circle cx="50" cy="35" r="4" fill="#FCD34D"/>
+        <defs>
+          <linearGradient id="trophyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEF3C7" />
+            <stop offset="100%" stopColor="#FCD34D" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#trophyGradient)" stroke="#F59E0B" strokeWidth="4" filter="url(#shadow)"/>
+        <path d="M35 25 H65 L70 35 L50 55 L30 35 Z" fill="#B45309"/>
+        <path d="M30 45 H70 L65 55 H35 Z" fill="#D97706"/>
+        <path d="M28 60 H72 L68 75 H32 Z" fill="#B45309"/>
+        <circle cx="50" cy="35" r="5" fill="#FBBF24" stroke="#F59E0B" strokeWidth="2"/>
       </svg>
     ),
-    'Perfect Score': (
+    'perfect_score': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#E9D5FF" stroke="#A855F7" strokeWidth="3"/>
+        <defs>
+          <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#E9D5FF" />
+            <stop offset="100%" stopColor="#C084FC" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#purpleGradient)" stroke="#A855F7" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="50" cy="50" r="35" stroke="#9333EA" strokeWidth="2" strokeDasharray="4 2" fill="none" opacity="0.5"/>
         <path d="M25 50 L40 65 L75 30" stroke="#7C3AED" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-        <circle cx="50" cy="50" r="35" stroke="#A855F7" strokeWidth="2" strokeDasharray="5 3" fill="none"/>
       </svg>
     ),
-    'Early Bird': (
+    'early_bird': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="3"/>
-        <circle cx="70" cy="30" r="15" fill="#FCD34D" opacity="0.6"/>
+        <defs>
+          <linearGradient id="sunriseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEF3C7" />
+            <stop offset="100%" stopColor="#FCD34D" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#sunriseGradient)" stroke="#F59E0B" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="70" cy="30" r="16" fill="#FBBF24" opacity="0.7"/>
         <path d="M35 45 Q35 35 45 35 Q50 30 55 35 Q65 35 65 45 Q65 60 50 70 Q35 60 35 45 Z" fill="#EA580C"/>
-        <circle cx="42" cy="42" r="2" fill="white"/>
-        <path d="M45 50 L48 52 L52 48" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" fill="none"/>
+        <circle cx="42" cy="42" r="2.5" fill="white"/>
+        <path d="M45 50 L48 52 L52 48" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
       </svg>
     ),
-    'Weather Warrior': (
+    'weather_warrior': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#BFDBFE" stroke="#3B82F6" strokeWidth="3"/>
-        <ellipse cx="35" cy="35" rx="15" ry="12" fill="#9CA3AF"/>
-        <ellipse cx="50" cy="32" rx="18" ry="15" fill="#6B7280"/>
-        <ellipse cx="65" cy="35" rx="15" ry="12" fill="#9CA3AF"/>
-        <path d="M35 50 L32 60 M40 52 L37 62 M45 50 L42 60 M50 52 L47 62 M55 50 L52 60 M60 52 L57 62 M65 50 L62 60" stroke="#60A5FA" strokeWidth="2" strokeLinecap="round"/>
+        <defs>
+          <linearGradient id="stormGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#BFDBFE" />
+            <stop offset="100%" stopColor="#60A5FA" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#stormGradient)" stroke="#3B82F6" strokeWidth="3" filter="url(#shadow)"/>
+        <ellipse cx="35" cy="35" rx="15" ry="12" fill="#6B7280"/>
+        <ellipse cx="50" cy="32" rx="18" ry="15" fill="#4B5563"/>
+        <ellipse cx="65" cy="35" rx="15" ry="12" fill="#6B7280"/>
+        <path d="M35 50 L32 60 M40 52 L37 62 M45 50 L42 60 M50 52 L47 62 M55 50 L52 60 M60 52 L57 62 M65 50 L62 60" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"/>
       </svg>
     ),
-    'Marathon Rider': (
+    'marathon_rider': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#FED7AA" stroke="#F97316" strokeWidth="3"/>
-        <path d="M30 50 Q40 30 50 50 Q60 70 70 50" stroke="#EA580C" strokeWidth="4" fill="none" strokeLinecap="round"/>
-        <circle cx="30" cy="50" r="4" fill="#DC2626"/>
-        <circle cx="70" cy="50" r="4" fill="#22C55E"/>
-        <path d="M45 35 L48 38 L55 31" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" fill="none"/>
+        <defs>
+          <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FED7AA" />
+            <stop offset="100%" stopColor="#FB923C" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#orangeGradient)" stroke="#F97316" strokeWidth="3" filter="url(#shadow)"/>
+        <path d="M30 50 Q40 30 50 50 Q60 70 70 50" stroke="#C2410C" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        <circle cx="30" cy="50" r="5" fill="#DC2626" stroke="#991B1B" strokeWidth="2"/>
+        <circle cx="70" cy="50" r="5" fill="#22C55E" stroke="#15803D" strokeWidth="2"/>
+        <path d="M45 35 L48 38 L55 31" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
       </svg>
     ),
-    'Social Butterfly': (
+    'social_butterfly': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#FBCFE8" stroke="#EC4899" strokeWidth="3"/>
-        <rect x="40" y="35" width="20" height="22" rx="2" fill="#9CA3AF" stroke="#6B7280" strokeWidth="2"/>
-        <circle cx="50" cy="30" r="4" fill="#6B7280"/>
-        <rect x="42" y="38" width="16" height="12" fill="#E5E7EB"/>
+        <defs>
+          <linearGradient id="pinkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FCE7F3" />
+            <stop offset="100%" stopColor="#F9A8D4" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#pinkGradient)" stroke="#EC4899" strokeWidth="3" filter="url(#shadow)"/>
+        <rect x="40" y="35" width="20" height="22" rx="2" fill="#6B7280" stroke="#4B5563" strokeWidth="2"/>
+        <circle cx="50" cy="30" r="5" fill="#4B5563"/>
+        <rect x="42" y="38" width="16" height="12" fill="#D1D5DB"/>
         <path d="M30 65 L35 55 L45 60 L45 75 L30 75 Z" fill="#DB2777"/>
         <path d="M70 65 L65 55 L55 60 L55 75 L70 75 Z" fill="#DB2777"/>
-        <circle cx="47" cy="44" r="1.5" fill="#3B82F6"/>
+        <circle cx="47" cy="44" r="2" fill="#3B82F6"/>
       </svg>
     ),
-    'Popular': (
+    'popular': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#FECACA" stroke="#EF4444" strokeWidth="3"/>
+        <defs>
+          <linearGradient id="redGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEE2E2" />
+            <stop offset="100%" stopColor="#FCA5A5" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#redGradient)" stroke="#EF4444" strokeWidth="3" filter="url(#shadow)"/>
         <path d="M50 30 C50 30 35 35 35 50 C35 65 50 75 50 75 C50 75 65 65 65 50 C65 35 50 30 50 30 Z" fill="#DC2626"/>
-        <path d="M45 45 L48 50 L55 43" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+        <path d="M45 45 L48 50 L55 43" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
       </svg>
     ),
-    'Veteran': (
+    'veteran': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="#D1FAE5" stroke="#10B981" strokeWidth="3"/>
-        <circle cx="50" cy="40" r="20" fill="#059669" stroke="#047857" strokeWidth="2"/>
+        <defs>
+          <linearGradient id="greenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#D1FAE5" />
+            <stop offset="100%" stopColor="#6EE7B7" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#greenGradient)" stroke="#10B981" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="50" cy="40" r="20" fill="#047857" stroke="#065F46" strokeWidth="2"/>
         <rect x="35" y="55" width="30" height="25" fill="#065F46" rx="2"/>
         <path d="M25 75 L35 55 L40 55 L30 75 Z M75 75 L65 55 L60 55 L70 75 Z" fill="#047857"/>
-        <text x="50" y="47" textAnchor="middle" fontSize="16" fill="white" fontWeight="bold">★</text>
-        <text x="50" y="72" textAnchor="middle" fontSize="10" fill="#D1FAE5" fontWeight="bold">VET</text>
+        <text x="50" y="47" textAnchor="middle" fontSize="18" fill="#FCD34D" fontWeight="bold" fontFamily="Arial, sans-serif">★</text>
+        <text x="50" y="72" textAnchor="middle" fontSize="11" fill="#D1FAE5" fontWeight="bold" fontFamily="Arial, sans-serif">VET</text>
       </svg>
     ),
   };
 
-  return icons[name] || icons['First Blood'];
+  // Debug: log if we can't find the icon
+  if (!icons[name]) {
+    console.log(`Missing icon for achievement: "${name}"`);
+  }
+
+  return icons[name] || (
+    <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="45" fill="#9CA3AF" stroke="#6B7280" strokeWidth="3"/>
+      <text x="50" y="58" textAnchor="middle" fontSize="12" fill="#374151" fontWeight="bold" fontFamily="Arial, sans-serif">?</text>
+    </svg>
+  );
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -188,7 +265,7 @@ export default function Achievements() {
           
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-              <span className="text-5xl">🏆</span>
+              <Icon name="trophy" className="w-12 h-12" />
               Achievements
             </h1>
             <p className="text-primary-100 text-lg">Ontgrendel achievements en verzamel punten!</p>
@@ -217,21 +294,24 @@ export default function Achievements() {
               {stats.total_points}
               <span className="text-sm ml-2 text-gray-500">pts</span>
             </div>
-            <div className="text-xs text-gray-500 mt-4">💎 Verzamel meer punten!</div>
+            <div className="text-xs text-gray-500 mt-4 flex gap-2 items-center"><Icon name="diamond" className="w-3 h-3" /> Verzamel meer punten!</div>
           </div>
 
           {/* Zones */}
           <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-green-500">
             <div className="text-sm font-medium text-gray-600 mb-2">Zones Voltooid</div>
             <div className="text-3xl font-bold text-green-600">{stats.zones_completed}<span className="text-xl text-gray-400">/8</span></div>
-            <div className="text-xs text-gray-500 mt-4">🎯 Rally voortgang</div>
+            <div className="text-xs text-gray-500 mt-4 flex items-center gap-1">
+              <Icon name="target" className="w-3 h-3" />
+              Rally voortgang
+            </div>
           </div>
 
           {/* Photos */}
           <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-pink-500">
             <div className="text-sm font-medium text-gray-600 mb-2">Foto's Geüpload</div>
             <div className="text-3xl font-bold text-pink-600">{stats.photos_uploaded}</div>
-            <div className="text-xs text-gray-500 mt-4">📸 Deel je momenten</div>
+            <div className="text-xs text-gray-500 mt-4 flex gap-2 items-center"><Icon name="camera" className="w-3 h-3" /> Deel je momenten</div>
           </div>
         </div>
 
@@ -253,12 +333,12 @@ export default function Achievements() {
                     key={achievement.id}
                     className={`group relative rounded-sm shadow-xl overflow-hidden transition-all duration-300 ${
                       isUnlocked 
-                        ? 'bg-gradient-to-br from-white via-yellow-50 to-yellow-100 border-2 border-yellow-400' 
+                        ? 'bg-gradient-to-br from-white via-teal-100 to-teal-200 border-2 border-teal-400' 
                         : 'bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-300 hover:border-gray-400'
                     }`}
                   >
                     {isUnlocked && (
-                      <div className="absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rotate-45 opacity-20"></div>
+                      <div className="absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 bg-gradient-to-br from-teal-400 to-teal-500 rotate-45 opacity-20"></div>
                     )}
                     
                     <div className="p-6">
@@ -274,7 +354,8 @@ export default function Achievements() {
                         )}
                         {!isUnlocked && (
                           <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow flex items-center gap-1">
-                            <span>🔒</span> Locked
+                            <Icon name="lock" className="w-3 h-3" />
+                            Locked
                           </div>
                         )}
                       </div>
@@ -292,7 +373,7 @@ export default function Achievements() {
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-4 border-t-2 border-gray-200">
                         <div className={`font-bold text-lg flex items-center gap-2 ${isUnlocked ? 'text-yellow-600' : 'text-gray-400'}`}>
-                          <span className="text-xl">💎</span>
+                          <Icon name="diamond" className="w-5 h-5" />
                           +{achievement.points}
                         </div>
                         {isUnlocked && (
@@ -305,7 +386,7 @@ export default function Achievements() {
 
                     {/* Glow effect for unlocked */}
                     {isUnlocked && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-transparent to-yellow-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
                     )}
                   </div>
                 );
@@ -329,21 +410,24 @@ export default function Achievements() {
             <div className="flex gap-4 justify-center flex-wrap">
               <Link
                 to="/dashboard"
-                className="bg-white text-primary-600 px-8 py-4 rounded-sm font-bold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+                className="bg-white text-primary-600 px-8 py-4 rounded-sm font-bold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
               >
-                📊 Dashboard
+                <Icon name="chart" className="w-5 h-5" />
+                Dashboard
               </Link>
               <Link
                 to="/gallery"
-                className="bg-primary-800 text-white px-8 py-4 rounded-sm font-bold hover:bg-primary-900 transition-all transform hover:scale-105 shadow-lg border-2 border-white"
+                className="bg-primary-800 text-white px-8 py-4 rounded-sm font-bold hover:bg-primary-900 transition-all transform hover:scale-105 shadow-lg border-2 border-white flex items-center gap-2"
               >
-                📸 Upload Foto's
+                <Icon name="camera" className="w-5 h-5" />
+                Upload Foto's
               </Link>
               <Link
                 to="/dashboard/rally-submission"
-                className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-8 py-4 rounded-sm font-bold hover:from-yellow-500 hover:to-yellow-600 transition-all transform hover:scale-105 shadow-lg"
+                className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-8 py-4 rounded-sm font-bold hover:from-yellow-500 hover:to-yellow-600 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
               >
-                🏁 Rally Starten
+                <Icon name="flag" className="w-5 h-5" />
+                Rally Starten
               </Link>
             </div>
           </div>

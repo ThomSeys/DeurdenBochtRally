@@ -201,7 +201,7 @@ export default function ParticipantSubmissions() {
         <div className="space-y-6">
           {zoneIds.length === 0 ? (
             <div className="bg-white rounded-sm shadow p-12 text-center text-gray-500">
-              <div className="text-4xl mb-4">📝</div>
+              <Icon name="document" className="w-16 h-16 text-gray-400 mb-4" />
               <p>Deze deelnemer heeft nog geen rally codes ingediend</p>
             </div>
           ) : (
@@ -219,7 +219,7 @@ export default function ParticipantSubmissions() {
 
                   <div className="p-6">
                     <div className="flex items-center space-x-4">
-                      <div className="text-4xl">📍</div>
+                      <Icon name="marker" className="w-16 h-16 text-gray-400" />
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <span className="text-sm font-medium text-gray-600">Antwoord:</span>

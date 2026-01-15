@@ -115,7 +115,7 @@ export function PushNotificationButton() {
   if (permission === 'denied') {
     return (
       <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-sm text-sm">
-        ⚠️ Notificaties zijn geblokkeerd. Check je browser instellingen.
+        Notificaties zijn geblokkeerd. Check je browser instellingen.
       </div>
     );
   }

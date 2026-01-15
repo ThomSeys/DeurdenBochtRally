@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form, redirect, useActionData } from 'react-router';
+import { useLoaderData, Form, redirect, useActionData, Link } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
@@ -70,9 +70,17 @@ export default function AdminSettings() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Instellingen</h1>
-          <p className="text-gray-600 mt-2">Beheer systeem instellingen en admin gebruikers</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Instellingen</h1>
+            <p className="text-gray-600 mt-2">Beheer systeem instellingen en admin gebruikers</p>
+          </div>
+          <Link
+            to="/admin"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+          >
+            ← Terug naar Dashboard
+          </Link>
         </div>
 
         {actionData?.error && (
