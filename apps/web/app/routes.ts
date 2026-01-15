@@ -35,6 +35,8 @@ export default [
   route("gallery", "routes/gallery.tsx"),
   route("admin/gallery", "routes/admin.gallery.tsx"),
   route("admin/push-notifications", "routes/admin.push-notifications.tsx"),
+  route("admin/push-history", "routes/admin.push-history.tsx"),
   route("api/push-subscribe", "routes/api.push-subscribe.tsx"),
+  route("api/push-send", "routes/api.push-send.tsx"),
   route('api/rally-zones', 'routes/api.rally-zones.tsx'),
 ] satisfies RouteConfig;

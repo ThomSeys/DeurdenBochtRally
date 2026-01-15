@@ -219,6 +219,15 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            to="/admin/push-history"
+            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-orange-500"
+          >
+            <div className="text-2xl mb-2">📊</div>
+            <h3 className="font-semibold text-gray-900">Push History</h3>
+            <p className="text-sm text-gray-600 mt-1">Bekijk verzonden berichten</p>
+          </Link>
+
+          <Link
             to="/admin/settings"
             className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >

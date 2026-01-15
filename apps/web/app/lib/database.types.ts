@@ -465,6 +465,231 @@ export type Database = {
           },
         ]
       }
+      push_delivery_log: {
+        Row: {
+          created_at: string | null
+          delivery_attempt: number | null
+          delivery_status: string | null
+          error_message: string | null
+          first_attempt_at: string | null
+          id: number
+          last_attempt_at: string | null
+          notification_history_id: number | null
+          participant_id: string | null
+          status_code: number | null
+          subscription_endpoint: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_attempt?: number | null
+          delivery_status?: string | null
+          error_message?: string | null
+          first_attempt_at?: string | null
+          id?: number
+          last_attempt_at?: string | null
+          notification_history_id?: number | null
+          participant_id?: string | null
+          status_code?: number | null
+          subscription_endpoint?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_attempt?: number | null
+          delivery_status?: string | null
+          error_message?: string | null
+          first_attempt_at?: string | null
+          id?: number
+          last_attempt_at?: string | null
+          notification_history_id?: number | null
+          participant_id?: string | null
+          status_code?: number | null
+          subscription_endpoint?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_delivery_log_notification_history_id_fkey"
+            columns: ["notification_history_id"]
+            isOneToOne: false
+            referencedRelation: "push_notifications_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_delivery_log_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_delivery_log_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+        ]
+      }
+      push_message_templates: {
+        Row: {
+          body: string
+          created_at: string | null
+          created_by: string | null
+          event_type: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          target_group_id: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          created_by?: string | null
+          event_type?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          target_group_id?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          created_by?: string | null
+          event_type?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          target_group_id?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_message_templates_target_group_id_fkey"
+            columns: ["target_group_id"]
+            isOneToOne: false
+            referencedRelation: "push_recipient_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_notifications_history: {
+        Row: {
+          body: string
+          completed_at: string | null
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          expired_count: number | null
+          failed_count: number | null
+          id: number
+          participant_id: string | null
+          recipient_count: number | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string | null
+          success_count: number | null
+          target_criteria: Json | null
+          target_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          completed_at?: string | null
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          expired_count?: number | null
+          failed_count?: number | null
+          id?: number
+          participant_id?: string | null
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string | null
+          success_count?: number | null
+          target_criteria?: Json | null
+          target_type: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          completed_at?: string | null
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          expired_count?: number | null
+          failed_count?: number | null
+          id?: number
+          participant_id?: string | null
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string | null
+          success_count?: number | null
+          target_criteria?: Json | null
+          target_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_notifications_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_notifications_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+        ]
+      }
+      push_recipient_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          criteria: Json
+          description: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          participant_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          criteria: Json
+          description?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          participant_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          participant_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string | null
