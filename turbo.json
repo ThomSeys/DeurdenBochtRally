@@ -4,7 +4,7 @@
   "globalEnv": [
     "SANITY_PROJECT_ID",
     "SANITY_DATASET",
-    "SANITY_API_TOKEN",
+    "SANITY_TOKEN",
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -15,7 +15,13 @@
     "SITE_PASSWORD",
     "RESEND_API_KEY",
     "EMAIL_FROM",
-    "APP_URL"
+    "APP_URL",
+    "VAPID_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY",
+    "VAPID_EMAIL",
+    "VITE_VAPID_PUBLIC_KEY",
+    "STRIPE_PUBLISHABLE_KEY",
+    "VERCEL_OIDC_TOKEN"
   ],
   "tasks": {
     "build": {
