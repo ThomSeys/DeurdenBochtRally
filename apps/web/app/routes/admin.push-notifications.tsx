@@ -633,10 +633,10 @@ export default function AdminPushNotifications() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b bg-white px-6 rounded-t-lg">
+        <div className="flex gap-4 mb-6 border-b bg-white px-6 rounded-t-lg overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setSelectedTab('quick')}
-            className={`px-4 py-3 border-b-2 transition font-medium ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'quick'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -646,7 +646,7 @@ export default function AdminPushNotifications() {
           </button>
           <button
             onClick={() => setSelectedTab('broadcast')}
-            className={`px-4 py-3 border-b-2 transition font-medium ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'broadcast'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -656,7 +656,7 @@ export default function AdminPushNotifications() {
           </button>
           <button
             onClick={() => setSelectedTab('targeted')}
-            className={`px-4 py-3 border-b-2 transition font-medium ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'targeted'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -666,7 +666,7 @@ export default function AdminPushNotifications() {
           </button>
           <button
             onClick={() => setSelectedTab('history')}
-            className={`px-4 py-3 border-b-2 transition font-medium ${
+            className={`px-4 py-3 border-b-2 transition font-medium whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'history'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'

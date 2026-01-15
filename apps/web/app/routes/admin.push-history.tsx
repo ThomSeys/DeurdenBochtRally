@@ -219,10 +219,10 @@ export default function AdminPushHistory() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b">
+        <div className="flex gap-4 mb-6 border-b overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setSelectedTab('history')}
-            className={`px-4 py-2 border-b-2 transition ${
+            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'history'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -232,7 +232,7 @@ export default function AdminPushHistory() {
           </button>
           <button
             onClick={() => setSelectedTab('broadcast')}
-            className={`px-4 py-2 border-b-2 transition ${
+            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'broadcast'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -242,7 +242,7 @@ export default function AdminPushHistory() {
           </button>
           <button
             onClick={() => setSelectedTab('send-targeted')}
-            className={`px-4 py-2 border-b-2 transition ${
+            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 ${
               selectedTab === 'send-targeted'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
