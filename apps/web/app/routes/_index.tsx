@@ -331,7 +331,7 @@ export default function Index() {
               </p>
             </div>
             <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <div className="text-7xl mb-6">📕</div>
+              <Icon name="book" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
               <h3 className="text-2xl font-black mb-4">Het Bochtenboek</h3>
               <p className="text-gray-600 text-lg">
                 Geschreven aanwijzingen in plaats van GPS-pijlen. Echt navigeren, echt avontuur.
