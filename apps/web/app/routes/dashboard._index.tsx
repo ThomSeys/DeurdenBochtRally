@@ -90,7 +90,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .from('rally_zone_submissions')
       .select('participant_id, shadow_score');
 
-    // Calculate scores for all participants
+    // Get achievement points
+    const { data: achievementPoints } = await supabase
+      .from('participants')
+      .select('id, total_achievement_points');
+
+    // Calculate scores for all participants (including achievements)
     const scores = (allSubmissions || []).map(sub => {
       let basicPoints = 0;
       let shadowTotal = 0;
@@ -115,9 +120,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
       ) || [];
       shadowTotal = participantShadowScores.reduce((sum, s) => sum + (s.shadow_score || 0), 0);
 
+      // Achievement points
+      const achievementScore = achievementPoints?.find(a => a.id === sub.participant_id)?.total_achievement_points || 0;
+
       return {
         participant_id: sub.participant_id,
-        totalScore: basicPoints + shadowTotal
+        totalScore: basicPoints + shadowTotal + achievementScore
       };
     }).sort((a, b) => b.totalScore - a.totalScore);
 
@@ -288,6 +296,35 @@ export default function Dashboard() {
           </div>
         </div>
         )}
+
+        {/* Main CTA - Rally Submission */}
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="text-6xl">🏁</div>
+              <div>
+                <h2 className="text-3xl font-bold mb-2">Rally Codes Indienen</h2>
+                <p className="text-primary-100 text-lg">
+                  {submission && completedZones > 0 
+                    ? `Je hebt ${completedZones} zone${completedZones !== 1 ? 's' : ''} voltooid! Update je codes en verzamel meer punten.`
+                    : 'Dien je rally zone codes in om punten te verzamelen en mee te strijden om de Bochtenkoning titel!'}
+                </p>
+                {submission && (
+                  <p className="text-primary-50 text-sm mt-2 font-semibold">
+                    💪 Totaal punten: <span className="text-2xl">{submission?.total_points}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+            <Link
+              to="/dashboard/rally-submission"
+              className="whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-8 py-4 rounded-sm font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center gap-2 self-center"
+            >
+              {submission ? 'Codes Bijwerken' : 'Nu Starten'}
+              <span>→</span>
+            </Link>
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
@@ -562,22 +599,6 @@ export default function Dashboard() {
               <p className="text-gray-500">Nog geen instructies beschikbaar</p>
             )}
           </div>
-        </div>
-
-        {/* Rally Submission CTA */}
-        <div className="bg-primary-50 border-2 border-primary-200 rounded-sm p-6 text-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Rally codes indienen
-          </h3>
-          <p className="text-gray-700 mb-4">
-            Heb je rally zones voltooid? Dien je codes in om punten te verzamelen!
-          </p>
-          <Link
-            to="/dashboard/rally-submission"
-            className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-sm font-semibold transition-colors"
-          >
-            {submission ? 'Codes bijwerken' : 'Codes indienen'}
-          </Link>
         </div>
 
         {/* Contact Info */}

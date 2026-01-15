@@ -41,22 +41,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .eq('participant_id', userId)
     .order('zone_id', { ascending: true });
 
-  // Get scoreboard - all participants with their scores
-  const { data: scoreboard } = await supabaseAdmin
+  // Get scoreboard - all participants with their scores (including achievements)
+  const { data: allParticipants } = await supabaseAdmin
+    .from('participants')
+    .select('id, first_name, last_name, motorcycle_brand, motorcycle_model, total_achievement_points');
+
+  const { data: rallySubmissions } = await supabaseAdmin
     .from('rally_submissions')
-    .select(`
-      total_points,
-      shadow_total,
-      final_score,
-      participants!inner (
-        first_name,
-        last_name,
-        motorcycle_brand,
-        motorcycle_model
-      )
-    `)
-    .not('final_score', 'is', null)
-    .order('final_score', { ascending: false });
+    .select('participant_id, total_points, shadow_total, final_score')
+    .not('final_score', 'is', null);
+
+  // Combine rally scores with achievement points
+  const scoreboard = (allParticipants || [])
+    .map((participant: any) => {
+      const submission = rallySubmissions?.find(s => s.participant_id === participant.id);
+      return {
+        participant_id: participant.id,
+        final_score: (submission?.final_score || 0) + (participant.total_achievement_points || 0),
+        total_points: submission?.total_points || 0,
+        shadow_total: submission?.shadow_total || 0,
+        achievement_points: participant.total_achievement_points || 0,
+        participants: {
+          first_name: participant.first_name,
+          last_name: participant.last_name,
+          motorcycle_brand: participant.motorcycle_brand,
+          motorcycle_model: participant.motorcycle_model,
+        }
+      };
+    })
+    .filter(p => p.final_score > 0 || p.total_points > 0)
+    .sort((a: any, b: any) => b.final_score - a.final_score);
 
   // Get shadow score explanation from Sanity
   const shadowScoreExplanation = await sanityClient.fetch(
@@ -718,16 +732,19 @@ export default function RallySubmission() {
                 })}
 
                 {/* Hidden inputs for all zones */}
-                {zones.map((zone) => (
-                  activeZone !== zone.id && (
-                    <input
-                      key={zone.id}
-                      type="hidden"
-                      name={`rz${zone.id}_code`}
-                      value={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
-                    />
-                  )
-                ))}
+                {zones.map((zone) => {
+                  if (activeZone !== zone.id) {
+                    return (
+                      <input
+                        key={zone.id}
+                        type="hidden"
+                        name={`rz${zone.id}_code`}
+                        value={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
+                      />
+                    );
+                  }
+                  return null;
+                })}
 
                 {/* Distance Calculation Section */}
                 <div className="pt-6 border-t">

@@ -76,6 +76,13 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     />
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg py-2 z-50">
                       <Link
+                        to="/dashboard/rally-submission"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        🏁 Rally Codes Indienen
+                      </Link>
+                      <Link
                         to="/rally"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}

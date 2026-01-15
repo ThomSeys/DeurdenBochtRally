@@ -13,6 +13,7 @@ import "./app.css";
 import { getUser } from "~/lib/session.server";
 import { requireSitePassword } from "~/lib/site-password.server";
 import CookieBanner from "~/components/CookieBanner";
+import RallySubmissionFAB from "~/components/RallySubmissionFAB";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
@@ -37,7 +38,15 @@ export const links: Route.LinksFunction = () => [
 export async function loader({ request }: Route.LoaderArgs) {
   await requireSitePassword(request);
   const user = await getUser(request);
-  return { user };
+  
+  // Import server-only module inside the loader
+  const { getCSRFToken } = await import("~/lib/csrf.server");
+  const csrfToken = await getCSRFToken(request);
+  
+  return { 
+    user,
+    csrfToken,
+  };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -61,6 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body className="antialiased">
         {children}
         <CookieBanner />
+        <RallySubmissionFAB />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -70,16 +80,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   useEffect(() => {
-    // Register service worker on app load for all users
+    // Register service worker on app load - uses network-first strategy
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' })
         .then((registration) => {
           console.info('[sw] Service worker registered', registration.scope);
-          
-          // Check for updates regularly
-          setInterval(() => {
-            registration.update();
-          }, 60000); // Check every minute
         })
         .catch((error) => {
           console.error('[sw] Service worker registration failed', error);

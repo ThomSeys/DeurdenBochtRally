@@ -40,23 +40,42 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .order('created_at', { ascending: false })
     .limit(10);
 
-  // Get top scorers
-  const { data: topScorers } = await supabaseAdmin
+  // Get top scorers (including achievement points)
+  const { data: allParticipants } = await supabaseAdmin
+    .from('participants')
+    .select('id, first_name, last_name, motorcycle_brand, motorcycle_model, total_achievement_points')
+    .not('id', 'is', null);
+
+  const { data: rallyScores } = await supabaseAdmin
     .from('rally_submissions')
-    .select(`
-      final_score,
-      total_points,
-      shadow_total,
-      participants!inner (
-        first_name,
-        last_name,
-        motorcycle_brand,
-        motorcycle_model
-      )
-    `)
-    .not('final_score', 'is', null)
-    .order('final_score', { ascending: false })
-    .limit(10);
+    .select('participant_id, final_score, total_points, shadow_total')
+    .not('final_score', 'is', null);
+
+  // Combine rally scores with achievement points
+  const topScorers = (allParticipants || [])
+    .map((participant: any) => {
+      const rallyScore = rallyScores?.find(r => r.participant_id === participant.id);
+      return {
+        participant_id: participant.id,
+        first_name: participant.first_name,
+        last_name: participant.last_name,
+        motorcycle_brand: participant.motorcycle_brand,
+        motorcycle_model: participant.motorcycle_model,
+        final_score: (rallyScore?.final_score || 0) + (participant.total_achievement_points || 0),
+        total_points: rallyScore?.total_points || 0,
+        shadow_total: rallyScore?.shadow_total || 0,
+        achievement_points: participant.total_achievement_points || 0,
+        participants: {
+          first_name: participant.first_name,
+          last_name: participant.last_name,
+          motorcycle_brand: participant.motorcycle_brand,
+          motorcycle_model: participant.motorcycle_model,
+        }
+      };
+    })
+    .filter(p => p.final_score > 0 || p.total_points > 0) // Only show participants with scores
+    .sort((a: any, b: any) => b.final_score - a.final_score)
+    .slice(0, 10);
 
   return {
     stats: {
@@ -283,16 +302,19 @@ export default function AdminDashboard() {
                         <span className="text-2xl font-bold text-gray-400">#{index + 1}</span>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {scorer.participants.first_name} {scorer.participants.last_name}
+                            {scorer.first_name} {scorer.last_name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {scorer.participants.motorcycle_brand} {scorer.participants.motorcycle_model}
+                            {scorer.motorcycle_brand} {scorer.motorcycle_model}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-primary-600">{scorer.final_score?.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">{scorer.total_points} pts + {scorer.shadow_total?.toFixed(0)} shadow</p>
+                        <p className="text-xs text-gray-500">
+                          {scorer.total_points} pts + {scorer.shadow_total?.toFixed(0) || 0} shadow
+                          {scorer.achievement_points > 0 && ` + ${scorer.achievement_points} 🏆`}
+                        </p>
                       </div>
                     </div>
                   </div>
