@@ -39,4 +39,5 @@ export default [
   route("api/push-send", "routes/api.push-send.tsx"),
   route('api/rally-zones', 'routes/api.rally-zones.tsx'),
   route('dashboard/notification-history', 'routes/dashboard.notification-history.tsx'),
+  route('api/zone-gpx/:zoneId', 'routes/api.zone-gpx.tsx'),
 ] satisfies RouteConfig;
