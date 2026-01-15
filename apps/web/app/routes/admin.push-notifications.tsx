@@ -4,7 +4,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import type { Database } from '~/lib/database.types';
 import { useState } from 'react';
 import Header from '~/components/Header';
-import { notificationTemplates } from '~/lib/push-notifications.server';
+import { notificationTemplates } from '~/lib/push-notifications-enhanced.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Push Meldingen - Admin - Deur Den Bocht' }];
