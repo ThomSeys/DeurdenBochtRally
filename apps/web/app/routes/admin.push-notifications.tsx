@@ -418,27 +418,7 @@ export default function AdminPushNotifications() {
                 </button>
               </fetcher.Form>
 
-              <fetcher.Form method="post" className="contents">
-                <input type="hidden" name="_action" value="template-reminder24h" />
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
-                >
-                  ⏰ 24u Herinnering
-                </button>
-              </fetcher.Form>
 
-              <fetcher.Form method="post" className="contents">
-                <input type="hidden" name="_action" value="template-reminder1h" />
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
-                >
-                  ⏰ 1u Herinnering
-                </button>
-              </fetcher.Form>
             </div>
 
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
