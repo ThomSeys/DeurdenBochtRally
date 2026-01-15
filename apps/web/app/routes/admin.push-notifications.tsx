@@ -1,6 +1,5 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, useFetcher, Link } from 'react-router';
-import { supabaseAdmin } from '~/lib/supabase.server';
 import type { Database } from '~/lib/database.types';
 import { useState } from 'react';
 import Header from '~/components/Header';
@@ -12,6 +11,8 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { requireAdmin } = await import('~/lib/session.server');
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   await requireAdmin(request);
 
   const url = new URL(request.url);
@@ -94,6 +95,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const { requireAdmin, requireUserId } = await import('~/lib/session.server');
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  const { sendPushNotificationWithHistory, sendTargetedPushNotification, sendPushNotification, sendBulkPushNotifications } = await import('~/lib/push-notifications-enhanced.server');
+  
   await requireAdmin(request);
   const userId = await requireUserId(request);
 
@@ -101,157 +105,455 @@ export async function action({ request }: ActionFunctionArgs) {
     return { error: 'Method not allowed' };
   }
 
-  const formData = await request.formData();
-  const actionType = formData.get('_action') as string;
+  try {
+    const formData = await request.formData();
+    const actionType = formData.get('_action') as string;
 
-  // Handle quick template actions (broadcast to all)
-  if (actionType?.startsWith('template-')) {
-    const templateType = actionType.replace('template-', '') as keyof typeof notificationTemplates;
-    
-    const templateNotif = (notificationTemplates as any)[templateType];
-    if (!templateNotif) {
-      return { error: 'Template not found' };
+    // Handle quick template actions (broadcast to all)
+    if (actionType?.startsWith('template-')) {
+      const templateType = actionType.replace('template-', '') as keyof typeof notificationTemplates;
+      
+      const templateNotif = (notificationTemplates as any)[templateType];
+      if (!templateNotif) {
+        return { error: 'Template not found' };
+      }
+
+      // Get current template notification
+      const notification = typeof templateNotif === 'function' ? templateNotif(1) : templateNotif;
+
+      // Get all active subscriptions
+      const { data: subscriptions, error } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('[admin.push-notifications] Error fetching subscriptions:', error);
+        return { error: error.message };
+      }
+
+      if (!subscriptions || subscriptions.length === 0) {
+        return { error: 'No active subscriptions found' };
+      }
+
+      // Special handling for leaderboard update - personalize with each participant's rank
+      if (templateType === 'leaderboard') {
+        console.info('[admin.push-notifications] Personalizing leaderboard updates for broadcast');
+        
+        const { getParticipantRanks } = await import('~/lib/leaderboard.server');
+        
+        const participantIds = subscriptions.map(s => s.participant_id).filter(Boolean) as string[];
+        const rankMap = await getParticipantRanks(participantIds);
+
+        const results = await Promise.allSettled(
+          subscriptions.map(sub => {
+            const rank = sub.participant_id ? rankMap.get(sub.participant_id) : null;
+            const personalizedBody = rank ? `Je staat nu op positie #${rank}!` : notification.body;
+            
+            return sendPushNotification(sub, {
+              title: notification.title,
+              body: personalizedBody,
+              tag: 'leaderboard',
+            });
+          })
+        );
+
+        const successful = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+        const expired = results.filter(r => r.status === 'fulfilled' && r.value?.expired).length;
+        const failed = results.length - successful;
+
+        // Mark expired subscriptions as inactive
+        if (expired > 0) {
+          const expiredEndpoints = results
+            .map((result, idx) => result.status === 'fulfilled' && result.value?.expired ? subscriptions[idx].endpoint : null)
+            .filter(Boolean) as string[];
+          
+          if (expiredEndpoints.length > 0) {
+            await supabaseAdmin
+              .from('push_subscriptions')
+              .update({ is_active: false })
+              .in('endpoint', expiredEndpoints);
+          }
+        }
+
+        const { data: historyRecord } = await supabaseAdmin
+          .from('push_notifications_history')
+          .insert({
+            title: notification.title,
+            body: 'Personalized leaderboard update sent to each participant with their rank',
+            event_type: templateType,
+            target_type: 'broadcast',
+            sent_by: userId,
+            sent_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
+
+        return {
+          success: true,
+          historyId: historyRecord?.id,
+          sent: successful,
+          failed,
+          expired,
+          personalized: true,
+        };
+      }
+
+      const result = await sendPushNotificationWithHistory(
+        subscriptions,
+        {
+          title: notification.title,
+          body: notification.body,
+        },
+        {
+          title: notification.title,
+          body: notification.body,
+          eventType: templateType,
+          sentBy: userId,
+        }
+      );
+
+      return {
+        success: true,
+        historyId: result.historyId,
+        sent: result.successful,
+        failed: result.failed,
+        expired: result.expired,
+      };
     }
 
-    // Get current template notification
-    const notification = typeof templateNotif === 'function' ? templateNotif(1) : templateNotif;
+    // Handle custom broadcast
+    if (actionType === 'send-broadcast') {
+      const title = formData.get('title') as string;
+      const body = formData.get('body') as string;
+      const eventType = formData.get('eventType') as string;
 
-    const response = await fetch(new URL('/api/push-send', request.url), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({
-        action: 'broadcast',
+      if (!title || !body) {
+        return { error: 'Title and body are required' };
+      }
+
+      const { data: subscriptions, error } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('[admin.push-notifications] Error fetching subscriptions:', error);
+        return { error: error.message };
+      }
+
+      if (!subscriptions || subscriptions.length === 0) {
+        return { error: 'No active subscriptions found' };
+      }
+
+      // Special handling for leaderboard update
+      if (eventType === 'leaderboard') {
+        const { getParticipantRanks } = await import('~/lib/leaderboard.server');
+        
+        const participantIds = subscriptions.map(s => s.participant_id).filter(Boolean) as string[];
+        const rankMap = await getParticipantRanks(participantIds);
+
+        const results = await Promise.allSettled(
+          subscriptions.map(sub => {
+            const rank = sub.participant_id ? rankMap.get(sub.participant_id) : null;
+            const personalizedBody = rank ? `Je staat nu op positie #${rank}!` : body;
+            
+            return sendPushNotification(sub, {
+              title,
+              body: personalizedBody,
+              tag: 'leaderboard',
+            });
+          })
+        );
+
+        const successful = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+        const expired = results.filter(r => r.status === 'fulfilled' && r.value?.expired).length;
+        const failed = results.length - successful;
+
+        if (expired > 0) {
+          const expiredEndpoints = results
+            .map((result, idx) => result.status === 'fulfilled' && result.value?.expired ? subscriptions[idx].endpoint : null)
+            .filter(Boolean) as string[];
+          
+          if (expiredEndpoints.length > 0) {
+            await supabaseAdmin
+              .from('push_subscriptions')
+              .update({ is_active: false })
+              .in('endpoint', expiredEndpoints);
+          }
+        }
+
+        const { data: historyRecord } = await supabaseAdmin
+          .from('push_notifications_history')
+          .insert({
+            title,
+            body: 'Personalized leaderboard update sent to each participant with their rank',
+            event_type: eventType || 'custom',
+            target_type: 'broadcast',
+            sent_by: userId,
+            sent_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
+
+        return {
+          success: true,
+          historyId: historyRecord?.id,
+          sent: successful,
+          failed,
+          expired,
+          personalized: true,
+        };
+      }
+
+      const result = await sendPushNotificationWithHistory(
+        subscriptions,
+        { title, body },
+        {
+          title,
+          body,
+          eventType: eventType || 'custom',
+          sentBy: userId,
+        }
+      );
+
+      return {
+        success: true,
+        historyId: result.historyId,
+        sent: result.successful,
+        failed: result.failed,
+        expired: result.expired,
+      };
+    }
+
+    // Handle targeted message with advanced filters
+    if (actionType === 'send-targeted') {
+      const title = formData.get('title') as string;
+      const body = formData.get('body') as string;
+      const eventType = formData.get('eventType') as string;
+
+      const filterFormula = formData.get('filterFormula') as string;
+      const filterBeyondZone = formData.get('filterBeyondZone') as string;
+      const filterCheckedIn = formData.get('filterCheckedIn') as string;
+      const filterRideType = formData.get('filterRideType') as string;
+      const manualUserIds = formData.getAll('manualUserIds') as string[];
+
+      if (!title || !body) {
+        return { error: 'Title and body are required' };
+      }
+
+      const criteria: any = {};
+      if (filterFormula) criteria.rally_packages = [filterFormula];
+      if (filterBeyondZone) criteria.min_zone = filterBeyondZone;
+      if (filterCheckedIn !== 'all') criteria.checked_in = filterCheckedIn === 'true';
+      if (filterRideType) criteria.ride_types = [filterRideType];
+      if (manualUserIds.length > 0) criteria.participant_ids = manualUserIds;
+
+      if (Object.keys(criteria).length === 0) {
+        return { error: 'Please select at least one filter criteria' };
+      }
+
+      // Get targeted subscriptions
+      const { data: subscriptions, error } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select(`
+          *,
+          participants!inner (
+            formula,
+            ride_type,
+            checked_in
+          )
+        `)
+        .eq('is_active', true);
+
+      if (error || !subscriptions) {
+        return { error: 'Could not fetch subscriptions' };
+      }
+
+      let filtered = subscriptions;
+
+      if (criteria.participant_ids) {
+        filtered = filtered.filter(s => criteria.participant_ids.includes(s.participant_id));
+      }
+      if (criteria.rally_packages) {
+        filtered = filtered.filter(s => 
+          s.participants && criteria.rally_packages.includes(s.participants.formula)
+        );
+      }
+      if (criteria.ride_types) {
+        filtered = filtered.filter(s => 
+          s.participants && criteria.ride_types.includes(s.participants.ride_type)
+        );
+      }
+      if (criteria.checked_in !== undefined) {
+        filtered = filtered.filter(s => 
+          s.participants && s.participants.checked_in === criteria.checked_in
+        );
+      }
+
+      if (filtered.length === 0) {
+        return { error: 'No subscriptions match target criteria' };
+      }
+
+      // Special handling for leaderboard
+      if (eventType === 'leaderboard') {
+        const { getParticipantRanks } = await import('~/lib/leaderboard.server');
+        const participantIds = filtered.map(s => s.participant_id).filter(Boolean) as string[];
+        const rankMap = await getParticipantRanks(participantIds);
+
+        const results = await Promise.allSettled(
+          filtered.map(sub => {
+            const rank = sub.participant_id ? rankMap.get(sub.participant_id) : null;
+            const personalizedBody = rank ? `Je staat nu op positie #${rank}!` : body;
+            
+            return sendPushNotification(sub, {
+              title,
+              body: personalizedBody,
+              tag: 'leaderboard',
+            });
+          })
+        );
+
+        const successful = results.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+        const expired = results.filter(r => r.status === 'fulfilled' && r.value?.expired).length;
+        const failed = results.length - successful;
+
+        if (expired > 0) {
+          const expiredEndpoints = results
+            .map((result, idx) => result.status === 'fulfilled' && result.value?.expired ? filtered[idx].endpoint : null)
+            .filter(Boolean) as string[];
+          
+          if (expiredEndpoints.length > 0) {
+            await supabaseAdmin
+              .from('push_subscriptions')
+              .update({ is_active: false })
+              .in('endpoint', expiredEndpoints);
+          }
+        }
+
+        const { data: historyRecord } = await supabaseAdmin
+          .from('push_notifications_history')
+          .insert({
+            title,
+            body: 'Personalized leaderboard update sent to targeted participants with their rank',
+            event_type: eventType || 'custom',
+            target_type: 'targeted',
+            target_criteria: criteria,
+            sent_by: userId,
+            sent_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
+
+        return {
+          success: true,
+          historyId: historyRecord?.id,
+          sent: successful,
+          failed,
+          expired,
+          personalized: true,
+        };
+      }
+
+      const result = await sendTargetedPushNotification(
+        criteria,
+        { title, body },
+        {
+          title,
+          body,
+          eventType: eventType || 'custom',
+          sentBy: userId,
+        }
+      );
+
+      return {
+        success: true,
+        historyId: result.historyId,
+        sent: result.successful,
+        failed: result.failed,
+        expired: result.expired,
+      };
+    }
+
+    // Handle retry failed
+    if (actionType === 'retry-failed') {
+      const historyId = formData.get('historyId');
+
+      if (!historyId) {
+        return { error: 'Missing historyId' };
+      }
+
+      const { data: notification } = await supabaseAdmin
+        .from('push_notifications_history')
+        .select('*')
+        .eq('id', historyId)
+        .single();
+
+      if (!notification) {
+        return { error: 'Notification not found' };
+      }
+
+      const { data: failedDeliveries } = await supabaseAdmin
+        .from('push_delivery_log')
+        .select('subscription_endpoint, participant_id')
+        .eq('notification_history_id', historyId)
+        .eq('delivery_status', 'failed')
+        .lt('delivery_attempt', 3);
+
+      if (!failedDeliveries || failedDeliveries.length === 0) {
+        return { error: 'No failed deliveries to retry' };
+      }
+
+      const { data: subscriptions } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .in('endpoint', failedDeliveries.map(d => d.subscription_endpoint).filter(Boolean) as string[])
+        .eq('is_active', true);
+
+      if (!subscriptions || subscriptions.length === 0) {
+        return { error: 'No active subscriptions found for retry' };
+      }
+
+      const results = await sendBulkPushNotifications(subscriptions, {
         title: notification.title,
         body: notification.body,
-        eventType: templateType,
-      }),
-    });
+      });
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('[admin.push-notifications] API error:', response.status, text);
-      return { error: `API error: ${response.statusText}` };
+      for (const failed of failedDeliveries) {
+        if (!failed.subscription_endpoint) continue;
+        const attempt = await supabaseAdmin
+          .from('push_delivery_log')
+          .select('delivery_attempt')
+          .eq('notification_history_id', historyId)
+          .eq('subscription_endpoint', failed.subscription_endpoint)
+          .single();
+
+        const nextAttempt = (attempt.data?.delivery_attempt || 1) + 1;
+
+        await supabaseAdmin
+          .from('push_delivery_log')
+          .update({
+            delivery_attempt: nextAttempt,
+            last_attempt_at: new Date().toISOString(),
+          })
+          .eq('notification_history_id', historyId)
+          .eq('subscription_endpoint', failed.subscription_endpoint);
+      }
+
+      return {
+        success: true,
+        retried: subscriptions.length,
+        sent: results.successful,
+        failed: results.failed,
+        expired: results.expired,
+      };
     }
 
-    return await response.json();
+    return { error: 'Unknown action' };
+  } catch (error: any) {
+    console.error('[admin.push-notifications] Error:', error);
+    return { error: error.message || 'Internal server error' };
   }
-
-  // Handle custom broadcast
-  if (actionType === 'send-broadcast') {
-    const title = formData.get('title') as string;
-    const body = formData.get('body') as string;
-    const eventType = formData.get('eventType') as string;
-
-    if (!title || !body) {
-      return { error: 'Title and body are required' };
-    }
-
-    const response = await fetch(new URL('/api/push-send', request.url), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({
-        action: 'broadcast',
-        title,
-        body,
-        eventType: eventType || 'custom',
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('[admin.push-notifications] API error:', response.status, text);
-      return { error: `API error: ${response.statusText}` };
-    }
-
-    return await response.json();
-  }
-
-  // Handle targeted message with advanced filters
-  if (actionType === 'send-targeted') {
-    const title = formData.get('title') as string;
-    const body = formData.get('body') as string;
-    const eventType = formData.get('eventType') as string;
-
-    // Advanced filters
-    const filterFormula = formData.get('filterFormula') as string;
-    const filterBeyondZone = formData.get('filterBeyondZone') as string;
-    const filterCheckedIn = formData.get('filterCheckedIn') as string;
-    const filterRideType = formData.get('filterRideType') as string;
-    const manualUserIds = formData.getAll('manualUserIds') as string[];
-
-    if (!title || !body) {
-      return { error: 'Title and body are required' };
-    }
-
-    // Build filter criteria
-    const criteria: any = {};
-
-    if (filterFormula) criteria.formula = filterFormula;
-    if (filterBeyondZone) criteria.min_zone = filterBeyondZone;
-    if (filterCheckedIn !== 'all') criteria.checked_in = filterCheckedIn === 'true';
-    if (filterRideType) criteria.ride_type = filterRideType;
-    if (manualUserIds.length > 0) criteria.user_ids = manualUserIds;
-
-    if (Object.keys(criteria).length === 0) {
-      return { error: 'Please select at least one filter criteria' };
-    }
-
-    const response = await fetch(new URL('/api/push-send', request.url), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({
-        action: 'targeted',
-        title,
-        body,
-        eventType: eventType || 'custom',
-        criteria,
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('[admin.push-notifications] API error:', response.status, text);
-      return { error: `API error: ${response.statusText}` };
-    }
-
-    return await response.json();
-  }
-
-  // Handle retry failed
-  if (actionType === 'retry-failed') {
-    const historyId = formData.get('historyId');
-
-    const response = await fetch(new URL('/api/push-send', request.url), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({
-        action: 'retry-failed',
-        historyId: parseInt(historyId as string),
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('[admin.push-notifications] API error:', response.status, text);
-      return { error: `API error: ${response.statusText}` };
-    }
-
-    return await response.json();
-  }
-
-  return { error: 'Unknown action' };
 }
 
 

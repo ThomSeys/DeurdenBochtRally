@@ -1,8 +1,9 @@
 import type { ActionFunctionArgs } from 'react-router';
-import { requireUserId } from '~/lib/session.server';
-import { supabaseAdmin } from '~/lib/supabase.server';
 
 export async function action({ request }: ActionFunctionArgs) {
+  const { requireUserId } = await import('~/lib/session.server');
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   const userId = await requireUserId(request);
   
   if (request.method !== 'POST') {

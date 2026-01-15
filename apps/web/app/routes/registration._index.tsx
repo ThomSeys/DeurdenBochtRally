@@ -6,7 +6,6 @@ import { useState } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { getActiveEdition, getPricingTiers, getSiteConfig } from '~/lib/sanity.server';
-import { supabaseAdmin } from '~/lib/supabase.server';
 import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
 import { FORMULA_PRICES } from '~/lib/utils';
@@ -32,6 +31,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   console.info('[registration] action start');
 
   try {

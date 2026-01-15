@@ -1,10 +1,11 @@
 import type { ActionFunctionArgs } from 'react-router';
 
 import { verifyWebhookSignature } from '~/lib/stripe.server';
-import { supabaseAdmin } from '~/lib/supabase.server';
 import { sendEmail, paymentConfirmationEmail, registrationConfirmationEmail } from '~/lib/email.server';
 
 export async function action({ request }: ActionFunctionArgs) {
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   console.info('[api.webhook] action start', { method: request.method });
 
   if (request.method !== 'POST') {

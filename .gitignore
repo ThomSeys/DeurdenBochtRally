@@ -17,3 +17,4 @@ apps/web/build
 apps/web/node_modules
 sanity-studio/node_modules
 .gitignore
+.env.vercel

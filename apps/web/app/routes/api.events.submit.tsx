@@ -1,10 +1,11 @@
 import { type LoaderFunctionArgs } from 'react-router';
-import { requireUserId } from '~/lib/session.server';
-import { sanityClient } from '~/lib/sanity.server';
-import { supabaseAdmin } from '~/lib/supabase.server';
 import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
 
 export async function action({ request }: LoaderFunctionArgs) {
+  const { requireUserId } = await import('~/lib/session.server');
+  const { sanityClient } = await import('~/lib/sanity.server');
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   console.info('[api.events.submit] action start', { method: request.method });
 
   if (request.method !== 'POST') {
