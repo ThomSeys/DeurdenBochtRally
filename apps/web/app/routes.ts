@@ -40,4 +40,7 @@ export default [
   route('api/rally-zones', 'routes/api.rally-zones.tsx'),
   route('dashboard/notification-history', 'routes/dashboard.notification-history.tsx'),
   route('api/zone-gpx/:zoneId', 'routes/api.zone-gpx.$zoneId.tsx'),
+  route('api/gpx-route', 'routes/api.gpx-route.tsx'),
+  route('api/event-markers', 'routes/api.event-markers.tsx'),
+  route('api/check-ins', 'routes/api.check-ins.tsx'),
 ] satisfies RouteConfig;
