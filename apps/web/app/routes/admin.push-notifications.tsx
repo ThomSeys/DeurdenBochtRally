@@ -7,7 +7,7 @@ import Header from '~/components/Header';
 import { notificationTemplates } from '~/lib/push-notifications.server';
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'Push Notifications - Admin - Deur Den Bocht' }];
+  return [{ title: 'Push Meldingen - Admin - Deur Den Bocht' }];
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -298,16 +298,16 @@ export default function AdminPushNotifications() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">🔔 Push Notifications Center</h1>
+            <h1 className="text-3xl font-bold text-gray-900">🔔 Push Meldingen Centrum</h1>
             <p className="text-gray-600 mt-2">
-              {activeSubscriptions} active subscriptions • Send templates, custom, or targeted messages
+              {activeSubscriptions} actieve abonnementen • Stuur templates, aangepaste of gerichte berichten
             </p>
           </div>
           <Link
             to="/admin"
             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
           >
-            ← Back
+            ← Terug
           </Link>
         </div>
 
@@ -320,7 +320,7 @@ export default function AdminPushNotifications() {
         {result?.success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <p className="text-green-800">
-              ✅ Message sent successfully! Sent: {result.sent}, Failed: {result.failed}, Expired: {result.expired}
+              ✅ Bericht succesvol verzonden! Verzonden: {result.sent}, Mislukt: {result.failed}, Verlopen: {result.expired}
             </p>
           </div>
         )}
@@ -335,7 +335,7 @@ export default function AdminPushNotifications() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            ⚡ Quick Templates
+            ⚡ Snelle Templates
           </button>
           <button
             onClick={() => setSelectedTab('broadcast')}
@@ -345,7 +345,7 @@ export default function AdminPushNotifications() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            📢 Custom Broadcast
+            📢 Aangepaste Uitzending
           </button>
           <button
             onClick={() => setSelectedTab('targeted')}
@@ -355,7 +355,7 @@ export default function AdminPushNotifications() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            🎯 Targeted Message
+            🎯 Gericht Bericht
           </button>
           <button
             onClick={() => setSelectedTab('history')}
@@ -365,14 +365,14 @@ export default function AdminPushNotifications() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            📊 History
+            📊 Geschiedenis
           </button>
         </div>
 
         {/* Quick Templates Tab */}
         {selectedTab === 'quick' && (
           <div className="bg-white rounded-b-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Template Messages</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Snelle Sjabloonberichten</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <fetcher.Form method="post" className="contents">
                 <input type="hidden" name="_action" value="template-rallyStart" />
@@ -381,7 +381,7 @@ export default function AdminPushNotifications() {
                   disabled={isLoading}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  🏁 Rally Started
+                  🏁 Rally Gestart
                 </button>
               </fetcher.Form>
 
@@ -392,7 +392,7 @@ export default function AdminPushNotifications() {
                   disabled={isLoading}
                   className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  🏁 Rally Ended
+                  🏁 Rally Beëindigd
                 </button>
               </fetcher.Form>
 
@@ -403,7 +403,7 @@ export default function AdminPushNotifications() {
                   disabled={isLoading}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  ⛈️ Weather Warning
+                  ⛈️ Weersmelding
                 </button>
               </fetcher.Form>
 
@@ -414,7 +414,7 @@ export default function AdminPushNotifications() {
                   disabled={isLoading}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  🏆 Leaderboard Update
+                  🏆 Ranglijst Update
                 </button>
               </fetcher.Form>
 
@@ -425,7 +425,7 @@ export default function AdminPushNotifications() {
                   disabled={isLoading}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  ⏰ 24h Reminder
+                  ⏰ 24u Herinnering
                 </button>
               </fetcher.Form>
 
@@ -436,7 +436,7 @@ export default function AdminPushNotifications() {
                   disabled={isLoading}
                   className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  ⏰ 1h Reminder
+                  ⏰ 1u Herinnering
                 </button>
               </fetcher.Form>
             </div>
@@ -444,10 +444,10 @@ export default function AdminPushNotifications() {
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-semibold text-blue-900 mb-2">💡 Tips</h3>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Templates are pre-defined messages sent to all active subscribers</li>
-                <li>• Use for critical announcements and standard rally events</li>
-                <li>• Use "Custom Broadcast" for unique messages</li>
-                <li>• Use "Targeted Message" to reach specific participant groups</li>
+                <li>• Templates zijn voorgedefinieerde berichten verzonden naar alle actieve abonnees</li>
+                <li>• Gebruik voor kritieke aankondigingen en standaard rally-evenementen</li>
+                <li>• Gebruik "Aangepaste Uitzending" voor unieke berichten</li>
+                <li>• Gebruik "Gericht Bericht" om specifieke deelnemergroepen te bereiken</li>
               </ul>
             </div>
           </div>
@@ -456,36 +456,36 @@ export default function AdminPushNotifications() {
         {/* Custom Broadcast Tab */}
         {selectedTab === 'broadcast' && (
           <div className="bg-white rounded-b-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-6">Send Custom Broadcast</h2>
+            <h2 className="text-xl font-bold mb-6">Aangepaste Uitzending Versturen</h2>
             <fetcher.Form method="POST" className="space-y-4">
               <input type="hidden" name="_action" value="send-broadcast" />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
                 <input
                   type="text"
                   name="title"
                   required
-                  placeholder="e.g., 🔔 Important Update"
+                  placeholder="bijv. 🔔 Belangrijk Update"
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bericht</label>
                 <textarea
                   name="body"
                   required
                   rows={4}
-                  placeholder="Your message here..."
+                  placeholder="Uw bericht hier..."
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Event Type (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type Evenement (optioneel)</label>
                 <select name="eventType" className="w-full px-4 py-2 border rounded-lg">
-                  <option value="custom">Custom</option>
+                  <option value="custom">Aangepast</option>
                   {(eventTypes || []).map((type: string) => (
                     <option key={type} value={type}>
                       {type}
@@ -499,7 +499,7 @@ export default function AdminPushNotifications() {
                 disabled={isLoading}
                 className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium"
               >
-                {isLoading ? 'Sending...' : `Send to All ${activeSubscriptions} Subscribers`}
+                {isLoading ? 'Verzenden...' : `Verzenden naar Alle ${activeSubscriptions} Abonnees`}
               </button>
             </fetcher.Form>
           </div>
@@ -508,24 +508,24 @@ export default function AdminPushNotifications() {
         {/* Targeted Message Tab */}
         {selectedTab === 'targeted' && (
           <div className="bg-white rounded-b-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-6">Send Targeted Message</h2>
+            <h2 className="text-xl font-bold mb-6">Gericht Bericht Versturen</h2>
             <fetcher.Form method="POST" className="space-y-6">
               <input type="hidden" name="_action" value="send-targeted" />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
                   <input
                     type="text"
                     name="title"
                     required
-                    placeholder="e.g., 🎯 Special Message"
+                    placeholder="bijv. 🎯 Speciaal Bericht"
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Event Type (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type Evenement (optioneel)</label>
                   <select name="eventType" className="w-full px-4 py-2 border rounded-lg">
                     <option value="custom">Custom</option>
                     {(eventTypes || []).map((type: string) => (
@@ -538,58 +538,58 @@ export default function AdminPushNotifications() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bericht</label>
                 <textarea
                   name="body"
                   required
                   rows={4}
-                  placeholder="Your targeted message..."
+                  placeholder="Uw gericht bericht..."
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
               {/* Advanced Filters */}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-4">🎯 Advanced Filters</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">🎯 Geavanceerde Filters</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Meal Package</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Maaltijdpakket</label>
                     <select name="filterFormula" className="w-full px-3 py-2 border rounded-lg text-sm">
-                      <option value="">All participants</option>
-                      <option value="with_meals">With Meals</option>
-                      <option value="breakfast_only">Breakfast Only</option>
+                      <option value="">Alle deelnemers</option>
+                      <option value="with_meals">Met Maaltijden</option>
+                      <option value="breakfast_only">Alleen Ontbijt</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Beyond Rally Zone</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Voorbij Rally Zone</label>
                     <select name="filterBeyondZone" className="w-full px-3 py-2 border rounded-lg text-sm">
-                      <option value="">All zones</option>
-                      <option value="rz1">Beyond RZ1</option>
-                      <option value="rz2">Beyond RZ2</option>
-                      <option value="rz3">Beyond RZ3</option>
-                      <option value="rz4">Beyond RZ4</option>
-                      <option value="rz5">Beyond RZ5</option>
-                      <option value="rz6">Beyond RZ6</option>
+                      <option value="">Alle zones</option>
+                      <option value="rz1">Voorbij RZ1</option>
+                      <option value="rz2">Voorbij RZ2</option>
+                      <option value="rz3">Voorbij RZ3</option>
+                      <option value="rz4">Voorbij RZ4</option>
+                      <option value="rz5">Voorbij RZ5</option>
+                      <option value="rz6">Voorbij RZ6</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Status</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">In Check-in Status</label>
                     <select name="filterCheckedIn" className="w-full px-3 py-2 border rounded-lg text-sm">
-                      <option value="all">All participants</option>
-                      <option value="true">Checked in only</option>
-                      <option value="false">Not checked in</option>
+                      <option value="all">Alle deelnemers</option>
+                      <option value="true">Alleen ingecheckt</option>
+                      <option value="false">Niet ingecheckt</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ride Type</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Type Rit</label>
                     <select name="filterRideType" className="w-full px-3 py-2 border rounded-lg text-sm">
-                      <option value="">All riders</option>
-                      <option value="free">Free Ride</option>
-                      <option value="guided">Guided Tour</option>
+                      <option value="">Alle rijders</option>
+                      <option value="free">Vrije Rit</option>
+                      <option value="guided">Begeleide Tour</option>
                     </select>
                   </div>
                 </div>
@@ -602,7 +602,7 @@ export default function AdminPushNotifications() {
                   onClick={() => setShowManualSelection(!showManualSelection)}
                   className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                 >
-                  {showManualSelection ? '▼ Hide' : '▶ Show'} Manual Participant Selection
+                  {showManualSelection ? '▼ Verbergen' : '▶ Tonen'} Handmatige Deelnemersselectie
                 </button>
 
                 {showManualSelection && (
@@ -624,7 +624,7 @@ export default function AdminPushNotifications() {
                 disabled={isLoading}
                 className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium"
               >
-                {isLoading ? 'Sending...' : 'Send Targeted Message'}
+                {isLoading ? 'Verzenden...' : 'Gericht Bericht Versturen'}
               </button>
             </fetcher.Form>
           </div>
@@ -640,7 +640,7 @@ export default function AdminPushNotifications() {
                 onChange={(e) => handleFilterChange(e.target.value)}
                 className="px-4 py-2 border rounded-lg bg-white"
               >
-                <option value="">All Events</option>
+                <option value="">Alle Evenementen</option>
                 {eventTypes?.map((type: string) => (
                   <option key={type} value={type}>
                     {type}
@@ -654,12 +654,12 @@ export default function AdminPushNotifications() {
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Title</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Titel</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Results</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Sent At</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Resultaten</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Verzonden Op</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Acties</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -681,7 +681,7 @@ export default function AdminPushNotifications() {
                               : 'bg-yellow-100 text-yellow-800'
                           }`}
                         >
-                          {notif.status}
+                          {notif.status === 'completed' ? 'Voltooid' : notif.status === 'failed' ? 'Mislukt' : 'In behandeling'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
@@ -706,7 +706,7 @@ export default function AdminPushNotifications() {
                           onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
                           className="text-primary-600 hover:text-primary-800 font-medium"
                         >
-                          {expandedId === notif.id ? 'Hide' : 'Details'}
+                          {expandedId === notif.id ? 'Verbergen' : 'Details'}
                         </button>
                       </td>
                     </tr>
@@ -720,15 +720,15 @@ export default function AdminPushNotifications() {
                   <div className="bg-gray-50 px-6 py-4 border-t">
                     <div className="space-y-2">
                       <p>
-                        <strong>Message:</strong> {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.body}
+                        <strong>Bericht:</strong> {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.body}
                       </p>
                       <p>
-                        <strong>Target Type:</strong>{' '}
+                        <strong>Doeltype:</strong>{' '}
                         {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_type}
                       </p>
                       {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_criteria && (
                         <p>
-                          <strong>Target Criteria:</strong>{' '}
+                          <strong>Doelcriteria:</strong>{' '}
                           {JSON.stringify(history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_criteria)}
                         </p>
                       )}
@@ -743,7 +743,7 @@ export default function AdminPushNotifications() {
                           disabled={isLoading}
                           className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 disabled:opacity-50 font-medium"
                         >
-                          🔄 Retry Failed
+                          🔄 Mislukte Opnieuw Proberen
                         </button>
                       </fetcher.Form>
                     )}
@@ -758,17 +758,17 @@ export default function AdminPushNotifications() {
                 disabled={(offset ?? 0) === 0}
                 className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
               >
-                ← Previous
+                ← Vorige
               </button>
               <span className="py-2">
-                Page {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} of {Math.ceil(total / (limit ?? 20))}
+                Pagina {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} van {Math.ceil(total / (limit ?? 20))}
               </span>
               <button
                 onClick={() => handlePageChange((offset ?? 0) + (limit ?? 20))}
                 disabled={(offset ?? 0) + (limit ?? 20) >= total}
                 className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
               >
-                Next →
+                Volgende →
               </button>
             </div>
           </div>
