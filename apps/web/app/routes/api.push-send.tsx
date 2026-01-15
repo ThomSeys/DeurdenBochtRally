@@ -5,7 +5,6 @@ import type { Database } from '~/lib/database.types';
 export async function action({ request }: ActionFunctionArgs) {
   const { requireAdmin, requireUserId } = await import('~/lib/session.server');
   const { sendPushNotificationWithHistory, sendTargetedPushNotification } = await import('~/lib/push-notifications-enhanced.server');
-  const { getParticipantRanks } = await import('~/lib/leaderboard.server');
   
   await requireAdmin(request);
   const userId = await requireUserId(request);
@@ -42,6 +41,9 @@ export async function action({ request }: ActionFunctionArgs) {
       // Special handling for leaderboard update - personalize with each participant's rank
       if (eventType === 'leaderboard') {
         console.info('[api.push-send] Personalizing leaderboard updates for broadcast');
+        
+        // Lazy load leaderboard functions only when needed
+        const { getParticipantRanks } = await import('~/lib/leaderboard.server');
         
         // Get participant IDs and their ranks
         const participantIds = subscriptions.map(s => s.participant_id).filter(Boolean) as string[];
@@ -140,6 +142,9 @@ export async function action({ request }: ActionFunctionArgs) {
       // Special handling for leaderboard update - personalize with each participant's rank
       if (eventType === 'leaderboard') {
         console.info('[api.push-send] Personalizing leaderboard updates for targeted message');
+        
+        // Lazy load leaderboard functions only when needed
+        const { getParticipantRanks } = await import('~/lib/leaderboard.server');
         
         // Get targeted subscriptions with participant data
         const { data: subscriptions, error } = await supabaseAdmin
@@ -293,6 +298,9 @@ export async function action({ request }: ActionFunctionArgs) {
       // Special handling for leaderboard update - personalize with each participant's rank
       if (eventType === 'leaderboard') {
         console.info('[api.push-send] Personalizing leaderboard updates for to-users');
+        
+        // Lazy load leaderboard functions only when needed
+        const { getParticipantRanks } = await import('~/lib/leaderboard.server');
         const rankMap = await getParticipantRanks(userIds);
 
         // Send individual personalized notifications
