@@ -9,13 +9,13 @@ export async function action({ request }: ActionFunctionArgs) {
   console.info('[api.webhook] action start', { method: request.method });
 
   if (request.method !== 'POST') {
-    return {  error: 'Method not allowed',  status: 405 };
+    return {  error: 'Methode niet toegestaan',  status: 405 };
   }
 
   const signature = request.headers.get('stripe-signature');
   
   if (!signature) {
-    return {  error: 'No signature', status: 400 };
+    return {  error: 'Geen handtekening', status: 400 };
   }
 
   const payload = await request.text();
@@ -40,7 +40,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         if (fetchError || !participant) {
           console.error('Failed to fetch participant:', fetchError);
-          return {  error: 'Participant not found', status: 404 };
+          return {  error: 'Deelnemer niet gevonden', status: 404 };
         }
 
         // Update participant payment status
@@ -55,7 +55,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         if (error) {
           console.error('Failed to update participant:', error);
-          return {  error: 'Database update failed', status: 500 };
+          return {  error: 'Databaseupdate mislukt', status: 500 };
         }
 
         // Send payment confirmation email
@@ -103,6 +103,6 @@ export async function action({ request }: ActionFunctionArgs) {
     return {  received: true };
   } catch (error) {
     console.error('[api.webhook] action error', error);
-    return {  error: 'Webhook signature verification failed', status: 400 };
+    return {  error: 'Webhookhandtekeningverificatie mislukt', status: 400 };
   }
 }

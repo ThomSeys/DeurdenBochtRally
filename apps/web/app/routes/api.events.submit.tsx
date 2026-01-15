@@ -10,7 +10,7 @@ export async function action({ request }: LoaderFunctionArgs) {
 
   if (request.method !== 'POST') {
     return Response.json(
-      { error: 'Method not allowed' },
+      { error: 'Methode niet toegestaan' },
       { status: 405 }
     );
   }
@@ -24,14 +24,14 @@ export async function action({ request }: LoaderFunctionArgs) {
     // Validation
     if (!title || !type || !severity || !location) {
       return Response.json(
-        { error: 'Missing required fields' },
+        { error: 'Verplichte velden ontbreken' },
         { status: 400 }
       );
     }
 
     if (!location.lat || !location.lng) {
       return Response.json(
-        { error: 'Invalid location' },
+        { error: 'Ongeldige locatie' },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function action({ request }: LoaderFunctionArgs) {
 
     if (!currentEdition) {
       return Response.json(
-        { error: 'No active edition found' },
+        { error: 'Geen actieve editie gevonden' },
         { status: 400 }
       );
     }

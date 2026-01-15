@@ -10,7 +10,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
 
   if (request.method !== 'POST') {
-    return { error: 'Method not allowed' };
+    return { error: 'Methode niet toegestaan' };
   }
 
   try {
@@ -35,7 +35,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       if (!subscriptions || subscriptions.length === 0) {
-        return { error: 'No active subscriptions found' };
+        return { error: 'Geen actieve abonnementen gevonden' };
       }
 
       // Special handling for leaderboard update - personalize with each participant's rank
@@ -136,7 +136,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const { title, body: messageBody, eventType, eventData, criteria } = payload;
 
       if (!criteria) {
-        return { error: 'Missing target criteria' };
+        return { error: 'Doelcriteria ontbreekt' };
       }
 
       // Special handling for leaderboard update - personalize with each participant's rank
@@ -159,7 +159,7 @@ export async function action({ request }: ActionFunctionArgs) {
           .eq('is_active', true);
 
         if (error || !subscriptions) {
-          return { error: 'Could not fetch subscriptions' };
+          return { error: 'Kon abonnementen niet ophalen' };
         }
 
         // Filter subscriptions based on criteria
@@ -182,7 +182,7 @@ export async function action({ request }: ActionFunctionArgs) {
         }
 
         if (filtered.length === 0) {
-          return { error: 'No subscriptions match target criteria' };
+          return { error: 'Geen abonnementen voldoen aan de doelcriteria' };
         }
 
         // Get ranks for targeted participants
@@ -277,7 +277,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const { title, body: messageBody, eventType, eventData, userIds } = payload;
 
       if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-        return { error: 'Missing or invalid userIds' };
+        return { error: 'Gebruiker-ID\'s ontbreken of zijn ongeldig' };
       }
 
       const { data: subscriptions, error } = await supabaseAdmin
@@ -292,7 +292,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       if (!subscriptions || subscriptions.length === 0) {
-        return { error: `No active subscriptions found for specified users` };
+        return { error: `Geen actieve abonnementen gevonden voor opgegeven gebruikers` };
       }
 
       // Special handling for leaderboard update - personalize with each participant's rank
@@ -423,7 +423,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const { historyId } = payload;
 
       if (!historyId) {
-        return { error: 'Missing historyId' };
+        return { error: 'historyId ontbreekt' };
       }
 
       const { data: notification, error: notifError } = await supabaseAdmin
@@ -460,7 +460,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const { historyId } = payload;
 
       if (!historyId) {
-        return { error: 'Missing historyId' };
+        return { error: 'historyId ontbreekt' };
       }
 
       const { data: notification } = await supabaseAdmin
@@ -470,7 +470,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .single();
 
       if (!notification) {
-        return { error: 'Notification not found' };
+        return { error: 'Melding niet gevonden' };
       }
 
       // Get failed deliveries
@@ -482,7 +482,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .lt('delivery_attempt', 3);
 
       if (!failedDeliveries || failedDeliveries.length === 0) {
-        return { error: 'No failed deliveries to retry' };
+        return { error: 'Geen mislukte afleveringen om opnieuw te proberen' };
       }
 
       // Get current subscriptions
@@ -493,7 +493,7 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('is_active', true);
 
       if (!subscriptions || subscriptions.length === 0) {
-        return { error: 'No active subscriptions found for retry' };
+        return { error: 'Geen actieve abonnementen gevonden voor opnieuw' };
       }
 
       const { sendBulkPushNotifications } = await import('~/lib/push-notifications-enhanced.server');
@@ -534,9 +534,9 @@ export async function action({ request }: ActionFunctionArgs) {
       };
     }
 
-    return { error: 'Unknown action' };
+    return { error: 'Onbekende actie' };
   } catch (error: any) {
     console.error('[api.push-send] Error:', error);
-    return { error: error.message || 'Internal server error' };
+    return { error: error.message || 'Interne serverfout' };
   }
 }

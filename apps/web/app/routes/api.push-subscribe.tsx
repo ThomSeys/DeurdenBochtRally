@@ -7,7 +7,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
   
   if (request.method !== 'POST') {
-    return { error: 'Method not allowed' };
+    return { error: 'Methode niet toegestaan' };
   }
 
   try {
@@ -19,7 +19,7 @@ export async function action({ request }: ActionFunctionArgs) {
     if (bodyAction === 'subscribe') {
       if (!subscription?.endpoint) {
         console.error('[api.push-subscribe] missing endpoint', subscription);
-        return { error: 'Invalid subscription' };
+        return { error: 'Ongeldige abonnement' };
       }
       
       // Validate subscription has required keys
@@ -28,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
           hasp256dh: !!subscription.keys?.p256dh,
           hasAuth: !!subscription.keys?.auth,
         });
-        return { error: 'Invalid subscription keys' };
+        return { error: 'Ongeldige abonnementsleutels' };
       }
       
       console.info('[api.push-subscribe] storing subscription', { 
@@ -81,9 +81,9 @@ export async function action({ request }: ActionFunctionArgs) {
       return { success: true };
     }
 
-    return { error: 'Invalid action' };
+    return { error: 'Ongeldige actie' };
   } catch (err) {
     console.error('Push subscribe error:', err);
-    return { error: 'Internal server error' };
+    return { error: 'Interne serverfout' };
   }
 }
