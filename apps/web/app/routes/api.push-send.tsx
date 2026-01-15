@@ -4,7 +4,7 @@ import type { Database } from '~/lib/database.types';
 
 export async function action({ request }: ActionFunctionArgs) {
   const { requireAdmin, requireUserId } = await import('~/lib/session.server');
-  const { sendPushNotificationWithHistory, sendTargetedPushNotification, notificationTemplates } = await import('~/lib/push-notifications-enhanced.server');
+  const { sendPushNotificationWithHistory, sendTargetedPushNotification } = await import('~/lib/push-notifications-enhanced.server');
   const { getParticipantRanks } = await import('~/lib/leaderboard.server');
   
   await requireAdmin(request);
