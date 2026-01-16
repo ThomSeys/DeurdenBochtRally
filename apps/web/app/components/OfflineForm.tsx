@@ -38,7 +38,6 @@ export function OfflineForm({
 
       if (!isOnline()) {
         // Queue for later sync
-        console.log('Offline: Queueing submission', { endpoint, method });
         await queueOfflineSubmission(endpoint, data, method);
         setSuccess(
           'Opgeslagen offline. Het wordt verzonden wanneer je weer online bent.'
@@ -53,7 +52,6 @@ export function OfflineForm({
 
         if (!response.ok) {
           // Fallback to queue if request fails
-          console.log('Submit failed, queueing for later');
           await queueOfflineSubmission(endpoint, data, method);
           setSuccess(
             'Opgeslagen voor later. Het wordt verzonden wanneer mogelijk.'

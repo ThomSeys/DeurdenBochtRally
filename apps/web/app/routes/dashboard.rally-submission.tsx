@@ -117,14 +117,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
   // Handle immediate odometer updates
   if (action === 'update_odometer') {
-    console.log('[odometer] Update request received');
     const startKm = formData.get('start_km');
     const endKm = formData.get('end_km');
     const startKmLocked = formData.get('start_km_locked') === 'true';
     const endKmLocked = formData.get('end_km_locked') === 'true';
     const totalDistance = formData.get('total_distance');
-    
-    console.log('[odometer] Data:', { startKm, endKm, startKmLocked, endKmLocked, totalDistance });
 
     // Check if existing submission exists
     const { data: existing } = await supabaseAdmin
@@ -145,9 +142,6 @@ export async function action({ request }: ActionFunctionArgs) {
     if (totalDistance) {
       updateData.total_distance = parseFloat(totalDistance as string);
     }
-    
-    console.log('[odometer] Update data:', updateData);
-    console.log('[odometer] Existing submission:', existing);
 
     if (existing) {
       const { error } = await supabaseAdmin
@@ -159,7 +153,6 @@ export async function action({ request }: ActionFunctionArgs) {
         console.error('[odometer] Update error:', error);
         return { error: 'Er ging iets mis bij het opslaan.', status: 500 };
       }
-      console.log('[odometer] Successfully updated existing submission');
     } else {
       const { error } = await supabaseAdmin
         .from('rally_submissions')
@@ -172,16 +165,13 @@ export async function action({ request }: ActionFunctionArgs) {
         console.error('[odometer] Insert error:', error);
         return { error: 'Er ging iets mis bij het opslaan.', status: 500 };
       }
-      console.log('[odometer] Successfully inserted new submission');
     }
 
     // Check and unlock achievements when total distance is set
     if (totalDistance) {
-      console.log('[odometer] Checking achievements after distance update');
       await checkAndUnlockAchievements(userId);
     }
 
-    console.log('[odometer] Returning success response');
     return { success: true };
   }
 
@@ -562,16 +552,10 @@ export default function RallySubmission() {
         formData.append('start_km', value);
         formData.append('start_km_locked', 'true');
         
-        console.log('[client] Sending start km update:', { value, locked: true });
-        
         const response = await fetch(window.location.pathname, {
           method: 'POST',
           body: formData,
         });
-        
-        console.log('[client] Response status:', response.status);
-        const responseData = await response.json().catch(() => null);
-        console.log('[client] Response data:', responseData);
         
         if (response.ok) {
           setStartKm(value);
@@ -622,16 +606,10 @@ export default function RallySubmission() {
           formData.append('total_distance', distance.toString());
         }
         
-        console.log('[client] Sending end km update:', { value, locked: true, distance });
-        
         const response = await fetch(window.location.pathname, {
           method: 'POST',
           body: formData,
         });
-        
-        console.log('[client] Response status:', response.status);
-        const responseData = await response.json().catch(() => null);
-        console.log('[client] Response data:', responseData);
         
         if (response.ok) {
           setEndKm(value);
@@ -910,13 +888,6 @@ export default function RallySubmission() {
                                 (zs: any) => zs.zone_id === zone.id.toString() && zs.checkpoint_number === idx + 1
                               );
                               const existingCode = checkpointRecord?.submitted_answer || '';
-                              
-                              console.log(`Zone ${zone.id} Checkpoint ${idx + 1}:`, { 
-                                checkpointName: checkpoint.name,
-                                fieldName: `rz${zone.id}_checkpoint_${idx + 1}_code`,
-                                existingCode,
-                                checkpointRecord
-                              });
                               
                               return (
                               <div key={idx} className="bg-gray-50 p-4 rounded-sm border border-gray-200">

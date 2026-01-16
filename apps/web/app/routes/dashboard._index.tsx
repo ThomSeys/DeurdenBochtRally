@@ -166,7 +166,7 @@ export default function Dashboard() {
           const subscription = await registration.pushManager.getSubscription();
           setIsNotificationSubscribed(!!subscription);
         } catch (err) {
-          console.log('Could not check notification subscription:', err);
+          // Silent fail - notification subscription check not critical
         }
       }
     };

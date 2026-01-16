@@ -167,11 +167,6 @@ const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boole
     ),
   };
 
-  // Debug: log if we can't find the icon
-  if (!icons[name]) {
-    console.log(`Missing icon for achievement: "${name}"`);
-  }
-
   return icons[name] || (
     <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="45" fill="#9CA3AF" stroke="#6B7280" strokeWidth="3"/>

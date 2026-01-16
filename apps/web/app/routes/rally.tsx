@@ -7,6 +7,7 @@ import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
 import { getActiveEdition, getRallyZones, getSiteConfig } from '~/lib/sanity.server';
+import { getUserId } from '~/lib/session.server';
 import { urlFor } from '~/lib/sanity';
 import { Icon } from '~/components/Icon';
 
@@ -18,15 +19,16 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const userId = await getUserId(request);
   const edition = await getActiveEdition();
   const rallyZones = edition ? await getRallyZones(edition._id) : [];
   const siteConfig = await getSiteConfig();
 
-  return { edition, rallyZones, siteConfig };
+  return { userId, edition, rallyZones, siteConfig };
 }
 
 export default function Rally() {
-  const { edition, rallyZones, siteConfig } = useLoaderData<typeof loader>();
+  const { userId, edition, rallyZones, siteConfig } = useLoaderData<typeof loader>();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
 
   const toggleMap = (zoneId: string) => {
@@ -313,7 +315,7 @@ export default function Rally() {
       </section>
 
       {/* CTA */}
-      {edition?.registrationOpen && (
+      {!userId && edition?.registrationOpen && (
         <section className="py-16 bg-primary-600 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Klaar voor de uitdaging?</h2>

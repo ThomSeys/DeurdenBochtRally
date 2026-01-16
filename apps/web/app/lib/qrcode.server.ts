@@ -28,10 +28,8 @@ export async function generateQRCodeDataURL(text: string): Promise<string> {
 export async function generateAndSaveQRCode(text: string, userId: string): Promise<string> {
   // Create qrcodes directory if it doesn't exist
   const publicDir = join(process.cwd(), 'apps', 'web', 'public', 'qrcodes');
-  console.log('QR Code: Saving to directory:', publicDir);
   
   if (!existsSync(publicDir)) {
-    console.log('QR Code: Directory does not exist, creating...');
     await mkdir(publicDir, { recursive: true });
   }
 

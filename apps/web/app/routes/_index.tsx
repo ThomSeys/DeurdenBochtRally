@@ -130,7 +130,7 @@ export default function Index() {
             </>
           )}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {edition?.registrationOpen && (
+            {!userId && edition?.registrationOpen && (
               <Link
                 to="/registration"
                 className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-4 rounded-sm text-lg font-bold uppercase transition-colors shadow-lg"
@@ -280,7 +280,7 @@ export default function Index() {
               ))}
             </div>
 
-            {edition?.registrationOpen && (
+            {!userId && edition?.registrationOpen && (
               <div className="text-center mt-12">
                 <Link
                   to="/registration"

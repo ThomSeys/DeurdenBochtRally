@@ -114,7 +114,6 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
       return;
     }
 
-    console.log('Submitting with location:', userLocation);
     setLoading(true);
     setError(null);
 
@@ -129,7 +128,6 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
           lng: userLocation.lng,
         },
       };
-      console.log('Payload:', payload);
 
       const response = await fetch('/api/events/submit', {
         method: 'POST',
@@ -138,7 +136,6 @@ export default function EventSubmissionForm({ onSubmitSuccess, userLocation: pro
       });
 
       const data = await response.json();
-      console.log('Response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || data.message || 'Verzenden mislukt');

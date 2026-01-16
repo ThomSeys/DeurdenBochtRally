@@ -26,20 +26,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response('Participant not found', { status: 404 });
   }
 
-  console.log('Looking for submissions for participant:', { 
-    id: participantId, 
-    email: participant.email,
-    name: `${participant.first_name} ${participant.last_name}`
-  });
-
   // Get the rally submission (single row with all zone codes)
   const { data: rallySubmission } = await supabaseAdmin
     .from('rally_submissions')
     .select('*')
     .eq('participant_id', participantId)
     .single();
-
-  console.log('Rally submission row:', rallySubmission);
 
   // Transform the single row into individual zone submissions
   const submissions = [];
@@ -57,8 +49,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       }
     }
   }
-
-  console.log('Transformed submissions:', submissions);
 
   // Calculate total points from the rally_submission row
   const totalPoints = rallySubmission?.total_points || 0;
@@ -81,13 +71,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function ParticipantSubmissions() {
   const { participant, submissions, score, rallySubmission } = useLoaderData<typeof loader>();
 
-  console.log('Participant submissions data:', { 
-    participantId: participant.id,
-    submissionsCount: submissions.length,
-    submissions,
-    rallySubmission
-  });
-
   // Group submissions by zone
   const submissionsByZone: Record<string, any[]> = {};
   submissions.forEach((sub: any) => {
@@ -99,8 +82,6 @@ export default function ParticipantSubmissions() {
   });
 
   const zoneIds = Object.keys(submissionsByZone).sort((a, b) => Number(a) - Number(b));
-
-  console.log('Grouped by zone:', { submissionsByZone, zoneIds });
 
   return (
     <div className="min-h-screen bg-gray-50">

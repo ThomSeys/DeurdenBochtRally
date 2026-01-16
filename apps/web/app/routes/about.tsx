@@ -6,6 +6,7 @@ import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
 import { Icon } from '~/components/Icon';
 import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig } from '~/lib/sanity.server';
+import { getUserId } from '~/lib/session.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,13 +16,14 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const userId = await getUserId(request);
   const edition = await getActiveEdition();
   const siteConfig = await getSiteConfig();
   const schedule = edition ? await getScheduleItems(edition._id) : [];
   const benefits = edition ? await getBenefitItems(edition._id) : [];
   const faq = edition ? await getFAQItems(edition._id) : [];
 
-  return { edition, siteConfig, schedule, benefits, faq };
+  return { userId, edition, siteConfig, schedule, benefits, faq };
 }
 
 // Map common benefit emoji icons to Icon component names
@@ -47,7 +49,7 @@ function getBenefitIconName(icon: string): string {
 }
 
 export default function About() {
-  const { edition, siteConfig, schedule, benefits, faq } = useLoaderData<typeof loader>();
+  const { userId, edition, siteConfig, schedule, benefits, faq } = useLoaderData<typeof loader>();
 
   const everyoneBenefits = benefits.filter((b: any) => b.category === 'everyone');
   const winnerBenefits = benefits.filter((b: any) => b.category === 'winner');
@@ -178,7 +180,7 @@ export default function About() {
       )}
 
       {/* CTA */}
-      {edition?.registrationOpen && (
+      {!userId && edition?.registrationOpen && (
         <section className="py-16 bg-primary-600 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4 break-words">Klaar voor het avontuur?</h2>
