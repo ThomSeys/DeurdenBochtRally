@@ -435,7 +435,7 @@ export default function Gallery() {
                       <img 
                         src={photo.image_url} 
                         alt={photo.caption || 'Rally foto'}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover"
                       />
                       {!photo.is_approved && filter === 'mine' && (
                         <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
