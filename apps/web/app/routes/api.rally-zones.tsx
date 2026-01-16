@@ -6,6 +6,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
     // Return JSON to be cached by service worker
     const rallyZones = await sanityClient.fetch(`
       *[_type == "rallyZone"] | order(order asc) {
+        zoneType,
+        estimatedDistance,
+        checkpoints[] {
+          name,
+          description,
+          codeHint,
+          solution,
+          validAnswers,
+          location
+        },
         _id,
         title,
         order,

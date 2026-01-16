@@ -20,7 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const rallyZones = edition ? await getRallyZones(edition._id) : [];
   const siteConfig = await getSiteConfig();
 
-  return {  edition, rallyZones, siteConfig };
+  return { edition, rallyZones, siteConfig };
 }
 
 const colorClasses = {
@@ -91,11 +91,29 @@ export default function Rally() {
                 >
                   <div className="p-6 md:p-8">
                     <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                          RZ{zone.zoneNumber} – {zone.title}
-                        </h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+                            RZ{zone.zoneNumber} – {zone.title}
+                          </h3>
+                          {zone.zoneType && (
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                              zone.zoneType === 'short' ? 'bg-green-100 text-green-800' :
+                              zone.zoneType === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {zone.zoneType === 'short' ? 'Type A - Kort' : 
+                               zone.zoneType === 'medium' ? 'Type B - Medium' : 
+                               'Type C - Lang'}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-700 font-semibold">{zone.location}</p>
+                        {zone.estimatedDistance && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            ~{zone.estimatedDistance} km
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
                         <div className="inline-block bg-white px-4 py-2 rounded-sm shadow">
@@ -128,16 +146,45 @@ export default function Rally() {
                         <h4 className="font-bold text-gray-900 mb-2">🔄 LUS</h4>
                         <p className="text-gray-700">{zone.lus}</p>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                          <Icon name="marker" className="w-5 h-5" /> CHECKPUNT
+                      <div className="md:col-span-2">
+                        <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <Icon name="marker" className="w-5 h-5" /> 
+                          {zone.checkpoints && zone.checkpoints.length > 1 ? 'CHECKPUNTEN' : 'CHECKPUNT'}
+                          {zone.checkpoints && zone.checkpoints.length > 1 && (
+                            <span className="text-sm font-normal text-gray-600">
+                              ({zone.checkpoints.length} stops)
+                            </span>
+                          )}
                         </h4>
-                        <p className="text-gray-700">{zone.checkpoint}</p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Code: <em>{zone.codeHint}</em>
-                        </p>
+                        {zone.checkpoints && zone.checkpoints.length > 0 ? (
+                          <div className="space-y-4">
+                            {zone.checkpoints.map((checkpoint: any, idx: number) => (
+                              <div key={idx} className="bg-gray-50 p-4 rounded-sm border border-gray-200">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
+                                    {idx + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-gray-900 mb-1">{checkpoint.name}</p>
+                                    <p className="text-gray-700 text-sm mb-2">{checkpoint.description}</p>
+                                    <p className="text-sm text-gray-600">
+                                      Code hint: <em>{checkpoint.codeHint}</em>
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-gray-700">{zone.checkpoint}</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Code: <em>{zone.codeHint}</em>
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <h4 className="font-bold text-gray-900 mb-2">↩️ REJOIN</h4>
                         <p className="text-gray-700">{zone.rejoin}</p>
                       </div>
@@ -166,16 +213,39 @@ export default function Rally() {
               </thead>
               <tbody className="divide-y">
                 <tr>
-                  <td className="px-6 py-4">Elke Rally Zone</td>
-                  <td className="px-6 py-4 text-right font-bold">15</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      Type A - Kort (5-8 km, 1 checkpoint)
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">A</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right font-bold">12</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      Type B - Medium (15-25 km, 2 checkpoints)
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">B</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right font-bold">20</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      Type C - Lang (30-45 km, 3 checkpoints)
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">C</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right font-bold">35</td>
                 </tr>
                 <tr className="bg-gray-50">
                   <td className="px-6 py-4">Minstens 4 zones <em className="text-sm text-gray-600">(voor kwalificatie)</em></td>
-                  <td className="px-6 py-4 text-right font-bold">-</td>
+                  <td className="px-6 py-4 text-right font-bold">+10</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4">Alle 8 zones <em className="text-sm text-primary-600">(bonus!)</em></td>
-                  <td className="px-6 py-4 text-right font-bold text-primary-600">+20</td>
+                  <td className="px-6 py-4 text-right font-bold text-primary-600">+30</td>
                 </tr>
                 <tr className="bg-gray-50">
                   <td className="px-6 py-4">Meer dan 500 km</td>
@@ -183,7 +253,7 @@ export default function Rally() {
                 </tr>
                 <tr className="bg-primary-50">
                   <td className="px-6 py-4 font-bold">Maximum totaal</td>
-                  <td className="px-6 py-4 text-right font-bold text-2xl text-primary-600">150</td>
+                  <td className="px-6 py-4 text-right font-bold text-2xl text-primary-600">206</td>
                 </tr>
               </tbody>
             </table>

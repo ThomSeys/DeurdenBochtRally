@@ -102,7 +102,17 @@ export async function getRallyZones(editionId: string) {
       image,
       zoneNumber,
       startLocation,
-      endLocation
+      endLocation,
+      zoneType,
+      estimatedDistance,
+      checkpoints[] {
+        name,
+        description,
+        codeHint,
+        solution,
+        validAnswers,
+        location
+      }
     }`,
     { editionId }
   );

@@ -745,6 +745,8 @@ export type Database = {
           end_km_locked: boolean | null
           final_score: number | null
           id: string
+          long_zones_completed: number | null
+          medium_zones_completed: number | null
           participant_id: string
           rz1_code: string | null
           rz2_code: string | null
@@ -755,6 +757,7 @@ export type Database = {
           rz7_code: string | null
           rz8_code: string | null
           shadow_total: number | null
+          short_zones_completed: number | null
           start_km: number | null
           start_km_locked: boolean | null
           submitted_at: string | null
@@ -769,6 +772,8 @@ export type Database = {
           end_km_locked?: boolean | null
           final_score?: number | null
           id?: string
+          long_zones_completed?: number | null
+          medium_zones_completed?: number | null
           participant_id: string
           rz1_code?: string | null
           rz2_code?: string | null
@@ -779,6 +784,7 @@ export type Database = {
           rz7_code?: string | null
           rz8_code?: string | null
           shadow_total?: number | null
+          short_zones_completed?: number | null
           start_km?: number | null
           start_km_locked?: boolean | null
           submitted_at?: string | null
@@ -793,6 +799,8 @@ export type Database = {
           end_km_locked?: boolean | null
           final_score?: number | null
           id?: string
+          long_zones_completed?: number | null
+          medium_zones_completed?: number | null
           participant_id?: string
           rz1_code?: string | null
           rz2_code?: string | null
@@ -803,6 +811,7 @@ export type Database = {
           rz7_code?: string | null
           rz8_code?: string | null
           shadow_total?: number | null
+          short_zones_completed?: number | null
           start_km?: number | null
           start_km_locked?: boolean | null
           submitted_at?: string | null
@@ -836,6 +845,7 @@ export type Database = {
           answer_timestamp: string | null
           approved_at: string | null
           approved_by: string | null
+          checkpoint_number: number
           correctness_score: number | null
           created_at: string | null
           entry_accuracy: number | null
@@ -857,6 +867,7 @@ export type Database = {
           submitted_answer: string | null
           submitted_offline: boolean | null
           synced_at: string | null
+          total_checkpoints: number
           updated_at: string | null
           valid: boolean | null
           view_score: number | null
@@ -870,6 +881,7 @@ export type Database = {
           answer_timestamp?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          checkpoint_number?: number
           correctness_score?: number | null
           created_at?: string | null
           entry_accuracy?: number | null
@@ -891,6 +903,7 @@ export type Database = {
           submitted_answer?: string | null
           submitted_offline?: boolean | null
           synced_at?: string | null
+          total_checkpoints?: number
           updated_at?: string | null
           valid?: boolean | null
           view_score?: number | null
@@ -904,6 +917,7 @@ export type Database = {
           answer_timestamp?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          checkpoint_number?: number
           correctness_score?: number | null
           created_at?: string | null
           entry_accuracy?: number | null
@@ -925,6 +939,7 @@ export type Database = {
           submitted_answer?: string | null
           submitted_offline?: boolean | null
           synced_at?: string | null
+          total_checkpoints?: number
           updated_at?: string | null
           valid?: boolean | null
           view_score?: number | null

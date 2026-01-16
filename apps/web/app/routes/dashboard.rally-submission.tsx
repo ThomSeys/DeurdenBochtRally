@@ -13,6 +13,7 @@ import MapView from '~/components/MapView';
 import { sendEmail, rallySubmissionEmail } from '~/lib/email.server';
 import { checkAndUnlockAchievements } from '~/lib/achievements.server';
 import { Icon } from '~/components/Icon';
+import { calculateZoneShadowScores } from '~/lib/shadow-rally.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -35,12 +36,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .eq('participant_id', userId)
     .single();
 
-  // Get zone-level submissions with shadow scores
+  // Get zone-level submissions with shadow scores AND checkpoint codes
   const { data: zoneSubmissions } = await supabaseAdmin
     .from('rally_zone_submissions')
-    .select('zone_id, rhythm_score, view_score, shadow_score, zone_time_minutes')
+    .select('zone_id, checkpoint_number, submitted_answer, rhythm_score, view_score, shadow_score, zone_time_minutes')
     .eq('participant_id', userId)
-    .order('zone_id', { ascending: true });
+    .order('zone_id', { ascending: true })
+    .order('checkpoint_number', { ascending: true });
 
   // Get scoreboard - all participants with their scores (including achievements)
   const { data: allParticipants } = await supabaseAdmin
@@ -86,6 +88,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `*[_type == "rallyZone"] | order(order asc) {
       title,
       order,
+      "zoneNumber": order + 1,
+      zoneType,
+      estimatedDistance,
+      checkpoints[] {
+        name,
+        description,
+        codeHint,
+        solution,
+        validAnswers
+      },
       startLocation,
       endLocation
     }`
@@ -184,6 +196,95 @@ export async function action({ request }: ActionFunctionArgs) {
     rz8_code: formData.get('rz8_code') as string | null,
   };
 
+  // Get rally zones data for checkpoint structure
+  const rallyZones = await sanityClient.fetch(
+    `*[_type == "rallyZone"] | order(order asc) {
+      order,
+      "zoneNumber": order + 1,
+      checkpoints[] {
+        solution,
+        validAnswers
+      }
+    }`
+  );
+
+  console.info('[submission] Fetched rally zones:', rallyZones.map((z: any) => ({ 
+    zone: z.zoneNumber, 
+    checkpointCount: z.checkpoints?.length || 0 
+  })));
+
+  // Collect checkpoint codes for each zone (allow partial submissions)
+  for (let zoneNum = 1; zoneNum <= 8; zoneNum++) {
+    const zone = rallyZones.find((z: any) => z.zoneNumber === zoneNum);
+    const checkpoints = zone?.checkpoints || [];
+    
+    console.info(`[submission] Zone ${zoneNum}: ${checkpoints.length} checkpoints in Sanity`);
+    
+    if (checkpoints.length > 0) {
+      // Multi-checkpoint zone - collect all checkpoint codes (including empty ones)
+      const checkpointCodes: string[] = [];
+      
+      for (let cpNum = 1; cpNum <= checkpoints.length; cpNum++) {
+        const fieldName = `rz${zoneNum}_checkpoint_${cpNum}_code`;
+        const code = formData.get(fieldName) as string | null;
+        const trimmedCode = code?.trim() || '';
+        checkpointCodes.push(trimmedCode);
+        
+        console.info(`[checkpoint-collection] Zone ${zoneNum} CP ${cpNum}: field="${fieldName}", value="${trimmedCode}"`);
+        
+        // Update checkpoint record if a code was provided
+        if (trimmedCode) {
+          const checkpoint = checkpoints[cpNum - 1];
+          const normalizedCode = trimmedCode.toLowerCase();
+          const solution = checkpoint.solution?.toLowerCase();
+          const validAnswers = checkpoint.validAnswers?.map((a: string) => a.toLowerCase()) || [];
+          
+          // Check correctness but don't block submission
+          const isCorrect = normalizedCode === solution || validAnswers.includes(normalizedCode);
+          
+          console.info(`[checkpoint-update] Attempting update: zone=${zoneNum}, cp=${cpNum}, code="${trimmedCode}"`);
+          
+          const { data: updateData, error: updateError } = await supabaseAdmin
+            .from('rally_zone_submissions')
+            .update({
+              submitted_answer: trimmedCode,
+              normalized_answer: normalizedCode,
+              is_correct: isCorrect,
+              valid: true,
+            })
+            .eq('participant_id', userId)
+            .eq('zone_id', zoneNum.toString())
+            .eq('checkpoint_number', cpNum)
+            .select();
+          
+          if (updateError) {
+            console.error(`[checkpoint-update] FAILED zone ${zoneNum} cp ${cpNum}:`, updateError);
+          } else if (!updateData || updateData.length === 0) {
+            console.error(`[checkpoint-update] NO RECORD FOUND for zone ${zoneNum} cp ${cpNum} (participant: ${userId})`);
+          } else {
+            console.info(`[checkpoint-update] SUCCESS zone ${zoneNum} cp ${cpNum}/${checkpoints.length} (correct: ${isCorrect})`);
+          }
+        }
+      }
+      
+      // Store combined codes for this zone (pipe-separated, including empty slots)
+      const combinedCode = checkpointCodes.join('|');
+      console.info(`[checkpoint-collection] Zone ${zoneNum}: checkpointCodes=[${checkpointCodes.map(c => `"${c}"`).join(', ')}], combined="${combinedCode}"`);
+      
+      if (checkpointCodes.some(code => code)) {
+        submissionData[`rz${zoneNum}_code` as keyof typeof submissionData] = combinedCode;
+        
+        // Calculate shadow scores for this zone after updating checkpoints
+        try {
+          await calculateZoneShadowScores(zoneNum.toString());
+          console.info(`[shadow-scores] Calculated scores for zone ${zoneNum}`);
+        } catch (error) {
+          console.warn(`[shadow-scores] Failed to calculate scores for zone ${zoneNum}:`, error);
+        }
+      }
+    }
+  }
+
   // Collect GPS data for each zone
   const zoneGpsData: Record<number, { lat: number; lng: number; accuracy: number } | null> = {};
   for (let i = 1; i <= 8; i++) {
@@ -281,25 +382,50 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  // Calculate points
-  const totalPoints = calculateRallyPoints(submissionData);
+  // Calculate zone type counters based on zone distribution
+  // Zones 1,6 = short (1cp), Zones 2,3,5,7 = medium (2cp), Zones 4,8 = long (3cp)
+  const zoneTypes: Record<number, 'short' | 'medium' | 'long'> = {
+    1: 'short', 2: 'medium', 3: 'medium', 4: 'long',
+    5: 'medium', 6: 'short', 7: 'medium', 8: 'long'
+  };
 
-  // Count completed zones
-  const completedZones = [
-    submissionData.rz1_code,
-    submissionData.rz2_code,
-    submissionData.rz3_code,
-    submissionData.rz4_code,
-    submissionData.rz5_code,
-    submissionData.rz6_code,
-    submissionData.rz7_code,
-    submissionData.rz8_code,
-  ].filter((code) => code && code.trim()).length;
+  let shortZonesCompleted = 0;
+  let mediumZonesCompleted = 0;
+  let longZonesCompleted = 0;
+
+  for (let i = 1; i <= 8; i++) {
+    const code = submissionData[`rz${i}_code` as keyof typeof submissionData];
+    if (code && code.trim()) {
+      const zoneType = zoneTypes[i];
+      if (zoneType === 'short') shortZonesCompleted++;
+      else if (zoneType === 'medium') mediumZonesCompleted++;
+      else if (zoneType === 'long') longZonesCompleted++;
+    }
+  }
+
+  const completedZones = shortZonesCompleted + mediumZonesCompleted + longZonesCompleted;
+
+  console.info('[points-calc] Zone type counters:', {
+    short: shortZonesCompleted,
+    medium: mediumZonesCompleted,
+    long: longZonesCompleted,
+    total: completedZones
+  });
 
   // Check if at least one zone is completed
   if (completedZones === 0) {
     return {  error: 'Vul minstens één rally zone code in', status: 400 };
   }
+
+  // Calculate points with zone type data
+  const totalPoints = calculateRallyPoints({
+    ...submissionData,
+    short_zones_completed: shortZonesCompleted,
+    medium_zones_completed: mediumZonesCompleted,
+    long_zones_completed: longZonesCompleted,
+  });
+
+  console.info('[points-calc] Total points calculated:', totalPoints);
 
   // Check if existing submission exists
   const { data: existing } = await supabaseAdmin
@@ -316,6 +442,9 @@ export async function action({ request }: ActionFunctionArgs) {
     end_km: endKm ? parseFloat(endKm as string) : null,
     start_km_locked: startKmLocked,
     end_km_locked: endKmLocked,
+    short_zones_completed: shortZonesCompleted,
+    medium_zones_completed: mediumZonesCompleted,
+    long_zones_completed: longZonesCompleted,
     submitted_at: new Date().toISOString(),
   };
 
@@ -386,7 +515,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     console.info('[dashboard.rally-submission] action success', { action });
-    return redirect('/dashboard?success=rally');
+    return { success: true, message: 'Rally codes succesvol opgeslagen!' };
   } catch (error) {
     console.error('[dashboard.rally-submission] action error', error);
     return { error: 'Onverwachte fout', status: 500 };
@@ -529,8 +658,45 @@ export default function RallySubmission() {
     { id: 8, name: 'RZ8', color: 'red' },
   ];
 
+  const getZoneByNumber = (zoneNum: number) => {
+    return rallyZones.find((z: any) => z.zoneNumber === zoneNum);
+  };
+
+  const getZoneType = (zoneId: number) => {
+    const zone = getZoneByNumber(zoneId);
+    return zone?.zoneType || null;
+  };
+
+  const getZoneTypeBadge = (zoneType: string | null) => {
+    if (!zoneType) return null;
+    const config = {
+      short: { label: 'A', bg: 'bg-green-100', text: 'text-green-800' },
+      medium: { label: 'B', bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      long: { label: 'C', bg: 'bg-red-100', text: 'text-red-800' },
+    }[zoneType];
+    return config ? (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
+    ) : null;
+  };
+
   const getZoneSubmission = (zoneNum: number) => {
-    return zoneSubmissions.find((_, idx) => idx + 1 === zoneNum);
+    // Get all checkpoint submissions for this zone
+    const zoneCheckpoints = zoneSubmissions.filter(s => s.zone_id === zoneNum.toString());
+    if (zoneCheckpoints.length === 0) return undefined;
+    
+    // Average the scores across all checkpoints
+    const avgRhythm = zoneCheckpoints.reduce((sum, cp) => sum + (cp.rhythm_score || 0), 0) / zoneCheckpoints.length;
+    const avgView = zoneCheckpoints.reduce((sum, cp) => sum + (cp.view_score || 0), 0) / zoneCheckpoints.length;
+    const avgShadow = zoneCheckpoints.reduce((sum, cp) => sum + (cp.shadow_score || 0), 0) / zoneCheckpoints.length;
+    
+    return {
+      ...zoneCheckpoints[0],
+      rhythm_score: avgRhythm,
+      view_score: avgView,
+      shadow_score: avgShadow
+    };
   };
 
   return (
@@ -576,6 +742,7 @@ export default function RallySubmission() {
                       >
                         <div className="flex items-center space-x-2">
                           <span>{zone.name}</span>
+                          {getZoneTypeBadge(getZoneType(zone.id))}
                           {hasCode && <span className="text-green-600">✓</span>}
                           {zoneScore?.shadow_score && (
                             <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">
@@ -596,14 +763,27 @@ export default function RallySubmission() {
                 onSubmit={async (e) => {
                   e.preventDefault();
                   
-                  // Capture GPS for all zones that have codes
+                  // Capture GPS for all zones that have checkpoint codes
                   let pendingRequests = 0;
-                  let completedRequests = 0;
                   
+                  // Check both legacy single-code and new multi-checkpoint formats
                   for (let i = 1; i <= 8; i++) {
-                    const codeInput = formRef.current?.querySelector(`input[name="rz${i}_code"]`) as HTMLInputElement;
-                    if (codeInput && codeInput.value.trim()) {
+                    // Check legacy format
+                    const legacyCodeInput = formRef.current?.querySelector(`input[name="rz${i}_code"]`) as HTMLInputElement;
+                    if (legacyCodeInput && legacyCodeInput.value.trim()) {
                       pendingRequests++;
+                      continue;
+                    }
+                    
+                    // Check multi-checkpoint format
+                    const checkpointInputs = formRef.current?.querySelectorAll(`input[name^="rz${i}_checkpoint_"]`) as NodeListOf<HTMLInputElement>;
+                    if (checkpointInputs && checkpointInputs.length > 0) {
+                      for (const input of checkpointInputs) {
+                        if (input.value.trim()) {
+                          pendingRequests++;
+                          break; // Only need to count once per zone
+                        }
+                      }
                     }
                   }
                   
@@ -611,10 +791,24 @@ export default function RallySubmission() {
                     // Capture GPS location
                     navigator.geolocation.getCurrentPosition(
                       (position) => {
-                        // Add GPS data to all zone code inputs
+                        // Add GPS data for all zones with codes
                         for (let i = 1; i <= 8; i++) {
-                          const codeInput = formRef.current?.querySelector(`input[name="rz${i}_code"]`) as HTMLInputElement;
-                          if (codeInput && codeInput.value.trim()) {
+                          const legacyCodeInput = formRef.current?.querySelector(`input[name="rz${i}_code"]`) as HTMLInputElement;
+                          const checkpointInputs = formRef.current?.querySelectorAll(`input[name^="rz${i}_checkpoint_"]`) as NodeListOf<HTMLInputElement>;
+                          
+                          let hasCode = false;
+                          if (legacyCodeInput && legacyCodeInput.value.trim()) {
+                            hasCode = true;
+                          } else if (checkpointInputs && checkpointInputs.length > 0) {
+                            for (const input of checkpointInputs) {
+                              if (input.value.trim()) {
+                                hasCode = true;
+                                break;
+                              }
+                            }
+                          }
+                          
+                          if (hasCode) {
                             const latInput = formRef.current?.querySelector(`input[name="rz${i}_answer_lat"]`) as HTMLInputElement;
                             const lngInput = formRef.current?.querySelector(`input[name="rz${i}_answer_lng"]`) as HTMLInputElement;
                             const accuracyInput = formRef.current?.querySelector(`input[name="rz${i}_answer_accuracy"]`) as HTMLInputElement;
@@ -642,6 +836,7 @@ export default function RallySubmission() {
                 {/* Zone Input Cards */}
                 {zones.map((zone) => {
                   const zoneScore = getZoneSubmission(zone.id);
+                  const currentZone = getZoneByNumber(zone.id);
                   return (
                     <div
                       key={zone.id}
@@ -649,7 +844,15 @@ export default function RallySubmission() {
                     >
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <h2 className="text-2xl font-bold text-gray-900">Rally Zone {zone.id}</h2>
+                          <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-bold text-gray-900">Rally Zone {zone.id}</h2>
+                            {getZoneTypeBadge(getZoneType(zone.id))}
+                            {currentZone?.estimatedDistance && (
+                              <span className="text-sm text-gray-600">
+                                ~{currentZone.estimatedDistance} km
+                              </span>
+                            )}
+                          </div>
                           {zoneScore?.zone_time_minutes && (
                             <span className="text-sm text-gray-600">
                               {zoneScore.zone_time_minutes} minuten
@@ -657,34 +860,109 @@ export default function RallySubmission() {
                           )}
                         </div>
 
+                        {/* Checkpoint info */}
+                        {currentZone?.checkpoints && currentZone.checkpoints.length > 0 && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4">
+                            <h4 className="font-semibold text-blue-900 mb-2">
+                              {currentZone.checkpoints.length > 1 ? '🎯 Checkpunten' : '🎯 Checkpunt'}
+                            </h4>
+                            <div className="space-y-3">
+                              {currentZone.checkpoints.map((checkpoint: any, idx: number) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                    {idx + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-blue-900">{checkpoint.name}</p>
+                                    <p className="text-xs text-blue-700">{checkpoint.description}</p>
+                                    <p className="text-xs text-blue-600 mt-1">Hint: <em>{checkpoint.codeHint}</em></p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Map View */}
-                        {rallyZones[zone.id - 1]?.startLocation && rallyZones[zone.id - 1]?.endLocation && (
+                        {currentZone?.startLocation && currentZone?.endLocation && (
                           <div className="rounded-sm overflow-hidden shadow-md border border-gray-200">
                             <MapView
                               key={`map-${zone.id}-${activeZone}`}
-                              startPoint={rallyZones[zone.id - 1].startLocation}
-                              endPoint={rallyZones[zone.id - 1].endLocation}
+                              startPoint={currentZone.startLocation}
+                              endPoint={currentZone.endLocation}
                               className="h-64 w-full"
                             />
                           </div>
                         )}
 
-                        <div>
-                          <label
-                            htmlFor={`rz${zone.id}_code`}
-                            className="block text-sm font-medium text-gray-700 mb-2"
-                          >
-                            Code
-                          </label>
-                          <input
-                            id={`rz${zone.id}_code`}
-                            name={`rz${zone.id}_code`}
-                            type="text"
-                            defaultValue={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg uppercase"
-                            placeholder="Vul hier de code in..."
-                          />
-                        </div>
+                        {/* Code Inputs - One per checkpoint */}
+                        {currentZone?.checkpoints && currentZone.checkpoints.length > 0 ? (
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {currentZone.checkpoints.length > 1 ? 'Checkpoint Codes' : 'Checkpoint Code'}
+                              <span className="text-xs text-gray-500 ml-2">
+                                (Zone {zone.id}: {currentZone.checkpoints.length} checkpoint{currentZone.checkpoints.length > 1 ? 's' : ''})
+                              </span>
+                            </h3>
+                            {currentZone.checkpoints.map((checkpoint: any, idx: number) => {
+                              // Get existing code from individual checkpoint record, not combined code
+                              const checkpointRecord = zoneSubmissions.find(
+                                (zs: any) => zs.zone_id === zone.id.toString() && zs.checkpoint_number === idx + 1
+                              );
+                              const existingCode = checkpointRecord?.submitted_answer || '';
+                              
+                              console.log(`Zone ${zone.id} Checkpoint ${idx + 1}:`, { 
+                                checkpointName: checkpoint.name,
+                                fieldName: `rz${zone.id}_checkpoint_${idx + 1}_code`,
+                                existingCode,
+                                checkpointRecord
+                              });
+                              
+                              return (
+                              <div key={idx} className="bg-gray-50 p-4 rounded-sm border border-gray-200">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
+                                    {idx + 1}
+                                  </div>
+                                  <label
+                                    htmlFor={`rz${zone.id}_checkpoint_${idx + 1}_code`}
+                                    className="block text-sm font-semibold text-gray-900"
+                                  >
+                                    {checkpoint.name}
+                                  </label>
+                                </div>
+                                <input
+                                  id={`rz${zone.id}_checkpoint_${idx + 1}_code`}
+                                  name={`rz${zone.id}_checkpoint_${idx + 1}_code`}
+                                  type="text"
+                                  defaultValue={existingCode}
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg uppercase"
+                                  placeholder={`Code voor ${checkpoint.name}...`}
+                                />
+                                <p className="text-xs text-gray-600 mt-2">
+                                  Hint: <em>{checkpoint.codeHint}</em>
+                                </p>
+                              </div>
+                            )})}
+                          </div>
+                        ) : (
+                          <div>
+                            <label
+                              htmlFor={`rz${zone.id}_code`}
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Code
+                            </label>
+                            <input
+                              id={`rz${zone.id}_code`}
+                              name={`rz${zone.id}_code`}
+                              type="text"
+                              defaultValue={submission?.[`rz${zone.id}_code` as keyof typeof submission] as string || ''}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg uppercase"
+                              placeholder="Vul hier de code in..."
+                            />
+                          </div>
+                        )}
 
                         {/* Zone Shadow Score Display */}
                         {zoneScore?.shadow_score !== null && zoneScore?.shadow_score !== undefined && (
@@ -696,7 +974,7 @@ export default function RallySubmission() {
                               </h3>
                               <span className="text-2xl font-bold text-primary-600">
                                 {zoneScore.shadow_score?.toFixed(0) || '0'}
-                                <span className="text-sm text-gray-500">/100</span>
+                                <span className="text-sm text-gray-500">/200</span>
                               </span>
                             </div>
                             <div className="space-y-3">
@@ -707,7 +985,7 @@ export default function RallySubmission() {
                                     Ritme
                                   </span>
                                   <span className="text-sm font-semibold text-gray-900">
-                                    {zoneScore.rhythm_score?.toFixed(1) || '0.0'}/50
+                                    {zoneScore.rhythm_score?.toFixed(1) || '0.0'}/100
                                   </span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -724,7 +1002,7 @@ export default function RallySubmission() {
                                     Blik
                                   </span>
                                   <span className="text-sm font-semibold text-gray-900">
-                                    {zoneScore.view_score?.toFixed(1) || '0.0'}/50
+                                    {zoneScore.view_score?.toFixed(1) || '0.0'}/100
                                   </span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -1000,7 +1278,7 @@ export default function RallySubmission() {
                   </p>
                   <h3 className="flex items-center gap-2">
                     <Icon name="clock" className="w-5 h-5" />
-                    Ritme (0-50 punten)
+                    Ritme (0-100 punten)
                   </h3>
                   <p>
                     Meet hoe consistent je bent in je timing. Hoe dichter je bij de mediaan tijd van alle deelnemers zit,
@@ -1008,14 +1286,14 @@ export default function RallySubmission() {
                   </p>
                   <h3 className="flex items-center gap-2">
                     <Icon name="eye" className="w-5 h-5" />
-                    Blik (0-50 punten)
+                    Blik (0-100 punten)
                   </h3>
                   <p>
                     Meet hoe nauwkeurig en uniek je antwoorden zijn. Correcte antwoorden leveren punten op,
                     en unieke observaties worden extra beloond.
                   </p>
                   <p className="mt-4">
-                    <strong>Totaal:</strong> Je Schaduwscore is de som van Ritme en Blik per zone (max 100 punten per zone, 800 punten totaal).
+                    <strong>Totaal:</strong> Je Schaduwscore is de som van Ritme en Blik per zone (max 200 punten per zone, 1600 punten totaal).
                   </p>
                 </div>
               )}

@@ -110,14 +110,14 @@ function calculateRarity(frequency: number): number {
 /**
  * Calculate rhythm score for a zone submission
  * 
- * ritme = max(0, 50 - straf)
+ * ritme = max(0, 100 - straf)
  * straf = Δ × (Δ + 1) / 2
  * Δ = |zone_time - mediaan|
  */
 function calculateRhythmScore(zoneTime: number, medianTime: number): number {
   const delta = Math.abs(zoneTime - medianTime);
   const penalty = (delta * (delta + 1)) / 2;
-  return Math.max(0, 50 - penalty);
+  return Math.max(0, 100 - penalty);
 }
 
 /**
@@ -136,23 +136,58 @@ function calculateMedian(numbers: number[]): number {
 }
 
 /**
- * Get valid answers for a Rally Zone from Sanity
+ * Get valid answers for a Rally Zone by zone number (1-8) or _id
  */
-async function getValidAnswers(zoneId: string): Promise<string[]> {
+async function getValidAnswers(zoneIdentifier: string): Promise<string[]> {
   const { sanityClient } = await import('./sanity.server');
   
-  const zone = await sanityClient.fetch(
-    `*[_type == "rallyZone" && _id == $zoneId][0] {
-      validAnswers,
-      solution
-    }`,
-    { zoneId }
-  );
+  // Try to parse as zone number first (1-8)
+  const zoneNum = parseInt(zoneIdentifier, 10);
   
-  if (!zone) return [];
+  let zone;
+  if (!isNaN(zoneNum) && zoneNum >= 1 && zoneNum <= 8) {
+    // Look up by zone number (order + 1)
+    zone = await sanityClient.fetch(
+      `*[_type == "rallyZone" && order == $order][0] {
+        checkpoints[] {
+          solution,
+          validAnswers
+        }
+      }`,
+      { order: zoneNum - 1 }
+    );
+    
+    if (zone?.checkpoints) {
+      // Collect all valid answers from all checkpoints
+      const allValidAnswers: string[] = [];
+      for (const checkpoint of zone.checkpoints) {
+        if (checkpoint.validAnswers && checkpoint.validAnswers.length > 0) {
+          allValidAnswers.push(...checkpoint.validAnswers);
+        }
+        if (checkpoint.solution) {
+          allValidAnswers.push(checkpoint.solution);
+        }
+      }
+      console.info(`[getValidAnswers] Zone ${zoneNum}: found ${allValidAnswers.length} valid answers`);
+      return allValidAnswers;
+    }
+  } else {
+    // Look up by _id (legacy)
+    zone = await sanityClient.fetch(
+      `*[_type == "rallyZone" && _id == $zoneId][0] {
+        validAnswers,
+        solution
+      }`,
+      { zoneId: zoneIdentifier }
+    );
+    
+    if (zone) {
+      return zone.validAnswers || [zone.solution];
+    }
+  }
   
-  // Return validAnswers if it exists, otherwise use solution as fallback
-  return zone.validAnswers || [zone.solution];
+  console.warn(`[getValidAnswers] No valid answers found for zone ${zoneIdentifier}`);
+  return [];
 }
 
 /**
@@ -189,6 +224,7 @@ export async function calculateZoneShadowScores(zoneId: string): Promise<void> {
   
   // 4. Get valid answers for this zone
   const validAnswers = await getValidAnswers(zoneId);
+  console.info(`[shadow-scores] Zone ${zoneId}: Found ${validAnswers.length} valid answers:`, validAnswers);
   
   // 5. Count answer frequencies (only correct answers)
   const answerFrequency = new Map<string, number>();
@@ -199,10 +235,14 @@ export async function calculateZoneShadowScores(zoneId: string): Promise<void> {
     const normalized = normalizeAnswer(sub.submitted_answer);
     const correctness = calculateCorrectness(normalized, validAnswers);
     
+    console.info(`[shadow-scores] Zone ${zoneId}, submission ${sub.id}: answer="${sub.submitted_answer}", normalized="${normalized}", correctness=${correctness}`);
+    
     if (correctness > 0) {
       answerFrequency.set(normalized, (answerFrequency.get(normalized) || 0) + 1);
     }
   }
+  
+  console.info(`[shadow-scores] Zone ${zoneId}: Answer frequency map:`, Array.from(answerFrequency.entries()));
   
   // 6. Calculate scores for each submission
   for (const sub of submissions) {
@@ -222,12 +262,18 @@ export async function calculateZoneShadowScores(zoneId: string): Promise<void> {
       if (correctness > 0) {
         const frequency = answerFrequency.get(normalized) || 0;
         const rarity = calculateRarity(frequency);
-        viewScore = 50 * correctness * rarity;
+        viewScore = 100 * correctness * rarity;
+        
+        console.info(`[shadow-scores] Zone ${zoneId}, submission ${sub.id}: correctness=${correctness}, frequency=${frequency}, rarity=${rarity}, viewScore=${viewScore}`);
+      } else {
+        console.info(`[shadow-scores] Zone ${zoneId}, submission ${sub.id}: correctness=0, no view score`);
       }
     }
     
-    // Shadow score (0-100)
+    // Shadow score (0-200, sum of rhythm 0-100 and view 0-100)
     const shadowScore = rhythmScore + viewScore;
+    
+    console.info(`[shadow-scores] Zone ${zoneId}, submission ${sub.id}: rhythmScore=${rhythmScore}, viewScore=${viewScore}, shadowScore=${shadowScore}`);
     
     // Update submission
     await supabaseAdmin

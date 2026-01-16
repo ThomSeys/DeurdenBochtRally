@@ -56,18 +56,37 @@ export interface PricingTier {
   order: number;
 }
 
+export type ZoneType = 'short' | 'medium' | 'long';
+
+export interface Checkpoint {
+  _key?: string;
+  name: string;
+  description: string;
+  codeHint: string;
+  solution: string;
+  validAnswers: string[];
+  location?: {
+    lat: number;
+    lng: number;
+  };
+}
+
 export interface RallyZone {
   _id: string;
   title: string;
   description: string;
   location: string;
+  zoneType: ZoneType;
+  estimatedDistance: number;
   exit: string;
   lus: string;
-  checkpoint: string;
-  codeHint: string;
   rejoin: string;
+  checkpoints: Checkpoint[];
+  // Legacy fields (hidden but kept for backward compatibility)
+  checkpoint?: string;
+  codeHint?: string;
+  solution?: string;
   points: number;
-  solution: string;
   color: 'green' | 'yellow' | 'orange' | 'red';
   image?: any;
   zoneNumber: number;
