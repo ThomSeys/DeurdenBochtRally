@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Den Bochtenkoning Rally" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>RZ1 - Leie Valley Loop</name>
+    <desc>Rally Zone 1: Leie Valley Loop</desc>
+    <time>2026-01-16T18:25:52.317Z</time>
+  </metadata>
+  <wpt lat="51.01308" lon="3.61875">
+    <name>Start</name>
+    <desc>Start</desc>
+    <time>2026-01-16T18:25:52.317Z</time>
+  </wpt>
+  <wpt lat="50.96918" lon="3.62395">
+    <name>Checkpoint 1: De Brugwachter</name>
+    <desc>Checkpoint 1: De Brugwachter</desc>
+    <time>2026-01-16T18:25:52.317Z</time>
+  </wpt>
+  <wpt lat="50.88479" lon="3.58042">
+    <name>End</name>
+    <desc>End</desc>
+    <time>2026-01-16T18:25:52.317Z</time>
+  </wpt>
+  <trk>
+    <name>RZ1 - Leie Valley Loop</name>
+    <desc>Rally detour route with 1 checkpoint(s)</desc>
+    <trkseg>
+        <trkpt lat="51.01308" lon="3.61875">
+          <name>Start</name>
+          <time>2026-01-16T18:25:52.317Z</time>
+        </trkpt>
+        <trkpt lat="50.96918" lon="3.62395">
+          <name>Checkpoint 1: De Brugwachter</name>
+          <time>2026-01-16T18:25:52.317Z</time>
+        </trkpt>
+        <trkpt lat="50.88479" lon="3.58042">
+          <name>End</name>
+          <time>2026-01-16T18:25:52.317Z</time>
+        </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

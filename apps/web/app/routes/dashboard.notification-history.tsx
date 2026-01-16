@@ -103,25 +103,17 @@ export default function DashboardNotificationHistory() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            notif.delivery_status === 'success'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {notif.delivery_status === 'success' ? (
-                            <span className="flex items-center gap-1">
-                              <Icon name="check" className="w-4 h-4 text-green-600" />
-                              Bezorgd
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1">
-                              <Icon name="x" className="w-4 h-4 text-red-600" />
-                              {notif.error_message || 'Mislukt'}
-                            </span>
-                          )}
-                        </span>
+                        {notif.delivery_status === 'success' ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                            <Icon name="check-circle" className="w-4 h-4" />
+                            Bezorgd
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+                            <Icon name="x-circle" className="w-4 h-4" />
+                            Mislukt
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {notif.first_attempt_at

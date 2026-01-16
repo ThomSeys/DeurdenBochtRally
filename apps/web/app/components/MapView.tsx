@@ -13,6 +13,8 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
   const [isClient, setIsClient] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
+  console.log('[MapView] Rendering with:', { startPoint, endPoint, className });
+
   // Only run on client side
   useEffect(() => {
     setIsClient(true);
@@ -40,10 +42,14 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
   useEffect(() => {
     if (!isClient || !mapContainerRef.current || !startPoint) return;
 
+    console.log('[MapView] Initializing map with startPoint:', startPoint);
+
     // Dynamically import Leaflet only on client side
     import('leaflet').then((L) => {
+      console.log('[MapView] Leaflet loaded');
       // Initialize map
       if (!mapRef.current && mapContainerRef.current) {
+        console.log('[MapView] Creating new map instance');
         mapRef.current = L.default.map(mapContainerRef.current).setView(
           [startPoint.lat, startPoint.lng],
           13

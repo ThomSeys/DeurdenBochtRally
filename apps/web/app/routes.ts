@@ -43,4 +43,5 @@ export default [
   route('api/gpx-route', 'routes/api.gpx-route.tsx'),
   route('api/event-markers', 'routes/api.event-markers.tsx'),
   route('api/check-ins', 'routes/api.check-ins.tsx'),
+  route('admin/fallback-review', 'routes/admin.fallback-review.tsx'),
 ] satisfies RouteConfig;

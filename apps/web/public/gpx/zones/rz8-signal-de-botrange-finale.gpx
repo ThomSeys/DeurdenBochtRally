@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Den Bochtenkoning Rally" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>RZ8 - Signal de Botrange Finale</name>
+    <desc>Rally Zone 8: Signal de Botrange Finale</desc>
+    <time>2026-01-16T18:25:52.325Z</time>
+  </metadata>
+  <wpt lat="50.1569" lon="5.73486">
+    <name>Start</name>
+    <desc>Start</desc>
+    <time>2026-01-16T18:25:52.325Z</time>
+  </wpt>
+  <wpt lat="50.5031" lon="6.1089">
+    <name>Checkpoint 1: Hoogste Punt van België</name>
+    <desc>Checkpoint 1: Hoogste Punt van België</desc>
+    <time>2026-01-16T18:25:52.325Z</time>
+  </wpt>
+  <wpt lat="50.24155" lon="5.7507">
+    <name>End</name>
+    <desc>End</desc>
+    <time>2026-01-16T18:25:52.325Z</time>
+  </wpt>
+  <trk>
+    <name>RZ8 - Signal de Botrange Finale</name>
+    <desc>Rally detour route with 1 checkpoint(s)</desc>
+    <trkseg>
+        <trkpt lat="50.1569" lon="5.73486">
+          <name>Start</name>
+          <time>2026-01-16T18:25:52.325Z</time>
+        </trkpt>
+        <trkpt lat="50.5031" lon="6.1089">
+          <name>Checkpoint 1: Hoogste Punt van België</name>
+          <time>2026-01-16T18:25:52.325Z</time>
+        </trkpt>
+        <trkpt lat="50.24155" lon="5.7507">
+          <name>End</name>
+          <time>2026-01-16T18:25:52.325Z</time>
+        </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -19,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const EVENT_DATE = process.env.EVENT_DATE || '2026-05-16';
   const today = new Date().toISOString().split('T')[0];
   const isEventDay = today === EVENT_DATE;
-  const isAdmin = user?.is_admin || false;
+  const isAdmin = user?.is_admin === true;
 
   // Only allow access on event day OR if user is admin
   if (!isEventDay && !isAdmin) {
@@ -33,9 +33,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
       title,
       location,
       color,
-      startLocation,
-      endLocation,
+      "startLocation": startPoint,
+      "endLocation": endPoint,
       "is_open": coalesce(is_open, true),
+      checkpoints[] {
+        _key,
+        name,
+        description,
+        codeHint,
+        location
+      },
       gpxRoute {
         asset-> {
           url
@@ -194,6 +201,7 @@ export default function LiveMap() {
           showCheckIns={showCheckIns}
           showZoneRoutes={showZoneRoutes}
           showEventMarkers={showEventMarkers}
+          isAdmin={isAdmin}
         />
 
         {/* Legend */}
@@ -209,11 +217,12 @@ export default function LiveMap() {
                 <span>Zone Routes</span>
               </div>
               <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
-                <span>S / E</span>
-                <span>Start / Eind Punten</span>
+                <span>S{isAdmin ? ' / E' : ''}</span>
+                <span>Start{isAdmin ? ' / Eind' : ''} Punt{isAdmin ? 'en' : ''}</span>
               </div>
             </div>
 
+            {isAdmin && (
             <div className="border-b pb-2">
               <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowCheckIns(!showCheckIns)}>
                 <span style={{opacity: showCheckIns ? 1 : 0.5}}>Check-ins ({checkIns?.length || 0})</span>
@@ -222,14 +231,15 @@ export default function LiveMap() {
                 <div style={{ background: '#10b981', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
                 <span className="flex items-center gap-1">
                   <Icon name="marker" className="w-3 h-3" />
-                  Zone Start
+                  Zone Entry
                 </span>
               </div>
               <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
                 <div style={{ background: '#f59e0b', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
-                <span>✓ Code Indiening</span>
+                <span>✓ Code Submission</span>
               </div>
             </div>
+            )}
 
             <div className="border-b pb-2">
               <div className="flex items-center gap-2">
@@ -261,7 +271,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers, isAdmin }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -290,6 +300,7 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns
       showCheckIns={showCheckIns}
       showZoneRoutes={showZoneRoutes}
       showEventMarkers={showEventMarkers}
+      isAdmin={isAdmin}
     />
   );
 }

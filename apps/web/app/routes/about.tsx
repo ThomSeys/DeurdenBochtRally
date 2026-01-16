@@ -1,12 +1,12 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
-
 import { useLoaderData, Link } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
 import { Icon } from '~/components/Icon';
-import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig } from '~/lib/sanity.server';
+import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { getUserId } from '~/lib/session.server';
+import { PortableText } from '@portabletext/react';
 
 export const meta: MetaFunction = () => {
   return [
@@ -22,8 +22,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const schedule = edition ? await getScheduleItems(edition._id) : [];
   const benefits = edition ? await getBenefitItems(edition._id) : [];
   const faq = edition ? await getFAQItems(edition._id) : [];
+  
+  // Fetch event stories
+  const stories = edition ? await sanityClient.fetch(
+    `*[_type == "eventStory" && references($editionId)] | order(order asc) {
+      _id,
+      title,
+      subtitle,
+      content,
+      highlights,
+      "imageUrl": image.asset->url
+    }`,
+    { editionId: edition._id }
+  ) : [];
 
-  return { userId, edition, siteConfig, schedule, benefits, faq };
+  return { userId, edition, siteConfig, schedule, benefits, faq, stories };
 }
 
 // Map common benefit emoji icons to Icon component names
@@ -49,7 +62,7 @@ function getBenefitIconName(icon: string): string {
 }
 
 export default function About() {
-  const { userId, edition, siteConfig, schedule, benefits, faq } = useLoaderData<typeof loader>();
+  const { userId, edition, siteConfig, schedule, benefits, faq, stories } = useLoaderData<typeof loader>();
 
   const everyoneBenefits = benefits.filter((b: any) => b.category === 'everyone');
   const winnerBenefits = benefits.filter((b: any) => b.category === 'winner');
@@ -58,79 +71,200 @@ export default function About() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 break-words">Over het Event</h1>
-          <p className="text-lg sm:text-xl break-words">Alles wat je moet weten over Deur Den Bocht</p>
+      {/* Hero with gradient and pattern */}
+      <section className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-20 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 break-words">
+            Over het Event
+          </h1>
+          <p className="text-xl sm:text-2xl mb-8 text-primary-100">
+            Een unieke rally-ervaring door de mooiste wegen van België
+          </p>
+          {edition && (
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full">
+              <Icon name="calendar" className="w-5 h-5" />
+              <span className="font-semibold">{new Date(edition.eventDate).toLocaleDateString('nl-BE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </div>
+          )}
         </div>
       </section>
 
+      {/* Event Stories */}
+      {stories && stories.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
+            {stories.map((story: any, index: number) => (
+              <>
+              <div key={story._id}>
+                {/* Full-width hero image banner */}
+                {story.imageUrl && (
+                  <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] mb-12 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden group">
+                    {/* Image with parallax effect */}
+                    <div className="absolute inset-0">
+                      <img
+                        src={story.imageUrl}
+                        alt={story.title}
+                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000"
+                      />
+                    </div>
+                    
+                    {/* Gradient overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-900/30 to-transparent"></div>
+                    
+                    {/* Content overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16">
+                      <div className="max-w-7xl mx-auto">
+                        <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-2xl">
+                          {story.title}
+                        </h2>
+                        {story.subtitle && (
+                          <p className="text-xl sm:text-2xl lg:text-3xl text-white/90 font-medium italic drop-shadow-lg max-w-3xl">
+                            {story.subtitle}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Decorative corner elements */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-bl-full blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-600/10 rounded-tr-full blur-2xl"></div>
+                  </div>
+                )}
+
+                {/* Content section */}
+                <div className="max-w-4xl mx-auto">
+                  {!story.imageUrl && (
+                    <>
+                      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+                        {story.title}
+                      </h2>
+                      {story.subtitle && (
+                        <p className="text-xl sm:text-2xl text-primary-600 mb-6 font-medium italic">{story.subtitle}</p>
+                      )}
+                    </>
+                  )}
+                  
+                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed mb-8">
+                    <PortableText value={story.content} />
+                  </div>
+                  
+                  {story.highlights && story.highlights.length > 0 && (
+                    <div 
+                      className="grid gap-4"
+                      style={{ gridTemplateColumns: `repeat(${Math.min(story.highlights.length, 4)}, minmax(0, 1fr))` }}
+                    >
+                      {story.highlights.map((highlight: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className="group relative overflow-hidden text-center bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-6 rounded-xl transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="relative z-10">
+                            <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                              {highlight.number}
+                            </div>
+                            <div className="text-xs sm:text-sm text-primary-50 font-medium uppercase tracking-wider">
+                              {highlight.label}
+                            </div>
+                          </div>
+                          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full"></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <hr />
+              </>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Schedule */}
       {schedule && schedule.length > 0 && (
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 break-words">
-              Programma
-            </h2>
-            <div className="space-y-6">
-              {schedule.map((item: any, index: number) => (
-                <div key={item._id} className={`bg-white rounded-sm shadow-lg p-6 border-l-4 border-${item.color || 'primary'}-600`}>
-                  <div className="flex items-start">
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
-                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{item.title}</h3>
-                        <span className="text-base sm:text-lg font-semibold text-primary-600 whitespace-nowrap">{item.time}</span>
-                      </div>
-                      <p className="text-gray-700 mb-4">{item.description}</p>
+        <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Programma
+              </h2>
+              <p className="text-lg text-gray-600">Plan je dag met ons gedetailleerde schema</p>
+            </div>
+            
+            {/* Mobile & Desktop: Vertical timeline */}
+            <div className="relative px-10 border-l-4 border-primary-700">
+              
+              <div className="space-y-8">
+                {schedule.map((item: any, index: number) => (
+                  <div key={item._id} className="relative">
+                    {/* Time badge - positioned on the orb */}
+                    <div className="mb-2">
+                      <span className="inline-block px-3 py-1 bg-primary-100 text-gray-700 text-sm font-bold rounded">
+                        {item.time}
+                      </span>
+                    </div>
+                    <div className="bg-white rounded-lg shadow-md lg:shadow-lg p-4 lg:p-6 border-l-4 border-primary-600 hover:shadow-xl transition-shadow">
+                      <h3 className="text-lg lg:text-2xl font-bold text-gray-900 mb-2 lg:mb-3">{item.title}</h3>
+                      <p className="text-gray-700 text-sm lg:text-lg mb-2 lg:mb-4">{item.description}</p>
                       {item.details && item.details.length > 0 && (
-                        <ul className="space-y-2 mb-4">
+                        <ul className="space-y-1 lg:space-y-2 text-sm lg:text-base lg:grid lg:grid-cols-2 lg:gap-3">
                           {item.details.map((detail: string, idx: number) => (
                             <li key={idx} className="flex items-start">
-                              <span className="text-primary-600 mr-2">•</span>
+                              <Icon name="check-circle" className="w-4 h-4 lg:w-5 lg:h-5 text-primary-600 mr-2 flex-shrink-0 mt-0.5" />
                               <span className="text-gray-600">{detail}</span>
                             </li>
                           ))}
                         </ul>
                       )}
-                      {/* Show map for first schedule item (start location) */}
                       {index === 0 && siteConfig?.startLocation && (
-                        <div className="mt-4">
+                        <div className="mt-3 lg:mt-4">
                           <MapView
                             startPoint={siteConfig.startLocation}
                             endPoint={siteConfig.startLocation}
-                            className="h-64 rounded-sm"
+                            className="h-48 lg:h-72 rounded lg:rounded-lg"
                           />
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
           </div>
         </section>
       )}
 
       {/* What you receive */}
       {benefits && benefits.length > 0 && (
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4 break-words">
-              Wat krijg je?
-            </h2>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Wat krijg je?
+              </h2>
+              <p className="text-lg text-gray-600">Meer dan alleen een rit</p>
+            </div>
             
             {everyoneBenefits.length > 0 && (
               <>
-                <h3 className="text-2xl font-semibold text-center text-gray-700 mb-8">
-                  Iedere deelnemer krijgt
-                </h3>
-                <div className="grid md:grid-cols-3 gap-6 mb-12">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-semibold text-gray-800 inline-block px-6 py-2 bg-primary-50 rounded-full">
+                    🎁 Iedere deelnemer krijgt
+                  </h3>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
                   {everyoneBenefits.map((benefit: any) => (
-                    <div key={benefit._id} className="bg-white p-6 rounded-sm shadow text-center">
-                      <Icon name={getBenefitIconName(benefit.icon)} className="w-16 h-16 mx-auto mb-3 text-primary-600" />
-                      <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
-                      <p className="text-gray-600">{benefit.description}</p>
+                    <div key={benefit._id} className="group bg-gradient-to-br from-gray-50 to-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all border border-gray-100 hover:border-primary-200">
+                      <div className="flex flex-col items-center text-center">
+                        <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <Icon name={getBenefitIconName(benefit.icon)} className="w-10 h-10 text-primary-600" />
+                        </div>
+                        <h4 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h4>
+                        <p className="text-gray-600 leading-relaxed">{benefit.description}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -139,15 +273,22 @@ export default function About() {
 
             {winnerBenefits.length > 0 && (
               <>
-                <h3 className="text-2xl font-semibold text-center text-gray-700 mb-8">
-                  De winnaar krijgt
-                </h3>
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-semibold text-primary-900 inline-block px-6 py-2 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-full">
+                    🏆 De winnaar krijgt
+                  </h3>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {winnerBenefits.map((benefit: any) => (
-                    <div key={benefit._id} className="bg-primary-50 p-6 rounded-sm shadow-lg border-2 border-primary-600 text-center">
-                      <Icon name={getBenefitIconName(benefit.icon)} className="w-16 h-16 mx-auto mb-3 text-primary-600" />
-                      <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
-                      <p className="text-gray-600">{benefit.description}</p>
+                    <div key={benefit._id} className="group relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-700 p-8 rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative flex flex-col items-center text-center">
+                        <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <Icon name={getBenefitIconName(benefit.icon)} className="w-10 h-10 text-white" />
+                        </div>
+                        <h4 className="text-xl font-bold text-white mb-3">{benefit.title}</h4>
+                        <p className="text-primary-50 leading-relaxed">{benefit.description}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -159,19 +300,29 @@ export default function About() {
 
       {/* FAQ */}
       {faq && faq.length > 0 && (
-        <section className="py-20">
+        <section className="py-20 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 break-words">
-              Veelgestelde Vragen
-            </h2>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Veelgestelde Vragen
+              </h2>
+              <p className="text-lg text-gray-600">We beantwoorden je vragen</p>
+            </div>
             <div className="space-y-4">
               {faq.map((item: any) => (
-                <details key={item._id} className="bg-white rounded-sm shadow p-6">
-                  <summary className="font-semibold text-base sm:text-lg text-gray-900 cursor-pointer flex items-start gap-2 break-words">
-                    {item.icon && <span className="mr-2 flex-shrink-0 mt-1">{item.icon}</span>}
-                    <span>{item.question}</span>
+                <details key={item._id} className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                  <summary className="font-semibold text-lg text-gray-900 cursor-pointer p-6 flex items-start justify-between gap-4">
+                    <span className="flex items-start gap-3">
+                      {item.icon && <span className="text-2xl flex-shrink-0">{item.icon}</span>}
+                      <span>{item.question}</span>
+                    </span>
+                    <Icon name="chevron-down" className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
                   </summary>
-                  <p className="mt-4 text-gray-700 pl-6">{item.answer}</p>
+                  <div className="px-6 pb-6 pt-2">
+                    <div className="pl-11 text-gray-700 leading-relaxed border-l-4 border-primary-200 pl-4">
+                      {item.answer}
+                    </div>
+                  </div>
                 </details>
               ))}
             </div>
@@ -181,16 +332,22 @@ export default function About() {
 
       {/* CTA */}
       {!userId && edition?.registrationOpen && (
-        <section className="py-16 bg-primary-600 text-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 break-words">Klaar voor het avontuur?</h2>
-            <p className="text-base sm:text-lg md:text-xl mb-8 break-words">
+        <section className="relative py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          </div>
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <Icon name="flag" className="w-16 h-16 mx-auto mb-6 text-white" />
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Klaar voor het avontuur?</h2>
+            <p className="text-xl sm:text-2xl mb-8 text-primary-100">
               Schrijf je nu in en zeker je plaats voor Deur Den Bocht
             </p>
             <Link
               to="/registration"
-              className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-sm text-lg font-semibold transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
+              <Icon name="user-plus" className="w-5 h-5" />
               Inschrijven
             </Link>
           </div>

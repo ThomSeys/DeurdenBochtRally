@@ -8,6 +8,13 @@ interface RallyZone {
   startLocation: { lat: number; lng: number; label?: string };
   endLocation?: { lat: number; lng: number; label?: string };
   is_open: boolean;
+  checkpoints?: Array<{
+    _key: string;
+    name: string;
+    description: string;
+    codeHint: string;
+    location: { lat: number; lng: number };
+  }>;
   gpxRoute?: {
     asset: {
       url: string;
@@ -50,9 +57,11 @@ interface LiveEventMapProps {
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
   showEventMarkers?: boolean;
+  isAdmin?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true, isAdmin = false }: LiveEventMapProps) {
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -192,8 +201,8 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         zoneRoutesRef.current = [];
 
 
-        // Add check-in markers
-        if (showCheckIns) {
+        // Add check-in markers (only for admins)
+        if (showCheckIns && isAdmin) {
           checkIns.forEach((checkIn) => {
           if (checkIn.entry_latitude && checkIn.entry_longitude) {
             // Entry point (start)
@@ -300,6 +309,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
           rallyZones.forEach((zone) => {
             // Skip zones without start location
             if (!zone.startLocation) {
+              console.warn('⚠️ Zone missing startLocation:', zone.title);
               return;
             }
 
@@ -337,6 +347,62 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
                   </div>
                 </div>
               `);
+
+            // Add end point marker only for admins
+            if (isAdmin && zone.endLocation) {
+              const endIcon = L.default.divIcon({
+                html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: bold;">E</div>`,
+                className: '',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
+              });
+
+              L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
+                .addTo(mapRef.current)
+                .bindPopup(`
+                  <div style="min-width: 200px;">
+                    <strong style="font-size: 16px;">${zone.title}</strong><br/>
+                    <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                      ${statusBadge}
+                    </div>
+                    <div style="margin-top: 4px; color: #666; font-size: 12px;">
+                      🏁 End Point
+                    </div>
+                  </div>
+                `);
+            }
+
+            // Add checkpoint markers only for admins
+            if (isAdmin && zone.checkpoints && zone.checkpoints.length > 0) {
+              zone.checkpoints.forEach((checkpoint, index) => {
+                if (checkpoint.location && checkpoint.location.lat && checkpoint.location.lng) {
+                  const checkpointIcon = L.default.divIcon({
+                    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; font-weight: bold;">${index + 1}</div>`,
+                    className: '',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12],
+                  });
+
+                  L.default.marker([checkpoint.location.lat, checkpoint.location.lng], { icon: checkpointIcon })
+                    .addTo(mapRef.current)
+                    .bindPopup(`
+                      <div style="min-width: 200px;">
+                        <strong style="font-size: 14px;">${checkpoint.name}</strong><br/>
+                        <span style="color: #666; font-size: 12px;">${zone.title}</span><br/>
+                        <div style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                          <div style="font-size: 12px; color: #374151; margin-bottom: 4px;">
+                            ${checkpoint.description}
+                          </div>
+                          <div style="font-size: 11px; color: #6b7280; font-style: italic;">
+                            💡 ${checkpoint.codeHint}
+                          </div>
+                        </div>
+                      </div>
+                    `);
+                }
+              });
+            }
           });
         } // Close showZoneRoutes conditional
 
@@ -406,7 +472,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         setMapError('Failed to initialize map');
       }
     });
-  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers]);
+  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers, isAdmin]);
 
   if (mapError) {
     return (

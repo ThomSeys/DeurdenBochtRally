@@ -15,11 +15,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  await requireUserId(request);
   const user = await getUser(request);
   const zoneId = parseInt(params.zoneId || '0');
 
-  if (!user || !zoneId || zoneId < 1 || zoneId > 8) {
+  if (!zoneId || zoneId < 1 || zoneId > 8) {
     throw new Response('Not Found', { status: 404 });
   }
 
@@ -47,23 +46,33 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       points,
       color,
       "imageUrl": image.asset->url,
-      startPoint,
-      endPoint
+      startPoint {
+        lat,
+        lng
+      },
+      endPoint {
+        lat,
+        lng
+      }
     }`,
-    { order: zoneId - 1 }
+    { order: zoneId }
   );
 
   if (!zone) {
     throw new Response('Zone not found', { status: 404 });
   }
 
-  // Check if already started this zone
-  const { data: existingSubmission } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('id, entry_timestamp')
-    .eq('participant_id', user.id)
-    .eq('zone_id', zoneId.toString())
-    .single();
+  // Check if already started this zone (only if logged in)
+  let existingSubmission = null;
+  if (user) {
+    const { data } = await supabaseAdmin
+      .from('rally_zone_submissions')
+      .select('id, entry_timestamp')
+      .eq('participant_id', user.id)
+      .eq('zone_id', zoneId.toString())
+      .single();
+    existingSubmission = data;
+  }
 
   return { 
     zone, 
@@ -155,7 +164,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export default function ZonePage() {
-  const { zone, zoneId, alreadyStarted } = useLoaderData<typeof loader>();
+  const { zone, zoneId, user, alreadyStarted } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const isStarting = navigation.state === 'submitting';
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -285,21 +294,35 @@ export default function ZonePage() {
         </div>
 
         {/* Map */}
-        {zone.startPoint && zone.endPoint && (
+        {zone.startPoint && zone.endPoint ? (
           <div className="bg-white rounded-sm shadow-lg p-6 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 break-words">Kaart</h2>
-            <div className="h-96 rounded-sm overflow-hidden">
+            <div className="h-96 w-full rounded-sm overflow-hidden border-2 border-gray-300 bg-gray-100">
               <MapView
                 startPoint={zone.startPoint}
-                endPoint={zone.endPoint}
+                className="w-full h-full"
               />
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Start Button */}
         <div className="bg-white rounded-sm shadow-lg p-6">
-          {alreadyStarted ? (
+          {!user ? (
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                <Icon name="lock" className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Log in om te starten</h3>
+              <p className="text-gray-600 mb-4">Je moet ingelogd zijn om een zone te kunnen starten.</p>
+              <a
+                href="/login"
+                className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-sm font-bold transition-colors"
+              >
+                Inloggen
+              </a>
+            </div>
+          ) : alreadyStarted ? (
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
                 <span className="text-3xl">✓</span>

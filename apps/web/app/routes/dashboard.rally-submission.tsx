@@ -88,10 +88,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `*[_type == "rallyZone"] | order(order asc) {
       title,
       order,
-      "zoneNumber": order + 1,
+      "zoneNumber": order,
       zoneType,
       estimatedDistance,
       checkpoints[] {
+        checkpointNumber,
         name,
         description,
         codeHint,
@@ -190,7 +191,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const rallyZones = await sanityClient.fetch(
     `*[_type == "rallyZone"] | order(order asc) {
       order,
-      "zoneNumber": order + 1,
+      "zoneNumber": order,
       checkpoints[] {
         solution,
         validAnswers
@@ -253,6 +254,72 @@ export async function action({ request }: ActionFunctionArgs) {
             console.error(`[checkpoint-update] NO RECORD FOUND for zone ${zoneNum} cp ${cpNum} (participant: ${userId})`);
           } else {
             console.info(`[checkpoint-update] SUCCESS zone ${zoneNum} cp ${cpNum}/${checkpoints.length} (correct: ${isCorrect})`);
+          }
+        }
+        
+        // Handle fallback photo upload if provided
+        const fallbackReason = formData.get(`rz${zoneNum}_cp${cpNum}_fallback_reason`) as string | null;
+        const fallbackNotes = formData.get(`rz${zoneNum}_cp${cpNum}_fallback_notes`) as string | null;
+        const fallbackPhoto = formData.get(`rz${zoneNum}_cp${cpNum}_fallback_photo`) as File | null;
+        
+        if (fallbackReason || fallbackNotes || (fallbackPhoto && fallbackPhoto.size > 0)) {
+          let photoUrl = null;
+          
+          // Upload photo to Supabase Storage if provided
+          if (fallbackPhoto && fallbackPhoto.size > 0) {
+            try {
+              const fileExt = fallbackPhoto.name.split('.').pop();
+              const fileName = `${userId}/zone${zoneNum}_cp${cpNum}_${Date.now()}.${fileExt}`;
+              const photoBuffer = await fallbackPhoto.arrayBuffer();
+              
+              const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+                .from('fallback-photos')
+                .upload(fileName, photoBuffer, {
+                  contentType: fallbackPhoto.type,
+                  upsert: false
+                });
+              
+              if (uploadError) {
+                console.error(`[fallback-photo] Upload failed for zone ${zoneNum} cp ${cpNum}:`, uploadError);
+              } else {
+                const { data: { publicUrl } } = supabaseAdmin.storage
+                  .from('fallback-photos')
+                  .getPublicUrl(fileName);
+                photoUrl = publicUrl;
+                console.info(`[fallback-photo] Uploaded: ${fileName}`);
+              }
+            } catch (error) {
+              console.error(`[fallback-photo] Upload error:`, error);
+            }
+          }
+          
+          // Update checkpoint with fallback info
+          const { error: fallbackError } = await supabaseAdmin
+            .from('rally_zone_submissions')
+            .update({
+              fallback_reason: fallbackReason,
+              fallback_notes: fallbackNotes,
+              fallback_photo_url: photoUrl,
+            })
+            .eq('participant_id', userId)
+            .eq('zone_id', zoneNum.toString())
+            .eq('checkpoint_number', cpNum);
+          
+          if (fallbackError) {
+            console.error(`[fallback] Update failed for zone ${zoneNum} cp ${cpNum}:`, fallbackError);
+          } else {
+            console.info(`[fallback] Recorded for zone ${zoneNum} cp ${cpNum}: ${fallbackReason}`);
+            
+            // Create fallback event record
+            await supabaseAdmin
+              .from('fallback_events')
+              .insert({
+                participant_id: userId,
+                zone_id: zoneNum.toString(),
+                event_type: fallbackReason || 'other',
+                participant_notes: fallbackNotes,
+                event_timestamp: new Date().toISOString(),
+              });
           }
         }
       }
@@ -885,7 +952,7 @@ export default function RallySubmission() {
                             {currentZone.checkpoints.map((checkpoint: any, idx: number) => {
                               // Get existing code from individual checkpoint record, not combined code
                               const checkpointRecord = zoneSubmissions.find(
-                                (zs: any) => zs.zone_id === zone.id.toString() && zs.checkpoint_number === idx + 1
+                                (zs: any) => zs.zone_id === zone.id.toString() && zs.checkpoint_number === checkpoint.checkpointNumber
                               );
                               const existingCode = checkpointRecord?.submitted_answer || '';
                               
@@ -913,6 +980,58 @@ export default function RallySubmission() {
                                 <p className="text-xs text-gray-600 mt-2">
                                   Hint: <em>{checkpoint.codeHint}</em>
                                 </p>
+                                
+                                {/* Fallback Photo Upload */}
+                                <details className="mt-3 bg-yellow-50 border border-yellow-200 rounded-sm p-3">
+                                  <summary className="text-sm font-medium text-yellow-800 cursor-pointer flex items-center gap-2">
+                                    <Icon name="alert-triangle" className="w-4 h-4" />
+                                    Checkpoint niet gevonden?
+                                  </summary>
+                                  <div className="mt-3 space-y-3">
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        Fallback reden
+                                      </label>
+                                      <select
+                                        name={`rz${zone.id}_cp${idx + 1}_fallback_reason`}
+                                        className="w-full text-sm px-2 py-2 border border-gray-300 rounded-sm"
+                                      >
+                                        <option value="">Selecteer reden...</option>
+                                        <option value="checkpoint_missed">Checkpoint niet kunnen vinden</option>
+                                        <option value="qr_damaged">QR code beschadigd/onleesbaar</option>
+                                        <option value="doubt_rule">Twijfelregel gebruikt (15min+)</option>
+                                        <option value="stuck_rule">Vastzitregel gebruikt (parallelweg)</option>
+                                        <option value="tech_failure">Technisch probleem</option>
+                                        <option value="other">Andere reden</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        Upload foto als bewijs
+                                      </label>
+                                      <input
+                                        type="file"
+                                        name={`rz${zone.id}_cp${idx + 1}_fallback_photo`}
+                                        accept="image/*"
+                                        className="w-full text-sm"
+                                      />
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Foto van locatie waar je dacht dat checkpoint was
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        Notities (optioneel)
+                                      </label>
+                                      <textarea
+                                        name={`rz${zone.id}_cp${idx + 1}_fallback_notes`}
+                                        rows={2}
+                                        className="w-full text-sm px-2 py-2 border border-gray-300 rounded-sm"
+                                        placeholder="Beschrijf wat er gebeurde..."
+                                      />
+                                    </div>
+                                  </div>
+                                </details>
                               </div>
                             )})}
                           </div>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Den Bochtenkoning Rally" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>RZ7 - Vallei van de Ourthe</name>
+    <desc>Rally Zone 7: Vallei van de Ourthe</desc>
+    <time>2026-01-16T18:25:52.324Z</time>
+  </metadata>
+  <wpt lat="50.13375" lon="5.53609">
+    <name>Start</name>
+    <desc>Start</desc>
+    <time>2026-01-16T18:25:52.324Z</time>
+  </wpt>
+  <wpt lat="50.09037" lon="5.56763">
+    <name>Checkpoint 1: Pont de Bérismenil</name>
+    <desc>Checkpoint 1: Pont de Bérismenil</desc>
+    <time>2026-01-16T18:25:52.324Z</time>
+  </wpt>
+  <wpt lat="50.4956" lon="6.1167">
+    <name>Checkpoint 2: Cascade du Bayehon</name>
+    <desc>Checkpoint 2: Cascade du Bayehon</desc>
+    <time>2026-01-16T18:25:52.324Z</time>
+  </wpt>
+  <wpt lat="50.12837" lon="5.7865">
+    <name>End</name>
+    <desc>End</desc>
+    <time>2026-01-16T18:25:52.324Z</time>
+  </wpt>
+  <trk>
+    <name>RZ7 - Vallei van de Ourthe</name>
+    <desc>Rally detour route with 2 checkpoint(s)</desc>
+    <trkseg>
+        <trkpt lat="50.13375" lon="5.53609">
+          <name>Start</name>
+          <time>2026-01-16T18:25:52.324Z</time>
+        </trkpt>
+        <trkpt lat="50.09037" lon="5.56763">
+          <name>Checkpoint 1: Pont de Bérismenil</name>
+          <time>2026-01-16T18:25:52.324Z</time>
+        </trkpt>
+        <trkpt lat="50.4956" lon="6.1167">
+          <name>Checkpoint 2: Cascade du Bayehon</name>
+          <time>2026-01-16T18:25:52.324Z</time>
+        </trkpt>
+        <trkpt lat="50.12837" lon="5.7865">
+          <name>End</name>
+          <time>2026-01-16T18:25:52.324Z</time>
+        </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
