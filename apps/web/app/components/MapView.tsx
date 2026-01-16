@@ -49,9 +49,9 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
           13
         );
 
-        // Add OpenStreetMap tiles (free and open-source)
-        L.default.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        // Add CartoDB Voyager tiles (balanced light/dark theme)
+        L.default.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
           maxZoom: 19,
         }).addTo(mapRef.current);
       }

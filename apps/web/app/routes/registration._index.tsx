@@ -72,9 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
       return {  error: 'Ongeldige formule geselecteerd', status: 400 };
     }
 
-    if (!['free', 'guided'].includes(rideType)) {
-      return {  error: 'Ongeldig rittype geselecteerd', status: 400 };
-    }
+    // Ride type is always 'free' - no guided rides offered
 
     const { data: existing } = await supabaseAdmin
       .from('participants')
@@ -188,7 +186,6 @@ export default function Registration() {
   const { edition, pricing, siteConfig } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [selectedFormula, setSelectedFormula] = useState<string>('with_meals');
-  const [selectedRideType, setSelectedRideType] = useState<string>('free');
 
   // Redirect to Stripe if we have a checkout URL
   if (actionData && 'checkoutUrl' in actionData && actionData.checkoutUrl) {
@@ -378,59 +375,8 @@ export default function Registration() {
                 </div>
               </div>
 
-              {/* Ride Type Selection */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Kies je rittype *</h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label
-                    className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
-                      selectedRideType === 'free'
-                        ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="rideType"
-                      value="free"
-                      className="sr-only"
-                      onChange={(e) => setSelectedRideType(e.target.value)}
-                      checked={selectedRideType === 'free'}
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <span className="text-2xl mb-2">🔵</span>
-                      <span className="block text-lg font-semibold text-gray-900">Vrije rit</span>
-                      <span className="mt-2 text-sm text-gray-600">
-                        Rijd op eigen tempo, alleen of met vrienden. Je kiest zelf je pauzes.
-                      </span>
-                    </div>
-                  </label>
-
-                  <label
-                    className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
-                      selectedRideType === 'guided'
-                        ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="rideType"
-                      value="guided"
-                      className="sr-only"
-                      onChange={(e) => setSelectedRideType(e.target.value)}
-                      checked={selectedRideType === 'guided'}
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <span className="text-2xl mb-2">🟢</span>
-                      <span className="block text-lg font-semibold text-gray-900">Begeleide rit</span>
-                      <span className="mt-2 text-sm text-gray-600">
-                        Vertrek 08:00 stipt in een groep van ±5 motoren met voor- en achterrijder.
-                      </span>
-                    </div>
-                  </label>
-                </div>
-              </div>
+              {/* Ride Type - Hidden, always free */}
+              <input type="hidden" name="rideType" value="free" />
 
               <div className="pt-6 border-t">
                 <button

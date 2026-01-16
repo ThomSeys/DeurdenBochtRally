@@ -62,16 +62,39 @@ export async function loader({ request }: LoaderFunctionArgs) {
     rallySubmissionMap[rs.participant_id] = rs;
   });
 
-  // Transform each zone submission into a display row
-  const submissions: any[] = [];
+  // Group by participant AND zone - create one record per zone per participant with all checkpoint answers
+  const zoneSubmissionsGrouped: Map<string, any> = new Map();
   
   zoneSubmissions?.forEach((zoneSubmission: any) => {
     const zoneId = parseInt(zoneSubmission.zone_id);
     const participantId = zoneSubmission.participant_id;
+    const checkpointNumber = zoneSubmission.checkpoint_number || 1;
+    const key = `${participantId}-${zoneId}`; // Unique key per participant per zone
+    
+    // Get or create zone record for this participant
+    if (!zoneSubmissionsGrouped.has(key)) {
+      const rallySubmission = rallySubmissionMap[participantId];
+      zoneSubmissionsGrouped.set(key, {
+        participant_id: participantId,
+        zone_id: zoneId,
+        participants: zoneSubmission.participants,
+        submitted_at: rallySubmission?.submitted_at,
+        created_at: zoneSubmission.created_at,
+        checkpoints: {}
+      });
+    }
+    
+    const groupedRecord = zoneSubmissionsGrouped.get(key);
     
     // Get the rally submission for this participant to find the submitted code
+    // Note: There's one code per zone (not per checkpoint), stored in rally_submissions table
     const rallySubmission = rallySubmissionMap[participantId];
-    const code = rallySubmission?.[`rz${zoneId}_code`] || '';
+    const zoneCode = rallySubmission?.[`rz${zoneId}_code`] || '';
+    
+    // For multi-checkpoint zones, the code might be in format "answer1|answer2|answer3"
+    // Split and get the answer for this specific checkpoint
+    const codeParts = zoneCode.split('|').map((c: string) => c.trim());
+    const code = codeParts[checkpointNumber - 1] || codeParts[0] || '';
     
     // Check correctness
     const submittedCode = code.toLowerCase().trim();
@@ -79,33 +102,39 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const validCodes = validAnswersMap[zoneId - 1] || [];
     const isCorrect = submittedCode === correctCode || validCodes.includes(submittedCode);
     
-    // Apply filters
-    if (zoneFilter !== 'all' && zoneId !== parseInt(zoneFilter)) {
-      return;
-    }
-    
-    if (statusFilter === 'correct' && !isCorrect) {
-      return;
-    }
-    if (statusFilter === 'incorrect' && isCorrect) {
-      return;
-    }
-    
-    submissions.push({
-      id: zoneSubmission.id,
-      participant_id: participantId,
-      zone_id: zoneId,
+    // Store checkpoint data
+    groupedRecord.checkpoints[checkpointNumber] = {
       code: code,
-      submitted_at: rallySubmission?.submitted_at || zoneSubmission.created_at,
-      participants: zoneSubmission.participants,
       is_correct: isCorrect,
+      correct_answer: correctCode || 'Niet beschikbaar',
       shadow_score: zoneSubmission.shadow_score,
       rhythm_score: zoneSubmission.rhythm_score,
       view_score: zoneSubmission.view_score,
       answer_accuracy: zoneSubmission.answer_accuracy,
-      correct_answer: correctCode || 'Niet beschikbaar',
       created_at: zoneSubmission.created_at
-    });
+    };
+  });
+
+  // Convert to array and apply filters
+  const submissions = Array.from(zoneSubmissionsGrouped.values()).filter((submission) => {
+    // Zone filter
+    if (zoneFilter !== 'all' && submission.zone_id !== parseInt(zoneFilter)) {
+      return false;
+    }
+    
+    // Status filter
+    if (statusFilter !== 'all') {
+      const hasMatchingCheckpoint = Object.values(submission.checkpoints).some((checkpoint: any) => {
+        if (statusFilter === 'correct' && checkpoint.is_correct) return true;
+        if (statusFilter === 'incorrect' && !checkpoint.is_correct) return true;
+        return false;
+      });
+      if (!hasMatchingCheckpoint) {
+        return false;
+      }
+    }
+    
+    return true;
   });
 
   // Sort by created_at descending
@@ -115,18 +144,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return dateB - dateA;
   });
 
+  // Calculate max checkpoints needed for display
+  const maxCheckpoints = Math.max(
+    ...submissions.map(s => Object.keys(s.checkpoints).length),
+    1 // Minimum 1 checkpoint
+  );
+
   const uniqueZones = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return { 
     submissions, 
     zoneFilter, 
     statusFilter,
-    uniqueZones
+    uniqueZones,
+    maxCheckpoints
   };
 }
 
 export default function AdminSubmissions() {
-  const { submissions, zoneFilter, statusFilter, uniqueZones } = useLoaderData<typeof loader>();
+  const { submissions, zoneFilter, statusFilter, uniqueZones, maxCheckpoints } = useLoaderData<typeof loader>();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -200,27 +236,11 @@ export default function AdminSubmissions() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Zone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ingediend
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Correct Antwoord
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Accuraatheid
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ritme
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Blik
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Shadow
-                  </th>
+                  {Array.from({ length: maxCheckpoints }, (_, i) => i + 1).map((cpNum) => (
+                    <th key={cpNum} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      CP{cpNum}
+                    </th>
+                  ))}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ingediend op
                   </th>
@@ -228,73 +248,51 @@ export default function AdminSubmissions() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {submissions.map((submission: any) => (
-                  <tr key={submission.id} className="hover:bg-gray-50">
+                  <tr key={`${submission.participant_id}-${submission.zone_id}`} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {submission.participants.first_name} {submission.participants.last_name}
                       </div>
                       <div className="text-sm text-gray-500">{submission.participants.email}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       Rally Zone {submission.zone_id}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                        {submission.code}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="px-2 py-1 bg-green-50 text-green-800 rounded text-sm font-mono">
-                        {submission.correct_answer}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {submission.is_correct ? (
-                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          ✓ Correct
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          ✗ Incorrect
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {submission.answer_accuracy !== null && submission.answer_accuracy !== undefined ? (
-                        <span className="text-sm font-semibold text-orange-600">
-                          {submission.answer_accuracy.toFixed(1)}m
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {submission.rhythm_score !== null && submission.rhythm_score !== undefined ? (
-                        <span className="text-sm font-semibold text-blue-600">
-                          {submission.rhythm_score.toFixed(1)}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {submission.view_score !== null && submission.view_score !== undefined ? (
-                        <span className="text-sm font-semibold text-green-600">
-                          {submission.view_score.toFixed(1)}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {submission.shadow_score !== null && submission.shadow_score !== undefined ? (
-                        <span className="text-sm font-bold text-purple-600">
-                          {submission.shadow_score.toFixed(1)}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </td>
+                    {Array.from({ length: maxCheckpoints }, (_, i) => i + 1).map((checkpointNum) => {
+                      const checkpoint = submission.checkpoints[checkpointNum];
+                      if (!checkpoint) {
+                        return (
+                          <td key={checkpointNum} className="px-4 py-4 text-center">
+                            <span className="text-xs text-gray-300">-</span>
+                          </td>
+                        );
+                      }
+                      return (
+                        <td key={checkpointNum} className="px-4 py-4">
+                          <div className="flex flex-col items-center gap-1">
+                            <code className={`px-2 py-1 rounded text-xs font-mono ${
+                              checkpoint.is_correct 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {checkpoint.code || '-'}
+                            </code>
+                            <div className="text-xs text-gray-500 space-y-0.5">
+                              {checkpoint.answer_accuracy !== null && checkpoint.answer_accuracy !== undefined && (
+                                <div className="text-orange-600 font-semibold">
+                                  {checkpoint.answer_accuracy.toFixed(1)} meter
+                                </div>
+                              )}
+                              {checkpoint.shadow_score !== null && checkpoint.shadow_score !== undefined && (
+                                <div className="text-purple-600 font-bold">
+                                  Score: {checkpoint.shadow_score.toFixed(1)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    })}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {submission.submitted_at 
                         ? new Date(submission.submitted_at).toLocaleString('nl-BE')
@@ -304,7 +302,7 @@ export default function AdminSubmissions() {
                 ))}
                 {submissions.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={maxCheckpoints + 3} className="px-6 py-12 text-center text-gray-500">
                       Geen inzendingen gevonden
                     </td>
                   </tr>

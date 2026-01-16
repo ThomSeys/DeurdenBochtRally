@@ -6,7 +6,7 @@ interface RallyZone {
   location: string;
   color: string;
   startLocation: { lat: number; lng: number; label?: string };
-  endLocation: { lat: number; lng: number; label?: string };
+  endLocation?: { lat: number; lng: number; label?: string };
   is_open: boolean;
   gpxRoute?: {
     asset: {
@@ -57,6 +57,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
   const gpxLayerRef = useRef<any>(null);
+  const zoneRoutesRef = useRef<any[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -119,9 +120,9 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
           
           mapRef.current = L.default.map(mapContainerRef.current).setView(defaultCenter, 12);
 
-          // Add OpenStreetMap tiles
-          L.default.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          // Add light gray map tiles (CartoDB Voyager - balanced theme)
+          L.default.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             maxZoom: 19,
           }).addTo(mapRef.current);
 
@@ -172,51 +173,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
           }
         }
 
-        // Load individual zone GPX routes
-        rallyZones.forEach(async (zone) => {
-          if (zone.gpxRoute?.asset?.url) {
-            try {
-              const response = await fetch(zone.gpxRoute.asset.url);
-              const gpxText = await response.text();
-              const parser = new DOMParser();
-              const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
-              
-              const trackPoints: [number, number][] = [];
-              const trkpts = gpxDoc.querySelectorAll('trkpt');
-              
-              trkpts.forEach((pt) => {
-                const lat = parseFloat(pt.getAttribute('lat') || '0');
-                const lon = parseFloat(pt.getAttribute('lon') || '0');
-                if (lat && lon) {
-                  trackPoints.push([lat, lon]);
-                }
-              });
-
-              if (trackPoints.length > 0) {
-                // Get zone color for the route
-                const colorMap: Record<string, string> = {
-                  green: '#22c55e',
-                  yellow: '#eab308',
-                  orange: '#f97316',
-                  red: '#ef4444',
-                };
-                const zoneColor = colorMap[zone.color] || '#4F46E5';
-
-                // Add zone route with dashed line
-                L.default.polyline(trackPoints, {
-                  color: zoneColor,
-                  weight: 3,
-                  opacity: 0.5,
-                  dashArray: '5, 5',
-                }).addTo(mapRef.current);
-              }
-            } catch (error) {
-              console.error(`Error loading GPX for zone ${zone.title}:`, error);
-            }
-          }
-        });
-
-        // Clear existing markers (except route and user marker)
+        // Clear existing markers and zone routes (except main route and user marker)
         mapRef.current.eachLayer((layer: any) => {
           if (
             layer instanceof L.default.Marker &&
@@ -225,6 +182,14 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
             mapRef.current?.removeLayer(layer);
           }
         });
+        
+        // Clear existing zone routes
+        zoneRoutesRef.current.forEach((route) => {
+          if (mapRef.current) {
+            mapRef.current.removeLayer(route);
+          }
+        });
+        zoneRoutesRef.current = [];
 
 
         // Add check-in markers
@@ -282,87 +247,97 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
           });
         }
 
-        // Add rally zone markers
+        // Add rally zone start markers and load GPX routes
         if (showZoneRoutes) {
+          // Process all zones
+          await Promise.all(rallyZones.map(async (zone) => {
+            // Load zone GPX route if available
+            if (zone.gpxRoute?.asset?.url) {
+              try {
+                const response = await fetch(zone.gpxRoute.asset.url);
+                const gpxText = await response.text();
+                const parser = new DOMParser();
+                const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
+                
+                const trackPoints: [number, number][] = [];
+                const trkpts = gpxDoc.querySelectorAll('trkpt');
+                
+                trkpts.forEach((pt) => {
+                  const lat = parseFloat(pt.getAttribute('lat') || '0');
+                  const lon = parseFloat(pt.getAttribute('lon') || '0');
+                  if (lat && lon) {
+                    trackPoints.push([lat, lon]);
+                  }
+                });
+
+                if (trackPoints.length > 0) {
+                  // Get zone color for the route
+                  const colorMap: Record<string, string> = {
+                    green: '#15803d',
+                    yellow: '#a16207',
+                    orange: '#c2410c',
+                    red: '#b91c1c',
+                  };
+                  const zoneColor = colorMap[zone.color] || '#4F46E5';
+
+                  // Add zone route with dashed line
+                  const routePolyline = L.default.polyline(trackPoints, {
+                    color: zoneColor,
+                    weight: 3,
+                    opacity: 0.5,
+                  }).addTo(mapRef.current);
+                  
+                  // Store reference to clean up later
+                  zoneRoutesRef.current.push(routePolyline);
+                }
+              } catch (err) {
+                console.error('Error loading GPX for zone:', zone.title, err);
+              }
+            }
+          }));
+
+          // Add start markers for all zones
           rallyZones.forEach((zone) => {
-            // Skip zones without coordinates
-            if (!zone.startLocation || !zone.endLocation) {
-              console.warn(`Zone ${zone.title} missing startLocation or endLocation`);
+            // Skip zones without start location
+            if (!zone.startLocation) {
               return;
             }
 
             const colorMap: Record<string, string> = {
-              green: '#22c55e',
-              yellow: '#eab308',
-              orange: '#f97316',
-              red: '#ef4444',
+              green: '#15803d',
+              yellow: '#a16207',
+              orange: '#c2410c',
+              red: '#b91c1c',
             };
             const color = colorMap[zone.color] || '#4F46E5';
 
-          // Start point marker
-          const startIcon = L.default.divIcon({
-            html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: bold;">S</div>`,
-            className: '',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14],
+            // Start point marker only
+            const startIcon = L.default.divIcon({
+              html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: bold;">S</div>`,
+              className: '',
+              iconSize: [28, 28],
+              iconAnchor: [14, 14],
+            });
+
+            const statusBadge = zone.is_open 
+              ? '<span style="color: #22c55e; font-weight: bold;">✓ Open</span>'
+              : '<span style="color: #ef4444; font-weight: bold;">✗ Closed</span>';
+
+            L.default.marker([zone.startLocation.lat, zone.startLocation.lng], { icon: startIcon })
+              .addTo(mapRef.current)
+              .bindPopup(`
+                <div style="min-width: 200px;">
+                  <strong style="font-size: 16px;">${zone.title}</strong><br/>
+                  <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                    ${statusBadge}
+                  </div>
+                  <div style="margin-top: 4px; color: #666; font-size: 12px;">
+                    📍 Start Point
+                  </div>
+                </div>
+              `);
           });
-
-          // End point marker
-          const endIcon = L.default.divIcon({
-            html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: bold;">E</div>`,
-            className: '',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14],
-          });
-
-          const statusBadge = zone.is_open 
-            ? '<span style="color: #22c55e; font-weight: bold;">✓ Open</span>'
-            : '<span style="color: #ef4444; font-weight: bold;">✗ Closed</span>';
-
-          L.default.marker([zone.startLocation.lat, zone.startLocation.lng], { icon: startIcon })
-            .addTo(mapRef.current)
-            .bindPopup(`
-              <div style="min-width: 200px;">
-                <strong style="font-size: 16px;">${zone.title}</strong><br/>
-                <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                  ${statusBadge}
-                </div>
-                <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                  📍 Start Point
-                </div>
-              </div>
-            `);
-
-          L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
-            .addTo(mapRef.current)
-            .bindPopup(`
-              <div style="min-width: 200px;">
-                <strong style="font-size: 16px;">${zone.title}</strong><br/>
-                <span style="color: #666; font-size: 13px;">${zone.location}</span><br/>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-                  ${statusBadge}
-                </div>
-                <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                  🏁 End Point
-                </div>
-              </div>
-            `);
-
-          // Draw line between start and end
-          L.default.polyline(
-            [
-              [zone.startLocation.lat, zone.startLocation.lng],
-              [zone.endLocation.lat, zone.endLocation.lng],
-            ],
-            {
-              color: color,
-              weight: 3,
-              opacity: 0.5,
-              dashArray: '10, 10',
-            }
-          ).addTo(mapRef.current);
-        });
         } // Close showZoneRoutes conditional
 
         // Add event markers

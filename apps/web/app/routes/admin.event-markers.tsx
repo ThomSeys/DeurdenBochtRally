@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { type LoaderFunctionArgs, type ActionFunctionArgs } from 'react-router';
-import { useLoaderData, useRevalidator, Form } from 'react-router';
+import { useState, useEffect } from 'react';
+import { type LoaderFunctionArgs, type ActionFunctionArgs, redirect } from 'react-router';
+import { useLoaderData, useRevalidator, useActionData, Form } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { sanityClient } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
@@ -8,6 +8,8 @@ import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-not
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
+import ClientOnly from '~/components/ClientOnly';
+import LocationPicker from '~/components/LocationPicker';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -78,7 +80,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       console.info('[admin.event-markers] action success', { intent, id });
-      return { success: true };
+      return { success: true}
     }
 
     if (intent === 'delete') {
@@ -201,8 +203,19 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function AdminEventMarkers() {
   const { eventMarkers, editionId } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const revalidator = useRevalidator();
   const [showForm, setShowForm] = useState(false);
+  const [selectedLat, setSelectedLat] = useState(51.0967);
+  const [selectedLng, setSelectedLng] = useState(3.4400);
+
+  // Revalidate data when action succeeds
+  useEffect(() => {
+    if (actionData?.success) {
+      revalidator.revalidate();
+      setShowForm(false);
+    }
+  }, [actionData, revalidator]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -257,11 +270,7 @@ export default function AdminEventMarkers() {
           <div className="bg-white rounded-sm shadow-md p-6 mb-6">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 break-words">Evenementmarkering Aanmaken</h2>
             <Form 
-              method="post" 
-              onSubmit={() => {
-                setShowForm(false);
-                setTimeout(() => revalidator.revalidate(), 100);
-              }}
+              method="post"
             >
               <input type="hidden" name="intent" value="create" />
               <input type="hidden" name="editionId" value={editionId} />
@@ -313,6 +322,19 @@ export default function AdminEventMarkers() {
                   />
                 </div>
 
+                <div className="md:col-span-2" suppressHydrationWarning>
+                  <ClientOnly>
+                    <LocationPicker
+                      initialLat={selectedLat}
+                      initialLng={selectedLng}
+                      onLocationChange={(lat, lng) => {
+                        setSelectedLat(lat);
+                        setSelectedLng(lng);
+                      }}
+                    />
+                  </ClientOnly>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Latitude <span className="text-red-600">*</span>
@@ -324,6 +346,8 @@ export default function AdminEventMarkers() {
                     step="any"
                     min="-90"
                     max="90"
+                    value={selectedLat}
+                    onChange={(e) => setSelectedLat(parseFloat(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="bijv. 51.0967"
                   />
@@ -341,6 +365,8 @@ export default function AdminEventMarkers() {
                     step="any"
                     min="-180"
                     max="180"
+                    value={selectedLng}
+                    onChange={(e) => setSelectedLng(parseFloat(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="bijv. 3.4400"
                   />
@@ -432,9 +458,6 @@ export default function AdminEventMarkers() {
                         <Form 
                           method="post" 
                           className="inline"
-                          onSubmit={() => {
-                            setTimeout(() => revalidator.revalidate(), 100);
-                          }}
                         >
                           <input type="hidden" name="intent" value="toggle" />
                           <input type="hidden" name="id" value={marker._id} />
@@ -459,9 +482,6 @@ export default function AdminEventMarkers() {
                         <Form 
                           method="post" 
                           className="inline"
-                          onSubmit={() => {
-                            setTimeout(() => revalidator.revalidate(), 100);
-                          }}
                         >
                           <input type="hidden" name="intent" value="delete" />
                           <input type="hidden" name="id" value={marker._id} />

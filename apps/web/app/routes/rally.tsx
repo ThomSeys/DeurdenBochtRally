@@ -23,13 +23,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { edition, rallyZones, siteConfig };
 }
 
-const colorClasses = {
-  green: 'bg-green-50 border-green-500',
-  yellow: 'bg-yellow-50 border-yellow-500',
-  orange: 'bg-orange-50 border-orange-500',
-  red: 'bg-red-50 border-red-500',
-};
-
 export default function Rally() {
   const { edition, rallyZones, siteConfig } = useLoaderData<typeof loader>();
 
@@ -85,9 +78,7 @@ export default function Rally() {
               {rallyZones.map((zone: any) => (
                 <div
                   key={zone._id}
-                  className={`border-l-4 rounded-sm shadow-lg overflow-hidden ${
-                    colorClasses[zone.color as keyof typeof colorClasses] || colorClasses.green
-                  }`}
+                  className={`border-l-4 rounded-sm shadow-lg overflow-hidden bg-gradient-to-r from-gray-100 to-primary-200 border-primary-600`}
                 >
                   <div className="p-6 md:p-8">
                     <div className="flex items-start justify-between mb-4">
@@ -159,15 +150,15 @@ export default function Rally() {
                         {zone.checkpoints && zone.checkpoints.length > 0 ? (
                           <div className="space-y-4">
                             {zone.checkpoints.map((checkpoint: any, idx: number) => (
-                              <div key={idx} className="bg-gray-50 p-4 rounded-sm border border-gray-200">
+                              <div key={idx} className="bg-primary-600 p-4 rounded-sm border border-gray-200">
                                 <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
+                                  <div className="flex-shrink-0 w-8 h-8 bg-white text-primary-600 rounded-full flex items-center justify-center font-bold">
                                     {idx + 1}
                                   </div>
                                   <div className="flex-1">
-                                    <p className="font-semibold text-gray-900 mb-1">{checkpoint.name}</p>
-                                    <p className="text-gray-700 text-sm mb-2">{checkpoint.description}</p>
-                                    <p className="text-sm text-gray-600">
+                                    <p className="font-semibold text-white mb-1">{checkpoint.name}</p>
+                                    <p className="text-white text-sm mb-2">{checkpoint.description}</p>
+                                    <p className="text-sm text-gray-300">
                                       Code hint: <em>{checkpoint.codeHint}</em>
                                     </p>
                                   </div>

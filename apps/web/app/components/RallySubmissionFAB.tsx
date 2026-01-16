@@ -44,7 +44,7 @@ export default function RallySubmissionFAB() {
         <Link
           to="/dashboard/rally-submission"
           className={`fixed ${isOnRallyPage ? 'bottom-4 right-24' : 'bottom-6 right-8'} z-[1000] flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ${
-            isScrolled ? 'bottom-8 opacity-100' : 'bottom-6 opacity-90 hover:opacity-100'
+            isScrolled ? 'bottom-6 opacity-100' : 'bottom-6 opacity-90 hover:opacity-100'
           }`}
           title="Rally Codes Indienen"
           aria-label="Rally Codes Indienen"

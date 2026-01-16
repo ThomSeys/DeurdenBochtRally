@@ -299,27 +299,27 @@ export default function Dashboard() {
         )}
 
         {/* Main CTA - Rally Submission */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex items-start gap-4">
-              <Icon name="flag" className="w-16 h-16 flex-shrink-0" />
-              <div>
-                <h2 className="text-3xl font-bold mb-2">Rally Codes Indienen</h2>
-                <p className="text-primary-100 text-lg">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+            <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
+              <Icon name="flag" className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0" />
+              <div className="flex-1">
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">Rally Codes Indienen</h2>
+                <p className="text-primary-100 text-base md:text-lg">
                   {submission && completedZones > 0 
                     ? `Je hebt ${completedZones} zone${completedZones !== 1 ? 's' : ''} voltooid! Update je codes en verzamel meer punten.`
                     : 'Dien je rally zone codes in om punten te verzamelen en mee te strijden om de Bochtenkoning titel!'}
                 </p>
                 {submission && (
                   <p className="text-primary-50 text-sm mt-2 font-semibold">
-                    Totaal punten: <span className="text-2xl">{submission?.total_points}</span>
+                    Totaal punten: <span className="text-xl md:text-2xl">{submission?.total_points}</span>
                   </p>
                 )}
               </div>
             </div>
             <Link
               to="/dashboard/rally-submission"
-              className="whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-8 py-4 rounded-sm font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center gap-2 self-center"
+              className="w-full md:w-auto text-center whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
               {submission ? 'Codes Bijwerken' : 'Nu Starten'}
               <span>→</span>

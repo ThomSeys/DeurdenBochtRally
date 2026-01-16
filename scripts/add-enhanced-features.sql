@@ -102,16 +102,16 @@ CREATE INDEX IF NOT EXISTS idx_email_logs_participant ON email_logs(participant_
 
 -- Insert default achievements
 INSERT INTO achievements (name, title, description, icon, category, points, criteria) VALUES
-  ('first_zone', 'First Blood', 'Complete your first rally zone', '🎯', 'completion', 10, '{"zones_completed": 1}'),
-  ('half_complete', 'Halfway Hero', 'Complete 4 rally zones', '⭐', 'completion', 25, '{"zones_completed": 4}'),
-  ('all_zones', 'Zone Master', 'Complete all 8 rally zones', '🏆', 'completion', 50, '{"zones_completed": 8}'),
-  ('perfect_score', 'Perfect Score', 'Get all rally zone answers correct', '💯', 'completion', 100, '{"all_correct": true}'),
-  ('early_bird', 'Early Bird', 'Check in before 07:00', '🌅', 'special', 15, '{"checkin_before": "07:00"}'),
-  ('weather_warrior', 'Weather Warrior', 'Complete rally in bad weather', '🌧️', 'special', 30, '{"weather_bonus": true}'),
-  ('marathon_rider', 'Marathon Rider', 'Ride over 550km', '🛣️', 'completion', 40, '{"distance_over": 550}'),
-  ('social_butterfly', 'Social Butterfly', 'Upload 5 photos', '📸', 'social', 20, '{"photos_uploaded": 5}'),
-  ('popular', 'Popular', 'Get 10 likes on your photos', '❤️', 'social', 25, '{"photo_likes": 10}'),
-  ('veteran', 'Veteran', 'Participated in previous editions', '🎖️', 'special', 50, '{"editions_count": 2}')
+  ('first_zone', 'Eerste Bloed', 'Voltooi je eerste rally zone', '🎯', 'completion', 10, '{"zones_completed": 1}'),
+  ('half_complete', 'Halverwege Held', 'Voltooi 4 rally zones', '⭐', 'completion', 25, '{"zones_completed": 4}'),
+  ('all_zones', 'Zone Meester', 'Voltooi alle 8 rally zones', '🏆', 'completion', 50, '{"zones_completed": 8}'),
+  ('perfect_score', 'Perfecte Score', 'Krijg alle rally zone antwoorden correct', '💯', 'completion', 100, '{"all_correct": true}'),
+  ('early_bird', 'Vroege Vogel', 'Check in voor 07:00', '🌅', 'special', 15, '{"checkin_before": "07:00"}'),
+  ('weather_warrior', 'Weerkrijger', 'Voltooi rally in slecht weer', '🌧️', 'special', 30, '{"weather_bonus": true}'),
+  ('marathon_rider', 'Marathon Rijder', 'Rijd meer dan 550km', '🛣️', 'completion', 40, '{"distance_over": 550}'),
+  ('social_butterfly', 'Sociale Vlinder', 'Upload 5 foto''s', '📸', 'social', 20, '{"photos_uploaded": 5}'),
+  ('popular', 'Populair', 'Krijg 10 likes op je foto''s', '❤️', 'social', 25, '{"photo_likes": 10}'),
+  ('veteran', 'Veteraan', 'Deelgenomen aan vorige edities', '🎖️', 'special', 50, '{"editions_count": 2}')
 ON CONFLICT (name) DO NOTHING;
 
 -- Add triggers for updated_at
