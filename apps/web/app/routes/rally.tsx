@@ -1,6 +1,8 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { useLoaderData, Link } from 'react-router';
+import { useState } from 'react';
+import { PortableText } from '@portabletext/react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
@@ -25,6 +27,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Rally() {
   const { edition, rallyZones, siteConfig } = useLoaderData<typeof loader>();
+  const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
+
+  const toggleMap = (zoneId: string) => {
+    setVisibleMaps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(zoneId)) {
+        newSet.delete(zoneId);
+      } else {
+        newSet.add(zoneId);
+      }
+      return newSet;
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -75,114 +90,156 @@ export default function Rally() {
               De 8 Rally Zones
             </h2>
             <div className="space-y-8">
-              {rallyZones.map((zone: any) => (
-                <div
-                  key={zone._id}
-                  className={`border-l-4 rounded-sm shadow-lg overflow-hidden bg-gradient-to-r from-gray-100 to-primary-200 border-primary-600`}
-                >
-                  <div className="p-6 md:p-8">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
-                            RZ{zone.zoneNumber} – {zone.title}
-                          </h3>
-                          {zone.zoneType && (
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                              zone.zoneType === 'short' ? 'bg-green-100 text-green-800' :
-                              zone.zoneType === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {zone.zoneType === 'short' ? 'Type A - Kort' : 
-                               zone.zoneType === 'medium' ? 'Type B - Medium' : 
-                               'Type C - Lang'}
-                            </span>
-                          )}
+              {rallyZones.map((zone: any) => {
+                return (
+                  <div
+                    key={zone._id}
+                    className={`border-l-4 rounded-sm shadow-lg overflow-hidden bg-gradient-to-r from-gray-100 to-primary-200 border-primary-600`}
+                  >
+                    <div className="p-6 md:p-8">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+                              RZ{zone.zoneNumber} – {zone.title}
+                            </h3>
+                            {zone.zoneType && (
+                              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                zone.zoneType === 'short' ? 'bg-green-100 text-green-800' :
+                                zone.zoneType === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {zone.zoneType === 'short' ? 'Type A - Kort' : 
+                                 zone.zoneType === 'medium' ? 'Type B - Medium' : 
+                                 'Type C - Lang'}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-gray-700 font-semibold">{zone.location}</p>
-                        {zone.estimatedDistance && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            ~{zone.estimatedDistance} km
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="inline-block bg-white px-4 py-2 rounded-sm shadow">
-                          <span className="text-sm text-gray-600">Punten</span>
-                          <div className="text-2xl font-bold text-primary-600">{zone.points}</div>
+                        <div className="text-right">
+                          <div className="inline-block bg-white px-4 py-2 rounded-sm shadow">
+                            <span className="text-sm text-gray-600">Punten</span>
+                            <div className="text-2xl font-bold text-primary-600">{zone.points}</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    {zone.description && (
-                      <p className="text-gray-700 mb-6 text-lg">{zone.description}</p>
-                    )}
-
-                    {/* Map View */}
-                    {zone.startLocation && (
-                      <div className="rounded-sm overflow-hidden shadow-md border border-gray-300 mb-6">
-                        <MapView
-                          startPoint={zone.startLocation}
-                          className="h-80 w-full"
-                        />
-                      </div>
-                    )}
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">🚪 EXIT</h4>
-                        <p className="text-gray-700">{zone.exit}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">🔄 LUS</h4>
-                        <p className="text-gray-700">{zone.lus}</p>
-                      </div>
-                      <div className="md:col-span-2">
-                        <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                          <Icon name="marker" className="w-5 h-5" /> 
-                          {zone.checkpoints && zone.checkpoints.length > 1 ? 'CHECKPUNTEN' : 'CHECKPUNT'}
-                          {zone.checkpoints && zone.checkpoints.length > 1 && (
-                            <span className="text-sm font-normal text-gray-600">
-                              ({zone.checkpoints.length} stops)
-                            </span>
+                      {zone.description && (
+                        <p className="text-gray-700 mb-6 text-lg">{zone.description}</p>
+                      )}
+                      {/* Map View */}
+                      {zone.startPoint && (
+                        <div className="mb-6">
+                          <button
+                            onClick={() => toggleMap(zone._id)}
+                            className="flex items-center gap-2 text-primary-600 hover:text-primary-700 font-semibold mb-3"
+                          >
+                            <Icon name="map" className="w-5 h-5" />
+                            {visibleMaps.has(zone._id) ? 'Verberg kaart' : 'Toon kaart'}
+                          </button>
+                          {visibleMaps.has(zone._id) && (
+                            <div className="rounded-sm overflow-hidden shadow-md border border-gray-300">
+                              <MapView
+                                startPoint={zone.startPoint}
+                                className="h-80 w-full"
+                              />
+                            </div>
                           )}
-                        </h4>
-                        {zone.checkpoints && zone.checkpoints.length > 0 ? (
-                          <div className="space-y-4">
-                            {zone.checkpoints.map((checkpoint: any, idx: number) => (
-                              <div key={idx} className="bg-primary-600 p-4 rounded-sm border border-gray-200">
-                                <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 w-8 h-8 bg-white text-primary-600 rounded-full flex items-center justify-center font-bold">
-                                    {idx + 1}
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="font-semibold text-white mb-1">{checkpoint.name}</p>
-                                    <p className="text-white text-sm mb-2">{checkpoint.description}</p>
-                                    <p className="text-sm text-gray-300">
-                                      Code hint: <em>{checkpoint.codeHint}</em>
-                                    </p>
+                        </div>
+                      )}
+                      <div className="flex gap-4 mb-8">
+                        <div className="w-1/2">
+                          <h4 className="font-bold text-gray-900 mb-2">Verlaat de route op deze manier:</h4>
+                          <p className="text-gray-700 whitespace-pre-line">{zone.exit}</p>
+                        </div>
+                        <div className="bg-white inline-block p-4 mb-8 rounded-sm shadow w-1/2">
+                          <div className="flex flex gap-2">
+                            <div>
+                              <Icon name="info" className="w-6 h-6 text-primary-600" />
+                            </div>
+                            <div>
+                              <p className="text-gray-700 font-semibold">{zone.location}</p>
+                              {zone.estimatedDistance && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  ~{zone.estimatedDistance} km
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+  
+                      <div className="grid md:grid-cols-1 gap-6">
+                        <div>
+                          <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <Icon name="marker" className="w-5 h-5" /> 
+                            {zone.checkpoints && zone.checkpoints.length > 1 ? 'CHECKPUNTEN' : 'CHECKPUNT'}
+                            {zone.checkpoints && zone.checkpoints.length > 1 && (
+                              <span className="text-sm font-normal text-gray-600">
+                                ({zone.checkpoints.length} stops)
+                              </span>
+                            )}
+                          </h4>
+                          {zone.checkpoints && zone.checkpoints.length > 0 ? (
+                            <div className="space-y-6">
+                              {zone.checkpoints.map((checkpoint: any, idx: number) => (
+                                <div key={idx} className="space-y-3">
+                                  {checkpoint.trajectory && (
+                                    <div className="bg-gray-100 border-l-4 border-primary-500 p-4 rounded-sm">
+                                      <p className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                                        <Icon name="map" className="w-4 h-4" /> TRAJECT {idx + 1}
+                                      </p>
+                                      <div className="text-gray-900 prose prose-sm max-w-none">
+                                        {Array.isArray(checkpoint.trajectory) ? (
+                                          <PortableText 
+                                            value={checkpoint.trajectory} 
+                                            components={{
+                                              marks: {
+                                                strong: ({children}) => <strong className="font-bold text-primary-700">{children}</strong>,
+                                                em: ({children}) => <em className="italic">{children}</em>,
+                                              },
+                                            }}
+                                          />
+                                        ) : (
+                                          <p>{checkpoint.trajectory}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="bg-primary-600 p-4 rounded-sm border border-gray-200">                              
+                                    <div className="flex items-start gap-3">
+                                      <div className="flex-shrink-0 w-8 h-8 bg-white text-primary-600 rounded-full flex items-center justify-center font-bold">
+                                        {idx + 1}
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="font-semibold text-white mb-1">{checkpoint.name}</p>
+                                        <p className="text-white text-sm mb-2">{checkpoint.description}</p>
+                                        <p className="text-sm text-gray-300">
+                                          Code hint: <em>{checkpoint.codeHint}</em>
+                                        </p>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-gray-700">{zone.checkpoint}</p>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Code: <em>{zone.codeHint}</em>
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="md:col-span-2">
-                        <h4 className="font-bold text-gray-900 mb-2">↩️ REJOIN</h4>
-                        <p className="text-gray-700">{zone.rejoin}</p>
+                              ))}
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-gray-700">{zone.checkpoint}</p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Code: <em>{zone.codeHint}</em>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 mb-2">↩️ REJOIN</h4>
+                          <p className="text-gray-700 whitespace-pre-line">{zone.rejoin}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
