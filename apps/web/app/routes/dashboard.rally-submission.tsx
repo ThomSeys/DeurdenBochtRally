@@ -294,7 +294,7 @@ export async function action({ request }: ActionFunctionArgs) {
           }
           
           // Update checkpoint with fallback info
-          const { error: fallbackError } = await supabaseAdmin
+          const { error: fallbackError } = await (supabaseAdmin as any)
             .from('rally_zone_submissions')
             .update({
               fallback_reason: fallbackReason,
@@ -311,7 +311,7 @@ export async function action({ request }: ActionFunctionArgs) {
             console.info(`[fallback] Recorded for zone ${zoneNum} cp ${cpNum}: ${fallbackReason}`);
             
             // Create fallback event record
-            await supabaseAdmin
+            await (supabaseAdmin as any)
               .from('fallback_events')
               .insert({
                 participant_id: userId,
