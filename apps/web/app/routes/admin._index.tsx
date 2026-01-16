@@ -164,101 +164,101 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link
             to="/admin/participants"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="users" className="w-8 h-8 text-gray-700 mb-2" />
-            <h3 className="font-semibold text-gray-900">Deelnemers</h3>
-            <p className="text-sm text-gray-600 mt-1">Beheer alle deelnemers</p>
+            <Icon name="users" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Deelnemers</h3>
+            <p className="text-sm text-white mt-1">Beheer alle deelnemers</p>
           </Link>
 
           <Link
             to="/admin/submissions"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="document" className="w-8 h-8 text-gray-700 mb-2" />
-            <h3 className="font-semibold text-gray-900">Inzendingen</h3>
-            <p className="text-sm text-gray-600 mt-1">Bekijk rally codes</p>
+            <Icon name="document" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Inzendingen</h3>
+            <p className="text-sm text-white mt-1">Bekijk rally codes</p>
           </Link>
 
           <Link
             to="/admin/check-in"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="check" className="w-8 h-8 text-gray-700 mb-2" />
-            <h3 className="font-semibold text-gray-900">Check-in</h3>
-            <p className="text-sm text-gray-600 mt-1">Scan QR codes</p>
+            <Icon name="check" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Check-in</h3>
+            <p className="text-sm text-white mt-1">Scan QR codes</p>
           </Link>
 
           <Link
             to="/admin/leaderboard"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="trophy" className="w-8 h-8 text-gray-700 mb-2" />
-            <h3 className="font-semibold text-gray-900">Klassement</h3>
-            <p className="text-sm text-gray-600 mt-1">Live scoreboard</p>
+            <Icon name="trophy" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Klassement</h3>
+            <p className="text-sm text-white mt-1">Live scoreboard</p>
           </Link>
 
           <Link
             to="/admin/pending-scans"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-yellow-400"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="search" className="w-8 h-8 text-yellow-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Manual Validatie</h3>
-            <p className="text-sm text-gray-600 mt-1">Controleer scans</p>
+            <Icon name="search" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Manual Validatie</h3>
+            <p className="text-sm text-white mt-1">Controleer scans</p>
           </Link>
 
           <Link
             to="/admin/zone-control"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-red-400"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="target" className="w-8 h-8 text-red-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Zone Control</h3>
-            <p className="text-sm text-gray-600 mt-1">Open/sluit zones</p>
+            <Icon name="target" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Zone Control</h3>
+            <p className="text-sm text-white mt-1">Open/sluit zones</p>
           </Link>
 
           <Link
             to="/admin/manual-scan"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-blue-400"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="document" className="w-8 h-8 text-blue-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Manual Scan</h3>
-            <p className="text-sm text-gray-600 mt-1">Telefoon dood</p>
+            <Icon name="document" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Manual Scan</h3>
+            <p className="text-sm text-white mt-1">Telefoon dood</p>
           </Link>
 
           <Link
             to="/admin/event-markers"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-green-400"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="map" className="w-8 h-8 text-green-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Event Markers</h3>
-            <p className="text-sm text-gray-600 mt-1">Live map events</p>
+            <Icon name="map" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Event Markers</h3>
+            <p className="text-sm text-white mt-1">Live map events</p>
           </Link>
 
           <Link
             to="/admin/gallery"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-purple-400"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="camera" className="w-8 h-8 text-purple-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Fotogalerij</h3>
-            <p className="text-sm text-gray-600 mt-1">Beheer foto's</p>
+            <Icon name="camera" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Fotogalerij</h3>
+            <p className="text-sm text-white mt-1">Beheer foto's</p>
           </Link>
 
           <Link
             to="/admin/push-notifications"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors border-2 border-orange-400"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="bell" className="w-6 h-6 text-orange-500 mb-2" />
-            <h3 className="font-semibold text-gray-900">Push Notifications</h3>
-            <p className="text-sm text-gray-600 mt-1">Templates, broadcast & targeted</p>
+            <Icon name="bell" className="w-6 h-6 text-white mb-2" />
+            <h3 className="font-semibold text-white">Push Notifications</h3>
+            <p className="text-sm text-white mt-1">Templates, broadcast & targeted</p>
           </Link>
 
           <Link
             to="/admin/settings"
-            className="bg-white hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="settings" className="w-6 h-6 text-gray-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Settings</h3>
-            <p className="text-sm text-gray-600 mt-1">Admin gebruikers</p>
+            <Icon name="settings" className="w-6 h-6 text-white mb-2" />
+            <h3 className="font-semibold text-white">Settings</h3>
+            <p className="text-sm text-white mt-1">Admin gebruikers</p>
           </Link>
         </div>
 
