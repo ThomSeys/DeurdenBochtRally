@@ -81,6 +81,13 @@ export default defineType({
               validation: (Rule) => Rule.required(),
             },
             {
+              name: 'trajectory',
+              title: 'Route to Checkpoint',
+              type: 'array',
+              of: [{ type: 'block' }],
+              description: 'Route segment instructions to reach this checkpoint (e.g., "Klim gedurende ±7 km")',
+            },
+            {
               name: 'description',
               title: 'Description',
               type: 'text',
