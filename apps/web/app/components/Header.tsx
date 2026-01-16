@@ -86,9 +86,10 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       </Link>
                       <Link
                         to="/rally"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
                       >
+                        <Icon name="target" className="w-4 h-4" />
                         Rally Zones
                       </Link>
                       <Link
@@ -101,25 +102,28 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       </Link>
                       <Link
                         to="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
                       >
+                        <Icon name="chart" className="w-4 h-4" />
                         Dashboard
                       </Link>
                       {user.is_admin && (
                         <Link
                           to="/admin"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t"
                           onClick={() => setUserMenuOpen(false)}
                         >
+                          <Icon name="shield" className="w-4 h-4" />
                           Admin
                         </Link>
                       )}
                       <Form method="post" action="/logout">
                         <button
                           type="submit"
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
+                          <Icon name="door" className="w-4 h-4" />
                           Uitloggen
                         </button>
                       </Form>
@@ -171,25 +175,28 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
             <div className="flex flex-col space-y-3">
               <Link
                 to="/"
-                className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
+                <Icon name="home" className="w-4 h-4" />
                 Home
               </Link>
               <Link
                 to="/about"
-                className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
+                <Icon name="info" className="w-4 h-4" />
                 Over het event
               </Link>
               {user ? (
                 <>
                   <Link
                     to="/rally"
-                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
+                    <Icon name="target" className="w-4 h-4" />
                     Rally Zones
                   </Link>
                   <Link
@@ -202,25 +209,28 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   </Link>
                   <Link
                     to="/dashboard"
-                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                    className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
+                    <Icon name="chart" className="w-4 h-4" />
                     Dashboard
                   </Link>
                   {user.is_admin && (
                     <Link
                       to="/admin"
-                      className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 border-t border-primary-700"
+                      className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 border-t border-primary-700"
                       onClick={() => setMobileMenuOpen(false)}
                     >
+                      <Icon name="shield" className="w-4 h-4" />
                       Admin
                     </Link>
                   )}
                   <Form method="post" action="/logout" className="border-t border-primary-700 pt-3">
                     <button
                       type="submit"
-                      className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 w-full text-left"
+                      className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 w-full text-left"
                     >
+                      <Icon name="door" className="w-4 h-4" />
                       Uitloggen
                     </button>
                   </Form>
