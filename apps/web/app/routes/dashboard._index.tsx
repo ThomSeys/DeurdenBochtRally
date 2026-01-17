@@ -420,10 +420,10 @@ export default function Dashboard() {
         </div>
 
         {/* New Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Link
-            to="/gallery"
-            className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white"
+            to="/dashboard/gallery"
+            className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="camera" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Fotogalerij</h3>
@@ -433,8 +433,19 @@ export default function Dashboard() {
           </Link>
 
           <Link
-            to="/achievements"
-            className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white"
+            to="/dashboard/blog"
+            className="bg-gradient-to-br from-orange-500 to-red-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="book-open" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Ride Stories</h3>
+            <p className="text-sm text-orange-100">
+              Schrijf en lees verhalen over de rally ervaringen van deelnemers!
+            </p>
+          </Link>
+
+          <Link
+            to="/dashboard/achievements"
+            className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="trophy" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Achievements</h3>
@@ -445,7 +456,7 @@ export default function Dashboard() {
 
           <Link
             to="/certificates/completion"
-            className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white"
+            className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="document" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Certificaat</h3>

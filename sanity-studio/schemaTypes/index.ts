@@ -10,6 +10,7 @@ import faqItem from './faqItem';
 import benefitItem from './benefitItem';
 import eventMarker from './eventMarker';
 import eventStory from './eventStory';
+import rideStory from './rideStory';
 
 export const schemaTypes = [
   edition,
@@ -24,5 +25,6 @@ export const schemaTypes = [
   benefitItem,
   eventMarker,
   eventStory,
+  rideStory,
 ];
 
