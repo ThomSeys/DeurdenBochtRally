@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 import { useEffect } from "react";
 
@@ -72,7 +73,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <CookieBanner />
         <RallySubmissionFAB />
-        <EmergencySOSButton />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -81,6 +81,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const data = useRouteLoaderData<typeof loader>('root');
+
   useEffect(() => {
     // Register service worker on app load - uses network-first strategy
     if ('serviceWorker' in navigator) {
@@ -94,7 +96,12 @@ export default function App() {
     }
   }, []);
 
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      {data?.user && <EmergencySOSButton />}
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

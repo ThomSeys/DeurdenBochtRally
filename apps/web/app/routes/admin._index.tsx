@@ -14,6 +14,38 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
+  // Get urgent counts
+  const { count: pendingScansCount, error: pendingError } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('verified', false);
+
+  const { count: fallbackReviewCount, error: fallbackError } = await supabaseAdmin
+    .from('fallback_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('verified', false);
+
+  const { count: emergencySOSCount, error: sosCountError } = await supabaseAdmin
+    .from('emergency_contacts')
+    .select('*', { count: 'exact', head: true });
+    // Removed .eq('status', 'active') filter temporarily to see all SOS
+
+  // Get recent SOS alerts
+  const { data: recentSOS, error: sosError } = await supabaseAdmin
+    .from('emergency_contacts')
+    .select('*, participants(first_name, last_name)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  console.log('[admin dashboard] Urgent counts:', {
+    pendingScansCount,
+    fallbackReviewCount,
+    emergencySOSCount,
+    recentSOSCount: recentSOS?.length || 0,
+    recentSOSDetails: recentSOS,
+    errors: { pendingError, fallbackError, sosCountError, sosError }
+  });
+
   // Get statistics
   const { count: totalParticipants } = await supabaseAdmin
     .from('participants')
@@ -79,6 +111,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .slice(0, 10);
 
   return {
+    urgent: {
+      pendingScansCount: pendingScansCount || 0,
+      fallbackReviewCount: fallbackReviewCount || 0,
+      emergencySOSCount: emergencySOSCount || 0,
+      recentSOS: recentSOS || [],
+    },
     stats: {
       totalParticipants: totalParticipants || 0,
       paidParticipants: paidParticipants || 0,
@@ -91,7 +129,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function AdminDashboard() {
-  const { stats, recentParticipants, topScorers } = useLoaderData<typeof loader>();
+  const { urgent, stats, recentParticipants, topScorers } = useLoaderData<typeof loader>();
+
+  const hasUrgentMatters = urgent.emergencySOSCount > 0 || urgent.pendingScansCount > 0 || urgent.fallbackReviewCount > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,6 +156,103 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Beheer deelnemers, rally inzendingen en meer</p>
         </div>
+
+        {/* Urgent Matters Alert Section */}
+        {hasUrgentMatters && (
+          <div className="mb-8 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-lg p-6 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="relative">
+                  <Icon name="alert-triangle" className="w-10 h-10 text-red-600" />
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+                  </span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-red-900 mb-3">⚠️ Directe Aandacht Vereist</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {urgent.emergencySOSCount > 0 && (
+                    <Link
+                      to="/admin/emergency-alerts"
+                      className="bg-white border-2 border-red-300 rounded-lg p-4 hover:shadow-md transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-red-700">🚨 Nood SOS</span>
+                        <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                          {urgent.emergencySOSCount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 group-hover:text-gray-900">Actieve noodoproepen</p>
+                    </Link>
+                  )}
+                  {urgent.pendingScansCount > 0 && (
+                    <Link
+                      to="/admin/pending-scans"
+                      className="bg-white border-2 border-orange-300 rounded-lg p-4 hover:shadow-md transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-orange-700">📋 Validaties</span>
+                        <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {urgent.pendingScansCount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 group-hover:text-gray-900">Scans te controleren</p>
+                    </Link>
+                  )}
+                  {urgent.fallbackReviewCount > 0 && (
+                    <Link
+                      to="/admin/fallback-review"
+                      className="bg-white border-2 border-yellow-300 rounded-lg p-4 hover:shadow-md transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-yellow-700">📝 Reviews</span>
+                        <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {urgent.fallbackReviewCount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 group-hover:text-gray-900">Fallback verificaties</p>
+                    </Link>
+                  )}
+                </div>
+
+                {/* Recent SOS Alerts */}
+                {urgent.recentSOS.length > 0 && (
+                  <div className="mt-4 bg-white rounded-lg p-4 border border-red-200">
+                    <h3 className="text-sm font-bold text-red-900 mb-2">Recente SOS Meldingen:</h3>
+                    <div className="space-y-2">
+                      {urgent.recentSOS.map((sos: any) => (
+                        <div key={sos.id} className="flex items-center justify-between text-xs bg-red-50 rounded p-2">
+                          <div>
+                            <span className="font-medium text-gray-900">
+                              {sos.participants?.first_name} {sos.participants?.last_name}
+                            </span>
+                            <span className="text-gray-500 ml-2">
+                              {new Date(sos.created_at).toLocaleString('nl-BE', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </span>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            sos.status === 'active' ? 'bg-red-100 text-red-700' :
+                            sos.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {sos.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -162,6 +299,79 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {/* Priority Actions - Show with badges if urgent */}
+          <Link
+            to="/admin/emergency-alerts"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              urgent.emergencySOSCount > 0
+                ? 'bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 ring-2 ring-red-400 ring-offset-2'
+                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+            }`}
+          >
+            {urgent.emergencySOSCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-red-500 text-white text-xs font-bold items-center justify-center">
+                  {urgent.emergencySOSCount}
+                </span>
+              </span>
+            )}
+            <Icon name="alert-triangle" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Nood SOS</h3>
+            <p className="text-sm text-white mt-1">
+              {urgent.emergencySOSCount > 0 ? `${urgent.emergencySOSCount} actieve oproepen` : 'Bekijk noodoproepen'}
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/pending-scans"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              urgent.pendingScansCount > 0
+                ? 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 ring-2 ring-orange-300'
+                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+            }`}
+          >
+            {urgent.pendingScansCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center bg-orange-500 text-white text-xs font-bold rounded-full border-2 border-white">
+                {urgent.pendingScansCount}
+              </span>
+            )}
+            <Icon name="search" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Manual Validatie</h3>
+            <p className="text-sm text-white mt-1">
+              {urgent.pendingScansCount > 0 ? `${urgent.pendingScansCount} scans wachten` : 'Controleer scans'}
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/fallback-review"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              urgent.fallbackReviewCount > 0
+                ? 'bg-gradient-to-r from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800 ring-2 ring-yellow-300'
+                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+            }`}
+          >
+            {urgent.fallbackReviewCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center bg-yellow-500 text-white text-xs font-bold rounded-full border-2 border-white">
+                {urgent.fallbackReviewCount}
+              </span>
+            )}
+            <Icon name="clipboard" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Fallback Review</h3>
+            <p className="text-sm text-white mt-1">
+              {urgent.fallbackReviewCount > 0 ? `${urgent.fallbackReviewCount} te verifiëren` : 'Verifieer inzendingen'}
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/event-markers"
+            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="map" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Event Markers</h3>
+            <p className="text-sm text-white mt-1">Live map events</p>
+          </Link>
+
           <Link
             to="/admin/participants"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
@@ -199,15 +409,6 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
-            to="/admin/pending-scans"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="search" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Manual Validatie</h3>
-            <p className="text-sm text-white mt-1">Controleer scans</p>
-          </Link>
-
-          <Link
             to="/admin/zone-control"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
@@ -223,15 +424,6 @@ export default function AdminDashboard() {
             <Icon name="document" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Manual Scan</h3>
             <p className="text-sm text-white mt-1">Telefoon dood</p>
-          </Link>
-
-          <Link
-            to="/admin/event-markers"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="map" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Event Markers</h3>
-            <p className="text-sm text-white mt-1">Live map events</p>
           </Link>
 
           <Link
