@@ -8,6 +8,8 @@ This file documents older, completed, or deprecated documentation files.
 
 The following files were archived because they document completed implementations or are superseded by newer guides:
 
+## hello
+
 **Feature Completion Documents** (Historical Reference)
 - `DYNAMIC-CONTENT-COMPLETE.md` - Completed feature
 - `EDITION-AWARE-SETUP-COMPLETE.md` - Completed feature
