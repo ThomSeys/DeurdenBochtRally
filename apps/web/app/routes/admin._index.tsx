@@ -262,6 +262,15 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            to="/admin/emergency-alerts"
+            className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 rounded-sm shadow p-6 transition-colors border-2 border-red-400"
+          >
+            <Icon name="alert-triangle" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Emergency SOS</h3>
+            <p className="text-sm text-white mt-1">Bekijk noodoproepen</p>
+          </Link>
+
+          <Link
             to="/admin/settings"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >

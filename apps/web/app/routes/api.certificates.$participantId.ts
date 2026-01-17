@@ -15,7 +15,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const { data: participant } = await supabase
     .from('participants')
     .select('*')
-    .eq('id', participantId)
+    .eq('id', participantId.toString())
     .single();
 
   if (!participant) {
@@ -25,12 +25,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   // Check if user is accessing their own certificate or is an admin
   const { data: requestingParticipant } = await supabase
     .from('participants')
-    .select('id, role')
+    .select('id, is_admin')
     .eq('user_id', userId)
     .single();
 
   const isOwnCertificate = requestingParticipant?.id === participantId;
-  const isAdmin = requestingParticipant?.role === 'admin';
+  const isAdmin = requestingParticipant?.is_admin === true;
 
   if (!isOwnCertificate && !isAdmin) {
     throw new Response('Unauthorized', { status: 403 });
@@ -38,7 +38,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   try {
     // Get comprehensive participant data using the database function
-    const { data: reportData } = await supabase
+    const { data: reportData } = await (supabase as any)
       .rpc('get_participant_report_data', { p_participant_id: participantId });
 
     if (!reportData) {
@@ -49,10 +49,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     const pdfBuffer = await generateParticipantCertificate(reportData);
 
     // Return PDF as response
-    return new Response(pdfBuffer, {
+    return new Response(pdfBuffer.buffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="certificate-${participant.name.replace(/\s+/g, '-')}.pdf"`,
+        'Content-Disposition': `attachment; filename="certificate-${participant.first_name}-${participant.last_name}.pdf"`,
         'Cache-Control': 'no-cache',
       },
     });

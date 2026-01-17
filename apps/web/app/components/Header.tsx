@@ -2,6 +2,7 @@ import { Link, useMatches, Form } from 'react-router';
 import { useState, useEffect } from 'react';
 import { NotificationBell } from './NotificationBell';
 import { Icon } from '~/components/Icon';
+import { EmergencySOSButton } from './EmergencySOSButton';
 
 export default function Header({ transparent, fixed }: { transparent?: boolean; fixed?: boolean }) {
   const matches = useMatches();
@@ -108,6 +109,17 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                         <Icon name="chart" className="w-4 h-4" />
                         Dashboard
                       </Link>
+                      <button
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left border-t"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          const event = new CustomEvent('trigger-emergency-sos');
+                          window.dispatchEvent(event);
+                        }}
+                      >
+                        <Icon name="alert-triangle" className="w-4 h-4" />
+                        Noodknop
+                      </button>
                       {user.is_admin && (
                         <Link
                           to="/admin"
@@ -215,6 +227,17 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Icon name="chart" className="w-4 h-4" />
                     Dashboard
                   </Link>
+                  <button
+                    className="flex items-center gap-2 text-red-200 hover:text-red-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 w-full text-left border-t border-primary-700 pt-3"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      const event = new CustomEvent('trigger-emergency-sos');
+                      window.dispatchEvent(event);
+                    }}
+                  >
+                    <Icon name="alert-triangle" className="w-4 h-4" />
+                    Noodknop
+                  </button>
                   {user.is_admin && (
                     <Link
                       to="/admin"

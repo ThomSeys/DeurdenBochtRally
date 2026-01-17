@@ -1,45 +1,44 @@
 import type { ActionFunctionArgs } from 'react-router';
-import { json, redirect } from 'react-router';
+import { redirect } from 'react-router';
 import { requireUserId } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
 
   if (request.method !== 'POST') {
-    return json({ error: 'Method not allowed' }, { status: 405 });
+    return { error: 'Method not allowed', status: 405 };
   }
 
-  const formData = await request.formData();
-  const participantId = Number(formData.get('participantId'));
-  const latitude = Number(formData.get('latitude'));
-  const longitude = Number(formData.get('longitude'));
-  const participantName = formData.get('participantName') as string;
-  const participantPhone = formData.get('participantPhone') as string;
+  const body = await request.json();
+  const latitude = Number(body.latitude);
+  const longitude = Number(body.longitude);
 
   // Validate required fields
-  if (!participantId || !latitude || !longitude || !participantName) {
-    return json({ error: 'Missing required fields' }, { status: 400 });
+  if (!latitude || !longitude) {
+    return { error: 'Missing required fields', status: 400 };
   }
 
-  // Verify that the participant belongs to the authenticated user
-  const { data: participant } = await supabase
+  // Get the participant from the authenticated user
+  const { data: participant } = await supabaseAdmin
     .from('participants')
-    .select('id, user_id')
-    .eq('id', participantId)
-    .eq('user_id', userId)
+    .select('id, first_name, last_name, phone')
+    .eq('id', userId)
     .single();
 
   if (!participant) {
-    return json({ error: 'Unauthorized' }, { status: 403 });
+    return { error: 'Participant not found', status: 404 };
   }
+
+  const participantName = `${participant.first_name} ${participant.last_name}`;
+  const participantPhone = participant.phone;
 
   try {
     // Create the SOS alert
-    const { data: alert, error: insertError } = await supabase
+    const { data: alert, error: insertError } = await (supabaseAdmin as any)
       .from('emergency_sos_alerts')
       .insert({
-        participant_id: participantId,
+        participant_id: participant.id,
         latitude,
         longitude,
         participant_name: participantName,
@@ -49,60 +48,83 @@ export async function action({ request }: ActionFunctionArgs) {
       .select()
       .single();
 
-    if (insertError) {
+    if (insertError || !alert) {
       console.error('Error creating SOS alert:', insertError);
-      return json({ error: 'Failed to create SOS alert' }, { status: 500 });
+      return { error: 'Failed to create SOS alert', status: 500 };
     }
 
-    // Get nearby buddies (within 5km)
-    const { data: nearbyBuddies } = await supabase
-      .rpc('get_nearby_buddies', {
-        p_latitude: latitude,
-        p_longitude: longitude,
-        p_radius_km: 5,
-      })
-      .limit(10);
-
-    // Get all admin users
-    const { data: admins } = await supabase
+    // Get all admin users with their push subscriptions
+    const { data: admins } = await supabaseAdmin
       .from('participants')
-      .select('id, name, user_id')
-      .eq('role', 'admin');
+      .select('id, first_name, last_name, email')
+      .eq('is_admin', true);
 
-    // TODO: Send notifications to admins
-    // This would integrate with your notification system (email, push, SMS)
-    // For now, we'll just log it
-    console.log('SOS Alert created:', {
-      alertId: alert.id,
-      participantName,
-      location: { latitude, longitude },
-      nearbyBuddies: nearbyBuddies?.length || 0,
-      adminsNotified: admins?.length || 0,
-    });
+    // Send push notifications to all admins
+    if (admins && admins.length > 0) {
+      const adminIds = admins.map(admin => admin.id);
+      
+      // Get push subscriptions for all admins
+      const { data: subscriptions } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .in('participant_id', adminIds)
+        .eq('is_active', true);
 
-    // TODO: Queue notifications for:
-    // 1. All admin users
-    // 2. Emergency contacts (if configured)
-    // 3. Nearby buddies (optional)
+      console.log('Found', subscriptions?.length || 0, 'admin push subscriptions');
 
-    // Store for offline sync if needed
-    if ('serviceWorker' in navigator) {
-      // The service worker will handle offline queueing
-      console.log('SOS alert will be queued for offline sync if needed');
+      if (subscriptions && subscriptions.length > 0) {
+        const { sendBulkPushNotifications } = await import('~/lib/push-notifications-enhanced.server');
+        
+        try {
+          await sendBulkPushNotifications(
+            subscriptions.map(sub => ({
+              ...sub,
+              keys: sub.keys || {}
+            })),
+            {
+              title: '🚨 EMERGENCY SOS ALERT',
+              body: `${participantName} has sent an emergency alert`,
+              icon: '/icon-192.png',
+              badge: '/icon-96.png',
+              tag: `emergency-sos-${alert.id}`,
+              requireInteraction: true,
+              data: {
+                type: 'emergency_sos',
+                alertId: alert.id,
+                participantId: participant.id,
+                participantName,
+                latitude,
+                longitude,
+                url: '/admin/emergency-alerts'
+              },
+              actions: [
+                {
+                  action: 'view',
+                  title: 'View Alert',
+                },
+                {
+                  action: 'dismiss',
+                  title: 'Dismiss',
+                }
+              ]
+            }
+          );
+          console.log('Push notifications sent to', subscriptions.length, 'admin devices');
+        } catch (pushError) {
+          console.error('Error sending push notifications:', pushError);
+          // Don't fail the whole request if push fails
+        }
+      }
     }
 
-    return json({
+    return {
       success: true,
       alertId: alert.id,
-      nearbyBuddies: nearbyBuddies?.length || 0,
       message: 'Emergency alert sent successfully. Help is on the way.',
-    });
+    };
   } catch (error) {
     console.error('Unexpected error creating SOS alert:', error);
-    return json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
-    );
+    return { error: 'An unexpected error occurred' ,status: 500 }
   }
 }
 

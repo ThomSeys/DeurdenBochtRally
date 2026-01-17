@@ -67,7 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     console.log('Creating story with participant_id:', participant.id, 'title:', title, 'excerpt:', excerpt);
 
-    const { data: story, error } = await supabase
+    const { data: story, error } = await (supabase as any)
       .from('ride_stories')
       .insert({
         participant_id: participant.id,

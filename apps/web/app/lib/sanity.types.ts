@@ -129,3 +129,23 @@ export interface PageContent {
   content?: any[];
   order: number;
 }
+
+export interface RideStory {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  excerpt?: string;
+  content: any[];
+  heroImage: any;
+  participantId: string;
+  participantName: string;
+  edition: {
+    _ref: string;
+    _type: 'reference';
+  };
+  publishedAt: string;
+  isApproved: boolean;
+  isFeatured: boolean;
+  likeCount: number;
+  viewCount: number;
+}

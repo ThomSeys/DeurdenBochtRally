@@ -14,6 +14,7 @@ import { getUser } from "~/lib/session.server";
 import { requireSitePassword } from "~/lib/site-password.server";
 import CookieBanner from "~/components/CookieBanner";
 import RallySubmissionFAB from "~/components/RallySubmissionFAB";
+import { EmergencySOSButton } from "~/components/EmergencySOSButton";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
@@ -71,6 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <CookieBanner />
         <RallySubmissionFAB />
+        <EmergencySOSButton />
         <ScrollRestoration />
         <Scripts />
       </body>

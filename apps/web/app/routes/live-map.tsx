@@ -89,6 +89,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   `);
 
+  // Fetch active emergency SOS alerts (only for admins)
+  let emergencyAlerts: any[] = [];
+  if (isAdmin) {
+    const { data: alerts, error: alertsError } = await supabaseAdmin
+      .from('emergency_sos_alerts' as any)
+      .select(`
+        id,
+        participant_id,
+        latitude,
+        longitude,
+        status,
+        created_at,
+        participants!emergency_sos_alerts_participant_id_fkey (
+          first_name,
+          last_name,
+          phone,
+          email
+        )
+      `)
+      .in('status', ['pending', 'acknowledged'])
+      .order('created_at', { ascending: false });
+    
+    if (alertsError) {
+      console.error('[live-map] Emergency alerts fetch error:', alertsError);
+    }
+    
+    emergencyAlerts = alerts || [];
+    console.log("🚨 ~ loader ~ emergencyAlerts:", emergencyAlerts, 'count:', alerts?.length, 'error:', alertsError);
+  }
+
   // Fetch GPX route file
   const siteConfig = await sanityClient.fetch(`
     *[_type == "siteConfig"][0] {
@@ -116,6 +146,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return {
       rallyZones,
       eventMarkers,
+      emergencyAlerts,
       gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
       checkIns: checkIns || [],
       isAdmin,
@@ -130,13 +161,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function LiveMap() {
-  const { rallyZones, eventMarkers, gpxRouteUrl, checkIns, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
+  const { rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showCheckIns, setShowCheckIns] = useState(true);
   const [showZoneRoutes, setShowZoneRoutes] = useState(true);
   const [showEventMarkers, setShowEventMarkers] = useState(true);
+  const [showEmergencyAlerts, setShowEmergencyAlerts] = useState(true);
 
   // Get user's location
   useEffect(() => {
@@ -196,11 +228,13 @@ export default function LiveMap() {
         <LiveEventMapComponent
           rallyZones={rallyZones}
           eventMarkers={eventMarkers}
+          emergencyAlerts={emergencyAlerts}
           gpxRouteUrl={gpxRouteUrl}
           checkIns={checkIns}
           showCheckIns={showCheckIns}
           showZoneRoutes={showZoneRoutes}
           showEventMarkers={showEventMarkers}
+          showEmergencyAlerts={showEmergencyAlerts}
           isAdmin={isAdmin}
         />
 
@@ -255,6 +289,18 @@ export default function LiveMap() {
                 </div>
               </div>
             )}
+
+            {isAdmin && emergencyAlerts && emergencyAlerts.length > 0 && (
+              <div className="border-t pt-2">
+                <div className="font-medium text-red-600 mb-2 cursor-pointer hover:text-red-700 transition-colors animate-pulse" onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
+                  <span style={{opacity: showEmergencyAlerts ? 1 : 0.5}}>🚨 Emergency SOS ({emergencyAlerts.length})</span>
+                </div>
+                <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-red-600 transition-colors" style={{opacity: showEmergencyAlerts ? 1 : 0.5}} onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
+                  <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
+                  <span className="text-red-600 font-medium">Active Alerts</span>
+                </div>
+              </div>
+            )}
           </div>
           {eventMarkers.length === 0 && checkIns.length === 0 && (
             <p className="text-xs text-gray-500 mt-2">Geen actieve evenementen of check-ins</p>
@@ -271,7 +317,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers, isAdmin }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -295,11 +341,13 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, gpxRouteUrl, checkIns
     <MapComponent
       rallyZones={rallyZones}
       eventMarkers={eventMarkers}
+      emergencyAlerts={emergencyAlerts}
       gpxRouteUrl={gpxRouteUrl}
       checkIns={checkIns}
       showCheckIns={showCheckIns}
       showZoneRoutes={showZoneRoutes}
       showEventMarkers={showEventMarkers}
+      showEmergencyAlerts={showEmergencyAlerts}
       isAdmin={isAdmin}
     />
   );

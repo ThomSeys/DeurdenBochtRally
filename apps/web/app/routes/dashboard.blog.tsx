@@ -29,7 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { data: likedStories } = await (supabase as any)
     .from('ride_story_likes')
     .select('story_id')
-    .eq('participant_id', participant.id)
+    .eq('participant_id', participant.id);
 
   const likedStoryIds = new Set(
     likedStories?.map((like: any) => like.story_id) || []
@@ -40,11 +40,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .from('ride_stories')
     .select('*')
     .eq('participant_id', participant.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  // Get all approved stories with participant info
+  const { data: allStories } = await (supabase as any)
+    .from('ride_stories')
+    .select(`
+      *,
+      participants (
+        first_name,
+        last_name
+      )
+    `)
+    .eq('is_approved', true)
+    .order('created_at', { ascending: false });
 
   return {
     participant,
     myStories: myStories || [],
+    allStories: allStories || [],
     likedStoryIds: Array.from(likedStoryIds),
   };
 }
@@ -99,7 +113,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function DashboardBlog() {
   const loaderData = useLoaderData<typeof loader>();
-  const { participant, myStories, likedStoryIds } = loaderData;
+  const { participant, myStories, allStories, likedStoryIds } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
@@ -130,7 +144,16 @@ export default function DashboardBlog() {
         publishedAt: s.published_at,
         likeCount: s.like_count || 0,
       }))
-    : [];
+    : (allStories as any[]).map((s: any) => ({
+        _id: s.id,
+        title: s.title,
+        excerpt: s.excerpt,
+        participantName: s.participants 
+          ? `${s.participants.first_name} ${s.participants.last_name}`
+          : 'Onbekend',
+        publishedAt: s.published_at,
+        likeCount: s.like_count || 0,
+      }));
 
   return (
     <div className="min-h-screen bg-gray-50">

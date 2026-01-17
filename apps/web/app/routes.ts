@@ -34,6 +34,7 @@ export default [
   
   // Admin
   route("admin", "routes/admin._index.tsx"),
+  route("admin/blog", "routes/admin.blog.tsx"),
   route("admin/check-in", "routes/admin.check-in.tsx"),
   route("admin/event-markers", "routes/admin.event-markers.tsx"),
   route("admin/fallback-review", "routes/admin.fallback-review.tsx"),
@@ -47,6 +48,7 @@ export default [
   route("admin/settings", "routes/admin.settings.tsx"),
   route("admin/submissions", "routes/admin.submissions.tsx"),
   route("admin/zone-control", "routes/admin.zone-control.tsx"),
+  route("admin/emergency-alerts", "routes/admin.emergency-alerts.tsx"),
   
   // API
   route("api/check-ins", "routes/api.check-ins.tsx"),
@@ -61,4 +63,5 @@ export default [
   route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"),
   route("api/webhook", "routes/api.webhook.tsx"),
   route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),
+  route("api/emergency-sos", "routes/api.emergency-sos.ts"),
 ] satisfies RouteConfig;

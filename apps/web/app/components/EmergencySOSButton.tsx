@@ -1,10 +1,9 @@
-import { useState } from 'react';
-import { Form } from 'react-router';
+import { useState, useEffect } from 'react';
 import { Icon } from './Icon';
 
 interface EmergencySOSButtonProps {
-  participantId: number;
-  participantName: string;
+  participantId?: number;
+  participantName?: string;
   participantPhone?: string;
 }
 
@@ -12,11 +11,22 @@ export function EmergencySOSButton({
   participantId,
   participantName,
   participantPhone,
-}: EmergencySOSButtonProps) {
+}: EmergencySOSButtonProps = {}) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const handleTrigger = () => {
+      handleSOSClick();
+    };
+
+    window.addEventListener('trigger-emergency-sos', handleTrigger);
+    return () => window.removeEventListener('trigger-emergency-sos', handleTrigger);
+  }, []);
 
   const getCurrentLocation = () => {
     setIsLocating(true);
@@ -58,6 +68,43 @@ export function EmergencySOSButton({
     setShowConfirmation(false);
     setLocation(null);
     setError(null);
+    setSuccess(false);
+  };
+
+  const handleSubmit = async () => {
+    if (!location) return;
+
+    setIsSending(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/emergency-sos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          latitude: location.lat,
+          longitude: location.lng,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send SOS alert');
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        setShowConfirmation(false);
+        setLocation(null);
+        setSuccess(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Error sending SOS:', err);
+      setError('Failed to send SOS alert. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -67,7 +114,7 @@ export function EmergencySOSButton({
         type="button"
         onClick={handleSOSClick}
         disabled={isLocating}
-        className="fixed bottom-6 right-6 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+        className="fixed bottom-24 right-11 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
         aria-label="Emergency SOS"
       >
         {isLocating ? (
@@ -102,16 +149,6 @@ export function EmergencySOSButton({
               
               <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Name:</span>
-                  <span className="font-medium text-gray-900">{participantName}</span>
-                </div>
-                {participantPhone && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Phone:</span>
-                    <span className="font-medium text-gray-900">{participantPhone}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
                   <span className="text-gray-600">Location:</span>
                   <span className="font-medium text-gray-900">
                     {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
@@ -122,31 +159,41 @@ export function EmergencySOSButton({
               <p className="text-sm text-gray-600">
                 Event administrators will be notified immediately and may contact you or send help to your location.
               </p>
+
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-3 py-2 rounded text-sm">
+                  ✓ SOS alert sent successfully!
+                </div>
+              )}
             </div>
 
-            <Form method="post" action="/api/emergency-sos">
-              <input type="hidden" name="participantId" value={participantId} />
-              <input type="hidden" name="latitude" value={location.lat} />
-              <input type="hidden" name="longitude" value={location.lng} />
-              <input type="hidden" name="participantName" value={participantName} />
-              <input type="hidden" name="participantPhone" value={participantPhone || ''} />
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-                >
-                  Send SOS
-                </button>
-              </div>
-            </Form>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isSending}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSending || success}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSending ? (
+                  <>
+                    <Icon name="loader" className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : success ? (
+                  'Sent!'
+                ) : (
+                  'Send SOS'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

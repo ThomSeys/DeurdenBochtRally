@@ -112,8 +112,14 @@ self.addEventListener('push', (event) => {
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.notification.tag);
+  console.log('[SW] Notification clicked:', event.notification.tag, 'action:', event.action);
   event.notification.close();
+
+  // Handle action button clicks
+  if (event.action === 'dismiss') {
+    // Just close the notification, no navigation
+    return;
+  }
 
   // Store notification in sessionStorage so app can display it
   const notificationData = {
@@ -124,22 +130,31 @@ self.addEventListener('notificationclick', (event) => {
     timestamp: Date.now(),
   };
 
+  // Determine target URL based on notification type or action
+  let targetUrl = '/';
+  if (event.notification.data?.url) {
+    targetUrl = event.notification.data.url;
+  } else if (event.action === 'view' && event.notification.data?.type === 'emergency_sos') {
+    targetUrl = '/admin/emergency-alerts';
+  }
+
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then((clientList) => {
       // Check if window is already open
       for (const client of clientList) {
-        if (client.url === '/' && 'focus' in client) {
+        if (client.url.includes(location.origin) && 'focus' in client) {
           // Send notification data to existing client
           client.postMessage({
             type: 'NOTIFICATION_CLICKED',
             notification: notificationData,
+            targetUrl: targetUrl,
           });
           return client.focus();
         }
       }
       // Open new window if not found
       if (clients.openWindow) {
-        return clients.openWindow('/?notification=' + encodeURIComponent(JSON.stringify(notificationData)));
+        return clients.openWindow(targetUrl + '?notification=' + encodeURIComponent(JSON.stringify(notificationData)));
       }
     })
   );

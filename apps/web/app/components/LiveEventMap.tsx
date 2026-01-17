@@ -52,15 +52,17 @@ interface CheckIn {
 interface LiveEventMapProps {
   rallyZones: RallyZone[];
   eventMarkers: EventMarker[];
+  emergencyAlerts?: any[];
   gpxRouteUrl?: string;
   checkIns?: CheckIn[];
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
   showEventMarkers?: boolean;
+  showEmergencyAlerts?: boolean;
   isAdmin?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true, isAdmin = false }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts = [], gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true, showEmergencyAlerts = true, isAdmin = false }: LiveEventMapProps) {
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -448,6 +450,96 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         });
         } // Close showEventMarkers conditional
 
+        // Add emergency SOS alerts (admin only)
+        if (isAdmin && showEmergencyAlerts && emergencyAlerts) {
+          emergencyAlerts.forEach((alert) => {
+            const statusColors: Record<string, string> = {
+              pending: '#dc2626',
+              acknowledged: '#f59e0b',
+            };
+            const color = statusColors[alert.status] || '#dc2626';
+            
+            const emergencyIcon = L.default.divIcon({
+              html: `
+                <div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                  <div style="
+                    background-color: ${color}; 
+                    width: 32px; 
+                    height: 32px; 
+                    border-radius: 50%; 
+                    border: 3px solid white; 
+                    box-shadow: 0 0 20px ${color === '#dc2626' ? 'rgba(220, 38, 38, 0.8)' : 'rgba(245, 158, 11, 0.8)'}, 0 3px 10px rgba(0,0,0,0.4); 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    animation: emergencyPulse 1.5s infinite;
+                    z-index: 2;
+                    position: relative;
+                  ">
+                    <span style="font-size: 16px; line-height: 1;">🚨</span>
+                  </div>
+                  <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 48px;
+                    height: 48px;
+                    margin: -24px 0 0 -24px;
+                    border: 2px solid ${color};
+                    border-radius: 50%;
+                    opacity: 0.5;
+                    animation: emergencyRipple 2s infinite;
+                    z-index: 1;
+                  "></div>
+                </div>
+              `,
+              className: '',
+              iconSize: [48, 48],
+              iconAnchor: [24, 24],
+            });
+
+            const timeAgo = getTimeAgo(new Date(alert.created_at));
+            const statusLabel = alert.status === 'pending' ? 'PENDING' : 'ACKNOWLEDGED';
+            const participant = alert.participants || {};
+            const participantName = participant.first_name && participant.last_name 
+              ? `${participant.first_name} ${participant.last_name}` 
+              : 'Onbekende Deelnemer';
+
+            L.default.marker([alert.latitude, alert.longitude], { icon: emergencyIcon })
+              .addTo(mapRef.current)
+              .bindPopup(`
+                <div style="min-width: 280px; max-width: 320px;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 12px; margin: -12px -12px 12px -12px; border-radius: 8px 8px 0 0;">
+                    <div style="font-size: 24px;">🚨</div>
+                    <div style="flex: 1;">
+                      <strong style="font-size: 16px; color: white; display: block;">EMERGENCY SOS</strong>
+                      <span style="font-size: 11px; color: rgba(255,255,255,0.9); display: block; margin-top: 2px;">${statusLabel}</span>
+                    </div>
+                  </div>
+                  <div style="margin-bottom: 12px;">
+                    <div style="font-size: 14px; font-weight: 600; color: #111; margin-bottom: 8px;">
+                      ${participantName}
+                    </div>
+                    ${participant.phone ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 4px;">📞 ${participant.phone}</div>` : ''}
+                    ${participant.email ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 4px;">✉️ ${participant.email}</div>` : ''}
+                  </div>
+                  <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px;">
+                      <span style="background-color: ${color}; color: white; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px;">${statusLabel}</span>
+                      <span style="color: #6b7280;">⏰ ${timeAgo}</span>
+                    </div>
+                    <a href="https://www.google.com/maps?q=${alert.latitude},${alert.longitude}" target="_blank" style="display: block; text-align: center; background-color: #3b82f6; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">
+                      📍 Open in Google Maps
+                    </a>
+                    <a href="/admin/emergency-alerts" style="display: block; text-align: center; background-color: #dc2626; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 6px;">
+                      🚨 View All Alerts
+                    </a>
+                  </div>
+                </div>
+              `);
+          });
+        } // Close showEmergencyAlerts conditional
+
         // Update user location marker
         if (userLocation) {
           if (userMarkerRef.current) {
@@ -472,7 +564,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         setMapError('Failed to initialize map');
       }
     });
-  }, [isClient, rallyZones, eventMarkers, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers, isAdmin]);
+  }, [isClient, rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin]);
 
   if (mapError) {
     return (
@@ -492,6 +584,22 @@ export default function LiveEventMap({ rallyZones, eventMarkers, gpxRouteUrl, ch
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.8), 0 3px 10px rgba(0,0,0,0.4); }
+          50% { box-shadow: 0 0 30px rgba(220, 38, 38, 1), 0 3px 15px rgba(0,0,0,0.6); }
+        }
+        @keyframes ripple {
+          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+          100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+        @keyframes emergencyPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+        }
+        @keyframes emergencyRipple {
+          0% { transform: scale(0.8); opacity: 0.6; }
+          100% { transform: scale(1.8); opacity: 0; }
         }
         .leaflet-container {
           font-family: system-ui, -apple-system, sans-serif;
