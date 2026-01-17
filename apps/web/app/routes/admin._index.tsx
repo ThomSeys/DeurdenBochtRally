@@ -296,6 +296,15 @@ export default function AdminDashboard() {
             <h3 className="font-semibold text-white">Settings</h3>
             <p className="text-sm text-white mt-1">Admin gebruikers</p>
           </Link>
+
+          <Link
+            to="/admin/prepare-edition"
+            className="bg-gradient-to-r from-yellow-600 to-orange-700 hover:from-yellow-700 hover:to-orange-800 rounded-sm shadow p-6 transition-colors border-2 border-yellow-400"
+          >
+            <Icon name="refresh" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Nieuwe Editie</h3>
+            <p className="text-sm text-white mt-1">Maak klaar voor volgend jaar</p>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

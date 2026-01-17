@@ -106,7 +106,7 @@ export function registrationConfirmationEmail(participant: {
               </ul>
 
               <div class="footer">
-                <p>Vragen? Contacteer ons via info@deurdenbocht.be</p>
+                <p>Vragen? Contacteer ons via vzwddb@gmail.com</p>
                 <p>© 2026 Deur Den Bocht - Een onvergetelijke motordag!</p>
               </div>
             </div>

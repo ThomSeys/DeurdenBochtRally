@@ -422,7 +422,7 @@ export default function Dashboard() {
         {/* New Feature Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Link
-            to="/dashboard/gallery"
+            to="/gallery"
             className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="camera" className="w-16 h-16 mb-3" />
@@ -462,6 +462,42 @@ export default function Dashboard() {
             <h3 className="font-bold text-xl mb-2">Certificaat</h3>
             <p className="text-sm text-green-100">
               Download je deelname certificaat na het voltooien van de rally!
+            </p>
+          </Link>
+        </div>
+
+        {/* New: Progress & Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Link
+            to="/dashboard/progress"
+            className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="trending-up" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Mijn Voortgang</h3>
+            <p className="text-sm text-blue-100">
+              Real-time overzicht van je rally voortgang, positie en punten breakdown!
+            </p>
+          </Link>
+
+          <Link
+            to="/dashboard/stats"
+            className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="bar-chart" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Mijn Statistieken</h3>
+            <p className="text-sm text-indigo-100">
+              Gedetailleerde analyse van je prestaties, zone tijden en shadow rally scores!
+            </p>
+          </Link>
+
+          <Link
+            to="/dashboard/privacy"
+            className="bg-gradient-to-br from-gray-600 to-gray-800 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="shield" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Privacy & Gegevens</h3>
+            <p className="text-sm text-gray-100">
+              Beheer je gegevens, download je data of verwijder je account (GDPR)
             </p>
           </Link>
         </div>
@@ -623,8 +659,8 @@ export default function Dashboard() {
           <p className="mb-2">Hulp nodig?</p>
           <p>
             <Icon name="mail" className="w-5 h-5 inline mr-1" />
-            <a href="mailto:info@deurdenbocht.be" className="text-primary-600 hover:underline">
-              info@deurdenbocht.be
+            <a href="mailto:vzwddb@gmail.com" className="text-primary-600 hover:underline">
+              vzwddb@gmail.com
             </a>
           </p>
         </div>

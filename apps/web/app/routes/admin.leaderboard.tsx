@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form, redirect, Link } from 'react-router';
+import { useLoaderData, Form, redirect, Link, useFetcher } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
@@ -99,15 +99,13 @@ export async function action({ request }: ActionFunctionArgs) {
     const action = formData.get('action') as string;
 
     if (action === 'recalculate') {
-      const participantId = formData.get('participant_id') as string;
-      
+      // Recalculate shadow scores for ALL participants
       await fetch(`${request.url.split('/admin')[0]}/api/shadow-recalculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantId }),
       });
 
-      console.info('[admin.leaderboard] action success', { action, participantId });
+      console.info('[admin.leaderboard] action success - recalculated all scores');
       return redirect('/admin/leaderboard');
     }
 
@@ -121,6 +119,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function AdminLeaderboard() {
   const { leaderboard, noScores } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -148,12 +147,25 @@ export default function AdminLeaderboard() {
               {leaderboard.length} deelnemers met scores
             </p>
           </div>
-          <Link
-            to="/admin"
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
-          >
-            ← Terug naar Dashboard
-          </Link>
+          <div className="flex gap-3">
+            <fetcher.Form method="post">
+              <input type="hidden" name="action" value="recalculate" />
+              <button
+                type="submit"
+                disabled={fetcher.state === 'submitting'}
+                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-sm font-medium transition-colors flex items-center gap-2"
+              >
+                <Icon name="refresh-cw" className={`w-4 h-4 ${fetcher.state === 'submitting' ? 'animate-spin' : ''}`} />
+                {fetcher.state === 'submitting' ? 'Herbereken...' : 'Herbereken Scores'}
+              </button>
+            </fetcher.Form>
+            <Link
+              to="/admin"
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+            >
+              ← Terug naar Dashboard
+            </Link>
+          </div>
         </div>
 
         {/* Leaderboard Table */}

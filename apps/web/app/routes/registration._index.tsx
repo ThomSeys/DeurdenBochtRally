@@ -378,7 +378,59 @@ export default function Registration() {
               {/* Ride Type - Hidden, always free */}
               <input type="hidden" name="rideType" value="free" />
 
-              <div className="pt-6 border-t">
+              {/* Consent Checkboxes */}
+              <div className="pt-6 border-t space-y-4">
+                <div className="flex items-start">
+                  <input
+                    id="termsConsent"
+                    name="termsConsent"
+                    type="checkbox"
+                    required
+                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="termsConsent" className="ml-3 text-sm text-gray-700">
+                    Ik heb de{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 underline">
+                      Algemene Voorwaarden
+                    </a>
+                    {' '}gelezen en ga hiermee akkoord *
+                  </label>
+                </div>
+
+                <div className="flex items-start">
+                  <input
+                    id="privacyConsent"
+                    name="privacyConsent"
+                    type="checkbox"
+                    required
+                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="privacyConsent" className="ml-3 text-sm text-gray-700">
+                    Ik heb het{' '}
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 underline">
+                      Privacybeleid
+                    </a>
+                    {' '}gelezen en ga akkoord met de verwerking van mijn persoonsgegevens *
+                  </label>
+                </div>
+
+                <div className="flex items-start">
+                  <input
+                    id="dataProcessingConsent"
+                    name="dataProcessingConsent"
+                    type="checkbox"
+                    required
+                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="dataProcessingConsent" className="ml-3 text-sm text-gray-700">
+                    Ik geef toestemming voor het verzamelen en verwerken van mijn gegevens 
+                    (inclusief GPS-locatie, foto's) voor dit evenement en ga akkoord met het 
+                    delen van foto's in de galerij *
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-6">
                 <button
                   type="submit"
                   className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 px-6 rounded-sm text-lg transition-colors"

@@ -146,16 +146,20 @@ async function getValidAnswers(zoneIdentifier: string): Promise<string[]> {
   
   let zone;
   if (!isNaN(zoneNum) && zoneNum >= 1 && zoneNum <= 8) {
-    // Look up by zone number (order + 1)
+    // Look up by zone number (order field is 1-indexed: 1, 2, 3... 8)
     zone = await sanityClient.fetch(
       `*[_type == "rallyZone" && order == $order][0] {
+        _id,
+        title,
         checkpoints[] {
           solution,
           validAnswers
         }
       }`,
-      { order: zoneNum - 1 }
+      { order: zoneNum }
     );
+    
+    console.info(`[getValidAnswers] Zone lookup for order ${zoneNum}:`, JSON.stringify(zone, null, 2));
     
     if (zone?.checkpoints) {
       // Collect all valid answers from all checkpoints

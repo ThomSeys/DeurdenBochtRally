@@ -169,7 +169,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const zoneHeatmap = Array.from(zoneMap.entries())
     .map(([zoneId, data]) => ({
-      zoneId,
+      zoneId: Number(zoneId),
       zoneName: data.name,
       completions: data.completions,
       avgTimeMinutes: Math.round(data.totalTime / data.completions),
@@ -503,7 +503,7 @@ export default function AnalyticsDashboard() {
                       className="hover:r-7 transition-all cursor-pointer"
                     />
                     <title>
-                      {timeRange === 'hourly' ? `${d.hour}:00` : d.date}: {d.count} check-ins
+                      {timeRange === 'hourly' ? ('hour' in d ? `${d.hour}:00` : '') : ('date' in d ? d.date : '')}: {d.count} check-ins
                     </title>
                   </g>
                 );
@@ -520,7 +520,7 @@ export default function AnalyticsDashboard() {
                 })
                 .map((d, i) => (
                   <span key={i} className="text-xs text-gray-600">
-                    {timeRange === 'hourly' ? `${d.hour}:00` : d.date.split('-').slice(1).join('/')}
+                    {timeRange === 'hourly' ? ('hour' in d ? `${d.hour}:00` : '') : ('date' in d ? d.date.split('-').slice(1).join('/') : '')}
                   </span>
                 ))}
             </div>

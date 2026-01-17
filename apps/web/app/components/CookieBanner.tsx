@@ -64,6 +64,10 @@ export default function CookieBanner() {
               <Link to="/cookie-policy" className="text-blue-400 hover:text-blue-300 ml-1 underline">
                 Lees meer over onze cookieverklaring
               </Link>
+              {' '}en{' '}
+              <Link to="/privacy-policy" className="text-blue-400 hover:text-blue-300 underline">
+                privacybeleid
+              </Link>.
             </p>
           </div>
           
