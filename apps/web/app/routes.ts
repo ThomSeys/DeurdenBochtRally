@@ -23,6 +23,7 @@ export default [
   route("dashboard", "routes/dashboard._index.tsx"),
   route("dashboard/blog", "routes/dashboard.blog.tsx"),
   route("dashboard/blog/new", "routes/dashboard.blog.new.tsx"),
+  route("dashboard/blog/:slug", "routes/dashboard.blog.$slug.tsx"),
   route("dashboard/notification-history", "routes/dashboard.notification-history.tsx"),
   route("dashboard/rally-submission", "routes/dashboard.rally-submission.tsx"),
   
@@ -34,8 +35,10 @@ export default [
   
   // Admin
   route("admin", "routes/admin._index.tsx"),
+  route("admin/analytics", "routes/dashboard.admin.analytics.tsx"),
   route("admin/blog", "routes/admin.blog.tsx"),
   route("admin/check-in", "routes/admin.check-in.tsx"),
+  route("admin/emergency-alerts", "routes/admin.emergency-alerts.tsx"),
   route("admin/event-markers", "routes/admin.event-markers.tsx"),
   route("admin/fallback-review", "routes/admin.fallback-review.tsx"),
   route("admin/gallery", "routes/admin.gallery.tsx"),
@@ -45,16 +48,17 @@ export default [
   route("admin/participants/:participantId/submissions", "routes/admin.participants.$participantId.submissions.tsx"),
   route("admin/pending-scans", "routes/admin.pending-scans.tsx"),
   route("admin/push-notifications", "routes/admin.push-notifications.tsx"),
+  route("admin/reports", "routes/dashboard.admin.reports.tsx"),
   route("admin/settings", "routes/admin.settings.tsx"),
   route("admin/submissions", "routes/admin.submissions.tsx"),
   route("admin/zone-control", "routes/admin.zone-control.tsx"),
-  route("admin/emergency-alerts", "routes/admin.emergency-alerts.tsx"),
   
   // API
   route("api/check-ins", "routes/api.check-ins.tsx"),
   route("api/event-markers", "routes/api.event-markers.tsx"),
   route("api/events/submit", "routes/api.events.submit.tsx"),
   route("api/gpx-route", "routes/api.gpx-route.tsx"),
+  route("api/process-reports", "routes/api.process-reports.ts"),
   route("api/push-send", "routes/api.push-send.tsx"),
   route("api/push-subscribe", "routes/api.push-subscribe.tsx"),
   route("api/qrcode", "routes/api.qrcode.tsx"),

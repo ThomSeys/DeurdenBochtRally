@@ -37,6 +37,7 @@
     "@react-router/dev": "7.12.0",
     "@sanity/codegen": "^5.2.0",
     "@types/node": "^22",
+    "@types/pdfkit": "^0.17.4",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.23",

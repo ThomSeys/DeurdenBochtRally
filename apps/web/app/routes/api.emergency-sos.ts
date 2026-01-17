@@ -82,8 +82,8 @@ export async function action({ request }: ActionFunctionArgs) {
               keys: sub.keys || {}
             })),
             {
-              title: '🚨 EMERGENCY SOS ALERT',
-              body: `${participantName} has sent an emergency alert`,
+              title: '🚨 NOOD SOS MELDING',
+              body: `${participantName} heeft een noodmelding verstuurd`,
               icon: '/icon-192.png',
               badge: '/icon-96.png',
               tag: `emergency-sos-${alert.id}`,

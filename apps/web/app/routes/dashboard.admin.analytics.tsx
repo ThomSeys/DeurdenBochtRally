@@ -1,9 +1,16 @@
 import { useState } from 'react';
-import type { LoaderFunctionArgs } from 'react-router';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData } from 'react-router';
-import { requireUserId } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
+import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { requireUserId } from '~/lib/session.server';
+import { supabaseAdmin, supabase } from '~/lib/supabase.server';
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'Analytics - Admin - Deur Den Bocht' },
+  ];
+};
 
 interface AnalyticsData {
   overview: {
@@ -47,11 +54,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Verify admin access
   const { data: participant } = await supabase
     .from('participants')
-    .select('role')
-    .eq('user_id', userId)
+    .select('is_admin')
+    .eq('id', userId)
     .single();
 
-  if (!participant || participant.role !== 'admin') {
+  if (!participant || !participant.is_admin) {
     throw new Response('Unauthorized', { status: 403 });
   }
 
@@ -64,32 +71,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
     { count: totalStories },
     { data: achievements },
   ] = await Promise.all([
-    supabase.from('participants').select('*', { count: 'exact', head: true }),
-    supabase
-      .from('checkins')
+    supabaseAdmin.from('participants').select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('rally_zone_submissions')
       .select('participant_id', { count: 'exact', head: true })
-      .gte('checked_in_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-    supabase.from('checkins').select('*', { count: 'exact', head: true }),
-    supabase.from('rally_photo_submissions').select('*', { count: 'exact', head: true }),
-    supabase.from('ride_stories').select('*', { count: 'exact', head: true }).catch(() => ({ data: [], count: 0 })),
-    supabase.from('achievements').select('participants').catch(() => ({ data: [] })),
+      .gte('entry_timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+    supabaseAdmin.from('rally_zone_submissions').select('*', { count: 'exact', head: true }),
+    supabaseAdmin.from('rally_zone_submissions').select('*', { count: 'exact', head: true }).not('proof_photo_url', 'is', null),
+    supabaseAdmin.from('participant_photos').select('*', { count: 'exact', head: true }),
+    supabaseAdmin.from('achievements').select('id'),
   ]);
 
   // Calculate total achievements unlocked
-  const totalAchievements = achievements?.reduce((sum, achievement) => {
-    return sum + (achievement.participants?.length || 0);
-  }, 0) || 0;
+  const totalAchievements = achievements?.length || 0;
 
   // Get hourly participation pattern (last 24 hours)
-  const { data: hourlyData } = await supabase
-    .from('checkins')
-    .select('checked_in_at')
-    .gte('checked_in_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-    .order('checked_in_at', { ascending: true });
+  const { data: hourlyData } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('entry_timestamp')
+    .gte('entry_timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+    .order('entry_timestamp', { ascending: true });
 
   const hourlyMap = new Map<number, number>();
   hourlyData?.forEach((checkin) => {
-    const hour = new Date(checkin.checked_in_at).getHours();
+    const hour = new Date(checkin.entry_timestamp).getHours();
     hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
   });
 
@@ -99,15 +104,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }));
 
   // Get daily participation (last 7 days)
-  const { data: dailyData } = await supabase
-    .from('checkins')
-    .select('checked_in_at')
-    .gte('checked_in_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-    .order('checked_in_at', { ascending: true });
+  const { data: dailyData } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('entry_timestamp')
+    .gte('entry_timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    .order('entry_timestamp', { ascending: true });
 
   const dailyMap = new Map<string, number>();
   dailyData?.forEach((checkin) => {
-    const date = new Date(checkin.checked_in_at).toISOString().split('T')[0];
+    const date = new Date(checkin.entry_timestamp).toISOString().split('T')[0];
     dailyMap.set(date, (dailyMap.get(date) || 0) + 1);
   });
 
@@ -121,8 +126,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   });
 
   // Get checkpoint completion stats
-  const { data: checkpointData } = await supabase
-    .from('checkins')
+  const { data: checkpointData } = await supabaseAdmin
+    .from('rally_zone_submissions')
     .select('checkpoint_number')
     .order('checkpoint_number', { ascending: true });
 
@@ -145,20 +150,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
     });
 
   // Get zone heatmap
-  const { data: zoneData } = await supabase
-    .from('rally_submissions')
-    .select('zone_id, completion_time_seconds, rally_zones(name)')
-    .not('completion_time_seconds', 'is', null);
+  const { data: zoneData } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('zone_id, zone_time_minutes')
+    .not('zone_time_minutes', 'is', null);
 
-  const zoneMap = new Map<number, { name: string; completions: number; totalTime: number }>();
+  const zoneMap = new Map<string, { name: string; completions: number; totalTime: number }>();
   zoneData?.forEach((submission: any) => {
     const existing = zoneMap.get(submission.zone_id) || {
-      name: submission.rally_zones?.name || `Zone ${submission.zone_id}`,
+      name: `Zone ${submission.zone_id}`,
       completions: 0,
       totalTime: 0,
     };
     existing.completions++;
-    existing.totalTime += submission.completion_time_seconds || 0;
+    existing.totalTime += submission.zone_time_minutes || 0;
     zoneMap.set(submission.zone_id, existing);
   });
 
@@ -167,20 +172,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
       zoneId,
       zoneName: data.name,
       completions: data.completions,
-      avgTimeMinutes: Math.round(data.totalTime / data.completions / 60),
+      avgTimeMinutes: Math.round(data.totalTime / data.completions),
     }))
     .sort((a, b) => b.completions - a.completions);
 
   // Get engagement metrics
-  const { data: photoStats } = await supabase
-    .from('rally_photo_submissions')
-    .select('participant_id, participants(name)')
+  const { data: photoStats } = await supabaseAdmin
+    .from('rally_zone_submissions')
+    .select('participant_id, participants(first_name, last_name)')
+    .not('proof_photo_url', 'is', null)
     .order('participant_id');
 
-  const photoCountMap = new Map<number, { name: string; count: number }>();
+  const photoCountMap = new Map<string, { name: string; count: number }>();
   photoStats?.forEach((photo: any) => {
     const existing = photoCountMap.get(photo.participant_id) || {
-      name: photo.participants?.name || 'Unknown',
+      name: photo.participants ? `${photo.participants.first_name} ${photo.participants.last_name}` : 'Unknown',
       count: 0,
     };
     existing.count++;
@@ -191,16 +197,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  const { data: storyStats } = await supabase
-    .from('ride_stories')
-    .select('participant_id, participants(name)')
-    .order('participant_id')
-    .catch(() => ({ data: [] }));
+  const { data: storyStats } = await supabaseAdmin
+    .from('participant_photos')
+    .select('participant_id, participants(first_name, last_name)')
+    .order('participant_id');
 
-  const storyCountMap = new Map<number, { name: string; count: number }>();
+  const storyCountMap = new Map<string, { name: string; count: number }>();
   storyStats?.forEach((story: any) => {
     const existing = storyCountMap.get(story.participant_id) || {
-      name: story.participants?.name || 'Unknown',
+      name: story.participants ? `${story.participants.first_name} ${story.participants.last_name}` : 'Unknown',
       count: 0,
     };
     existing.count++;
@@ -260,17 +265,32 @@ export default function AnalyticsDashboard() {
   const maxCount = Math.max(...participationData.map((d) => d.count), 1);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+
+      <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white py-16 overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+            <Icon name="bar-chart" className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">Analytics Dashboard</h1>
+          <p className="text-xl text-primary-100">Real-time event performance metrics</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col gap-4">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="text-gray-600 mt-1">Real-time event performance metrics</p>
+            <p className="text-gray-600 mt-2">Statistieken en prestatie-indicatoren</p>
           </div>
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors shadow"
           >
             <Icon name="download" className="w-5 h-5" />
             Export Report
@@ -366,7 +386,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Participation Chart */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mt-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Participation Pattern</h2>
             <div className="flex gap-2">
@@ -374,7 +394,7 @@ export default function AnalyticsDashboard() {
                 onClick={() => setTimeRange('hourly')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === 'hourly'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -384,7 +404,7 @@ export default function AnalyticsDashboard() {
                 onClick={() => setTimeRange('daily')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === 'daily'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -393,26 +413,140 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
 
-          <div className="h-64 flex items-end gap-2">
-            {participationData.map((data, index) => {
-              const height = (data.count / maxCount) * 100;
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="relative w-full group">
-                    <div
-                      className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-all cursor-pointer"
-                      style={{ height: `${Math.max(height, 2)}%` }}
+          {/* Graph */}
+          <div className="relative h-80">
+            <svg className="w-full h-full" viewBox="0 0 800 320" preserveAspectRatio="none">
+              {/* Grid lines */}
+              <defs>
+                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+              
+              {/* Horizontal grid lines */}
+              {[0, 1, 2, 3, 4].map((i) => {
+                const y = (i * 320) / 4;
+                return (
+                  <g key={i}>
+                    <line
+                      x1="0"
+                      y1={y}
+                      x2="800"
+                      y2={y}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
                     />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                      {data.count} check-ins
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-600 transform -rotate-45 origin-top-left mt-4">
-                    {timeRange === 'hourly' ? data.hour : data.date.split('-')[2]}
+                    <text
+                      x="0"
+                      y={y - 4}
+                      fill="#9ca3af"
+                      fontSize="12"
+                      fontFamily="system-ui"
+                    >
+                      {Math.round(maxCount - (i * maxCount) / 4)}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Area fill */}
+              {participationData.length > 0 && (
+                <path
+                  d={`
+                    M 0,320
+                    ${participationData
+                      .map((d, i) => {
+                        const x = (i * 800) / Math.max(participationData.length - 1, 1);
+                        const y = 320 - (d.count / maxCount) * 300;
+                        return `L ${x},${y}`;
+                      })
+                      .join(' ')}
+                    L 800,320 Z
+                  `}
+                  fill="url(#areaGradient)"
+                />
+              )}
+
+              {/* Line */}
+              {participationData.length > 0 && (
+                <path
+                  d={participationData
+                    .map((d, i) => {
+                      const x = (i * 800) / Math.max(participationData.length - 1, 1);
+                      const y = 320 - (d.count / maxCount) * 300;
+                      return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+                    })
+                    .join(' ')}
+                  fill="none"
+                  stroke="rgb(59, 130, 246)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+
+              {/* Data points */}
+              {participationData.map((d, i) => {
+                const x = (i * 800) / Math.max(participationData.length - 1, 1);
+                const y = 320 - (d.count / maxCount) * 300;
+                return (
+                  <g key={i}>
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r="5"
+                      fill="white"
+                      stroke="rgb(59, 130, 246)"
+                      strokeWidth="3"
+                      className="hover:r-7 transition-all cursor-pointer"
+                    />
+                    <title>
+                      {timeRange === 'hourly' ? `${d.hour}:00` : d.date}: {d.count} check-ins
+                    </title>
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* X-axis labels */}
+            <div className="flex justify-between mt-4 px-2">
+              {participationData
+                .filter((_, i) => {
+                  // Show fewer labels on mobile
+                  const step = participationData.length > 12 ? 3 : 2;
+                  return i % step === 0 || i === participationData.length - 1;
+                })
+                .map((d, i) => (
+                  <span key={i} className="text-xs text-gray-600">
+                    {timeRange === 'hourly' ? `${d.hour}:00` : d.date.split('-').slice(1).join('/')}
                   </span>
-                </div>
-              );
-            })}
+                ))}
+            </div>
+          </div>
+
+          {/* Stats below graph */}
+          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Total Check-ins</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {participationData.reduce((sum, d) => sum + d.count, 0)}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Average</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {Math.round(
+                  participationData.reduce((sum, d) => sum + d.count, 0) /
+                    Math.max(participationData.length, 1)
+                )}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Peak</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{maxCount}</p>
+            </div>
           </div>
         </div>
 

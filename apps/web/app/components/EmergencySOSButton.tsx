@@ -33,7 +33,7 @@ export function EmergencySOSButton({
     setError(null);
 
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
+      setError('Locatiebepaling wordt niet ondersteund door je browser');
       setIsLocating(false);
       return;
     }
@@ -48,7 +48,7 @@ export function EmergencySOSButton({
         setShowConfirmation(true);
       },
       (err) => {
-        setError('Unable to retrieve your location');
+        setError('Kan je locatie niet ophalen');
         setIsLocating(false);
         console.error('Geolocation error:', err);
       },
@@ -90,7 +90,7 @@ export function EmergencySOSButton({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send SOS alert');
+        throw new Error('Kon noodoproep niet versturen');
       }
 
       setSuccess(true);
@@ -101,7 +101,7 @@ export function EmergencySOSButton({
       }, 2000);
     } catch (err) {
       console.error('Error sending SOS:', err);
-      setError('Failed to send SOS alert. Please try again.');
+      setError('Kon noodoproep niet versturen. Probeer het opnieuw.');
     } finally {
       setIsSending(false);
     }
@@ -115,7 +115,7 @@ export function EmergencySOSButton({
         onClick={handleSOSClick}
         disabled={isLocating}
         className="fixed bottom-24 right-11 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
-        aria-label="Emergency SOS"
+        aria-label="Nood SOS"
       >
         {isLocating ? (
           <Icon name="loader" className="w-8 h-8 animate-spin" />
@@ -128,7 +128,7 @@ export function EmergencySOSButton({
             </span>
           </div>
         )}
-        <span className="sr-only">Emergency SOS</span>
+        <span className="sr-only">Nood SOS</span>
       </button>
 
       {/* Confirmation Dialog */}
@@ -139,17 +139,17 @@ export function EmergencySOSButton({
               <div className="bg-red-100 rounded-full p-3">
                 <Icon name="alert-triangle" className="w-6 h-6 text-red-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Emergency SOS</h2>
+              <h2 className="text-xl font-bold text-gray-900">Nood SOS</h2>
             </div>
 
             <div className="mb-6 space-y-3">
               <p className="text-gray-700">
-                This will send an emergency alert to event administrators with your current location.
+                Dit stuurt een noodmelding naar de organisatie met je huidige locatie.
               </p>
               
               <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Location:</span>
+                  <span className="text-gray-600">Locatie:</span>
                   <span className="font-medium text-gray-900">
                     {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                   </span>
@@ -157,12 +157,12 @@ export function EmergencySOSButton({
               </div>
 
               <p className="text-sm text-gray-600">
-                Event administrators will be notified immediately and may contact you or send help to your location.
+                De organisatie wordt onmiddellijk op de hoogte gebracht en kan contact met je opnemen of hulp naar je locatie sturen.
               </p>
 
               {success && (
                 <div className="bg-green-50 border border-green-200 text-green-800 px-3 py-2 rounded text-sm">
-                  ✓ SOS alert sent successfully!
+                  ✓ Noodoproep succesvol verstuurd!
                 </div>
               )}
             </div>
@@ -174,7 +174,7 @@ export function EmergencySOSButton({
                 disabled={isSending}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                Annuleren
               </button>
               <button
                 type="button"
@@ -185,12 +185,12 @@ export function EmergencySOSButton({
                 {isSending ? (
                   <>
                     <Icon name="loader" className="w-4 h-4 animate-spin" />
-                    Sending...
+                    Versturen...
                   </>
                 ) : success ? (
-                  'Sent!'
+                  'Verstuurd!'
                 ) : (
-                  'Send SOS'
+                  'Verstuur SOS'
                 )}
               </button>
             </div>
@@ -204,7 +204,7 @@ export function EmergencySOSButton({
           <div className="flex items-start gap-2">
             <Icon name="alert-circle" className="w-5 h-5 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">Location Error</p>
+              <p className="font-medium">Locatiefout</p>
               <p className="text-sm">{error}</p>
             </div>
           </div>

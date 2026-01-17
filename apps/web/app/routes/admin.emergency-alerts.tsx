@@ -87,8 +87,8 @@ export default function EmergencyAlerts() {
               <Icon name="alert-triangle" className="w-8 h-8" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold">Emergency SOS Alerts</h1>
-              <p className="text-red-100 mt-1">Monitor and respond to emergency situations</p>
+              <h1 className="text-4xl font-bold">Nood SOS Meldingen</h1>
+              <p className="text-red-100 mt-1">Monitor en reageer op noodsituaties</p>
             </div>
           </div>
           {pendingAlerts.length > 0 && (
@@ -97,7 +97,7 @@ export default function EmergencyAlerts() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
               </span>
-              <span className="font-semibold">{pendingAlerts.length} Active Alert{pendingAlerts.length !== 1 ? 's' : ''}</span>
+              <span className="font-semibold">{pendingAlerts.length} Actieve Melding{pendingAlerts.length !== 1 ? 'en' : ''}</span>
             </div>
           )}
         </div>
@@ -109,7 +109,7 @@ export default function EmergencyAlerts() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Icon name="alert-circle" className="w-6 h-6 text-red-600" />
-              Pending Alerts ({pendingAlerts.length})
+              In Afwachting ({pendingAlerts.length})
             </h2>
             <div className="space-y-4">
               {pendingAlerts.map((alert: any) => (
@@ -124,7 +124,7 @@ export default function EmergencyAlerts() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Icon name="check-circle" className="w-6 h-6 text-yellow-600" />
-              Acknowledged Alerts ({acknowledgedAlerts.length})
+              Bevestigde Meldingen ({acknowledgedAlerts.length})
             </h2>
             <div className="space-y-4">
               {acknowledgedAlerts.map((alert: any) => (
@@ -139,7 +139,7 @@ export default function EmergencyAlerts() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Icon name="check" className="w-6 h-6 text-green-600" />
-              Resolved Alerts ({resolvedAlerts.length})
+              Opgeloste Meldingen ({resolvedAlerts.length})
             </h2>
             <div className="space-y-4">
               {resolvedAlerts.map((alert: any) => (
@@ -152,7 +152,7 @@ export default function EmergencyAlerts() {
         {alerts.length === 0 && (
           <div className="text-center py-12">
             <Icon name="inbox" className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">No emergency alerts</p>
+            <p className="text-gray-600 text-lg">Geen noodmeldingen</p>
           </div>
         )}
       </div>
@@ -189,12 +189,12 @@ function AlertCard({ alert }: { alert: any }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-          <p className="text-sm font-semibold mb-1">Contact Info</p>
+          <p className="text-sm font-semibold mb-1">Contactinfo</p>
           <p className="text-sm">{participant?.email}</p>
           {participant?.phone && <p className="text-sm">{participant.phone}</p>}
         </div>
         <div>
-          <p className="text-sm font-semibold mb-1">Location</p>
+          <p className="text-sm font-semibold mb-1">Locatie</p>
           <p className="text-sm">
             Lat: {alert.latitude}, Lng: {alert.longitude}
           </p>
@@ -204,14 +204,14 @@ function AlertCard({ alert }: { alert: any }) {
             rel="noopener noreferrer"
             className="text-sm underline hover:no-underline inline-flex items-center gap-1"
           >
-            View on map <Icon name="external-link" className="w-3 h-3" />
+            Bekijk op kaart <Icon name="external-link" className="w-3 h-3" />
           </a>
         </div>
       </div>
 
       {alert.resolution_notes && (
         <div className="mb-4 p-3 bg-white/50 rounded">
-          <p className="text-sm font-semibold mb-1">Resolution Notes</p>
+          <p className="text-sm font-semibold mb-1">Oplossingsnotities</p>
           <p className="text-sm">{alert.resolution_notes}</p>
         </div>
       )}
@@ -226,7 +226,7 @@ function AlertCard({ alert }: { alert: any }) {
                 type="submit"
                 className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-medium"
               >
-                Acknowledge
+                Bevestigen
               </button>
             </Form>
           )}
@@ -237,14 +237,14 @@ function AlertCard({ alert }: { alert: any }) {
               <input
                 type="text"
                 name="notes"
-                placeholder="Resolution notes (optional)"
+                placeholder="Oplossingsnotities (optioneel)"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
               />
               <button
                 type="submit"
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium whitespace-nowrap"
               >
-                Mark Resolved
+                Markeer als Opgelost
               </button>
             </div>
           </Form>

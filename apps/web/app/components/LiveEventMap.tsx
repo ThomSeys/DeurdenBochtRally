@@ -421,7 +421,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
           const icon = getEventTypeIcon(marker.type, 'white');
 
           const eventIcon = L.default.divIcon({
-            html: `<div style="background-color: ${color}; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;">${icon.svg}</div>`,
+            html: `<div style="background-color: ${color}; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; 2s infinite;">${icon.svg}</div>`,
             className: '',
             iconSize: [40, 40],
             iconAnchor: [20, 20],
@@ -508,35 +508,38 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
             L.default.marker([alert.latitude, alert.longitude], { icon: emergencyIcon })
               .addTo(mapRef.current)
               .bindPopup(`
-                <div style="min-width: 280px; max-width: 320px;">
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 12px; margin: -12px -12px 12px -12px; border-radius: 8px 8px 0 0;">
+                <div style="min-width: 260px; max-width: 300px;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 10px; margin: -10px -10px 10px -10px; border-radius: 6px 6px 0 0;">
                     <div style="font-size: 24px;">🚨</div>
                     <div style="flex: 1;">
-                      <strong style="font-size: 16px; color: white; display: block;">EMERGENCY SOS</strong>
-                      <span style="font-size: 11px; color: rgba(255,255,255,0.9); display: block; margin-top: 2px;">${statusLabel}</span>
+                      <strong style="font-size: 15px; display: block;">NOOD SOS</strong>
+                      <span style="font-size: 11px; display: block; margin-top: 2px;">${statusLabel === 'PENDING' ? 'IN AFWACHTING' : 'BEVESTIGD'}</span>
                     </div>
                   </div>
-                  <div style="margin-bottom: 12px;">
-                    <div style="font-size: 14px; font-weight: 600; color: #111; margin-bottom: 8px;">
+                  <div style="margin-bottom: 10px;">
+                    <div style="font-size: 14px; font-weight: 600; color: #111; margin-bottom: 6px;">
                       ${participantName}
                     </div>
-                    ${participant.phone ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 4px;">📞 ${participant.phone}</div>` : ''}
-                    ${participant.email ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 4px;">✉️ ${participant.email}</div>` : ''}
+                    ${participant.phone ? `<div style="font-size: 12px; color: #4b5563; margin-bottom: 3px;">📞 ${participant.phone}</div>` : ''}
+                    ${participant.email ? `<div style="font-size: 12px; color: #4b5563; margin-bottom: 3px;">✉️ ${participant.email}</div>` : ''}
                   </div>
-                  <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                  <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px;">
-                      <span style="background-color: ${color}; color: white; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px;">${statusLabel}</span>
+                      <span style="background-color: ${color}; color: white; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px;">${statusLabel === 'PENDING' ? 'IN AFWACHTING' : 'BEVESTIGD'}</span>
                       <span style="color: #6b7280;">⏰ ${timeAgo}</span>
                     </div>
-                    <a href="https://www.google.com/maps?q=${alert.latitude},${alert.longitude}" target="_blank" style="display: block; text-align: center; background-color: #3b82f6; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">
+                    <a href="https://www.google.com/maps?q=${alert.latitude},${alert.longitude}" target="_blank" style="display: block; text-align: center; background-color: #2f7184; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">
                       📍 Open in Google Maps
                     </a>
-                    <a href="/admin/emergency-alerts" style="display: block; text-align: center; background-color: #dc2626; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 6px;">
-                      🚨 View All Alerts
+                    <a href="/admin/emergency-alerts" style="display: block; text-align: center; background-color: #dc2626; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 6px;">
+                      🚨 Bekijk Alle Meldingen
                     </a>
                   </div>
                 </div>
-              `);
+              `, {
+                maxWidth: 300,
+                className: 'emergency-sos-popup'
+              });
           });
         } // Close showEmergencyAlerts conditional
 

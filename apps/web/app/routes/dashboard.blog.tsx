@@ -139,20 +139,24 @@ export default function DashboardBlog() {
     ? (myStories as any[]).map((s: any) => ({
         _id: s.id,
         title: s.title,
+        slug: s.slug,
         excerpt: s.excerpt,
         participantName: `${(participant as any).first_name} ${(participant as any).last_name}`,
         publishedAt: s.published_at,
         likeCount: s.like_count || 0,
+        viewCount: s.view_count || 0,
       }))
     : (allStories as any[]).map((s: any) => ({
         _id: s.id,
         title: s.title,
+        slug: s.slug,
         excerpt: s.excerpt,
         participantName: s.participants 
           ? `${s.participants.first_name} ${s.participants.last_name}`
           : 'Onbekend',
         publishedAt: s.published_at,
         likeCount: s.like_count || 0,
+        viewCount: s.view_count || 0,
       }));
 
   return (
@@ -233,52 +237,61 @@ export default function DashboardBlog() {
             displayStories.map((story: any) => (
               <div
                 key={story._id}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105 overflow-hidden border border-gray-100"
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden border border-gray-100 flex flex-col"
               >
-                <div className="p-6">
+                <a href={`/dashboard/blog/${story.slug}`} className="block p-6 flex-1 hover:bg-gray-50 transition-colors">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                     {story.title}
                   </h3>
                   <p className="text-gray-600 mb-4 line-clamp-3 text-sm">
                     {story.excerpt}
                   </p>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4 border-t pt-3">
+                  <div className="flex items-center justify-between text-sm text-gray-500">
                     <span className="font-medium">{story.participantName}</span>
                     {story.publishedAt && (
-                      <span>{new Date(story.publishedAt).toLocaleDateString()}</span>
+                      <span>{new Date(story.publishedAt).toLocaleDateString('nl-NL')}</span>
                     )}
                   </div>
+                </a>
 
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center justify-between p-6 pt-0 border-t">
+                  <div className="flex items-center gap-4 text-gray-600 text-sm">
+                    <div className="flex items-center gap-1">
                       <Icon
                         name="heart"
-                        className={`w-5 h-5 transition-colors ${
+                        className={`w-4 h-4 ${
                           localLikes.has(story._id) ? 'fill-red-500 text-red-500' : ''
                         }`}
                       />
-                      <span className="text-sm font-medium">{story.likeCount}</span>
+                      <span className="font-medium">{story.likeCount}</span>
                     </div>
-
-                    {filter === 'all' && (
-                      <Form method="POST" className="flex gap-2">
-                        <input type="hidden" name="intent" value={localLikes.has(story._id) ? 'unlike' : 'like'} />
-                        <input type="hidden" name="storyId" value={story._id} />
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                            localLikes.has(story._id)
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          } disabled:opacity-50`}
-                          onClick={() => toggleLike(story._id)}
-                        >
-                          {localLikes.has(story._id) ? '❤' : '🤍'}
-                        </button>
-                      </Form>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <Icon name="eye" className="w-4 h-4" />
+                      <span>{story.viewCount || 0}</span>
+                    </div>
                   </div>
+
+                  {filter === 'all' && (
+                    <Form method="POST" className="flex gap-2">
+                      <input type="hidden" name="intent" value={localLikes.has(story._id) ? 'unlike' : 'like'} />
+                      <input type="hidden" name="storyId" value={story._id} />
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                          localLikes.has(story._id)
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        } disabled:opacity-50`}
+                        onClick={() => toggleLike(story._id)}
+                      >
+                        <Icon 
+                          name="heart" 
+                          className={`w-4 h-4 ${localLikes.has(story._id) ? 'fill-current' : ''}`}
+                        />
+                      </button>
+                    </Form>
+                  )}
                 </div>
               </div>
             ))

@@ -292,12 +292,12 @@ export default function LiveMap() {
 
             {isAdmin && emergencyAlerts && emergencyAlerts.length > 0 && (
               <div className="border-t pt-2">
-                <div className="font-medium text-red-600 mb-2 cursor-pointer hover:text-red-700 transition-colors animate-pulse" onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
-                  <span style={{opacity: showEmergencyAlerts ? 1 : 0.5}}>🚨 Emergency SOS ({emergencyAlerts.length})</span>
+                <div className="font-medium text-red-600 mb-2 cursor-pointer hover:text-red-700 transition-colors" onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
+                  <span style={{opacity: showEmergencyAlerts ? 1 : 0.5}}>🚨 Nood SOS ({emergencyAlerts.length})</span>
                 </div>
                 <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-red-600 transition-colors" style={{opacity: showEmergencyAlerts ? 1 : 0.5}} onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
                   <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
-                  <span className="text-red-600 font-medium">Active Alerts</span>
+                  <span className="text-red-600 font-medium">Actieve Meldingen</span>
                 </div>
               </div>
             )}
