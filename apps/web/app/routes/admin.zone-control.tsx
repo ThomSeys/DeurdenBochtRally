@@ -24,7 +24,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   // Get all rally zones with their open/close status (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZoneV2"] | order(order asc) {
+    *[_type == "rallyZone"] | order(order asc) {
       _id,
       title,
       "zoneNumber": order + 1,
@@ -418,7 +418,6 @@ export default function AdminZoneControl() {
           </h3>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Wanneer een zone gesloten is, kunnen rijders geen nieuwe scans voor die zone indienen</li>
-            <li>• Gesloten zones ontvangen automatisch gemiddelde shadow scores</li>
             <li>• De sluiting wordt gelogd met tijdstempel en reden</li>
             <li>• Zones kunnen heropend worden wanneer het probleem is opgelost</li>
             <li>• Gebruik dit voor wegafsluitingen, veiligheidskwesties of evenementstremomingen</li>

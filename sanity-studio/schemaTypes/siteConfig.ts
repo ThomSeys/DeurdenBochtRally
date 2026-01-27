@@ -146,6 +146,16 @@ export default defineType({
       initialValue: true,
     }),
     defineField({
+      name: 'gpxRouteFile',
+      title: 'GPX Route File (Legacy)',
+      type: 'file',
+      description: 'Legacy single GPX file - use gpxRouteFiles instead',
+      hidden: true,
+      options: {
+        accept: '.gpx',
+      },
+    }),
+    defineField({
       name: 'gpxRouteFiles',
       title: 'GPX Route Files',
       type: 'array',

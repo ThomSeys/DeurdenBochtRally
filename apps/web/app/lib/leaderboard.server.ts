@@ -1,12 +1,17 @@
 import { supabase } from '~/lib/supabase.server';
-import { sanityClient } from '~/lib/sanity.server';
 
 /**
- * Get participant ranks based on their total scores (basic points + shadow points)
+ * V1: Competition disabled - no rankings based on points
+ * This returns empty rankings for now
  * @param participantIds - Array of participant IDs to get ranks for
- * @returns Map of participant ID to rank number
+ * @returns Empty map (no competition in V1)
  */
 export async function getParticipantRanks(participantIds: string[]): Promise<Map<string, number>> {
+  // V1: No competition/rankings - return empty map
+  // Focus is on stories and experience, not points
+  return new Map();
+  
+  /* DISABLED CODE - kept for potential future competition mode
   try {
     if (participantIds.length === 0) {
       return new Map();
@@ -84,4 +89,5 @@ export async function getParticipantRanks(participantIds: string[]): Promise<Map
     console.error('[leaderboard.server] Error calculating participant ranks:', error);
     return new Map();
   }
+  */
 }

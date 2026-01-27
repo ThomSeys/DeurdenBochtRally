@@ -28,24 +28,28 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Fetch rally zones with GPX routes (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZoneV2"] | order(order asc) {
+    *[_type == "rallyZone"] | order(order asc) {
       _id,
       title,
       character,
-      "startLocation": {
-        "lat": start_location.coordinates.lat,
-        "lng": start_location.coordinates.lng,
-        "name": start_location.name,
-        "landmark_description": start_location.landmark_description
-      },
-      "endLocation": {
-        "lat": end_location.coordinates.lat,
-        "lng": end_location.coordinates.lng,
-        "name": end_location.name,
-        "landmark_description": end_location.landmark_description
-      },
+      color,
+      "startLocation": startPoint,
+      "endLocation": endPoint,
       "is_open": coalesce(is_active, true),
-      emergency_contact
+      emergency_contact,
+      routeTips[] {
+        name,
+        color,
+        locations[] {
+          name,
+          coordinates {
+            lat,
+            lng
+          },
+          type,
+          description
+        }
+      }
     }
   `);
 
@@ -55,11 +59,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select(`
       id,
       participant_id,
-      rally_zone_id,
-      action,
-      latitude,
-      longitude,
-      checked_at,
+      zone_id,
+      location_lat,
+      location_lng,
+      checked_in_at,
       participants (
         first_name,
         last_name,
@@ -67,7 +70,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         motorcycle_model
       )
     `)
-    .order('checked_at', { ascending: false });
+    .order('checked_in_at', { ascending: false });
 
   if (checkInError) {
     console.error('[live-map] checkIn fetch error:', checkInError);
@@ -92,22 +95,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
   let emergencyAlerts: any[] = [];
   if (isAdmin) {
     const { data: alerts, error: alertsError } = await supabaseAdmin
-      .from('emergency_sos_alerts' as any)
+      .from('emergency_sos')
       .select(`
         id,
         participant_id,
-        latitude,
-        longitude,
+        location_lat,
+        location_lng,
         status,
+        message,
         created_at,
-        participants!emergency_sos_alerts_participant_id_fkey (
+        participants!emergency_sos_participant_id_fkey (
           first_name,
           last_name,
           phone,
           email
         )
       `)
-      .in('status', ['pending', 'acknowledged'])
+      .eq('status', 'active')
       .order('created_at', { ascending: false });
     
     if (alertsError) {
@@ -121,7 +125,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Fetch GPX route file
   const siteConfig = await sanityClient.fetch(`
     *[_type == "siteConfig"][0] {
-      gpxRouteFile {
+      gpxRouteFiles[] {
         asset-> {
           url
         }
@@ -137,7 +141,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       markers: eventMarkers?.length ?? 0,
       checkIns: checkIns?.length ?? 0,
       checkInsData: checkIns,
-      hasGpx: Boolean(siteConfig?.gpxRouteFile?.asset?.url),
+      hasGpx: Boolean(siteConfig?.gpxRouteFiles?.[0]?.asset?.url),
       isAdmin,
       isEventDay,
     });
@@ -146,7 +150,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       rallyZones,
       eventMarkers,
       emergencyAlerts,
-      gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
+      gpxRouteUrl: siteConfig?.gpxRouteFiles?.[0]?.asset?.url,
       checkIns: checkIns || [],
       isAdmin,
       isEventDay,
@@ -191,7 +195,7 @@ export default function LiveMap() {
     const interval = setInterval(() => {
       revalidator.revalidate();
       setLastUpdate(new Date());
-    }, 10000); // 10 seconds
+    }, 60000); // 60 seconds
 
     return () => clearInterval(interval);
   }, [revalidator]);

@@ -19,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Get rally zones (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZoneV2"] | order(order asc) {
+    *[_type == "rallyZone"] | order(order asc) {
       _id,
       title,
       "zoneNumber": order + 1,
@@ -59,12 +59,10 @@ export async function action({ request }: ActionFunctionArgs) {
       .from('rally_zone_checkins')
       .insert({
         participant_id: participantId,
-        rally_zone_id: rallyZoneId,
-        action: action,
-        qr_code: `MANUAL-${action}-${Date.now()}`,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
-        checked_at: timestamp,
+        zone_id: rallyZoneId,
+        location_lat: latitude ? parseFloat(latitude) : null,
+        location_lng: longitude ? parseFloat(longitude) : null,
+        checked_in_at: timestamp,
       })
       .select()
       .single();

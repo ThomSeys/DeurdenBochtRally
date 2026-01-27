@@ -9,11 +9,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
 
   // Get all emergency SOS alerts
-  const { data: alerts } = await (supabaseAdmin as any)
-    .from('emergency_sos_alerts')
+  const { data: alerts } = await supabaseAdmin
+    .from('emergency_sos')
     .select(`
       *,
-      participants!participant_id (
+      participants (
         first_name,
         last_name,
         phone,
@@ -37,23 +37,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     if (intent === 'acknowledge') {
-      await (supabaseAdmin as any)
-        .from('emergency_sos_alerts')
-        .update({
-          status: 'acknowledged',
-          acknowledged_by: adminId,
-          acknowledged_at: new Date().toISOString(),
-        })
-        .eq('id', alertId);
-    } else if (intent === 'resolve') {
-      const notes = formData.get('notes') as string;
-      await (supabaseAdmin as any)
-        .from('emergency_sos_alerts')
+      await supabaseAdmin
+        .from('emergency_sos')
         .update({
           status: 'resolved',
           resolved_by: adminId,
           resolved_at: new Date().toISOString(),
-          resolution_notes: notes || null,
+        })
+        .eq('id', alertId);
+    } else if (intent === 'resolve') {
+      const notes = formData.get('notes') as string;
+      await supabaseAdmin
+        .from('emergency_sos')
+        .update({
+          status: 'resolved',
+          resolved_by: adminId,
+          resolved_at: new Date().toISOString(),
         })
         .eq('id', alertId);
     }

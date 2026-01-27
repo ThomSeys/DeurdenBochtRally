@@ -1,4 +1,7 @@
-// Rally Zone validation and points calculation with 3-tier system
+// Rally Zone validation and points calculation - DISABLED FOR V1
+// V1 Focus: Stories and experience, not competition
+// Points system kept for potential future use but not active
+// 
 // Type A (Short): 5-8 km, 1 checkpoint = 12 points
 // Type B (Medium): 15-25 km, 2 checkpoints = 20 points (10 per checkpoint)
 // Type C (Long): 30-45 km, 3 checkpoints = 35 points (12+12+11)
@@ -31,6 +34,12 @@ export function calculateRallyPoints(submission: {
   medium_zones_completed?: number | null;
   long_zones_completed?: number | null;
 }): number {
+  // V1: Points system disabled - focus on stories and experience
+  // Return 0 for all submissions
+  // This function is kept for potential future competition mode
+  return 0;
+  
+  /* DISABLED CODE - kept for future reference
   let points = 0;
 
   // New calculation method if zone type data is available
@@ -103,6 +112,8 @@ export function calculateRallyPoints(submission: {
   }
 
   return points;
+}
+*/
 }
 
 export function formatDistance(km: number): string {

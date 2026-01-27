@@ -30,6 +30,7 @@ export default [
   route("dashboard/blog/:slug", "routes/dashboard.blog.$slug.tsx"),
   route("dashboard/notification-history", "routes/dashboard.notification-history.tsx"),
   route("dashboard/privacy", "routes/dashboard.privacy.tsx"),
+  route("dashboard/rally-submission", "routes/dashboard.rally-submission.tsx"),
   
   // Zones
   

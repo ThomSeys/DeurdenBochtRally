@@ -18,27 +18,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   const url = new URL(request.url);
   const zoneFilter = url.searchParams.get('zone') || 'all';
-  const statusFilter = url.searchParams.get('status') || 'all';
 
-  // Get correct answers from Sanity
-  const rallyZones = await sanityClient.fetch(
-    `*[_type == "rallyZone"] | order(order asc) {
-      order,
-      solution,
-      validAnswers,
-    }`
-  );
-
-  // Create a map of zone -> correct code and valid answers
-  const correctAnswers: Record<number, string> = {};
-  const validAnswersMap: Record<number, string[]> = {};
-  
-  rallyZones.forEach((zone: any) => {
-    correctAnswers[zone.order] = zone.solution?.toLowerCase().trim() || '';
-    validAnswersMap[zone.order] = (zone.validAnswers || []).map((ans: string) => ans.toLowerCase().trim());
-  });
-
-  // Get all zone submissions (primary data source) with participant info
+  // V1: Simplified - no code validation, just track visits
+  // Get all zone submissions with participant info
   const { data: zoneSubmissions } = await supabaseAdmin
     .from('rally_zone_submissions')
     .select(`
@@ -52,27 +34,27 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `)
     .order('created_at', { ascending: false });
 
-  // Get all rally submissions (aggregated data with zone codes)
+  // Get all rally submissions for zone codes
   const { data: rallySubmissions } = await supabaseAdmin
     .from('rally_submissions')
     .select('participant_id, rz1_code, rz2_code, rz3_code, rz4_code, rz5_code, rz6_code, rz7_code, rz8_code, submitted_at');
 
-  // Create a map for quick lookup: participantId -> rally submission with codes
+  // Create a map: participantId -> rally submission
   const rallySubmissionMap: Record<string, any> = {};
   rallySubmissions?.forEach((rs: any) => {
     rallySubmissionMap[rs.participant_id] = rs;
   });
 
-  // Group by participant AND zone - create one record per zone per participant with all checkpoint answers
+  // Group submissions by participant and zone
   const zoneSubmissionsGrouped: Map<string, any> = new Map();
   
   zoneSubmissions?.forEach((zoneSubmission: any) => {
     const zoneId = parseInt(zoneSubmission.zone_id);
     const participantId = zoneSubmission.participant_id;
     const checkpointNumber = zoneSubmission.checkpoint_number || 1;
-    const key = `${participantId}-${zoneId}`; // Unique key per participant per zone
+    const key = `${participantId}-${zoneId}`;
     
-    // Get or create zone record for this participant
+    // Get or create zone record
     if (!zoneSubmissionsGrouped.has(key)) {
       const rallySubmission = rallySubmissionMap[participantId];
       zoneSubmissionsGrouped.set(key, {
@@ -86,55 +68,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
     
     const groupedRecord = zoneSubmissionsGrouped.get(key);
-    
-    // Get the rally submission for this participant to find the submitted code
-    // Note: There's one code per zone (not per checkpoint), stored in rally_submissions table
     const rallySubmission = rallySubmissionMap[participantId];
     const zoneCode = rallySubmission?.[`rz${zoneId}_code`] || '';
     
-    // For multi-checkpoint zones, the code might be in format "answer1|answer2|answer3"
-    // Split and get the answer for this specific checkpoint
+    // For multi-checkpoint zones: "answer1|answer2|answer3"
     const codeParts = zoneCode.split('|').map((c: string) => c.trim());
     const code = codeParts[checkpointNumber - 1] || codeParts[0] || '';
     
-    // Check correctness
-    const submittedCode = code.toLowerCase().trim();
-    const correctCode = correctAnswers[zoneId - 1] || '';
-    const validCodes = validAnswersMap[zoneId - 1] || [];
-    const isCorrect = submittedCode === correctCode || validCodes.includes(submittedCode);
-    
-    // Store checkpoint data
+    // Store checkpoint data (no validation in V1)
     groupedRecord.checkpoints[checkpointNumber] = {
       code: code,
-      is_correct: isCorrect,
-      correct_answer: correctCode || 'Niet beschikbaar',
-      shadow_score: zoneSubmission.shadow_score,
-      rhythm_score: zoneSubmission.rhythm_score,
-      view_score: zoneSubmission.view_score,
-      answer_accuracy: zoneSubmission.answer_accuracy,
       created_at: zoneSubmission.created_at
     };
   });
 
-  // Convert to array and apply filters
+  // Convert to array and apply zone filter
   const submissions = Array.from(zoneSubmissionsGrouped.values()).filter((submission) => {
-    // Zone filter
     if (zoneFilter !== 'all' && submission.zone_id !== parseInt(zoneFilter)) {
       return false;
     }
-    
-    // Status filter
-    if (statusFilter !== 'all') {
-      const hasMatchingCheckpoint = Object.values(submission.checkpoints).some((checkpoint: any) => {
-        if (statusFilter === 'correct' && checkpoint.is_correct) return true;
-        if (statusFilter === 'incorrect' && !checkpoint.is_correct) return true;
-        return false;
-      });
-      if (!hasMatchingCheckpoint) {
-        return false;
-      }
-    }
-    
     return true;
   });
 
@@ -145,25 +97,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return dateB - dateA;
   });
 
-  // Calculate max checkpoints needed for display
+  // Calculate max checkpoints for display
   const maxCheckpoints = Math.max(
     ...submissions.map(s => Object.keys(s.checkpoints).length),
-    1 // Minimum 1 checkpoint
+    1
   );
 
   const uniqueZones = [1, 2, 3, 4, 5, 6, 7, 8];
 
   return { 
     submissions, 
-    zoneFilter, 
-    statusFilter,
+    zoneFilter,
     uniqueZones,
     maxCheckpoints
   };
 }
 
 export default function AdminSubmissions() {
-  const { submissions, zoneFilter, statusFilter, uniqueZones, maxCheckpoints } = useLoaderData<typeof loader>();
+  const { submissions, zoneFilter, uniqueZones, maxCheckpoints } = useLoaderData<typeof loader>();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,16 +129,16 @@ export default function AdminSubmissions() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="document" className="w-10 h-10" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">Rally Code Submissions</h1>
-          <p className="text-xl text-primary-100">Bekijk en beheer alle inzendingen</p>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">Rally Zone Bezoeken</h1>
+          <p className="text-xl text-primary-100">Bekijk wie welke zones heeft bezocht</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Rally Code Submissions</h1>
-            <p className="text-gray-600 mt-2">{submissions.length} inzendingen gevonden</p>
+            <h1 className="text-3xl font-bold text-gray-900">Zone Bezoeken</h1>
+            <p className="text-gray-600 mt-2">{submissions.length} bezoeken geregistreerd</p>
           </div>
           <Link
             to="/admin"
@@ -217,23 +168,6 @@ export default function AdminSubmissions() {
                     Rally Zone {zone}
                   </option>
                 ))}
-              </select>
-            </div>
-
-            <div className="flex-1 min-w-[200px]">
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={statusFilter}
-                onChange={(e) => e.currentTarget.form?.requestSubmit()}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              >
-                <option value="all">Alle statussen</option>
-                <option value="correct">Correct</option>
-                <option value="incorrect">Incorrect</option>
               </select>
             </div>
           </Form>
@@ -285,24 +219,14 @@ export default function AdminSubmissions() {
                       return (
                         <td key={checkpointNum} className="px-4 py-4">
                           <div className="flex flex-col items-center gap-1">
-                            <code className={`px-2 py-1 rounded text-xs font-mono ${
-                              checkpoint.is_correct 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <code className="px-2 py-1 rounded text-xs font-mono bg-gray-100 text-gray-800">
                               {checkpoint.code || '-'}
                             </code>
-                            <div className="text-xs text-gray-500 space-y-0.5">
-                              {checkpoint.answer_accuracy !== null && checkpoint.answer_accuracy !== undefined && (
-                                <div className="text-orange-600 font-semibold">
-                                  {checkpoint.answer_accuracy.toFixed(1)} meter
-                                </div>
-                              )}
-                              {checkpoint.shadow_score !== null && checkpoint.shadow_score !== undefined && (
-                                <div className="text-purple-600 font-bold">
-                                  Score: {checkpoint.shadow_score.toFixed(1)}
-                                </div>
-                              )}
+                            <div className="text-xs text-gray-400">
+                              {new Date(checkpoint.created_at).toLocaleTimeString('nl-BE', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
                             </div>
                           </div>
                         </td>

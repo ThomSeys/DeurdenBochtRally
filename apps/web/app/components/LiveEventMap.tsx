@@ -20,6 +20,16 @@ interface RallyZone {
       url: string;
     };
   };
+  routeTips?: Array<{
+    name: string;
+    color?: string;
+    locations?: Array<{
+      name: string;
+      coordinates: { lat: number; lng: number };
+      type: string;
+      description?: string;
+    }>;
+  }>;
 }
 
 interface EventMarker {
@@ -34,13 +44,12 @@ interface EventMarker {
 }
 
 interface CheckIn {
+  id: string;
   participant_id: string;
-  zone_id: number;
-  entry_latitude: number;
-  entry_longitude: number;
-  answer_latitude: number | null;
-  answer_longitude: number | null;
-  created_at: string;
+  zone_id: string;
+  location_lat: number | null;
+  location_lng: number | null;
+  checked_in_at: string;
   participants?: {
     first_name: string;
     last_name: string;
@@ -206,16 +215,16 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
         // Add check-in markers (only for admins)
         if (showCheckIns && isAdmin) {
           checkIns.forEach((checkIn) => {
-          if (checkIn.entry_latitude && checkIn.entry_longitude) {
-            // Entry point (start)
-            const entryIcon = L.default.divIcon({
+          if (checkIn.location_lat && checkIn.location_lng) {
+            // Zone check-in marker
+            const checkInIcon = L.default.divIcon({
               html: `<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">📍</div>`,
               className: '',
               iconSize: [20, 20],
               iconAnchor: [10, 10],
             });
 
-            L.default.marker([checkIn.entry_latitude, checkIn.entry_longitude], { icon: entryIcon })
+            L.default.marker([checkIn.location_lat, checkIn.location_lng], { icon: checkInIcon })
               .addTo(mapRef.current)
               .bindPopup(`
                 <div style="min-width: 200px;">
@@ -223,34 +232,9 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                   <span style="color: #666; font-size: 12px;">
                     ${checkIn.participants?.motorcycle_brand} ${checkIn.participants?.motorcycle_model}
                   </span><br/>
-                  <span style="color: #10b981; font-weight: bold; font-size: 11px;">📍 Zone Entry</span><br/>
+                  <span style="color: #10b981; font-weight: bold; font-size: 11px;">📍 Zone Check-in</span><br/>
                   <span style="color: #666; font-size: 11px;">
-                    ${new Date(checkIn.created_at).toLocaleTimeString()}
-                  </span>
-                </div>
-              `);
-          }
-
-          // Answer/submission point (if exists)
-          if (checkIn.answer_latitude && checkIn.answer_longitude) {
-            const answerIcon = L.default.divIcon({
-              html: `<div style="background-color: #f59e0b; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">✓</div>`,
-              className: '',
-              iconSize: [20, 20],
-              iconAnchor: [10, 10],
-            });
-
-            L.default.marker([checkIn.answer_latitude, checkIn.answer_longitude], { icon: answerIcon })
-              .addTo(mapRef.current)
-              .bindPopup(`
-                <div style="min-width: 200px;">
-                  <strong>${checkIn.participants?.first_name} ${checkIn.participants?.last_name}</strong><br/>
-                  <span style="color: #666; font-size: 12px;">
-                    ${checkIn.participants?.motorcycle_brand} ${checkIn.participants?.motorcycle_model}
-                  </span><br/>
-                  <span style="color: #f59e0b; font-weight: bold; font-size: 11px;">✓ Code Submission</span><br/>
-                  <span style="color: #666; font-size: 11px;">
-                    ${new Date(checkIn.created_at).toLocaleTimeString()}
+                    ${new Date(checkIn.checked_in_at).toLocaleTimeString()}
                   </span>
                 </div>
               `);
@@ -323,12 +307,13 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
             };
             const color = colorMap[zone.color] || '#4F46E5';
 
-            // Start point marker only
+            // Start point marker - always visible, green background with flag SVG
+            const flagSvg = '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>';
             const startIcon = L.default.divIcon({
-              html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: bold;">S</div>`,
+              html: `<div style="background-color: #22c55e; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">${flagSvg}</div>`,
               className: '',
-              iconSize: [28, 28],
-              iconAnchor: [14, 14],
+              iconSize: [32, 32],
+              iconAnchor: [16, 16],
             });
 
             const statusBadge = zone.is_open 
@@ -345,18 +330,18 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                     ${statusBadge}
                   </div>
                   <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                    📍 Start Point
+                    🏁 Zone Start
                   </div>
                 </div>
               `);
 
-            // Add end point marker only for admins
-            if (isAdmin && zone.endLocation) {
+            // End point marker - always visible, red background with flag SVG
+            if (zone.endLocation && zone.endLocation.lat && zone.endLocation.lng) {
               const endIcon = L.default.divIcon({
-                html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: bold;">E</div>`,
+                html: `<div style="background-color: #ef4444; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">${flagSvg}</div>`,
                 className: '',
-                iconSize: [28, 28],
-                iconAnchor: [14, 14],
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
               });
 
               L.default.marker([zone.endLocation.lat, zone.endLocation.lng], { icon: endIcon })
@@ -369,7 +354,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                       ${statusBadge}
                     </div>
                     <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                      🏁 End Point
+                      🏁 Zone Einde
                     </div>
                   </div>
                 `);
@@ -402,6 +387,66 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                         </div>
                       </div>
                     `);
+                }
+              });
+            }
+
+            // Add routeTip location markers
+            if (zone.routeTips && zone.routeTips.length > 0) {
+              const defaultTipColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+              
+              zone.routeTips.forEach((tip, tipIndex) => {
+                if (tip.locations && tip.locations.length > 0) {
+                  const tipColor = tip.color || defaultTipColors[tipIndex % defaultTipColors.length];
+                  
+                  tip.locations.forEach((location) => {
+                    // Skip locations without valid coordinates
+                    if (!location.coordinates || !location.coordinates.lat || !location.coordinates.lng) {
+                      console.warn('⚠️ Location missing coordinates:', location.name, location.coordinates);
+                      return;
+                    }
+
+                    // SVG icons for location types
+                    const locationIcon = 
+                      location.type === 'highlight' ? 
+                        '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>' :
+                      location.type === 'warning' ? 
+                        '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>' :
+                      location.type === 'photo' ? 
+                        '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>' :
+                        '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>';
+
+                    const tipLocationIcon = L.default.divIcon({
+                      html: `<div style="background-color: ${tipColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">${locationIcon}</div>`,
+                      className: '',
+                      iconSize: [30, 30],
+                      iconAnchor: [15, 15],
+                    });
+
+                    const typeLabel = 
+                      location.type === 'start' ? 'Start punt' :
+                      location.type === 'end' ? 'Eind punt' :
+                      location.type === 'highlight' ? 'Highlight' :
+                      location.type === 'warning' ? 'Waarschuwing' :
+                      location.type === 'photo' ? 'Foto Spot' :
+                      'Waypoint';
+
+                    L.default.marker([location.coordinates.lat, location.coordinates.lng], { icon: tipLocationIcon })
+                      .addTo(mapRef.current)
+                      .bindPopup(`
+                        <div style="min-width: 200px;">
+                          <div style="font-weight: bold; color: ${tipColor}; margin-bottom: 4px; font-size: 13px;">
+                            ${tip.name}
+                          </div>
+                          <strong style="font-size: 15px;">${location.name}</strong><br/>
+                          <span style="color: #666; font-size: 12px;">${zone.title}</span><br/>
+                          <div style="margin-top: 8px; padding: 6px 8px; background: ${tipColor}20; border-radius: 4px; font-size: 12px; color: #374151;">
+                            ${typeLabel}
+                          </div>
+                          ${location.description ? `<div style="margin-top: 8px; font-size: 12px; color: #6b7280;">${location.description}</div>` : ''}
+                        </div>
+                      `);
+                  });
                 }
               });
             }

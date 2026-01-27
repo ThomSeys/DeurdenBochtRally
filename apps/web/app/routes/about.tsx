@@ -151,8 +151,7 @@ export default function About() {
                   
                   {story.highlights && story.highlights.length > 0 && (
                     <div 
-                      className="grid gap-4"
-                      style={{ gridTemplateColumns: `repeat(${Math.min(story.highlights.length, 4)}, minmax(0, 1fr))` }}
+                      className={`grid grid-cols-2 gap-4 md:grid-cols-${Math.min(story.highlights.length, 4)}`}
                     >
                       {story.highlights.map((highlight: any, idx: number) => (
                         <div 

@@ -8,11 +8,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select(`
       id,
       participant_id,
-      rally_zone_id,
-      action,
-      latitude,
-      longitude,
-      checked_at,
+      zone_id,
+      location_lat,
+      location_lng,
+      checked_in_at,
       created_at,
       participants (
         first_name,
@@ -21,7 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         motorcycle_model
       )
     `)
-    .order('checked_at', { ascending: false });
+    .order('checked_in_at', { ascending: false });
 
   return new Response(JSON.stringify(checkIns || []), {
     headers: {

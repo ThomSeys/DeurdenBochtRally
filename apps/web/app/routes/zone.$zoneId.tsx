@@ -36,7 +36,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 
     // Get the zone from Sanity to verify it exists
     const zone = await sanityClient.fetch(
-      `*[_type == "rallyZoneV2" && order == $order][0] {
+      `*[_type == "rallyZone" && order == $order][0] {
         _id,
         title,
         is_active
@@ -58,45 +58,28 @@ export async function action({ params, request }: ActionFunctionArgs) {
       return { error: 'Ongeldige actie' };
     }
 
-    // For check-in, verify they haven't already checked in (skip for admins)
-    if (action === 'CHECKIN' && !user.is_admin) {
+    // Check if already checked in (Concept B: one check-in per zone)
+    if (!user.is_admin) {
       const { data: existingCheckIn } = await supabaseAdmin
         .from('rally_zone_checkins')
         .select('id')
         .eq('participant_id', user.id)
-        .eq('rally_zone_id', zone._id)
-        .eq('action', 'CHECKIN')
-        .order('checked_at', { ascending: false })
-        .limit(1)
+        .eq('zone_id', zone._id)
         .single();
 
-      // Check if there's a matching checkout
       if (existingCheckIn) {
-        const { data: checkout } = await supabaseAdmin
-          .from('rally_zone_checkins')
-          .select('id')
-          .eq('participant_id', user.id)
-          .eq('rally_zone_id', zone._id)
-          .eq('action', 'CHECKOUT')
-          .gt('checked_at', existingCheckIn.checked_at)
-          .single();
-
-        if (!checkout) {
-          return { error: 'Je hebt hier al ingecheckt zonder uit te checken' };
-        }
+        return { error: 'Je hebt deze zone al bezocht!' };
       }
     }
 
-    // Create check-in/checkout
+    // Create check-in
     const { error: insertError } = await supabaseAdmin
       .from('rally_zone_checkins')
       .insert({
         participant_id: user.id,
-        rally_zone_id: zone._id,
-        action: action,
-        qr_code: qrCode || `${action}-${Date.now()}`,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
+        zone_id: zone._id,
+        location_lat: latitude ? parseFloat(latitude) : null,
+        location_lng: longitude ? parseFloat(longitude) : null,
       });
 
     if (insertError) {
@@ -128,7 +111,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   // Get zone from Sanity
   const zone = await sanityClient.fetch(
-    `*[_type == "rallyZoneV2" && order == $order][0] {
+    `*[_type == "rallyZone" && order == $order][0] {
       _id,
       title,
       order,
@@ -151,7 +134,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   // Get next zone for navigation after checkout
   const nextZone = await sanityClient.fetch(
-    `*[_type == "rallyZoneV2" && order == $nextOrder][0] {
+    `*[_type == "rallyZone" && order == $nextOrder][0] {
       _id,
       title,
       order
@@ -159,15 +142,15 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     { nextOrder: zoneOrder + 1 }
   );
 
-  // Get user's check-ins for this zone
+  // Get user's check-in for this zone
   let checkIns = null;
   if (user) {
     const { data } = await supabaseAdmin
       .from('rally_zone_checkins')
       .select('*')
       .eq('participant_id', user.id)
-      .eq('rally_zone_id', zone._id)
-      .order('checked_at', { ascending: false });
+      .eq('zone_id', zone._id)
+      .order('checked_in_at', { ascending: false });
     
     checkIns = data;
   }

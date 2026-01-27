@@ -1,5 +1,5 @@
 import { createCookieSessionStorage, redirect } from 'react-router';
-import { supabase } from './supabase.server';
+import { supabaseAdmin } from './supabase.server';
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET is required');
@@ -55,7 +55,7 @@ export async function getUser(request: Request) {
   const userId = await getUserId(request);
   if (userId === undefined) return null;
 
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from('participants')
     .select('*, is_admin')
     .eq('id', userId)
@@ -67,7 +67,7 @@ export async function getUser(request: Request) {
 export async function requireAdmin(request: Request) {
   const userId = await requireUserId(request);
   
-  const { data: user } = await supabase
+  const { data: user } = await supabaseAdmin
     .from('participants')
     .select('is_admin')
     .eq('id', userId)
@@ -81,9 +81,6 @@ export async function requireAdmin(request: Request) {
 }
 
 export async function logout(request: Request) {
-  // Sign out from Supabase Auth
-  await supabase.auth.signOut();
-
   // Destroy the session cookie
   const session = await getUserSession(request);
   return redirect('/', {

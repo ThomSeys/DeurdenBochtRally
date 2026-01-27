@@ -3,7 +3,7 @@ import sponsor from './sponsor';
 import siteConfig from './siteConfig';
 import stat from './stat';
 import pricingTier from './pricingTier';
-// import rallyZone from './rallyZone'; // DEPRECATED - Concept A (zone codes, GPS validation) - Use rallyZoneV2 for Concept B
+import rallyZone from './rallyZone';
 import pageContent from './pageContent';
 import scheduleItem from './scheduleItem';
 import faqItem from './faqItem';
@@ -18,7 +18,7 @@ export const schemaTypes = [
   siteConfig,
   stat,
   pricingTier,
-  // rallyZone, // HIDDEN - Concept A legacy schema
+  rallyZone,
   pageContent,
   scheduleItem,
   faqItem,

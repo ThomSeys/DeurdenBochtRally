@@ -48,6 +48,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const licensePlate = formData.get('licensePlate');
     const formula = formData.get('formula');
     const rideType = formData.get('rideType');
+    const routePreference = formData.get('routePreference');
 
     if (
       typeof firstName !== 'string' ||
@@ -59,7 +60,8 @@ export async function action({ request }: ActionFunctionArgs) {
       typeof motorcycleModel !== 'string' ||
       typeof licensePlate !== 'string' ||
       typeof formula !== 'string' ||
-      typeof rideType !== 'string'
+      typeof rideType !== 'string' ||
+      typeof routePreference !== 'string'
     ) {
       return {  error: 'Alle velden zijn verplicht', status: 400 };
     }
@@ -70,6 +72,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (!['with_meals', 'breakfast_only'].includes(formula)) {
       return {  error: 'Ongeldige formule geselecteerd', status: 400 };
+    }
+
+    if (!['rally_zones', 'complete_route'].includes(routePreference)) {
+      return {  error: 'Ongeldige route voorkeur geselecteerd', status: 400 };
     }
 
     // Ride type is always 'free' - no guided rides offered
@@ -114,6 +120,7 @@ export async function action({ request }: ActionFunctionArgs) {
         license_plate: licensePlate.toUpperCase(),
         formula,
         ride_type: rideType,
+        route_preference: routePreference,
         amount_paid: amount,
         qr_code: qrCode,
         payment_status: 'pending',
@@ -372,6 +379,83 @@ export default function Registration() {
                       </div>
                     </label>
                   ))}
+                </div>
+              </div>
+
+              {/* Route Preference Selection */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Kies je route voorkeur *</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Kies hoe je de rit wil beleven: met optionele rally zones voor een avontuurlijke ervaring, of de complete route zonder uitdagingen.
+                </p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <label className="relative flex cursor-pointer rounded-sm border p-4 focus:outline-none border-primary-600 ring-2 ring-primary-600 bg-primary-50">
+                    <input
+                      type="radio"
+                      name="routePreference"
+                      value="rally_zones"
+                      className="sr-only"
+                      defaultChecked
+                    />
+                    <div className="flex flex-1 flex-col">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">🎯</span>
+                        <span className="text-xs font-semibold text-primary-700 bg-primary-100 px-2 py-1 rounded-full">AANBEVOLEN</span>
+                      </div>
+                      <span className="block text-lg font-semibold text-gray-900 mb-2">Adventure Track</span>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li className="flex items-start">
+                          <span className="text-primary-600 mr-1">✓</span>
+                          Complete route met 8 optionele rally zones
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary-600 mr-1">✓</span>
+                          Check-in via QR codes bij elke zone
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary-600 mr-1">✓</span>
+                          Deel foto's en verhalen met de community
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary-600 mr-1">✓</span>
+                          Ontgrendel achievements
+                        </li>
+                      </ul>
+                    </div>
+                  </label>
+
+                  <label className="relative flex cursor-pointer rounded-sm border p-4 focus:outline-none border-gray-300 hover:border-gray-400">
+                    <input
+                      type="radio"
+                      name="routePreference"
+                      value="complete_route"
+                      className="sr-only"
+                    />
+                    <div className="flex flex-1 flex-col">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">🗺️</span>
+                      </div>
+                      <span className="block text-lg font-semibold text-gray-900 mb-2">Complete Route</span>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li className="flex items-start">
+                          <span className="text-gray-400 mr-1">✓</span>
+                          Volledige uitgewerkte route zonder stops
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-gray-400 mr-1">✓</span>
+                          Geen check-ins of QR codes
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-gray-400 mr-1">✓</span>
+                          Rij in je eigen tempo
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-gray-400 mr-1">✓</span>
+                          Focus op de rit zelf
+                        </li>
+                      </ul>
+                    </div>
+                  </label>
                 </div>
               </div>
 

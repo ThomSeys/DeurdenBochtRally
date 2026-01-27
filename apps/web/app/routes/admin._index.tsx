@@ -128,7 +128,7 @@ export default function AdminDashboard() {
             <Icon name="settings" className="w-10 h-10" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-xl text-primary-100">Beheer deelnemers, scores en evenementen</p>
+          <p className="text-xl text-primary-100">Beheer deelnemers en evenementen</p>
         </div>
       </div>
 
@@ -312,14 +312,14 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Beheer alle deelnemers</p>
           </Link>
 
-          <Link
+          {/* <Link
             to="/admin/submissions"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="document" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Inzendingen</h3>
             <p className="text-sm text-white mt-1">Bekijk rally codes</p>
-          </Link>
+          </Link> */}
 
           <Link
             to="/admin/check-in"
@@ -328,15 +328,6 @@ export default function AdminDashboard() {
             <Icon name="check" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Check-in</h3>
             <p className="text-sm text-white mt-1">Scan QR codes</p>
-          </Link>
-
-          <Link
-            to="/admin/leaderboard"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="trophy" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Klassement</h3>
-            <p className="text-sm text-white mt-1">Live scoreboard</p>
           </Link>
 
           <Link
@@ -393,6 +384,7 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Bekijk noodoproepen</p>
           </Link>
 
+          {/* V1: Reports page not implemented
           <Link
             to="/admin/reports"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
@@ -401,7 +393,9 @@ export default function AdminDashboard() {
             <h3 className="font-semibold text-white">Rapporten</h3>
             <p className="text-sm text-white mt-1">Genereer en beheer rapporten</p>
           </Link>
+          */}
 
+          {/* V1: Analytics page not implemented
           <Link
             to="/admin/analytics"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
@@ -410,6 +404,7 @@ export default function AdminDashboard() {
             <h3 className="font-semibold text-white">Analytics</h3>
             <p className="text-sm text-white mt-1">Statistieken en grafieken</p>
           </Link>
+          */}
 
           <Link
             to="/admin/settings"
@@ -469,7 +464,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Top Scorers */}
+          {/* Top Check-ins */}
           <div className="bg-white rounded-sm shadow">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">Top 10 Check-ins</h2>
@@ -501,11 +496,13 @@ export default function AdminDashboard() {
                 ))
               )}
             </div>
+            {/* V1: my-day link removed - page doesn't exist
             <div className="p-4 border-t border-gray-200">
               <Link to="/my-day" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
                 Bekijk rally geschiedenis →
               </Link>
             </div>
+            */}
           </div>
         </div>
       </div>

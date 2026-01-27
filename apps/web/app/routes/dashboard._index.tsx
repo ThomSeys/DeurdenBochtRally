@@ -31,12 +31,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  // Get rally submission if exists
-  const { data: submission } = await supabase
-    .from('rally_submissions')
+  // Get zone check-ins (Concept B)
+  const { data: zoneCheckins } = await supabase
+    .from('rally_zone_checkins')
     .select('*')
-    .eq('participant_id', user.id)
-    .single();
+    .eq('participant_id', user.id);
 
   // Get documents
   const { data: documents } = await supabase
@@ -55,86 +54,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   `);
 
-  // Count completed zones
-  const completedZones = submission
-    ? [
-        submission.rz1_code,
-        submission.rz2_code,
-        submission.rz3_code,
-        submission.rz4_code,
-        submission.rz5_code,
-        submission.rz6_code,
-        submission.rz7_code,
-        submission.rz8_code,
-      ].filter((code) => code && code.trim()).length
-    : 0;
+  // Count completed zones (unique zone IDs)
+  const completedZones = zoneCheckins ? new Set(zoneCheckins.map(c => c.zone_id)).size : 0;
 
-  // Check if user is in first place (Bochtenkoning)
-  let isBochtenkoning = false;
-  if (submission) {
-    // Get rally zones with points from Sanity
-    const rallyZones = await sanityClient.fetch(
-      `*[_type == "rallyZone"] | order(order asc) {
-        order,
-        points,
-        validAnswers
-      }`
-    );
+  // V1: No competition/ranking - disabled for story-focused experience
+  const isBochtenkoning = false;
 
-    // Get all rally submissions
-    const { data: allSubmissions } = await supabase
-      .from('rally_submissions')
-      .select('participant_id, rz1_code, rz2_code, rz3_code, rz4_code, rz5_code, rz6_code, rz7_code, rz8_code');
-
-    // Get shadow scores
-    const { data: shadowScores } = await supabase
-      .from('rally_zone_submissions')
-      .select('participant_id, shadow_score');
-
-    // Get achievement points
-    const { data: achievementPoints } = await supabase
-      .from('participants')
-      .select('id, total_achievement_points');
-
-    // Calculate scores for all participants (including achievements)
-    const scores = (allSubmissions || []).map(sub => {
-      let basicPoints = 0;
-      let shadowTotal = 0;
-
-      // Basic points
-      for (let i = 1; i <= 8; i++) {
-        const code = sub[`rz${i}_code` as keyof typeof sub] as string | null;
-        if (code) {
-          const zone = rallyZones[i - 1];
-          const isCorrect = zone?.validAnswers?.some((answer: string) => 
-            answer.toLowerCase() === code.toLowerCase()
-          );
-          if (isCorrect && zone?.points) {
-            basicPoints += zone.points;
-          }
-        }
-      }
-
-      // Shadow points
-      const participantShadowScores = shadowScores?.filter(
-        s => s.participant_id === sub.participant_id
-      ) || [];
-      shadowTotal = participantShadowScores.reduce((sum, s) => sum + (s.shadow_score || 0), 0);
-
-      // Achievement points
-      const achievementScore = achievementPoints?.find(a => a.id === sub.participant_id)?.total_achievement_points || 0;
-
-      return {
-        participant_id: sub.participant_id,
-        totalScore: basicPoints + shadowTotal + achievementScore
-      };
-    }).sort((a, b) => b.totalScore - a.totalScore);
-
-    // Check if current user is first
-    isBochtenkoning = scores.length > 0 && scores[0].participant_id === user.id;
-  }
-
-  const eventDate = process.env.EVENT_DATE || '2026-05-16';
+  const eventDate = process.env.EVENT_DATE || '2026-08-08';
   
   // Generate QR code URL on server to avoid hydration mismatch
   const checkInUrl = `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}/check-in/${user.id}`;
@@ -142,18 +68,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   return { 
     user, 
-    submission, 
+    zoneCheckins, 
     documents, 
     completedZones, 
     isBochtenkoning, 
     eventDate,
     gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
     qrCodeUrl,
+    routePreference: user.route_preference || 'adventure', // Default to adventure
   };
 }
 
 export default function Dashboard() {
-  const { user, submission, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl } = useLoaderData<typeof loader>();
+  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference } = useLoaderData<typeof loader>();
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
 
@@ -291,46 +218,68 @@ export default function Dashboard() {
                 >
                   ✓ Notificaties inschakelen
                 </button>
-                <a
-                  href="/dashboard/rally-submission"
+                <Link
+                  to="/rally"
                   className="px-6 py-2 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-sm hover:bg-blue-50 transition-colors"
                 >
                   Later
-                </a>
+                </Link>
               </div>
             </div>
           </div>
         </div>
         )}
 
-        {/* Main CTA - Rally Submission */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
-            <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
-              <Icon name="flag" className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0" />
-              <div className="flex-1">
-                <h2 className="text-2xl md:text-3xl font-bold mb-2">Rally Codes Indienen</h2>
-                <p className="text-primary-100 text-base md:text-lg">
-                  {submission && completedZones > 0 
-                    ? `Je hebt ${completedZones} zone${completedZones !== 1 ? 's' : ''} voltooid! Update je codes en verzamel meer punten.`
-                    : 'Dien je rally zone codes in om punten te verzamelen en mee te strijden om de Bochtenkoning titel!'}
-                </p>
-                {submission && (
-                  <p className="text-primary-50 text-sm mt-2 font-semibold">
-                    Totaal punten: <span className="text-xl md:text-2xl">{submission?.total_points}</span>
+        {/* Main CTA - Rally Submission (only for rally_zones preference) */}
+        {routePreference === 'rally_zones' && (
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+              <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
+                <Icon name="flag" className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0" />
+                <div className="flex-1">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2">Rally Zones</h2>
+                  <p className="text-primary-100 text-base md:text-lg">
+                    {completedZones > 0 
+                      ? `Je hebt ${completedZones} zone${completedZones !== 1 ? 's' : ''} bezocht! Deel je foto's en verhalen.`
+                      : 'Bezoek de rally zones, maak foto\'s en deel je verhalen met de community!'}
                   </p>
+                </div>
+              </div>
+              <Link
+                to="/rally"
+                className="w-full md:w-auto text-center whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                {completedZones > 0 ? 'Bekijk Zones' : 'Start Rally'}
+                <span>→</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Complete Route - Simplified CTA */}
+        {routePreference === 'complete_route' && (
+          <div className="bg-gradient-to-r from-gray-600 to-gray-700 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8">
+            <div className="flex items-start gap-4">
+              <Icon name="map" className="w-16 h-16 flex-shrink-0" />
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">Complete Route</h2>
+                <p className="text-gray-100 text-base md:text-lg mb-4">
+                  Je hebt gekozen voor de complete route zonder rally zones. Download je GPX en geniet van de rit!
+                </p>
+                {gpxRouteUrl && (
+                  <a
+                    href={gpxRouteUrl}
+                    download
+                    className="inline-flex items-center gap-2 bg-white text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-sm font-bold transition-colors"
+                  >
+                    <Icon name="download" className="w-5 h-5" />
+                    Download Complete Route GPX
+                  </a>
                 )}
               </div>
             </div>
-            <Link
-              to="/dashboard/rally-submission"
-              className="w-full md:w-auto text-center whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-            >
-              {submission ? 'Codes Bijwerken' : 'Nu Starten'}
-              <span>→</span>
-            </Link>
           </div>
-        </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
@@ -386,35 +335,32 @@ export default function Dashboard() {
           {/* Rally Progress */}
           <div className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon name="trophy" className="w-6 h-6 text-yellow-600" />
-              Rally Status
+              <Icon name="map" className="w-6 h-6 text-primary-600" />
+              Rally Avontuur
             </h3>
-            {submission ? (
+            {completedZones > 0 ? (
               <div className="space-y-3 text-sm">
-                {isBochtenkoning && (
-                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-sm p-3 mb-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <Icon name="crown" className="w-8 h-8 text-yellow-500" />
-                      <div className="text-center">
-                        <div className="font-bold text-yellow-800 text-base">Bochtenkoning!</div>
-                        <div className="text-xs text-yellow-700">Je staat op #1</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 <div>
-                  <dt className="text-gray-600">Zones voltooid:</dt>
-                  <dd className="font-medium text-2xl text-primary-600">{completedZones}/8</dd>
+                  <dt className="text-gray-600">Zones bezocht:</dt>
+                  <dd className="font-medium text-2xl text-primary-600">{completedZones}/4</dd>
                 </div>
-                <div>
-                  <dt className="text-gray-600">Totaal punten:</dt>
-                  <dd className="font-medium text-xl">{submission?.total_points}</dd>
-                </div>
+                <Link
+                  to="/rally"
+                  className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                >
+                  Bekijk alle zones →
+                </Link>
               </div>
             ) : (
-              <p className="text-gray-600 text-sm">
-                Nog geen rally codes ingediend
-              </p>
+              <div className="text-gray-600 text-sm space-y-2">
+                <p>Start je avontuur!</p>
+                <Link
+                  to="/rally"
+                  className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Ontdek de zones →
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -444,20 +390,20 @@ export default function Dashboard() {
           </Link>
 
           <Link
-            to="/dashboard/achievements"
+            to="/achievements"
             className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="trophy" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Achievements</h3>
             <p className="text-sm text-yellow-100">
-              Ontgrendel achievements door deel te nemen en punten te verzamelen!
+              Ontgrendel achievements door deel te nemen aan de rally zones!
             </p>
           </Link>
 
           {/* Removed: Certificates - Concept A only */}
         </div>
 
-        {/* New: Progress & Stats Cards */}
+        {/* V1: Progress & Stats Cards disabled (competition-related)
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Link
             to="/dashboard/progress"
@@ -480,7 +426,9 @@ export default function Dashboard() {
               Gedetailleerde analyse van je prestaties, zone tijden en shadow rally scores!
             </p>
           </Link>
+          */}
 
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Link
             to="/dashboard/privacy"
             className="bg-gradient-to-br from-gray-600 to-gray-800 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"

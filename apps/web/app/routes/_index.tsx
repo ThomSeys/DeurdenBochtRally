@@ -10,8 +10,8 @@ import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: data?.siteConfig?.seoTitle || 'Deur Den Bocht - Den Bochtenkoning Rally 2026' },
-    { name: 'description', content: data?.siteConfig?.seoDescription || 'Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen.' },
+    { title: data?.siteConfig?.seoTitle || 'Deur Den Bocht - Motorrit Rally 2026' },
+    { name: 'description', content: data?.siteConfig?.seoDescription || 'Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. Ontdek prachtige routes en deel je verhalen.' },
   ];
 };
 
@@ -64,7 +64,7 @@ export default function Index() {
               </h1>
             ) : (
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-6 tracking-tight gradient-text break-words">
-                DEN BOCHTENKONING<br />RALLY 2026
+                MOTORRIT<br />RALLY 2026
               </h1>
             )}
             
@@ -215,7 +215,7 @@ export default function Index() {
                     </li>
                   </ul>
                   <p className="text-xl text-gray-900 font-semibold mt-8">
-                    Aan het einde van de dag kronen we: <strong className="text-primary-600 inline-flex items-center gap-1"><Icon name="trophy" className="w-5 h-5 inline" /> DEN BOCHTENKONING</strong>
+                    Deel je foto's en verhalen met de <strong className="text-primary-600 inline-flex items-center gap-1"><Icon name="camera" className="w-5 h-5 inline" /> Deur Den Bocht community</strong>
                   </p>
                 </>
               )}
@@ -316,7 +316,7 @@ export default function Index() {
                 </h2>
                 <p className="text-xl text-gray-700 max-w-3xl mx-auto">
                   Onderweg kan je deelnemen aan <strong>8 Rally Zones</strong> – optionele rally-lussen
-                  waar je punten verzamelt voor <strong>Den Bochtenkoning</strong>
+                  waar je foto's deelt en verhalen verzamelt
                 </p>
               </>
             )}
@@ -338,10 +338,10 @@ export default function Index() {
               </p>
             </div>
             <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <Icon name="trophy" className="w-20 h-20 mb-6 mx-auto text-yellow-500" />
-              <h3 className="text-2xl font-black mb-4">165 punten mogelijk</h3>
+              <Icon name="camera" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+              <h3 className="text-2xl font-black mb-4">Deel je verhaal</h3>
               <p className="text-gray-600 text-lg">
-                Verzamel punten en word gekroond tot Den Bochtenkoning van 2026
+                Maak foto's, verzamel verhalen en deel je avontuur met de community
               </p>
             </div>
           </div>

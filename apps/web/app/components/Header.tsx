@@ -77,22 +77,16 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       onClick={() => setUserMenuOpen(false)}
                     />
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg py-2 z-50">
-                      <Link
-                        to="/dashboard/rally-submission"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Icon name="flag" className="w-4 h-4" />
-                        Rally Codes Indienen
-                      </Link>
-                      <Link
-                        to="/rally"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Icon name="target" className="w-4 h-4" />
-                        Rally Zones
-                      </Link>
+                      {user.route_preference !== 'complete_route' && (
+                        <Link
+                          to="/rally"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <Icon name="target" className="w-4 h-4" />
+                          Rally Zones
+                        </Link>
+                      )}
                       <Link
                         to="/live-map"
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -203,14 +197,16 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               </Link>
               {user ? (
                 <>
-                  <Link
-                    to="/rally"
-                    className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Icon name="target" className="w-4 h-4" />
-                    Rally Zones
-                  </Link>
+                  {user.route_preference !== 'complete_route' && (
+                    <Link
+                      to="/rally"
+                      className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Icon name="target" className="w-4 h-4" />
+                      Rally Zones
+                    </Link>
+                  )}
                   <Link
                     to="/live-map"
                     className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"

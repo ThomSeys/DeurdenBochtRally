@@ -502,6 +502,7 @@ export type Database = {
           qr_code: string
           qr_code_image_url: string | null
           ride_type: string
+          route_preference: string | null
           show_on_leaderboard: boolean | null
           status: string | null
           stripe_payment_id: string | null
@@ -531,6 +532,7 @@ export type Database = {
           qr_code: string
           qr_code_image_url?: string | null
           ride_type: string
+          route_preference?: string | null
           show_on_leaderboard?: boolean | null
           status?: string | null
           stripe_payment_id?: string | null
@@ -560,6 +562,7 @@ export type Database = {
           qr_code?: string
           qr_code_image_url?: string | null
           ride_type?: string
+          route_preference?: string | null
           show_on_leaderboard?: boolean | null
           status?: string | null
           stripe_payment_id?: string | null

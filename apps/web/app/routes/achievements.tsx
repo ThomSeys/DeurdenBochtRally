@@ -263,12 +263,12 @@ export default function Achievements() {
               <Icon name="trophy" className="w-12 h-12" />
               Achievements
             </h1>
-            <p className="text-primary-100 text-lg">Ontgrendel achievements en verzamel punten!</p>
+            <p className="text-primary-100 text-lg">Ontgrendel achievements door deel te nemen aan de rally!</p>
           </div>
         </div>
 
         {/* Stats Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Total Progress */}
           <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-primary-500">
             <div className="text-sm font-medium text-gray-600 mb-2">Voortgang</div>
@@ -282,7 +282,7 @@ export default function Achievements() {
             <div className="text-xs text-gray-500 mt-2">{completionPercentage}% compleet</div>
           </div>
 
-          {/* Points */}
+          {/* V1: Points display hidden
           <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-yellow-500">
             <div className="text-sm font-medium text-gray-600 mb-2">Totaal Punten</div>
             <div className="text-3xl font-bold text-yellow-600 flex items-baseline">
@@ -291,6 +291,7 @@ export default function Achievements() {
             </div>
             <div className="text-xs text-gray-500 mt-4 flex gap-2 items-center"><Icon name="diamond" className="w-3 h-3" /> Verzamel meer punten!</div>
           </div>
+          */}
 
           {/* Zones */}
           <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-green-500">
@@ -366,11 +367,13 @@ export default function Achievements() {
                       </p>
 
                       {/* Footer */}
-                      <div className="flex items-center justify-between pt-4 border-t-2 border-gray-200">
+                      <div className="flex items-center justify-end pt-4 border-t-2 border-gray-200">
+                        {/* V1: Points display hidden
                         <div className={`font-bold text-lg flex items-center gap-2 ${isUnlocked ? 'text-yellow-600' : 'text-gray-400'}`}>
                           <Icon name="diamond" className="w-5 h-5" />
                           +{achievement.points}
                         </div>
+                        */}
                         {isUnlocked && (
                           <div className="text-xs text-green-600 font-semibold px-2 py-1 bg-green-100 rounded-full">
                             ✨ Voltooid
@@ -400,7 +403,7 @@ export default function Achievements() {
             <div className="text-5xl mb-4">🚀</div>
             <h2 className="text-3xl font-bold mb-4">Klaar voor meer achievements?</h2>
             <p className="text-primary-100 text-lg mb-8 max-w-2xl mx-auto">
-              Neem deel aan de rally, upload foto's en behaal nog meer achievements om je positie op het leaderboard te verbeteren!
+              Neem deel aan de rally, upload foto's en deel je verhalen om meer achievements te ontgrendelen!
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Link
@@ -416,13 +419,6 @@ export default function Achievements() {
               >
                 <Icon name="camera" className="w-5 h-5" />
                 Upload Foto's
-              </Link>
-              <Link
-                to="/dashboard/rally-submission"
-                className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-8 py-4 rounded-sm font-bold hover:from-yellow-500 hover:to-yellow-600 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
-              >
-                <Icon name="flag" className="w-5 h-5" />
-                Rally Starten
               </Link>
             </div>
           </div>
