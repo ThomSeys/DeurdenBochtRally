@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { Form, useLoaderData, useNavigation, redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
@@ -15,7 +15,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // Get participant data
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('id')
     .eq('id', user.id)
@@ -31,7 +31,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
 
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('id')
     .eq('id', userId)
@@ -67,7 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     console.log('Creating story with participant_id:', participant.id, 'title:', title, 'excerpt:', excerpt);
 
-    const { data: story, error } = await (supabase as any)
+    const { data: story, error } = await (supabaseAdmin as any)
       .from('ride_stories')
       .insert({
         participant_id: participant.id,

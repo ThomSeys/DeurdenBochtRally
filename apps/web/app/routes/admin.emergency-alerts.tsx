@@ -9,18 +9,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
 
   // Get all emergency SOS alerts
-  const { data: alerts } = await supabaseAdmin
+  const { data: alertsRaw } = await supabaseAdmin
     .from('emergency_sos')
-    .select(`
-      *,
-      participants (
-        first_name,
-        last_name,
-        phone,
-        email
-      )
-    `)
+    .select('*')
     .order('created_at', { ascending: false });
+
+  // Fetch participant data for each alert
+  const alerts = await Promise.all(
+    (alertsRaw || []).map(async (alert: any) => {
+      const { data: participant } = await supabaseAdmin
+        .from('participants')
+        .select('first_name, last_name, phone, email')
+        .eq('id', alert.participant_id)
+        .single();
+      
+      return {
+        ...alert,
+        participants: participant || null,
+      };
+    })
+  );
 
   return { alerts: alerts || [] };
 }
@@ -37,24 +45,38 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     if (intent === 'acknowledge') {
-      await supabaseAdmin
+      console.log('Acknowledging alert:', alertId);
+      const { data, error } = await supabaseAdmin
         .from('emergency_sos')
         .update({
-          status: 'resolved',
-          resolved_by: adminId,
-          resolved_at: new Date().toISOString(),
+          status: 'acknowledged',
         })
-        .eq('id', alertId);
+        .eq('id', alertId)
+        .select();
+      
+      if (error) {
+        console.error('Error acknowledging alert:', error);
+        return { error: error.message };
+      }
+      console.log('Alert acknowledged successfully:', data);
     } else if (intent === 'resolve') {
       const notes = formData.get('notes') as string;
-      await supabaseAdmin
+      console.log('Resolving alert:', alertId, 'with notes:', notes);
+      const { data, error } = await supabaseAdmin
         .from('emergency_sos')
         .update({
           status: 'resolved',
           resolved_by: adminId,
           resolved_at: new Date().toISOString(),
         })
-        .eq('id', alertId);
+        .eq('id', alertId)
+        .select();
+      
+      if (error) {
+        console.error('Error resolving alert:', error);
+        return { error: error.message };
+      }
+      console.log('Alert resolved successfully:', data);
     }
 
     return { success: true };
@@ -67,7 +89,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function EmergencyAlerts() {
   const { alerts } = useLoaderData<typeof loader>();
 
-  const pendingAlerts = alerts.filter((a: any) => a.status === 'pending');
+  const activeAlerts = alerts.filter((a: any) => a.status === 'active');
   const acknowledgedAlerts = alerts.filter((a: any) => a.status === 'acknowledged');
   const resolvedAlerts = alerts.filter((a: any) => a.status === 'resolved');
 
@@ -90,28 +112,28 @@ export default function EmergencyAlerts() {
               <p className="text-red-100 mt-1">Monitor en reageer op noodsituaties</p>
             </div>
           </div>
-          {pendingAlerts.length > 0 && (
+          {activeAlerts.length > 0 && (
             <div className="mt-4 bg-white/20 backdrop-blur-md rounded-lg px-4 py-2 inline-flex items-center gap-2">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
               </span>
-              <span className="font-semibold">{pendingAlerts.length} Actieve Melding{pendingAlerts.length !== 1 ? 'en' : ''}</span>
+              <span className="font-semibold">{activeAlerts.length} Actieve Melding{activeAlerts.length !== 1 ? 'en' : ''}</span>
             </div>
           )}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Pending Alerts */}
-        {pendingAlerts.length > 0 && (
+        {/* Active Alerts */}
+        {activeAlerts.length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Icon name="alert-circle" className="w-6 h-6 text-red-600" />
-              In Afwachting ({pendingAlerts.length})
+              Actief ({activeAlerts.length})
             </h2>
             <div className="space-y-4">
-              {pendingAlerts.map((alert: any) => (
+              {activeAlerts.map((alert: any) => (
                 <AlertCard key={alert.id} alert={alert} />
               ))}
             </div>
@@ -162,7 +184,7 @@ export default function EmergencyAlerts() {
 function AlertCard({ alert }: { alert: any }) {
   const participant = alert.participants;
   const statusColors = {
-    pending: 'bg-red-100 border-red-200 text-red-800',
+    active: 'bg-red-100 border-red-200 text-red-800',
     acknowledged: 'bg-yellow-100 border-yellow-200 text-yellow-800',
     resolved: 'bg-green-100 border-green-200 text-green-800',
   };
@@ -195,10 +217,10 @@ function AlertCard({ alert }: { alert: any }) {
         <div>
           <p className="text-sm font-semibold mb-1">Locatie</p>
           <p className="text-sm">
-            Lat: {alert.latitude}, Lng: {alert.longitude}
+            Lat: {alert.location_lat}, Lng: {alert.location_lng}
           </p>
           <a
-            href={`https://www.google.com/maps?q=${alert.latitude},${alert.longitude}`}
+            href={`https://www.google.com/maps?q=${alert.location_lat},${alert.location_lng}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm underline hover:no-underline inline-flex items-center gap-1"
@@ -217,7 +239,7 @@ function AlertCard({ alert }: { alert: any }) {
 
       {alert.status !== 'resolved' && (
         <div className="flex gap-2">
-          {alert.status === 'pending' && (
+          {alert.status === 'active' && (
             <Form method="post">
               <input type="hidden" name="intent" value="acknowledge" />
               <input type="hidden" name="alertId" value={alert.id} />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useActionData, Form, useNavigation } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
@@ -29,7 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
 
   // Get all ride stories with participant info
-  const { data: stories, error } = await (supabase as any)
+  const { data: stories, error } = await (supabaseAdmin as any)
     .from('ride_stories')
     .select(`
       *
@@ -63,7 +63,7 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     switch (intent) {
       case 'approve': {
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('ride_stories')
           .update({ is_approved: true })
           .eq('id', storyId);
@@ -73,7 +73,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       case 'unapprove': {
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('ride_stories')
           .update({ is_approved: false })
           .eq('id', storyId);
@@ -83,7 +83,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       case 'feature': {
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('ride_stories')
           .update({ is_featured: true })
           .eq('id', storyId);
@@ -93,7 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       case 'unfeature': {
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('ride_stories')
           .update({ is_featured: false })
           .eq('id', storyId);
@@ -103,7 +103,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       case 'delete': {
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('ride_stories')
           .delete()
           .eq('id', storyId);

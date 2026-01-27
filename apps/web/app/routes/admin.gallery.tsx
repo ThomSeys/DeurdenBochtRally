@@ -20,7 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       *,
       participant:participants(first_name, last_name, email)
     `)
-    .order('created_at', { ascending: false });
+    .order('uploaded_at', { ascending: false });
 
   const pendingCount = photos?.filter(p => !p.is_approved).length || 0;
 
@@ -151,10 +151,10 @@ export default function AdminGallery() {
                             {photo.caption}
                           </p>
                         )}
-                        {photo.location && (
+                        {photo.zone_id && (
                           <p className="text-xs text-gray-600 flex items-center gap-1">
                             <Icon name="marker" className="w-3 h-3" />
-                            {photo.location}
+                            {photo.zone_id}
                           </p>
                         )}
                         
@@ -164,7 +164,7 @@ export default function AdminGallery() {
                             {photo.participant?.first_name} {photo.participant?.last_name}
                           </span>
                           <span className="text-xs text-gray-400">
-                            {new Date(photo.created_at).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })}
+                            {new Date(photo.uploaded_at).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })}
                           </span>
                         </div>
                         <div className="text-xs text-gray-500">
@@ -260,10 +260,10 @@ export default function AdminGallery() {
                             {photo.caption}
                           </p>
                         )}
-                        {photo.location && (
+                        {photo.zone_id && (
                           <p className="text-xs text-gray-600 flex items-center gap-1">
                             <Icon name="marker" className="w-3 h-3" />
-                            {photo.location}
+                            {photo.zone_id}
                           </p>
                         )}
                         
@@ -341,14 +341,14 @@ export default function AdminGallery() {
                 <div className="flex items-center justify-between text-white/70 text-sm">
                   <span>{lightboxPhoto.participant?.first_name} {lightboxPhoto.participant?.last_name}</span>
                   <div className="flex items-center gap-4">
-                    {lightboxPhoto.location && (
+                    {lightboxPhoto.zone_id && (
                       <span className="flex items-center gap-1">
                         <Icon name="marker" className="w-4 h-4" />
-                        {lightboxPhoto.location}
+                        {lightboxPhoto.zone_id}
                       </span>
                     )}
                     <span className="text-xs">
-                      {new Date(lightboxPhoto.created_at).toLocaleDateString('nl-BE')}
+                      {new Date(lightboxPhoto.uploaded_at).toLocaleDateString('nl-BE')}
                     </span>
                   </div>
                 </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { Form, useLoaderData, useActionData, useNavigation, redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { supabase, supabaseAdmin } from '~/lib/supabase.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 import { createClient } from '@sanity/client';
 import { PortableText } from '@portabletext/react';
 import Header from '~/components/Header';
@@ -30,7 +30,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   // Get the story from the database
-  const { data: story } = await (supabase as any)
+  const { data: story } = await (supabaseAdmin as any)
     .from('ride_stories')
     .select(`
       *,
@@ -69,7 +69,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   );
 
   // Get participant data
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('*')
     .eq('id', user.id)
@@ -80,7 +80,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   // Check if user has liked this story
-  const { data: userLike } = await (supabase as any)
+  const { data: userLike } = await (supabaseAdmin as any)
     .from('ride_story_likes')
     .select('id')
     .eq('story_id', story.id)
@@ -88,20 +88,34 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     .single();
 
   // Get comments for this story
-  const { data: comments } = await (supabase as any)
+  const { data: commentsRaw, error: commentsError } = await (supabaseAdmin as any)
     .from('ride_story_comments')
-    .select(`
-      *,
-      participants (
-        first_name,
-        last_name
-      )
-    `)
+    .select('*')
     .eq('story_id', story.id)
     .order('created_at', { ascending: false });
 
+  if (commentsError) {
+    console.error('Error fetching comments:', commentsError);
+  }
+
+  // Fetch participant data for each comment
+  const comments = await Promise.all(
+    (commentsRaw || []).map(async (comment: any) => {
+      const { data: participant } = await supabaseAdmin
+        .from('participants')
+        .select('first_name, last_name')
+        .eq('id', comment.participant_id)
+        .single();
+      
+      return {
+        ...comment,
+        participants: participant || null,
+      };
+    })
+  );
+
   // Increment view count
-  await (supabase as any)
+  await (supabaseAdmin as any)
     .from('ride_stories')
     .update({ view_count: (story.view_count || 0) + 1 })
     .eq('id', story.id);
@@ -123,7 +137,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export async function action({ request, params }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
 
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('id')
     .eq('id', userId)
@@ -137,7 +151,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const intent = formData.get('intent');
 
   const { slug } = params;
-  const { data: story } = await (supabase as any)
+  const { data: story } = await (supabaseAdmin as any)
     .from('ride_stories')
     .select('id')
     .eq('slug', slug)
@@ -148,7 +162,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   if (intent === 'like') {
-    const { error } = await (supabase as any)
+    const { error } = await (supabaseAdmin as any)
       .from('ride_story_likes')
       .insert({
         story_id: story.id,
@@ -162,7 +176,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   if (intent === 'unlike') {
-    const { error } = await (supabase as any)
+    const { error } = await (supabaseAdmin as any)
       .from('ride_story_likes')
       .delete()
       .eq('story_id', story.id)
@@ -181,19 +195,24 @@ export async function action({ request, params }: ActionFunctionArgs) {
       return { error: 'Reactie kan niet leeg zijn' };
     }
 
-    const { error } = await (supabaseAdmin as any)
+    console.log('Inserting comment for story:', story.id, 'participant:', participant.id);
+    
+    const { data: insertedComment, error } = await (supabaseAdmin as any)
       .from('ride_story_comments')
       .insert({
         story_id: story.id,
         participant_id: participant.id,
         content: content.trim(),
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error('Comment error:', error);
       return { error: error.message };
     }
 
+    console.log('Comment inserted successfully:', insertedComment);
     return redirect(`/dashboard/blog/${slug}`);
   }
 

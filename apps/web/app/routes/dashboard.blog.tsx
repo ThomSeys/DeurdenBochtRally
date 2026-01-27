@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { Form, useLoaderData, useActionData, useNavigation } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
+import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
@@ -15,7 +15,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // Get participant data
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('*')
     .eq('id', user.id)
@@ -26,7 +26,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // Get stories liked by this participant
-  const { data: likedStories } = await (supabase as any)
+  const { data: likedStories } = await (supabaseAdmin as any)
     .from('ride_story_likes')
     .select('story_id')
     .eq('participant_id', participant.id);
@@ -36,14 +36,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 
   // Get participant's own stories
-  const { data: myStories } = await (supabase as any)
+  const { data: myStories } = await (supabaseAdmin as any)
     .from('ride_stories')
     .select('*')
     .eq('participant_id', participant.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false});
 
   // Get all approved stories with participant info
-  const { data: allStories } = await (supabase as any)
+  const { data: allStories } = await (supabaseAdmin as any)
     .from('ride_stories')
     .select(`
       *,
@@ -66,10 +66,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
 
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('id')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .single();
 
   if (!participant) {
@@ -81,7 +81,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === 'like') {
     const storyId = formData.get('storyId') as string;
-    const { error } = await (supabase as any)
+    const { error } = await (supabaseAdmin as any)
       .from('ride_story_likes')
       .insert({
         story_id: storyId,
@@ -96,7 +96,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (intent === 'unlike') {
     const storyId = formData.get('storyId') as string;
-    const { error } = await (supabase as any)
+    const { error } = await (supabaseAdmin as any)
       .from('ride_story_likes')
       .delete()
       .eq('story_id', storyId)

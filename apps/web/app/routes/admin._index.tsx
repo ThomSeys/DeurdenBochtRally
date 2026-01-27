@@ -21,13 +21,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 
   const { count: emergencySOSCount, error: sosCountError } = await supabaseAdmin
-    .from('emergency_contacts')
-    .select('*', { count: 'exact', head: true });
-    // Removed .eq('status', 'active') filter temporarily to see all SOS
+    .from('emergency_sos')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active');
 
   // Get recent SOS alerts
   const { data: recentSOS, error: sosError } = await supabaseAdmin
-    .from('emergency_contacts')
+    .from('emergency_sos')
     .select('*, participants(first_name, last_name)')
     .order('created_at', { ascending: false })
     .limit(5);

@@ -73,5 +73,5 @@ export default [
   // route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"), // REMOVED - Concept A only
   route("api/webhook", "routes/api.webhook.tsx"),
   route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),
-  route("api/emergency-sos", "routes/api.emergency-sos.ts"),
+  route("api/emergency-sos", "routes/api.emergency-sos.tsx"),
 ] satisfies RouteConfig;

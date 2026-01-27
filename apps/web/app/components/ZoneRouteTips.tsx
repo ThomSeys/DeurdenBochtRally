@@ -60,8 +60,8 @@ export default function ZoneRouteTips({
               key={mapKey}
               routeTips={routeTips} 
               zoneTitle={zoneTitle}
-              zoneStartLocation={zoneStartLocation}
-              zoneEndLocation={zoneEndLocation}
+              zoneStartLocation={zoneStartLocation ?? undefined}
+              zoneEndLocation={zoneEndLocation ?? undefined}
               className="h-full min-h-[400px] lg:min-h-[600px]"
             />
           </div>

@@ -83,13 +83,6 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "certificates_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
         ]
       }
       documents: {
@@ -156,56 +149,32 @@ export type Database = {
           status?: string | null
           subject?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "email_logs_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "email_logs_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-        ]
+        Relationships: []
       }
       emergency_contacts: {
         Row: {
           created_at: string | null
-          email: string | null
-          id: number
-          is_primary: boolean | null
+          id: string
           name: string
           participant_id: string
           phone: string
           relationship: string | null
-          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          email?: string | null
-          id?: number
-          is_primary?: boolean | null
+          id?: string
           name: string
           participant_id: string
           phone: string
           relationship?: string | null
-          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          email?: string | null
-          id?: number
-          is_primary?: boolean | null
+          id?: string
           name?: string
           participant_id?: string
           phone?: string
           relationship?: string | null
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -215,12 +184,56 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      emergency_sos: {
+        Row: {
+          created_at: string | null
+          id: string
+          location_lat: number
+          location_lng: number
+          message: string | null
+          participant_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location_lat: number
+          location_lng: number
+          message?: string | null
+          participant_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location_lat?: number
+          location_lng?: number
+          message?: string | null
+          participant_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "emergency_contacts_participant_id_fkey"
+            foreignKeyName: "emergency_sos_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_sos_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -273,50 +286,7 @@ export type Database = {
           status?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "emergency_sos_alerts_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emergency_sos_alerts_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
-            foreignKeyName: "emergency_sos_alerts_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emergency_sos_alerts_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
-            foreignKeyName: "emergency_sos_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emergency_sos_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-        ]
+        Relationships: []
       }
       manual_score_adjustments: {
         Row: {
@@ -346,36 +316,7 @@ export type Database = {
           reason?: string
           zone_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "manual_score_adjustments_adjusted_by_fkey"
-            columns: ["adjusted_by"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "manual_score_adjustments_adjusted_by_fkey"
-            columns: ["adjusted_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
-            foreignKeyName: "manual_score_adjustments_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "manual_score_adjustments_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-        ]
+        Relationships: []
       }
       participant_achievements: {
         Row: {
@@ -411,54 +352,50 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "participant_achievements_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
         ]
       }
       participant_photos: {
         Row: {
           caption: string | null
-          created_at: string | null
           id: string
           image_url: string
           is_approved: boolean | null
           is_featured: boolean | null
-          likes_count: number | null
-          location: string | null
+          like_count: number | null
+          location_lat: number | null
+          location_lng: number | null
           participant_id: string
-          rally_zone_id: number | null
-          updated_at: string | null
+          thumbnail_url: string | null
+          uploaded_at: string | null
+          zone_id: string | null
         }
         Insert: {
           caption?: string | null
-          created_at?: string | null
           id?: string
           image_url: string
           is_approved?: boolean | null
           is_featured?: boolean | null
-          likes_count?: number | null
-          location?: string | null
+          like_count?: number | null
+          location_lat?: number | null
+          location_lng?: number | null
           participant_id: string
-          rally_zone_id?: number | null
-          updated_at?: string | null
+          thumbnail_url?: string | null
+          uploaded_at?: string | null
+          zone_id?: string | null
         }
         Update: {
           caption?: string | null
-          created_at?: string | null
           id?: string
           image_url?: string
           is_approved?: boolean | null
           is_featured?: boolean | null
-          likes_count?: number | null
-          location?: string | null
+          like_count?: number | null
+          location_lat?: number | null
+          location_lng?: number | null
           participant_id?: string
-          rally_zone_id?: number | null
-          updated_at?: string | null
+          thumbnail_url?: string | null
+          uploaded_at?: string | null
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -467,13 +404,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "participant_photos_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
         ]
       }
@@ -504,6 +434,7 @@ export type Database = {
           ride_type: string
           route_preference: string | null
           show_on_leaderboard: boolean | null
+          start_location: Json | null
           status: string | null
           stripe_payment_id: string | null
           total_achievement_points: number | null
@@ -534,6 +465,7 @@ export type Database = {
           ride_type: string
           route_preference?: string | null
           show_on_leaderboard?: boolean | null
+          start_location?: Json | null
           status?: string | null
           stripe_payment_id?: string | null
           total_achievement_points?: number | null
@@ -564,6 +496,7 @@ export type Database = {
           ride_type?: string
           route_preference?: string | null
           show_on_leaderboard?: boolean | null
+          start_location?: Json | null
           status?: string | null
           stripe_payment_id?: string | null
           total_achievement_points?: number | null
@@ -596,13 +529,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "photo_likes_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
           {
             foreignKeyName: "photo_likes_photo_id_fkey"
@@ -668,145 +594,98 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "push_delivery_log_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
         ]
       }
       push_message_templates: {
         Row: {
-          body: string
+          body_template: string
           created_at: string | null
-          created_by: string | null
-          event_type: string | null
+          event_type: string
           id: number
           is_active: boolean | null
           name: string
-          target_group_id: number | null
-          title: string
+          title_template: string
           updated_at: string | null
+          variables: Json | null
         }
         Insert: {
-          body: string
+          body_template: string
           created_at?: string | null
-          created_by?: string | null
-          event_type?: string | null
+          event_type: string
           id?: number
           is_active?: boolean | null
           name: string
-          target_group_id?: number | null
-          title: string
+          title_template: string
           updated_at?: string | null
+          variables?: Json | null
         }
         Update: {
-          body?: string
+          body_template?: string
           created_at?: string | null
-          created_by?: string | null
-          event_type?: string | null
+          event_type?: string
           id?: number
           is_active?: boolean | null
           name?: string
-          target_group_id?: number | null
-          title?: string
+          title_template?: string
           updated_at?: string | null
+          variables?: Json | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "push_message_templates_target_group_id_fkey"
-            columns: ["target_group_id"]
-            isOneToOne: false
-            referencedRelation: "push_recipient_groups"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       push_notifications_history: {
         Row: {
           body: string
-          completed_at: string | null
-          created_at: string | null
           event_data: Json | null
-          event_type: string
-          expired_count: number | null
+          event_type: string | null
           failed_count: number | null
           id: number
-          participant_id: string | null
+          metadata: Json | null
           recipient_count: number | null
           sent_at: string | null
           sent_by: string | null
-          status: string | null
           success_count: number | null
-          target_criteria: Json | null
-          target_type: string
           title: string
-          updated_at: string | null
         }
         Insert: {
           body: string
-          completed_at?: string | null
-          created_at?: string | null
           event_data?: Json | null
-          event_type: string
-          expired_count?: number | null
+          event_type?: string | null
           failed_count?: number | null
           id?: number
-          participant_id?: string | null
+          metadata?: Json | null
           recipient_count?: number | null
           sent_at?: string | null
           sent_by?: string | null
-          status?: string | null
           success_count?: number | null
-          target_criteria?: Json | null
-          target_type: string
           title: string
-          updated_at?: string | null
         }
         Update: {
           body?: string
-          completed_at?: string | null
-          created_at?: string | null
           event_data?: Json | null
-          event_type?: string
-          expired_count?: number | null
+          event_type?: string | null
           failed_count?: number | null
           id?: number
-          participant_id?: string | null
+          metadata?: Json | null
           recipient_count?: number | null
           sent_at?: string | null
           sent_by?: string | null
-          status?: string | null
           success_count?: number | null
-          target_criteria?: Json | null
-          target_type?: string
           title?: string
-          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "push_notifications_history_participant_id_fkey"
-            columns: ["participant_id"]
+            foreignKeyName: "push_notifications_history_sent_by_fkey"
+            columns: ["sent_by"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_notifications_history_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
         ]
       }
       push_recipient_groups: {
         Row: {
           created_at: string | null
-          created_by: string | null
-          criteria: Json
+          criteria: Json | null
           description: string | null
           id: number
           is_active: boolean | null
@@ -816,8 +695,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          created_by?: string | null
-          criteria: Json
+          criteria?: Json | null
           description?: string | null
           id?: number
           is_active?: boolean | null
@@ -827,8 +705,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          created_by?: string | null
-          criteria?: Json
+          criteria?: Json | null
           description?: string | null
           id?: number
           is_active?: boolean | null
@@ -876,13 +753,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
         ]
       }
@@ -968,56 +838,38 @@ export type Database = {
           used_highways?: boolean | null
           weather_bonus?: boolean | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "rally_submissions_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: true
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rally_submissions_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: true
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-        ]
+        Relationships: []
       }
       rally_zone_checkins: {
         Row: {
-          action: string
-          checked_at: string | null
-          created_at: string | null
+          checked_in_at: string | null
           id: string
-          latitude: number | null
-          longitude: number | null
+          location_lat: number | null
+          location_lng: number | null
+          notes: string | null
+          odometer_reading: number | null
           participant_id: string
-          qr_code: string
-          rally_zone_id: string
+          zone_id: string
         }
         Insert: {
-          action: string
-          checked_at?: string | null
-          created_at?: string | null
+          checked_in_at?: string | null
           id?: string
-          latitude?: number | null
-          longitude?: number | null
+          location_lat?: number | null
+          location_lng?: number | null
+          notes?: string | null
+          odometer_reading?: number | null
           participant_id: string
-          qr_code: string
-          rally_zone_id: string
+          zone_id: string
         }
         Update: {
-          action?: string
-          checked_at?: string | null
-          created_at?: string | null
+          checked_in_at?: string | null
           id?: string
-          latitude?: number | null
-          longitude?: number | null
+          location_lat?: number | null
+          location_lng?: number | null
+          notes?: string | null
+          odometer_reading?: number | null
           participant_id?: string
-          qr_code?: string
-          rally_zone_id?: string
+          zone_id?: string
         }
         Relationships: [
           {
@@ -1026,13 +878,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rally_zone_checkins_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
         ]
       }
@@ -1145,36 +990,7 @@ export type Database = {
           zone_id?: string
           zone_time_minutes?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "rally_zone_submissions_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rally_zone_submissions_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
-            foreignKeyName: "rally_zone_submissions_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rally_zone_submissions_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-        ]
+        Relationships: []
       }
       report_history: {
         Row: {
@@ -1219,25 +1035,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "report_history_generated_by_fkey"
-            columns: ["generated_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
             foreignKeyName: "report_history_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "report_history_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
           {
             foreignKeyName: "report_history_scheduled_report_id_fkey"
@@ -1253,11 +1055,11 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           error_message: string | null
-          file_url: string | null
           id: number
-          participant_id: string | null
+          metadata: Json | null
           report_type: string
           requested_by: string
+          result_url: string | null
           started_at: string | null
           status: string
         }
@@ -1265,11 +1067,11 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           error_message?: string | null
-          file_url?: string | null
           id?: number
-          participant_id?: string | null
+          metadata?: Json | null
           report_type: string
           requested_by: string
+          result_url?: string | null
           started_at?: string | null
           status?: string
         }
@@ -1277,42 +1079,21 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           error_message?: string | null
-          file_url?: string | null
           id?: number
-          participant_id?: string | null
+          metadata?: Json | null
           report_type?: string
           requested_by?: string
+          result_url?: string | null
           started_at?: string | null
           status?: string
         }
         Relationships: [
           {
-            foreignKeyName: "report_queue_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "report_queue_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
             foreignKeyName: "report_queue_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "report_queue_requested_by_fkey"
-            columns: ["requested_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
         ]
       }
@@ -1370,13 +1151,6 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ride_stories_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
         ]
       }
       ride_story_comments: {
@@ -1404,29 +1178,7 @@ export type Database = {
           story_id?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "ride_story_comments_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ride_story_comments_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
-            foreignKeyName: "ride_story_comments_story_id_fkey"
-            columns: ["story_id"]
-            isOneToOne: false
-            referencedRelation: "ride_stories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       ride_story_likes: {
         Row: {
@@ -1454,13 +1206,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ride_story_likes_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
           },
           {
             foreignKeyName: "ride_story_likes_story_id_fkey"
@@ -1516,13 +1261,6 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "scheduled_reports_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
         ]
       }
       zone_closure_log: {
@@ -1556,66 +1294,15 @@ export type Database = {
           reopened_by?: string | null
           zone_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "zone_closure_log_closed_by_fkey"
-            columns: ["closed_by"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "zone_closure_log_closed_by_fkey"
-            columns: ["closed_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-          {
-            foreignKeyName: "zone_closure_log_reopened_by_fkey"
-            columns: ["reopened_by"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "zone_closure_log_reopened_by_fkey"
-            columns: ["reopened_by"]
-            isOneToOne: false
-            referencedRelation: "rally_director_dashboard"
-            referencedColumns: ["rider_id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      rally_director_dashboard: {
-        Row: {
-          checkpoints_approved: number | null
-          checkpoints_completed: number | null
-          checkpoints_pending: number | null
-          checkpoints_rejected: number | null
-          final_score: number | null
-          license_plate: string | null
-          long_zones_completed: number | null
-          low_gps_count: number | null
-          manual_entries: number | null
-          medium_zones_completed: number | null
-          rider_id: string | null
-          rider_name: string | null
-          rider_status: string | null
-          shadow_total: number | null
-          short_zones_completed: number | null
-          total_points: number | null
-          zones_fully_completed: number | null
-          zones_started: number | null
-        }
         Relationships: []
       }
     }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
       calculate_next_run_time: {
-        Args: { p_current_time?: string; p_frequency: string }
+        Args: { p_current_time?: string; p_frequency?: string }
         Returns: string
       }
       decrement_photo_likes: { Args: { photo_id: string }; Returns: undefined }
@@ -1682,6 +1369,8 @@ export type Database = {
         }[]
       }
       increment_photo_likes: { Args: { photo_id: string }; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       update_participant_shadow_scores: {
         Args: { p_participant_id: string }
         Returns: undefined

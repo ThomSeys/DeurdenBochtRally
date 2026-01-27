@@ -186,7 +186,7 @@ export async function action({ request }: ActionFunctionArgs) {
         participant_id: userId,
         image_url: urlData.publicUrl,
         caption,
-        location,
+        zone_id: location, // location is the zone name/id from the form
         is_approved: false, // Requires admin approval
       });
 
