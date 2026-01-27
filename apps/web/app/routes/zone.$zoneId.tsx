@@ -191,12 +191,10 @@ export default function ZonePage() {
     }
   }, []);
 
-  // Determine if user should check in or check out
-  const lastCheckIn = checkIns?.find(c => c.action === 'CHECKIN');
-  const lastCheckOut = checkIns?.find(c => c.action === 'CHECKOUT');
-  
-  const shouldCheckOut = lastCheckIn && (!lastCheckOut || new Date(lastCheckIn.checked_at) > new Date(lastCheckOut.checked_at));
-  const suggestedAction = shouldCheckOut ? 'CHECKOUT' : 'CHECKIN';
+  // Determine if user has already checked in
+  const hasCheckedIn = checkIns && checkIns.length > 0;
+  const suggestedAction = hasCheckedIn ? 'CHECKOUT' : 'CHECKIN';
+  const shouldCheckOut = hasCheckedIn;
 
   const difficultyColor = 
     zone.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
@@ -371,15 +369,15 @@ export default function ZonePage() {
                 <div key={checkIn.id} className="flex items-center justify-between py-2 border-b">
                   <div className="flex items-center">
                     <Icon 
-                      name={checkIn.action === 'CHECKIN' ? 'log-in' : 'log-out'} 
-                      className={`w-5 h-5 mr-2 ${checkIn.action === 'CHECKIN' ? 'text-green-500' : 'text-blue-500'}`}
+                      name="log-in" 
+                      className="w-5 h-5 mr-2 text-green-500"
                     />
                     <span className="font-medium">
-                      {checkIn.action === 'CHECKIN' ? 'Check-in' : 'Check-out'}
+                      Check-in
                     </span>
                   </div>
                   <span className="text-sm text-gray-600">
-                    {new Date(checkIn.checked_at).toLocaleString('nl-NL')}
+                    {new Date(checkIn.checked_in_at).toLocaleString('nl-NL')}
                   </span>
                 </div>
               ))}
