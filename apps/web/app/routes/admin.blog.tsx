@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, useActionData, Form, useNavigation } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { useToast } from '~/contexts/ToastContext';
 
 interface Story {
   id: string;
@@ -125,9 +126,19 @@ export default function AdminBlog() {
   const { stories } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { success, error } = useToast();
   const isSubmitting = navigation.state === 'submitting';
 
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'featured'>('all');
+
+  useEffect(() => {
+    if (actionData?.success) {
+      success(actionData.success);
+    }
+    if (actionData?.error) {
+      error(actionData.error);
+    }
+  }, [actionData, success, error]);
 
   const typedStories = stories as unknown as Story[];
 
@@ -151,18 +162,6 @@ export default function AdminBlog() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Ride Stories Moderatie</h1>
           <p className="text-gray-600">Beheer en modereer verhalen van deelnemers</p>
         </div>
-
-        {/* Alert messages */}
-        {actionData?.success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-sm">
-            {actionData.success}
-          </div>
-        )}
-        {actionData?.error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-sm">
-            {actionData.error}
-          </div>
-        )}
 
         {/* Filter tabs */}
         <div className="bg-white rounded-sm shadow mb-6">

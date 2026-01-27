@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { Form, useLoaderData, useActionData, useNavigation } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { useToast } from '~/contexts/ToastContext';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireUserId(request);
@@ -116,12 +117,19 @@ export default function DashboardBlog() {
   const { participant, myStories, allStories, likedStoryIds } = loaderData;
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { error } = useToast();
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const [localLikes, setLocalLikes] = useState<Set<string>>(
     new Set(likedStoryIds as string[])
   );
 
   const isSubmitting = navigation.state === 'submitting';
+
+  useEffect(() => {
+    if (actionData?.error) {
+      error(actionData.error);
+    }
+  }, [actionData, error]);
 
   const toggleLike = useCallback((storyId: string) => {
     setLocalLikes(prev => {

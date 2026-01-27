@@ -4,7 +4,8 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useToast } from '~/contexts/ToastContext';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Foto Beheer - Admin - Deur Den Bocht' }];
@@ -67,7 +68,17 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function AdminGallery() {
   const { photos, pendingCount } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const { success, error } = useToast();
   const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
+
+  useEffect(() => {
+    if (actionData?.message) {
+      success(actionData.message);
+    }
+    if (actionData?.error) {
+      error(actionData.error);
+    }
+  }, [actionData, success, error]);
 
   const pendingPhotos = photos.filter(p => !p.is_approved);
   const approvedPhotos = photos.filter(p => p.is_approved);
@@ -91,20 +102,6 @@ export default function AdminGallery() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        {actionData?.message && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-r-lg shadow-md flex items-center gap-3">
-            <Icon name="check-circle" className="w-6 h-6" />
-            <span>{actionData.message}</span>
-          </div>
-        )}
-
-        {actionData?.error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg shadow-md flex items-center gap-3">
-            <Icon name="alert-triangle" className="w-6 h-6" />
-            <span>{actionData.error}</span>
-          </div>
-        )}
 
         {/* Pending Photos - Polaroid Style */}
         {pendingPhotos.length > 0 && (

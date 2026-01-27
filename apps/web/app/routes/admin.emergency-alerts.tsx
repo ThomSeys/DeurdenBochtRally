@@ -1,9 +1,10 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
-import { useLoaderData, Form } from 'react-router';
+import { useLoaderData, Form, useRevalidator } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { useToast } from '~/contexts/ToastContext';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -88,6 +89,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function EmergencyAlerts() {
   const { alerts } = useLoaderData<typeof loader>();
+  const revalidator = useRevalidator();
+  const { warning } = useToast();
 
   const activeAlerts = alerts.filter((a: any) => a.status === 'active');
   const acknowledgedAlerts = alerts.filter((a: any) => a.status === 'acknowledged');

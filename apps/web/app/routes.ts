@@ -18,6 +18,7 @@ export default [
   route("site-access", "routes/site-access.tsx"),
   route("terms", "routes/terms.tsx"),
   route("zone/:zoneId", "routes/zone.$zoneId.tsx"), // Concept B: QR check-in/checkout
+  route('test-realtime', 'routes/test-realtime.tsx'), // For testing realtime subscriptions during development
   
   // Registration
   route("registration", "routes/registration._index.tsx"),

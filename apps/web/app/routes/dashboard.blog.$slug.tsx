@@ -7,6 +7,7 @@ import { createClient } from '@sanity/client';
 import { PortableText } from '@portabletext/react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { useToast } from '~/contexts/ToastContext';
 
 const sanityClient = createClient({
   projectId: process.env.SANITY_PROJECT_ID || '',
@@ -223,9 +224,16 @@ export default function BlogDetail() {
   const { story, sanityStory, participant, hasLiked, comments } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { success, error } = useToast();
   const isSubmitting = navigation.state === 'submitting';
   const [localLiked, setLocalLiked] = useState(hasLiked);
   const [localLikeCount, setLocalLikeCount] = useState(story.like_count || 0);
+
+  useEffect(() => {
+    if (actionData?.error) {
+      error(actionData.error);
+    }
+  }, [actionData, error, success]);
 
   useEffect(() => {
     setLocalLiked(hasLiked);

@@ -16,6 +16,12 @@ import { requireSitePassword } from "~/lib/site-password.server";
 import CookieBanner from "~/components/CookieBanner";
 import RallySubmissionFAB from "~/components/RallySubmissionFAB";
 import { EmergencySOSButton } from "~/components/EmergencySOSButton";
+import { AuthProvider } from "~/contexts/AuthContext";
+import { ToastProvider } from "~/contexts/ToastContext";
+import { ToastContainer } from "~/components/ToastContainer";
+import { ModalProvider } from "~/contexts/ModalContext";
+import { ModalContainer } from "~/components/ModalContainer";
+import { AppStateProvider } from "~/contexts/AppStateContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
@@ -36,6 +42,8 @@ export const links: Route.LinksFunction = () => [
     crossOrigin: "anonymous",
   },
 ];
+
+export const handle = { id: "root" };
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireSitePassword(request);
@@ -97,10 +105,18 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <Outlet />
-      {data?.user && <EmergencySOSButton />}
-    </>
+    <AuthProvider>
+      <ToastProvider>
+        <ModalProvider>
+          <AppStateProvider>
+            <Outlet />
+            {data?.user && <EmergencySOSButton />}
+            <ToastContainer />
+            <ModalContainer />
+          </AppStateProvider>
+        </ModalProvider>
+      </ToastProvider>
+    </AuthProvider>
   );
 }
 
