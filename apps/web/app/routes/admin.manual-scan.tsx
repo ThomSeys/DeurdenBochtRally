@@ -17,13 +17,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .eq('status', 'active')
     .order('last_name', { ascending: true });
 
-  // Get rally zones
+  // Get rally zones (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
+    *[_type == "rallyZoneV2"] | order(order asc) {
       _id,
       title,
       "zoneNumber": order + 1,
-      is_open
+      is_active
     }
   `);
 
@@ -43,46 +43,28 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const formData = await request.formData();
     const participantId = formData.get('participantId') as string;
-    const zoneId = formData.get('zoneId') as string;
+    const rallyZoneId = formData.get('zoneId') as string; // Sanity _id
+    const action = formData.get('action') as string || 'CHECKIN';
     const timestamp = formData.get('timestamp') as string;
     const notes = formData.get('notes') as string;
-    const proofPhotoUrl = formData.get('proofPhotoUrl') as string;
+    const latitude = formData.get('latitude') as string;
+    const longitude = formData.get('longitude') as string;
 
-    if (!participantId || !zoneId || !timestamp) {
+    if (!participantId || !rallyZoneId || !timestamp) {
       return { error: 'Vul alstublieft alle verplichte velden in' };
     }
 
-    const { data: existing } = await supabaseAdmin
-      .from('rally_zone_submissions')
-      .select('id')
-      .eq('participant_id', participantId)
-      .eq('zone_id', zoneId)
-      .single();
-
-    if (existing) {
-      return { error: `Deze deelnemer heeft al een inzending voor Zone ${zoneId}` };
-    }
-
+    // Concept B: Create manual check-in
     const { data, error } = await supabaseAdmin
-      .from('rally_zone_submissions')
+      .from('rally_zone_checkins')
       .insert({
         participant_id: participantId,
-        zone_id: zoneId,
-        entry_timestamp: timestamp,
-        answer_timestamp: timestamp,
-        is_manual: true,
-        valid: true,
-        approved_by: admin.id,
-        approved_at: new Date().toISOString(),
-        rhythm_score: 0,
-        submitted_answer: 'MANUAL_ENTRY',
-        proof_photo_url: proofPhotoUrl || null,
-        entry_accuracy: null,
-        entry_latitude: null,
-        entry_longitude: null,
-        answer_accuracy: null,
-        answer_latitude: null,
-        answer_longitude: null,
+        rally_zone_id: rallyZoneId,
+        action: action,
+        qr_code: `MANUAL-${action}-${Date.now()}`,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        checked_at: timestamp,
       })
       .select()
       .single();

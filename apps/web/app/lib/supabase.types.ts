@@ -982,6 +982,57 @@ export type Database = {
           },
         ]
       }
+      rally_zone_checkins: {
+        Row: {
+          action: string
+          checked_at: string | null
+          created_at: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          participant_id: string
+          qr_code: string
+          rally_zone_id: string
+        }
+        Insert: {
+          action: string
+          checked_at?: string | null
+          created_at?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          participant_id: string
+          qr_code: string
+          rally_zone_id: string
+        }
+        Update: {
+          action?: string
+          checked_at?: string | null
+          created_at?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          participant_id?: string
+          qr_code?: string
+          rally_zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rally_zone_checkins_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rally_zone_checkins_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+        ]
+      }
       rally_zone_submissions: {
         Row: {
           answer_accuracy: number | null
@@ -1116,6 +1167,146 @@ export type Database = {
           {
             foreignKeyName: "rally_zone_submissions_participant_id_fkey"
             columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+        ]
+      }
+      report_history: {
+        Row: {
+          file_size_bytes: number | null
+          file_url: string
+          generated_at: string | null
+          generated_by: string | null
+          id: number
+          metadata: Json | null
+          participant_id: string | null
+          report_type: string
+          scheduled_report_id: number | null
+        }
+        Insert: {
+          file_size_bytes?: number | null
+          file_url: string
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: number
+          metadata?: Json | null
+          participant_id?: string | null
+          report_type: string
+          scheduled_report_id?: number | null
+        }
+        Update: {
+          file_size_bytes?: number | null
+          file_url?: string
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: number
+          metadata?: Json | null
+          participant_id?: string | null
+          report_type?: string
+          scheduled_report_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_history_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_history_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+          {
+            foreignKeyName: "report_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+          {
+            foreignKeyName: "report_history_scheduled_report_id_fkey"
+            columns: ["scheduled_report_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          file_url: string | null
+          id: number
+          participant_id: string | null
+          report_type: string
+          requested_by: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          id?: number
+          participant_id?: string | null
+          report_type: string
+          requested_by: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          id?: number
+          participant_id?: string | null
+          report_type?: string
+          requested_by?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_queue_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_queue_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+          {
+            foreignKeyName: "report_queue_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_queue_requested_by_fkey"
+            columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "rally_director_dashboard"
             referencedColumns: ["rider_id"]
@@ -1277,6 +1468,60 @@ export type Database = {
           },
         ]
       }
+      scheduled_reports: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          email_list: string[]
+          frequency: string
+          id: number
+          is_active: boolean | null
+          last_run_at: string | null
+          next_run_at: string | null
+          report_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          email_list: string[]
+          frequency: string
+          id?: number
+          is_active?: boolean | null
+          last_run_at?: string | null
+          next_run_at?: string | null
+          report_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          email_list?: string[]
+          frequency?: string
+          id?: number
+          is_active?: boolean | null
+          last_run_at?: string | null
+          next_run_at?: string | null
+          report_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "rally_director_dashboard"
+            referencedColumns: ["rider_id"]
+          },
+        ]
+      }
       zone_closure_log: {
         Row: {
           closed_at: string | null
@@ -1366,6 +1611,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_next_run_time: {
+        Args: { p_current_time?: string; p_frequency: string }
+        Returns: string
+      }
       decrement_photo_likes: { Args: { photo_id: string }; Returns: undefined }
       get_leaderboard: {
         Args: never
@@ -1393,6 +1642,10 @@ export type Database = {
           participant_name: string
         }[]
       }
+      get_participant_report_data: {
+        Args: { p_participant_id: number }
+        Returns: Json
+      }
       get_pending_validations: {
         Args: never
         Returns: {
@@ -1406,6 +1659,17 @@ export type Database = {
           zone_id: string
         }[]
       }
+      get_rally_zone_progress: {
+        Args: { participant_uuid: string }
+        Returns: {
+          check_in_time: string
+          check_out_time: string
+          checked_in: boolean
+          checked_out: boolean
+          duration_minutes: number
+          rally_zone_id: string
+        }[]
+      }
       get_riders_with_pending_scans: {
         Args: never
         Returns: {
@@ -1417,6 +1681,10 @@ export type Database = {
       increment_photo_likes: { Args: { photo_id: string }; Returns: undefined }
       update_participant_shadow_scores: {
         Args: { p_participant_id: string }
+        Returns: undefined
+      }
+      update_scheduled_report_after_run: {
+        Args: { p_scheduled_report_id: number }
         Returns: undefined
       }
     }

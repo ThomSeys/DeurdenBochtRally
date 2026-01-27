@@ -22,9 +22,9 @@ const sanityWriteClient = createSanityClient({
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get all rally zones with their open/close status
+  // Get all rally zones with their open/close status (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
+    *[_type == "rallyZoneV2"] | order(order asc) {
       _id,
       title,
       "zoneNumber": order + 1,

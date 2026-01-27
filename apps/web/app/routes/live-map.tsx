@@ -26,49 +26,48 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Live map is only available on the event day', { status: 403 });
   }
 
-  // Fetch rally zones with GPX routes
+  // Fetch rally zones with GPX routes (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
+    *[_type == "rallyZoneV2"] | order(order asc) {
       _id,
       title,
-      location,
-      color,
-      "startLocation": startPoint,
-      "endLocation": endPoint,
-      "is_open": coalesce(is_open, true),
-      checkpoints[] {
-        _key,
-        name,
-        description,
-        codeHint,
-        location
+      character,
+      "startLocation": {
+        "lat": start_location.coordinates.lat,
+        "lng": start_location.coordinates.lng,
+        "name": start_location.name,
+        "landmark_description": start_location.landmark_description
       },
-      gpxRoute {
-        asset-> {
-          url
-        }
-      }
+      "endLocation": {
+        "lat": end_location.coordinates.lat,
+        "lng": end_location.coordinates.lng,
+        "name": end_location.name,
+        "landmark_description": end_location.landmark_description
+      },
+      "is_open": coalesce(is_active, true),
+      emergency_contact
     }
   `);
 
-  // Fetch check-ins for visualization with participant info
+  // Fetch check-ins for visualization with participant info (Concept B: latest check-in per participant)
   const { data: checkIns, error: checkInError } = await supabaseAdmin
-    .from('rally_zone_submissions')
+    .from('rally_zone_checkins')
     .select(`
+      id,
       participant_id,
-      zone_id,
-      entry_latitude,
-      entry_longitude,
-      answer_latitude,
-      answer_longitude,
-      created_at,
-      participants!rally_zone_submissions_participant_id_fkey (
+      rally_zone_id,
+      action,
+      latitude,
+      longitude,
+      checked_at,
+      participants (
         first_name,
         last_name,
         motorcycle_brand,
         motorcycle_model
       )
-    `);
+    `)
+    .order('checked_at', { ascending: false });
 
   if (checkInError) {
     console.error('[live-map] checkIn fetch error:', checkInError);

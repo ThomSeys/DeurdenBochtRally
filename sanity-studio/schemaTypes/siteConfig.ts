@@ -146,13 +146,18 @@ export default defineType({
       initialValue: true,
     }),
     defineField({
-      name: 'gpxRouteFile',
-      title: 'GPX Route File',
-      type: 'file',
-      description: 'Upload the main rally route GPX file for display on the live map',
-      options: {
-        accept: '.gpx',
-      },
+      name: 'gpxRouteFiles',
+      title: 'GPX Route Files',
+      type: 'array',
+      description: 'Upload multiple GPX route files to display on the live map (e.g., main route, alternate routes, etc.)',
+      of: [
+        {
+          type: 'file',
+          options: {
+            accept: '.gpx',
+          },
+        },
+      ],
     }),
     defineField({
       name: 'edition',

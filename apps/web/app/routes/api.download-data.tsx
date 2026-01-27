@@ -1,83 +1,96 @@
 import type { LoaderFunctionArgs } from 'react-router';
-import { requireUserId } from '~/lib/session.server';
+import { getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 
+/**
+ * GDPR Compliance: Export user data
+ * Allows participants to download all their personal data
+ */
 export async function loader({ request }: LoaderFunctionArgs) {
-  const userId = await requireUserId(request);
+  const user = await getUser(request);
+  
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     // Get participant data
-    const { data: participant } = await supabaseAdmin
+    const { data: participant, error: participantError } = await supabaseAdmin
       .from('participants')
       .select('*')
-      .eq('id', userId)
+      .eq('id', user.id)
       .single();
 
-    // Get rally submission
-    const { data: rallySubmission } = await supabaseAdmin
-      .from('rally_submissions')
-      .select('*')
-      .eq('participant_id', userId)
-      .single();
+    if (participantError) {
+      throw participantError;
+    }
 
-    // Get zone submissions
-    const { data: zoneSubmissions } = await supabaseAdmin
-      .from('rally_zone_submissions')
+    // Get rally zone check-ins (Concept B)
+    const { data: checkIns, error: checkInsError } = await supabaseAdmin
+      .from('rally_zone_checkins')
       .select('*')
-      .eq('participant_id', userId);
+      .eq('participant_id', user.id)
+      .order('checked_at', { ascending: false });
 
-    // Get achievements
-    const { data: achievements } = await supabaseAdmin
-      .from('participant_achievements')
-      .select(`
-        *,
-        achievement:achievement_id (*)
-      `)
-      .eq('participant_id', userId);
+    if (checkInsError) {
+      console.error('Error fetching check-ins:', checkInsError);
+    }
 
-    // Get documents
-    const { data: documents } = await supabaseAdmin
-      .from('documents')
+    // Get ride stories
+    const { data: rideStories, error: storiesError } = await supabaseAdmin
+      .from('ride_stories')
       .select('*')
-      .order('category', { ascending: true });
+      .eq('participant_id', user.id);
+
+    if (storiesError) {
+      console.error('Error fetching ride stories:', storiesError);
+    }
+
+    // Get emergency SOS history
+    const { data: emergencyAlerts, error: sosError } = await supabaseAdmin
+      .from('emergency_contacts')
+      .select('*')
+      .eq('participant_id', user.id);
+
+    if (sosError) {
+      console.error('Error fetching emergency alerts:', sosError);
+    }
+
+    // Get push notification history
+    const { data: pushHistory, error: pushError } = await supabaseAdmin
+      .from('push_notification_history')
+      .select('*')
+      .eq('participant_id', user.id);
+
+    if (pushError) {
+      console.error('Error fetching push history:', pushError);
+    }
 
     // Compile all data
     const userData = {
-      exportDate: new Date().toISOString(),
-      dataRetentionPolicy: '1 jaar na evenement (conform GDPR)',
-      participant: participant,
-      rallySubmission: rallySubmission,
-      zoneSubmissions: zoneSubmissions || [],
-      achievements: achievements || [],
-      availableDocuments: documents || [],
-      privacyNotice: {
-        rightToAccess: 'Je hebt het recht om je persoonlijke gegevens op te vragen (Art. 15 GDPR)',
-        rightToRectification: 'Je hebt het recht om onjuiste gegevens te laten corrigeren (Art. 16 GDPR)',
-        rightToErasure: 'Je hebt het recht om je gegevens te laten verwijderen (Art. 17 GDPR)',
-        rightToDataPortability: 'Je hebt het recht om je gegevens over te dragen (Art. 20 GDPR)',
-        rightToObject: 'Je hebt het recht om bezwaar te maken tegen verwerking (Art. 21 GDPR)',
-        contactEmail: 'vzwddb@gmail.com',
-        dataProtectionAuthority: 'Gegevensbeschermingsautoriteit (GBA) - https://www.gegevensbeschermingsautoriteit.be',
-      }
+      participant,
+      rally_zone_checkins: checkIns || [],
+      ride_stories: rideStories || [],
+      emergency_alerts: emergencyAlerts || [],
+      push_notification_history: pushHistory || [],
+      exported_at: new Date().toISOString(),
+      data_export_notice: 'This is your complete personal data as stored in our system, exported in compliance with GDPR regulations.',
     };
 
-    // Return JSON file for download
-    const json = JSON.stringify(userData, null, 2);
-    const filename = `deur-den-bocht-data-${userId}-${new Date().toISOString().split('T')[0]}.json`;
-
-    return new Response(json, {
-      status: 200,
+    // Return as downloadable JSON file
+    const filename = `deur-den-bocht-data-${user.id}-${Date.now()}.json`;
+    
+    return new Response(JSON.stringify(userData, null, 2), {
       headers: {
         'Content-Type': 'application/json',
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
-
   } catch (error) {
-    console.error('[download-data] Error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to export data' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('[api.download-data] error:', error);
+    return Response.json(
+      { error: 'Failed to export data' },
+      { status: 500 }
+    );
   }
 }

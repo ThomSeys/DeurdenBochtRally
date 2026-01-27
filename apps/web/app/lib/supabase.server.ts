@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
+import type { Database } from './supabase.types';
 
 if (!process.env.SUPABASE_URL) {
   throw new Error('SUPABASE_URL is required');

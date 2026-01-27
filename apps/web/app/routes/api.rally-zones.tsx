@@ -3,9 +3,9 @@ import { sanityClient } from '~/lib/sanity.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    // Return JSON to be cached by service worker
+    // Return JSON to be cached by service worker (Concept B: QR check-in zones)
     const rallyZones = await sanityClient.fetch(`
-      *[_type == "rallyZone"] | order(order asc) {
+      *[_type == "rallyZoneV2"] | order(order asc) {
         zoneType,
         estimatedDistance,
         checkpoints[] {

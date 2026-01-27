@@ -454,16 +454,7 @@ export default function Dashboard() {
             </p>
           </Link>
 
-          <Link
-            to="/certificates/completion"
-            className="bg-gradient-to-br from-green-500 to-green-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
-          >
-            <Icon name="document" className="w-16 h-16 mb-3" />
-            <h3 className="font-bold text-xl mb-2">Certificaat</h3>
-            <p className="text-sm text-green-100">
-              Download je deelname certificaat na het voltooien van de rally!
-            </p>
-          </Link>
+          {/* Removed: Certificates - Concept A only */}
         </div>
 
         {/* New: Progress & Stats Cards */}

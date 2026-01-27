@@ -309,9 +309,9 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
 
           // Add start markers for all zones
           rallyZones.forEach((zone) => {
-            // Skip zones without start location
-            if (!zone.startLocation) {
-              console.warn('⚠️ Zone missing startLocation:', zone.title);
+            // Skip zones without start location or invalid coordinates
+            if (!zone.startLocation || !zone.startLocation.lat || !zone.startLocation.lng) {
+              console.warn('⚠️ Zone missing startLocation or coordinates:', zone.title, zone.startLocation);
               return;
             }
 

@@ -14,16 +14,11 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   
-  // Get urgent counts
-  const { count: pendingScansCount, error: pendingError } = await supabaseAdmin
-    .from('rally_zone_submissions')
-    .select('*', { count: 'exact', head: true })
-    .eq('verified', false);
+  // Get urgent counts (Concept B: check-ins don't need verification)
+  const { count: checkInsCount, error: checkInsError } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('*', { count: 'exact', head: true });
 
-  const { count: fallbackReviewCount, error: fallbackError } = await supabaseAdmin
-    .from('fallback_submissions')
-    .select('*', { count: 'exact', head: true })
-    .eq('verified', false);
 
   const { count: emergencySOSCount, error: sosCountError } = await supabaseAdmin
     .from('emergency_contacts')
@@ -38,12 +33,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .limit(5);
 
   console.log('[admin dashboard] Urgent counts:', {
-    pendingScansCount,
-    fallbackReviewCount,
     emergencySOSCount,
     recentSOSCount: recentSOS?.length || 0,
     recentSOSDetails: recentSOS,
-    errors: { pendingError, fallbackError, sosCountError, sosError }
+    errors: { sosCountError, sosError }
   });
 
   // Get statistics
@@ -61,10 +54,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select('*', { count: 'exact', head: true })
     .eq('checked_in', true);
 
-  const { count: totalSubmissions } = await supabaseAdmin
-    .from('rally_submissions')
-    .select('*', { count: 'exact', head: true })
-    .not('submitted_at', 'is', null);
+  const { count: totalCheckIns } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('*', { count: 'exact', head: true });
 
   // Get recent participants
   const { data: recentParticipants } = await supabaseAdmin
@@ -73,47 +65,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .order('created_at', { ascending: false })
     .limit(10);
 
-  // Get top scorers (including achievement points)
-  const { data: allParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, motorcycle_brand, motorcycle_model, total_achievement_points')
-    .not('id', 'is', null);
+  // Get top participants by check-in count (Concept B: simple presence tracking)
+  const { data: checkInCounts } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('participant_id, participants(first_name, last_name, motorcycle_brand, motorcycle_model)')
+    .eq('action', 'CHECKIN');
 
-  const { data: rallyScores } = await supabaseAdmin
-    .from('rally_submissions')
-    .select('participant_id, final_score, total_points, shadow_total')
-    .not('final_score', 'is', null);
+  // Count check-ins per participant
+  const participantCheckIns = new Map();
+  checkInCounts?.forEach((checkIn: any) => {
+    const pid = checkIn.participant_id;
+    if (!participantCheckIns.has(pid)) {
+      participantCheckIns.set(pid, {
+        participant_id: pid,
+        first_name: checkIn.participants?.first_name,
+        last_name: checkIn.participants?.last_name,
+        motorcycle_brand: checkIn.participants?.motorcycle_brand,
+        motorcycle_model: checkIn.participants?.motorcycle_model,
+        check_in_count: 0,
+      });
+    }
+    participantCheckIns.get(pid).check_in_count++;
+  });
 
-  // Combine rally scores with achievement points
-  const topScorers = (allParticipants || [])
-    .map((participant: any) => {
-      const rallyScore = rallyScores?.find(r => r.participant_id === participant.id);
-      return {
-        participant_id: participant.id,
-        first_name: participant.first_name,
-        last_name: participant.last_name,
-        motorcycle_brand: participant.motorcycle_brand,
-        motorcycle_model: participant.motorcycle_model,
-        final_score: (rallyScore?.final_score || 0) + (participant.total_achievement_points || 0),
-        total_points: rallyScore?.total_points || 0,
-        shadow_total: rallyScore?.shadow_total || 0,
-        achievement_points: participant.total_achievement_points || 0,
-        participants: {
-          first_name: participant.first_name,
-          last_name: participant.last_name,
-          motorcycle_brand: participant.motorcycle_brand,
-          motorcycle_model: participant.motorcycle_model,
-        }
-      };
-    })
-    .filter(p => p.final_score > 0 || p.total_points > 0) // Only show participants with scores
-    .sort((a: any, b: any) => b.final_score - a.final_score)
+  const topCheckIns = Array.from(participantCheckIns.values())
+    .sort((a, b) => b.check_in_count - a.check_in_count)
     .slice(0, 10);
 
   return {
     urgent: {
-      pendingScansCount: pendingScansCount || 0,
-      fallbackReviewCount: fallbackReviewCount || 0,
+      checkInsCount: checkInsCount || 0,
       emergencySOSCount: emergencySOSCount || 0,
       recentSOS: recentSOS || [],
     },
@@ -121,17 +102,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
       totalParticipants: totalParticipants || 0,
       paidParticipants: paidParticipants || 0,
       checkedInParticipants: checkedInParticipants || 0,
-      totalSubmissions: totalSubmissions || 0,
+      totalCheckIns: totalCheckIns || 0,
     },
     recentParticipants: recentParticipants || [],
-    topScorers: topScorers || [],
+    topCheckIns: topCheckIns || [],
   };
 }
 
 export default function AdminDashboard() {
-  const { urgent, stats, recentParticipants, topScorers } = useLoaderData<typeof loader>();
+  const { urgent, stats, recentParticipants, topCheckIns } = useLoaderData<typeof loader>();
 
-  const hasUrgentMatters = urgent.emergencySOSCount > 0 || urgent.pendingScansCount > 0 || urgent.fallbackReviewCount > 0;
+  const hasUrgentMatters = urgent.emergencySOSCount > 0 || urgent.checkInsCount > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -185,34 +166,6 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-600 group-hover:text-gray-900">Actieve noodoproepen</p>
-                    </Link>
-                  )}
-                  {urgent.pendingScansCount > 0 && (
-                    <Link
-                      to="/admin/pending-scans"
-                      className="bg-white border-2 border-orange-300 rounded-lg p-4 hover:shadow-md transition-all group"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-orange-700">📋 Validaties</span>
-                        <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                          {urgent.pendingScansCount}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 group-hover:text-gray-900">Scans te controleren</p>
-                    </Link>
-                  )}
-                  {urgent.fallbackReviewCount > 0 && (
-                    <Link
-                      to="/admin/fallback-review"
-                      className="bg-white border-2 border-yellow-300 rounded-lg p-4 hover:shadow-md transition-all group"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-yellow-700">📝 Reviews</span>
-                        <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                          {urgent.fallbackReviewCount}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 group-hover:text-gray-900">Fallback verificaties</p>
                     </Link>
                   )}
                 </div>
@@ -285,16 +238,6 @@ export default function AdminDashboard() {
               <Icon name="check" className="w-10 h-10 text-blue-600" />
             </div>
           </div>
-
-          <div className="bg-white rounded-sm shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Rally Inzendingen</p>
-                <p className="text-3xl font-bold text-primary-600 mt-2">{stats.totalSubmissions}</p>
-              </div>
-              <Icon name="flag" className="w-10 h-10 text-primary-600" />
-            </div>
-          </div>
         </div>
 
         {/* Quick Actions */}
@@ -325,41 +268,29 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/pending-scans"
-            className={`rounded-sm shadow p-6 transition-all relative ${
-              urgent.pendingScansCount > 0
-                ? 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 ring-2 ring-orange-300'
-                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+              className={`rounded-sm shadow p-6 transition-all relative ${
+                'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
             }`}
           >
-            {urgent.pendingScansCount > 0 && (
-              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center bg-orange-500 text-white text-xs font-bold rounded-full border-2 border-white">
-                {urgent.pendingScansCount}
-              </span>
-            )}
             <Icon name="search" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Manual Validatie</h3>
             <p className="text-sm text-white mt-1">
-              {urgent.pendingScansCount > 0 ? `${urgent.pendingScansCount} scans wachten` : 'Controleer scans'}
+              {'Controleer scans'}
             </p>
           </Link>
 
           <Link
             to="/admin/fallback-review"
             className={`rounded-sm shadow p-6 transition-all relative ${
-              urgent.fallbackReviewCount > 0
-                ? 'bg-gradient-to-r from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800 ring-2 ring-yellow-300'
-                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+              
+              'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
             }`}
           >
-            {urgent.fallbackReviewCount > 0 && (
-              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center bg-yellow-500 text-white text-xs font-bold rounded-full border-2 border-white">
-                {urgent.fallbackReviewCount}
-              </span>
-            )}
+            
             <Icon name="clipboard" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Fallback Review</h3>
             <p className="text-sm text-white mt-1">
-              {urgent.fallbackReviewCount > 0 ? `${urgent.fallbackReviewCount} te verifiëren` : 'Verifieer inzendingen'}
+              {'Verifieer inzendingen'}
             </p>
           </Link>
 
@@ -541,36 +472,29 @@ export default function AdminDashboard() {
           {/* Top Scorers */}
           <div className="bg-white rounded-sm shadow">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Top 10 Klassement</h2>
+              <h2 className="text-xl font-bold text-gray-900">Top 10 Check-ins</h2>
             </div>
             <div className="divide-y divide-gray-200">
-              {topScorers.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">Nog geen inzendingen</div>
+              {topCheckIns.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">Nog geen check-ins</div>
               ) : (
-                topScorers.map((scorer: any, index: number) => (
+                topCheckIns.map((participant: any, index: number) => (
                   <div key={index} className="p-4 hover:bg-gray-50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <span className="text-2xl font-bold text-gray-400">#{index + 1}</span>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {scorer.first_name} {scorer.last_name}
+                            {participant.first_name} {participant.last_name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {scorer.motorcycle_brand} {scorer.motorcycle_model}
+                            {participant.motorcycle_brand} {participant.motorcycle_model}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-primary-600">{scorer.final_score?.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">
-                          {scorer.total_points} pts + {scorer.shadow_total?.toFixed(0) || 0} shadow
-                          {scorer.achievement_points > 0 && (
-                            <span className="inline-flex items-center gap-1">
-                              + {scorer.achievement_points} <Icon name="trophy" className="w-4 h-4 inline text-yellow-500" />
-                            </span>
-                          )}
-                        </p>
+                        <p className="text-lg font-bold text-primary-600">{participant.check_in_count}</p>
+                        <p className="text-xs text-gray-500">zones bezocht</p>
                       </div>
                     </div>
                   </div>
@@ -578,8 +502,8 @@ export default function AdminDashboard() {
               )}
             </div>
             <div className="p-4 border-t border-gray-200">
-              <Link to="/admin/leaderboard" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-                Bekijk volledig klassement →
+              <Link to="/my-day" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                Bekijk rally geschiedenis →
               </Link>
             </div>
           </div>
