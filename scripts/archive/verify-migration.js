@@ -1,8 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv/config');
 
 const supabase = createClient(
-  'https://gxhseyrdqytkmujwtmlu.supabase.co',
-  'sb_secret_sZcvOeOZY7sGZsr6G-EFrg_HxgkhoWh'
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 async function checkAll() {

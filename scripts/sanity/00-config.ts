@@ -4,13 +4,18 @@
  */
 
 import { createClient } from '@sanity/client';
+import 'dotenv/config';
 
-// Get token from environment or use hardcoded (for now)
-const SANITY_TOKEN = process.env.SANITY_TOKEN || 'skaD4StBLox7QnIavzjPBYrPNjemIOMgeeGzq8IECjOsmGMUQdQ4QXLifygEqOlL5lTxlMORN21tvsR1kUrkSvHbhe45pZnAwZXfsS0EEiCl9MSyTOoNYXQgCBH3vSdIyvY3YZ7ZCP5jznUPGXxphuG5IGG0TEXstNsIuT84bBKn0RLDRYGs';
+// Get token from environment
+const SANITY_TOKEN = process.env.SANITY_TOKEN || '';
+
+if (!SANITY_TOKEN) {
+  throw new Error('SANITY_TOKEN environment variable is required');
+}
 
 export const sanityClient = createClient({
-  projectId: 'tp2nrvnd',
-  dataset: 'production',
+  projectId: process.env.SANITY_PROJECT_ID || '',
+  dataset: process.env.SANITY_DATASET || 'production',
   token: SANITY_TOKEN,
   apiVersion: '2023-05-03',
   useCdn: false,

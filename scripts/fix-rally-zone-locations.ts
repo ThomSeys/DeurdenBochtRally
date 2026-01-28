@@ -1,10 +1,11 @@
 import { createClient } from '@sanity/client';
+import 'dotenv/config';
 
 const sanityClient = createClient({
-  projectId: 'tp2nrvnd',
-  dataset: 'production',
+  projectId: process.env.SANITY_PROJECT_ID || '',
+  dataset: process.env.SANITY_DATASET || 'production',
   apiVersion: '2024-01-01',
-  token: process.env.SANITY_TOKEN || 'skaD4StBLox7QnIavzjPBYrPNjemIOMgeeGzq8IECjOsmGMUQdQ4QXLifygEqOlL5lTxlMORN21tvsR1kUrkSvHbhe45pZnAwZXfsS0EEiCl9MSyTOoNYXQgCBH3vSdIyvY3YZ7ZCP5jznUPGXxphuG5IGG0TEXstNsIuT84bBKn0RLDRYGs',
+  token: process.env.SANITY_TOKEN || '',
   useCdn: false,
 });
 

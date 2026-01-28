@@ -26,9 +26,9 @@ function ask(question: string): Promise<string> {
 
 // Sanity client
 const sanityClient = createSanityClient({
-  projectId: 'tp2nrvnd',
-  dataset: 'production',
-  token: process.env.SANITY_TOKEN || 'skaD4StBLox7QnIavzjPBYrPNjemIOMgeeGzq8IECjOsmGMUQdQ4QXLifygEqOlL5lTxlMORN21tvsR1kUrkSvHbhe45pZnAwZXfsS0EEiCl9MSyTOoNYXQgCBH3vSdIyvY3YZ7ZCP5jznUPGXxphuG5IGG0TEXstNsIuT84bBKn0RLDRYGs',
+  projectId: process.env.SANITY_PROJECT_ID || '',
+  dataset: process.env.SANITY_DATASET || 'production',
+  token: process.env.SANITY_TOKEN || '',
   apiVersion: '2023-05-03',
   useCdn: false,
 });
