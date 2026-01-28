@@ -1,902 +1,874 @@
-# Bochtenkoning Rally - Organisatie Gids
+# 🏍️ Bochtenkoning Rally 2026 - Organisatie Gids
 
-**Editie 2026 | VZW Deur Den Bocht**
+**VZW Deur Den Bocht**  
+*Laatste update: 28 januari 2026*
 
 ---
 
 ## 📋 Inhoudsopgave
 
-1. [Event Concept](#event-concept)
-2. [Doelgroep & Filosofie](#doelgroep--filosofie)
-3. [Route & Formules](#route--formules)
-4. [Technische Infrastructuur](#technische-infrastructuur)
-5. [Timeline & Planning](#timeline--planning)
-6. [Verantwoordelijkheden & Rollen](#verantwoordelijkheden--rollen)
-7. [Communicatie & Marketing](#communicatie--marketing)
-8. [Veiligheid & Noodprocedures](#veiligheid--noodprocedures)
-9. [Financiën & Budgettering](#financiën--budgettering)
-10. [Post-Event & Evaluatie](#post-event--evaluatie)
+1. [Wat is dit Event?](#1-wat-is-dit-event)
+2. [Hoe Werkt Het?](#2-hoe-werkt-het)
+3. [De Routes & Zones](#3-de-routes--zones)
+4. [Wat Hebben We Nodig?](#4-wat-hebben-we-nodig)
+5. [Dagprogramma](#5-dagprogramma)
+6. [Organisatie & Rollen](#6-organisatie--rollen)
+7. [Budget & Financiën](#7-budget--financiën)
+8. [Veiligheid & Risico's](#8-veiligheid--risicos)
+9. [Checklist](#9-checklist)
 
 ---
 
-## 🏍️ Event Concept
+## 1. 🏍️ Wat is dit Event?
 
-### Wat is de Bochtenkoning Rally?
+### Het Concept
 
-De Bochtenkoning Rally is een **community-gerichte motorrit rally** door de mooiste wegen van België, met focus op **vrijheid, avontuur en verhalen delen**. Het is geen race of competitie, maar een viering van het motorrijden en de gemeenschap eromheen.
+De **Bochtenkoning Rally** is een motor evenement door de mooiste wegen van België. Het is **géén race** en **geen competitie** - het is een dag vol vrijheid, avontuur en beleving voor motorliefhebbers.
 
-### Core Principles
+### De Kern
 
-1. **Keuze & Vrijheid**: Deelnemers kiezen zelf hoe ze hun dag invullen
-2. **Community First**: Het gaat om verbinding, niet om winnen
-3. **Verhalen Delen**: Foto's en ervaringen zijn belangrijker dan punten
-4. **Veiligheid**: Veilig rijden, op eigen tempo, geen tijdsdruk
-5. **Toegankelijkheid**: Voor elk niveau en rijstijl
+**Wat maakt het bijzonder?**
+- Iedereen bepaalt zelf zijn route en tempo
+- Je kunt kiezen uit 4 "rally zones" (Vlaamse Ardennen, Condroz, Ourthe Vallei, Hoge Venen)
+- Geen verplichte stops of checkpoints
+- Focus op verhalen delen en foto's maken
+- Community gevoel staat centraal
 
-### Event Identiteit
+**Voor wie?**
+- Alle motorrijders (18+)
+- Van beginner tot ervaren
+- Solo riders en groepen
+- Alle types motoren welkom
 
-- **Naam**: Bochtenkoning Rally 2026
-- **Datum**: 8 augustus 2026
-- **Locatie**:
-  - Start: Café Den Belami (06:30 - 08:00)
-  - Finish: Baraque de Fraiture (17:00 - 20:30)
-- **Deelnemers**: Max. 50-100 rijders
-- **Type**: Zelfstandige rally met optionele checkpoints
+### Evenement Details
+
+- 📅 **Datum**: Zaterdag 16 mei 2026
+- 👥 **Aantal**: 50-100 deelnemers
+- ⏰ **Duur**: Hele dag (06:30 - 20:30)
+- 📍 **Start**: Café Den Belami (Oost-Vlaanderen)
+- 🏁 **Eindpunt**: Baraque de Fraiture (hoogste punt België)
+- 🗺️ **Afstand**: 350-450 km
+
+### Wat Deelnemers Krijgen
+
+**Bij inschrijving:**
+- Unieke QR code voor check-in
+- Roadbook met route beschrijvingen
+- GPS routes (downloadbaar)
+- Toegang tot online dashboard
+- Evenement sticker
+
+**Tijdens het evenement:**
+- Ontbijt bij de start
+- (Optioneel) lunch onderweg
+- Route door 4 mooie regio's
+- Mogelijkheid om foto's te delen
+- Eindpunt bij Baraque met afsluiter
+
+**Na het evenement:**
+- Foto galerij van alle deelnemers
+- Verhalen delen op blog
+- Gemeenschap blijft bestaan online
 
 ---
 
-## 👥 Doelgroep & Filosofie
+## 2. 🗺️ Hoe Werkt Het?
 
-### Primaire Doelgroep
+### Twee Manieren om Mee Te Doen
 
-- **Motorrijders** van alle niveaus (18+)
-- **Avonturiers** die willen ontdekken en navigeren
-- **Community builders** die verhalen willen delen
-- **Solo riders & groepen** beide welkom
-- **Toeristen & locals** gemengd publiek
+#### Optie A: Avontuur Traject (Zelf je route kiezen)
 
-### Filosofie Shift (2026)
+**Perfect voor:**
+- Mensen die graag navigeren
+- Avonturiers en ontdekkers
+- Wie graag zijn eigen route samenstelt
 
-#### Van Competition naar Community
+**Hoe het werkt:**
+1. Je krijgt een roadbook met beschrijvingen van 4 rally zones
+2. Onderweg kies je: ga ik deze zone in, of sla ik hem over?
+3. Per zone staan er meerdere route opties beschreven
+4. Je vinkt af wat je gedaan hebt via de app (optioneel)
+5. Maak foto's en deel je verhaal
 
-- ✅ Keuze tussen 2 route-opties
-- ✅ Optionele rally zone check-ins
-- ✅ Focus op foto's en verhalen delen
-- ✅ Community gallery & story sharing
-- ✅ Iedereen is een "bocht-held"
-**Totale Afstand**: ~350-450 km door de Ardennen
+**Voorbeeld:**
+- Start in Oost-Vlaanderen
+- Zie rally zone "Vlaamse Ardennen" → "Ziet er leuk uit, laat ik deze doen!"
+- Rij de zone, maak foto's
+- Verder naar volgende zone, of rechtstreeks naar de finish
+- Totale vrijheid!
 
-**Start & Finish:**
+#### Optie B: Volledige Route (Gewoon cruisen)
 
-- **Start**: Café Den Belami (Oost-Vlaanderen)
-- **Tussenhalte**: Lunch optie in Ardennen (11:30-14:30)
-- **Finish**: Baraque de Fraiture (hoogste punt van België)
+**Perfect voor:**
+- Wie gewoon wil genieten van mooie wegen
+- Geen gedoe met navigatie
+- Stress-vrij toeren
 
-### Twee Formules
+**Hoe het werkt:**
+1. Je volgt één GPS route van start tot finish
+2. De route gaat door alle mooie regio's
+3. Stop waar en wanneer je wilt
+4. Geen verplichtingen, gewoon rijden
+5. Je kunt alsnog zones aanvinken als je wil
 
-#### 1. Adventure Track (met Rally Zones & Routetips)
+### Het "Rittenboek"
 
-**Voor wie:**
+Een papieren boekje (A5 formaat) dat je mee krijgt met:
+- Overzichtskaart van heel de route
+- Per rally zone: beschrijving, foto's, highlights
+- Veiligheidsinfo en noodcontacten
+- Tips voor onderweg (benzinestations, rust plaatsen)
+- Ruimte voor eigen notities
 
-- Avonturiers die willen navigeren
-- Mensen die hun eigen route willen samenstellen
-- Deelnemers die volledig willen beleven
+### Incheck Systeem
 
-**Kenmerken:**
+**Bij de start:**
+- Scan je QR code
+- Krijg je rittenboek + materialen
+- Ontbijt eten
+- Vertrekken wanneer je klaar bent (tussen 06:30-08:00)
 
-- Meerdere rally zones verspreid over de hoofdroute
-- Per zone: verschillende routetips (off-road, technisch, panoramisch, snelweg, binnendoor, ...)
-- Volledig optioneel - kies waar je zin in hebt
-- Geen verplichte check-ins of checkpoints
-- GPX beschikbaar per tip (optioneel)
+**Onderweg (optioneel):**
+- Rally zones kunnen aangevinkt worden via de app
+- GPS controleert of je er écht bent (100m radius)
+- Foto's uploaden kan altijd
 
-**Materialen:**
+**Bij het eindpunt:**
+- Scan je QR code af
+- Klaar! Geen punten tellen of klassementen
 
-- Klassiek roadbook (papier) met rally zones & routetips
-- Digital GPX per tip (optioneel)
-- Overzichtskaart met alle zones & tip karakteristieken
+### De Applicatie / Website
 
-#### 2. Complete Route (Cruise Mode)
+**Wat kun je ermee?**
+- Je QR code bekijken
+- GPS routes downloaden
+- Rally zones afvinken
+- Foto's uploaden
+- Andere foto's bekijken
+- Verhaal schrijven
+- Noodknop (SOS)
 
-**Voor wie:**
+**Moet ik de app gebruiken?**
+Nee! Je kunt de hele dag rijden zonder app te openen. De app is er alleen om:
+- GPS routes te downloaden als je dat wil
+- Foto's te delen als je dat wil
+- Je verhaal te delen na afloop
 
-- Rijders die gewoon willen cruisen
-- Mensen zonder druk van checkpoints
-- Deelnemers die alleen de mooie wegen willen
+---
 
-**Kenmerken:**
+## 3. 🌍 De Routes & Zones
 
-- Eén doorlopende GPX route
+### Hoofdroute Overzicht
+
+**Totaal:** ~350-450 km (afhankelijk van keuzes)
+
+**Regio's:**
+1. Oost-Vlaanderen (start)
+2. Vlaamse Ardennen
+3. Condroz (Namen/Luik)
+4. Ourthe Vallei (Ardennen)
+5. Hoge Venen (Oostkantons)
+6. Baraque de Fraiture (eindpunt)
+
+### Rallyzone 1: Vlaamse Ardennen
+
+**Waar:** Oost-Vlaanderen  
+**Karakter:** Heuvels, bochten, Vlaamse klassiekers
+
+**Wat te verwachten:**
+- Korte steile klimmetjes
+- Afwisselend wegen (breed en smal)
+- Typisch Vlaams landschap
+- Mooie dorpjes
+
+**Highlights:**
+- Oudenaarde omgeving
+- Koppenberg regio
+- Paterberg wegen
+- Panorama uitzichten
+
+### Rallyzone 2: Condroz
+
+**Waar:** Namen & Luik  
+**Karakter:** Glooiend plateau, Waalse charme
+
+**Wat te verwachten:**
+- Open landschap met velden
+- Bossen en valleien
+- Authentieke dorpen
+- Wat technischere passages
+
+**Highlights:**
+- Rally van de Condroz route
+- Waalse heuvels
+- Rustige wegen
+- Lokale sfeer
+
+### Rallyzone 3: Ourthe Vallei
+
+**Waar:** Ardennen (Luik & Namen)  
+**Karakter:** Riviervalleien, iconische motorroutes
+
+**Wat te verwachten:**
+- Kronkelende wegen langs de rivier
+- Dichte bossen
+- Flow en ritme in de bochten
+- Absolute motorparadijs
+
+**Highlights:**
+- Ourthe rivier routes
+- La Roche-en-Ardenne
+- Houffalize omgeving
+- Klassieke motor wegen
+
+### Rallyzone 4: Hoge Venen
+
+**Waar:** Oostkantons (Duitse grens)  
+**Karakter:** Hoogveen, open landschap, hoogste wegen
+
+**Wat te verwachten:**
+- Uniek natuurgebied
+- Weids en open
+- Hooggelegen wegen
+- Andere sfeer dan rest België
+
+**Highlights:**
+- Signal de Botrange nabij
+- Hoogveen panorama's
+- Duitse grens wegen
+- Baraque de Fraiture aanloop
+
+### Middagpauze & Stops
+
+**Middagpauze optie (11:30-14:30):**
+- Ergens in de Ardennen (exacte locatie tbd)
+- Niet verplicht - je kunt ook eigen lunch regelen
+- Wie meedoet: vooraf aangeven bij inschrijving
+
+**Andere stops:**
+- Vrij om te pauzeren waar je wilt
+- Benzinestations langs de route
+- Mooie uitzichtpunten voor foto's
+- Cafés in dorpen onderweg
+
+---
+
+## 4. 📦 Wat Hebben We Nodig?
+
+### Locaties & Faciliteiten
+
+#### Start Locatie: Café Den Belami
+**Wat nodig:**
+- [ ] Reservatie voor 50-100 personen
+- [ ] Ruimte binnen voor ontbijt
+- [ ] Parking voor motoren (groot genoeg)
+- [ ] Stroom voor laptops/tablets
+- [ ] Tafels voor check-in
+
+**Afspraken maken:**
+- Datum & tijdslot vastleggen (06:00-09:00)
+- Ontbijt regelen (prijs per persoon)
+- Parking exclusief voor event
+- Mogelijkheid tot vroege setup (05:30)
+
+#### Eindpunt Locatie: Baraque de Fraiture
+**Wat nodig:**
+- [ ] Reservatie/afstemming eigenaar
+- [ ] Parking regeling
+- [ ] Eventueel iets te eten/drinken (bar open?)
+- [ ] Ruimte voor groepsfoto
+
+**Afspraken maken:**
+- Aankomst verwacht tussen 17:00-20:30
+- Parking beschikbaarheid
+- Mogelijkheid voor eindpunt spandoek
+
+#### Middagpauze Locatie (optioneel)
+**Wat nodig:**
+- [ ] Restaurant/café in Ardennen selecteren
+- [ ] Groepsreservering mogelijk?
+- [ ] Menu à €15-20 per persoon
+- [ ] Tijdslot 11:30-14:30 (flexibel)
+
+**Afspraken maken:**
+- Aantal personen meedelen (week voor evenement)
+- Menu vooraf kiezen
+- Betaling regelen (vooraf of ter plaatse)
+
+### Materialen - Fysiek
+
+#### Rittenboeken (1 per deelnemer)
+**Inhoud:**
+- A5 formaat, 20-30 pagina's
+- Volledige route kaarten
+- Rallyzone beschrijvingen
+- Veiligheidsinfo
+- Noodcontacten
+- Evenement sticker erin
+
+**Te maken:**
+- [ ] Design & layout
+- [ ] Printen & binden (50-100 stuks)
+- [ ] Testen met proefrit
+
+**Kostprijs:** ~€5-10 per boek
+
+#### Incheck Materiaal
+- [ ] 2-3 tablets/laptops voor QR scanning
+- [ ] Powerbanks als reservebatterij
+- [ ] Printer (voor reserveregistraties)
+- [ ] Incheck tafel + 2 stoelen
+- [ ] Evenement spandoek/vlag
+
+#### Deelnemer Pakketjes
+**Per persoon:**
+- [ ] Rittenboek
+- [ ] Evenement sticker (2 stuks)
+- [ ] Noodcontact kaartje (formaat bankkaart)
+- [ ] Optioneel: goodie (sleutelhanger, badge, etc.)
+
+**Verpakking:**
+- Papieren zak of kartonnen doosje
+- Met naam/startnummer erop
+
+#### Signage & Decoratie
+**Start (Den Belami):**
+- [ ] Start spandoek (3x1 meter)
+- [ ] Evenement vlaggen (2-3 stuks)
+- [ ] Wegwijzers naar parking
+
+**Eindpunt (Baraque):**
+- [ ] Eindpunt spandoek (3x1 meter)
+- [ ] Fotobooth hoek met achtergrond
+- [ ] Evenement vlaggen
+
+**Onderweg:**
+- [ ] Rallyzone markers (optioneel, 4 stuks)
+- [ ] Alleen als we echt fysieke inchecks willen
+
+### Materialen - Digitaal
+
+#### GPS Routes
+**Te maken:**
+- [ ] Hoofdroute GPX (complete cruise)
+- [ ] Rallyzone 1 GPX (Vlaamse Ardennen)
+- [ ] Rallyzone 2 GPX (Condroz)
+- [ ] Rallyzone 3 GPX (Ourthe)
+- [ ] Rallyzone 4 GPX (Hoge Venen)
+
+**Testen:**
+- [ ] Op verschillende GPS merken (Garmin, TomTom, etc.)
+- [ ] Op smartphone apps
+- [ ] Proefrit doen
+
+#### Website Inhoud
+**Nog toevoegen:**
+- [ ] Finaal rittenboek PDF download
+- [ ] Evenementdag instructies
+- [ ] Live updates tijdens evenement
+- [ ] FAQ uitbreiden
+
+### Mensen & Rollen
+
+#### Organisatie Team (6 Personen)
+
+We zijn met 6 personen, dus taken worden gecombineerd:
+
+**Persoon 1 - Evenement Manager / Coördinator**
+- Alles overzien en coördineren
+- Contactpersoon locaties en sponsors
+- Budget beheren
+- Verzekeringen regelen
+- Op evenementdag: Troubleshooting en beslissingen
+
+**Persoon 2 & 3 - Incheck Team**
+- Voorbereiding: Rittenboeken prepareren, pakketjes maken
+- Evenementdag (05:30-09:00): QR scannen, rittenboeken uitdelen, uitleg geven
+- Na start: Helpen bij eindpunt (vanaf 16:00)
+
+**Persoon 4 - Route & Veiligheid Verantwoordelijke**
+- Voorbereiding: Routes uitstippelen, GPX maken, proefritten
+- Evenementdag: Noodtelefoon monitoren (hele dag bereikbaar)
+- SOS meldingen opvolgen
+- Bij eindpunt: Controleren of iedereen binnen is
+
+**Persoon 5 - Inhoud & Social Media**
+- Voorbereiding: Rittenboek design, promo materiaal, social posts
+- Evenementdag: Foto's maken (start/eindpunt), social media updates
+- Na evenement: Galerij uploaden, verhalen verzamelen
+
+**Persoon 6 - Logistiek & Materialen**
+- Voorbereiding: Materialen bestellen, signage maken, transport regelen
+- Evenementdag (05:30-09:00): Opstelling incheck tafel, spandoeken ophangen
+- Evenementdag (17:00-21:00): Eindpunt opstelling, opruimen, materialen inpakken
+
+### Verzekeringen & Legaal
+
+#### Verplicht
+- [ ] **Evenementenverzekering**
+  - Dekking voor 100 personen
+  - Aansprakelijkheid organisatie
+  - Prijs: ~€200-500
+
+- [ ] **VZW Papieren**
+  - Evenement officiëel registreren?
+  - Vergunningen nodig? (check met gemeente)
+
+- [ ] **Deelnemer Disclaimer**
+  - Eigen risico verklaring
+  - Bij registratie ondertekenen
+  - Dekt organisatie af
+
+#### Optioneel
+- [ ] Weerverzekering (als budget groot is)
+- [ ] Annuleringsverzekering
+
+### Marketing & Communicatie
+
+#### Online
+- [ ] Website live (✅ al online)
+- [ ] Social media aanmaken:
+  - Instagram account
+  - Facebook page/event
+  - Eventueel YouTube voor promo
+
+#### Promotie
+- [ ] Promo video (2-3 min)
+- [ ] Evenement poster (A3 formaat)
+- [ ] Social media inhoud (10-15 posts vooraf)
+- [ ] Email nieuwsbrief naar deelnemers
+
+#### Samenwerkingen
+- [ ] Motorclubs contacteren
+- [ ] Lokale motorzaken (sponsors?)
+- [ ] Hospitality sponsors (koffie, eten, etc.)
+- [ ] Media partners (motor magazines)
+
+---
+
+## 5. 📅 Dagprogramma
+
+### Zaterdag 16 Mei 2026
+
+#### 05:30 - Opstelling (Organisatie)
+- Tafels klaarzetten bij Den Belami
+- Incheck materiaal uitpakken
+- Laptops/tablets opstarten
+- Ontbijt opstelling controleren
+- Test QR scanner
+
+#### 06:30 - Deuren Open
+- Deelnemers kunnen aankomen
+- Parking wijzen
+- Welkom!
+
+#### 06:30-08:00 - Incheck & Ontbijt
+**Incheck proces:**
+1. Deelnemer komt binnen
+2. QR code scannen
+3. Rittenboek + pakket meegeven
+4. Uitleg kort geven
+5. Naar ontbijt buffet
+
+**Ontbijt:**
+- Koffie, thee, fruitsap
+- Broodjes, croissants
+- Beleg (kaas, hesp, choco)
+- Fruit
+- Informele sfeer, kennismaken
+
+#### 08:00 - Start Mogelijkheid
+- Wie klaar is, kan vertrekken
+- Geen vaste start tijd (flexibel)
+- Groepsfoto mogelijkheid
+- "Rij veilig!" boodschap
+
+#### 08:00-11:00 - Vrij Rijden
+- Iedereen onderweg
+- Rallyzones bezoeken (of niet)
+- Eigen tempo
 - Geen verplichte stops
-- Volledige vrijheid
-- Optioneel: alsnog zones bezoeken
 
-**Materialen:**
+#### 11:30-14:30 - Lunch Window (Optioneel)
+- Voor wie reservering maakte
+- Lunch locatie in Ardennen
+- 1-2 uur pauze
+- Socializen met andere riders
 
-- Complete route GPX
-- Roadbook (optioneel)
-- Algemene route kaart
+#### 14:30-17:00 - Verder Rijden
+- Laatste rallyzones
+- Richting Hoge Venen
+- Richting eindpunt
 
-### Rally Zones & Routetips
+#### 17:00-20:30 - Eindpunt bij Baraque
+**Eindpunt activiteiten:**
+- QR code aft scannen
+- Groepsfoto
+- Drankje samen
+- Verhalen uitwisselen
+- Relaxte afsluiter
 
-Elke rally zone bevat meerdere routetips waar deelnemers uit kunnen kiezen:
+**Geen:**
+- Klassement voorlezen
+- Winnaars
+- Prestatiedruk
 
-**Rally Zone structuur:**
-
-- **Naam**: Beschrijvende titel van de zone
-- **Locatie**: Waar bevindt deze zone zich (bijv., "Vlaamse Ardennen")
-- **Beschrijving**: Algemene beschrijving van de zone
-
-**Routetip eigenschappen (per tip binnen een zone):**
-
-- **Naam**: Beschrijvende titel van de specifieke route
-- **Type**: Off-road / Technisch / Panoramisch / Snelweg / Binnendoor / Gemengd
-- **Beschrijving**: Wat maakt deze route bijzonder?
-- **Startpunt**: Waar verlaat je de hoofdroute (landmark + instructies)
-- **Route instructies**: Gedetailleerde beschrijving van de route
-- **Eindpunt**: Waar kom je terug op de hoofdroute
-- **Afstand**: Geschatte kilometers omweg
-- **Karakter**: Bochtig / Rustig / Druk / Technisch / Vlak
-- **Moeilijkheidsgraad**: Easy / Medium / Hard
-- **Aandachtspunten**: Gravel, verkeer, smalle wegen, etc.
-- **Highlights**: Scenic points, foto spots, aanraders
-- **GPX**: Optioneel downloadbaar bestand
+#### 20:30 - Einde
+- Iedereen veilig thuis
+- Eindpunt foto's al online?
+- Gemeenschap blijft online bestaan
 
 ---
 
-## 💻 Technische Infrastructuur
+## 6. 👥 Organisatie & Rollen
 
-### Online Platform (React Router + Remix)
+### Wie Doet Wat?
 
-#### Publieke Website
+#### Voor het Evenement (Voorbereiding)
 
-- Homepage met event intro
-- Rally zones overzicht
-- About page met filosofie
-- FAQ & veiligheid info
-- Registratie formulier
+**Persoon 1 - Evenement Manager:**
+- [ ] Locaties boeken en bevestigen
+- [ ] Budget beheren
+- [ ] Verzekeringen afsluiten
+- [ ] Sponsoring contacten
+- [ ] Timeline bewaken
+- [ ] Team coördineren
 
-#### Participant Dashboard
+**Persoon 2 & 3 - Incheck Voorbereiding:**
+- [ ] Deelnemer pakketjes maken (rittenboeken, stickers, kaartjes)
+- [ ] Incheck systeem testen
+- [ ] Deelnemers lijst bijhouden
+- [ ] Email communicatie naar deelnemers (samen met Persoon 1)
 
-- Persoonlijke QR code
-- Route preference keuze (bij registratie)
-- GPX downloads (per zone of volledig)
-- Rally zone check-in (voor Adventure Track users)
-- Foto upload & gallery toegang
-- Achievement tracking (optioneel)
-- Blog/verhalen schrijven
+**Persoon 4 - Routes & Veiligheid:**
+- [ ] Routes uitstippelen (alle 4 zones + hoofdroute)
+- [ ] GPX files maken en testen
+- [ ] Proefrit doen op motor
+- [ ] Veiligheidscontrole gevaarlijke punten
+- [ ] Noodprotocol opstellen
+- [ ] Noodcontacten lijst maken
 
-#### Admin Dashboard
+**Persoon 5 - Inhoud:**
+- [ ] Rittenboek design en layout
+- [ ] Website updates
+- [ ] Social media inhoud (10-15 posts)
+- [ ] Promo materiaal maken
+- [ ] Evenement poster ontwerpen
 
-- Check-in controle (QR scanner)
-- Live map met participant locaties
-- Emergency SOS monitoring
-- Push notifications versturen
-- Event markers plaatsen
-- Zone control (activeren/deactiveren)
-- Gallery moderation
-- Participant management
+**Persoon 6 - Logistiek:**
+- [ ] Rittenboeken laten printen (50-100 stuks)
+- [ ] Signalisatie & spandoeken bestellen
+- [ ] Materialen inkopen (stickers, kaartjes, etc.)
+- [ ] Transport regelen (alles naar start locatie)
+- [ ] Checklist maken van alle materialen
 
-### Database (Supabase PostgreSQL)
+#### Evenementdag Planning (6 Personen)
 
-**Core Tables:**
+**Ochtend (05:30-09:00) - Iedereen aanwezig:**
+- Persoon 1: Algemene coördinatie, laatste controles
+- Persoon 2 & 3: Incheck tafel, QR scanning, rittenboeken uitdelen
+- Persoon 4: Veiligheidsbriefing, noodsysteem testen
+- Persoon 5: Start foto's maken, social media updates
+- Persoon 6: Opstelling (tafels, spandoeken, signalisatie), ontbijt coördinatie
 
-```text
-participants:
-  - id, email, naam, motor details
-  - route_preference (rally_zones | complete_route)
-  - qr_code, checked_in, payment_status
-  - allow_location_sharing, bio, photo
+**Overdag (09:00-17:00) - Flexibel:**
+- Persoon 4: **Veiligheid Verantwoordelijke** (hele dag bereikbaar voor noodsituaties)
+- Persoon 1: Bereikbaar voor coördinatie, middagpauze locatie check (indien van toepassing)
+- Persoon 2, 3, 5, 6: Kunnen naar huis/vrije tijd tot eindpunt (16:00)
 
-rally_zone_checkins:
-  - participant_id, rally_zone_id
-  - action (manual_checkin | qr_scan)
-  - latitude, longitude, checked_at
+**Avond (17:00-21:00) - 4-5 personen aanwezig:**
+- Persoon 1: Algemene coördinatie eindpunt
+- Persoon 2 of 3: QR codes afscannen bij eindpunt
+- Persoon 4: Veiligheidscontrole (is iedereen binnen?)
+- Persoon 5: Eindpunt foto's, groepsfoto, social media
+- Persoon 6: Opruimen, materialen inpakken, spandoeken afbreken
 
-photos:
-  - participant_id, url, caption
-  - likes_count, approved
+**Wie doet wat bij pauzes:**
+- Iedereen werkt in shifts waar mogelijk
+- Tussen 09:00-17:00 hoeft niet iedereen aanwezig (behalve Veiligheid Verantwoordelijke)
+- Wissel noodtelefoon af als nodig
 
-blog_posts:
-  - participant_id, title, content
-  - published, created_at
+### Communicatie Kanalen
 
-emergency_sos_alerts:
-  - participant_id, latitude, longitude
-  - status (active | resolved), created_at
-```
+**Intern Team:**
+- WhatsApp groep (real-time)
+- Bellijst met alle nummers
+- Noodprotocol document
 
-### CMS (Sanity)
+**Naar Deelnemers:**
+- Email (voor evenement)
+- Website updates
+- App notificaties (optioneel)
+- Social media
 
-**Document Types:**
-
-- `edition`: Event editie configuratie
-- `rallyZoneV2`: Rally zone details met GPX
-- `benefitItem`: Voordelen van deelname
-- `scheduleItem`: Dagprogramma
-- `faqItem`: Veelgestelde vragen
-- `eventStory`: Over het event content
-- `siteConfig`: Algemene configuratie
-
-### Features Technologie
-
-1. **QR Code Systeem**
-   - Unieke QR per participant
-   - Check-in bij start
-   - Zone check-ins (optioneel)
-
-2. **Geolocation Services**
-   - Live map met participant markers
-   - 100m radius validatie voor check-ins
-   - Emergency location tracking
-
-3. **Push Notifications**
-   - Web push (service worker)
-   - Emergency broadcasts
-   - Route updates
-
-4. **Offline Capabilities**
-   - Service worker cache
-   - GPX downloads
-   - Fallback photos
-
-5. **Emergency SOS**
-   - One-tap noodknop
-   - GPS coördinaten naar organisatie
-   - Automatische notificatie admin
+**Noodsituaties:**
+- Vaste noodlijn
+- Reserve contact persoon
+- Hulpdiensten lijst
 
 ---
 
-## 📅 Timeline & Planning
+## 7. 💰 Budget & Financiën
 
-### Pre-Event (T-6 maanden tot T-1 week)
+### Inkomsten
 
-#### T-6 maanden: Concept & Route
+**Inschrijvingsgeld:**
+- Formule A (ontbijt): €15/persoon
+- Formule B (met middagpauze): €25/persoon
 
-- Route bepalen en testen
-- Rally zones selecteren
-- GPX files creëren
-- Roadbook design
+**Scenario's:**
 
-#### T-4 maanden: Marketing Launch
+| Deelnemers | Alleen Ontbijt | Mix (50/50) | Met Middagpauze |
+|-----------|---------------|-------------|-----------|
+| 50 | €750 | €1.000 | €1.250 |
+| 75 | €1.125 | €1.500 | €1.875 |
+| 100 | €1.500 | €2.000 | €2.500 |
 
-- Website live
-- Social media campagne starten
-- Inschrijvingen openen
-- Sponsoren contacteren
+**Extra Inkomsten (Optioneel):**
+- Sponsoring motormerken (€200-500)
+- Hospitality sponsors (€100-300)
+- Merchandise verkoop (break-even)
 
-#### T-2 maanden: Logistics
+### Uitgaven
 
-- Start/finish locaties boeken
-- Lunch locatie regelen
-- Verzekeringen afsluiten
-- Safety briefing voorbereiden
+#### Essentieel (Minimum Budget)
 
-#### T-1 maand: Finaliseren
+| Post | Kosten |
+|------|--------|
+| Ontbijt catering (100p) | €400-600 |
+| Rittenboeken printen (100x) | €500-800 |
+| Evenement verzekering | €200-500 |
+| Signalisatie & spandoeken | €200-400 |
+| QR materiaal & printen | €100-200 |
+| Website hosting (jaar) | €100 |
+| **TOTAAL MINIMUM** | **€1.500-2.600** |
 
-- QR codes genereren
-- Participant pakketjes voorbereiden
-- Emergency procedures testen
-- Admin team briefen
+#### Met Middagpauze Optie
 
-#### T-1 week: Final Checks
+| Post | Kosten |
+|------|--------|
+| Middagpauze (50 personen) | €750-1.000 |
+| Extra logistiek | €100-200 |
+| **TOTAAL MET MIDDAGPAUZE** | **€2.350-3.800** |
 
-- Alle deelnemers bevestigen
-- Weersvoorspelling checken
-- Materialen inladen
-- Noodcontacten delen
+#### Ideaal Scenario (Met Extra's)
 
-### Event Day (8 augustus 2026)
+| Post | Kosten |
+|------|--------|
+| Alle essentials | €2.600 |
+| Middagpauze | €1.000 |
+| Deelnemer cadeautjes | €300-500 |
+| Fotograaf huren | €200-400 |
+| Extra vrijwilligers (eten/drink) | €200 |
+| Marketing materiaal | €200-400 |
+| Contingency (10%) | €450 |
+| **TOTAAL IDEAAL** | **€4.950-5.550** |
 
-#### 06:00 - Setup
+### Sluitende Begroting Analyse
 
-- Start locatie inrichten
-- Check-in tafels klaarzetten
-- Admin tablets/laptops ready
-- Ontbijt setup
+**Minimaal Scenario (50 deelnemers):**
+- Inkomsten: €1.000 (mix ontbijt/middagpauze)
+- Uitgaven: €2.000
+- **Tekort: -€1.000** → Sponsoring nodig!
 
-#### 06:30-08:00 - Check-in
+**Realistisch Scenario (75 deelnemers):**
+- Inkomsten: €1.500
+- Uitgaven: €3.000
+- **Tekort: -€1.500** → Sponsoring + lagere kosten
 
-- QR codes scannen
-- Startnummers uitdelen
-- Roadbooks uitdelen
-- Safety briefing (07:30)
-- Groepsfoto (07:45)
+**Vol Scenario (100 deelnemers):**
+- Inkomsten: €2.000
+- Uitgaven: €3.500
+- **Tekort: -€1.500** → Haalbaar met sponsors
 
-#### 08:00-17:00 - Rally
+**Conclusie:** We hebben **€1.000-2.000 aan sponsoring** nodig om break-even te draaien.
 
-- Live monitoring dashboard
-- WhatsApp groep actief
-- Emergency standby
-- Push notifications indien nodig
+### Sponsoring Mogelijkheden
 
-#### 17:00-20:30 - Finish
+**Potentiële Sponsors:**
+- Lokale motorzaken (€200-500)
+- Koffiemerken voor ontbijt (€100-300)
+- GPS/navigatie merken (€200-400)
+- Motor kledingmerken (€300-600)
+- Verzekeraars (€200-500)
 
-- Check-in bij aankomst
-- Eten & drinken
-- Foto's verzamelen
-- Verhalen delen sessie (21:00)
-
-#### 21:00-23:00 - Community Time
-
-- Verhalen presentaties
-- Gallery showcase op groot scherm
-- Dank je wel speech
-- Groepsfoto finish
-
-### Post-Event (T+1 dag tot T+1 maand)
-
-#### T+1 dag: Debrief
-
-- Team evaluatie meeting
-- Emergency incidents review
-- Quick wins / pain points
-
-#### T+1 week: Data Processing
-
-- Alle foto's uploaden naar gallery
-- Blogs publiceren
-- Financiën afronden
-- Bedankjes naar sponsors
-
-#### T+1 maand: Archive
-
-- Event video/recap maken
-- Testimonials verzamelen
-- Lessons learned document
-- Next edition planning starten
+**In Ruil Voor:**
+- Logo op rittenboek
+- Spandoek bij start/eindpunt
+- Social media vermeldingen
+- Website vermelding
+- Email naar deelnemers
 
 ---
 
-## 👔 Verantwoordelijkheden & Rollen
-
-### Organisatie Team (VZW)
-
-#### Event Director (1 persoon)
-
-**Taken:**
-
-- Algemene leiding en beslissingen
-- Contact met locaties en leveranciers
-- Budget beheer
-- Finale verantwoordelijkheid
-
-**Skills:**
-
-- Project management
-- Leiderschapservaring
-- Stressbestendig
-
-#### Route Coördinator (1-2 personen)
-
-**Taken:**
-
-- Route design en testen
-- GPX files creëren
-- Rally zones selecteren en documenteren
-- Roadbook ontwerp
-
-**Skills:**
-
-- Ervaring met motorroutes
-- GPS/GPX kennis
-- Creatief met navigatie
-
-#### Tech Lead (1 persoon)
-
-**Taken:**
-
-- Website/platform beheer
-- Database configuratie
-- Bug fixes tijdens event
-- Emergency SOS systeem
-
-**Skills:**
-
-- Web development (React/Remix)
-- Database kennis
-- 24/7 beschikbaarheid event day
-
-#### Marketing & Communicatie (1-2 personen)
-
-**Taken:**
-
-- Social media management
-- Content creatie (foto's, video's)
-- Deelnemers communicatie
-- Sponsor relaties
-
-**Skills:**
-
-- Social media ervaring
-- Copywriting
-- Fotografie/videografie
-
-#### Logistics Coördinator (1 persoon)
-
-**Taken:**
-
-- Materialen inkoop en transport
-- Check-in setup
-- Eten & drinken regelen
-- Toiletten, parking, etc.
-
-**Skills:**
-
-- Organisatorisch sterk
-- Praktisch ingesteld
-- Leveranciers management
-
-#### Safety Officer (1-2 personen)
-
-**Taken:**
-
-- Safety briefing presenteren
-- Emergency procedures
-- EHBO standby
-- Incident management
-
-**Skills:**
-
-- EHBO diploma (vereist)
-- Kalm onder druk
-- Motorrijervaring
-
-### Vrijwilligers (8-12 personen)
-
-#### Check-in Team (4 personen)
-
-- QR codes scannen
-- Pakketjes uitdelen
-- Vragen beantwoorden
-
-#### Finish Team (3 personen)
-
-- Check-in registratie
-- Eten & drinken serveren
-- Foto's maken
-
-#### Road Marshals (3-4 personen)
-
-- Strategische punten bemensen
-- Hulp bij pech/vragen
-- Emergency backup
-
-#### Media Team (1-2 personen)
-
-- Event fotografie
-- Video opnames
-- Social media live updates
-
----
-
-## 📢 Communicatie & Marketing
-
-### Pre-Event Marketing
-
-#### Content Pilaren
-
-1. **Route & Adventure**: Mooie wegen, zones preview
-2. **Community**: Testimonials, vorige edities
-3. **Practical**: Info, FAQ, tips
-4. **Behind the Scenes**: Organisatie, route testen
-
-#### Kanalen
-
-- **Website**: Primary info source
-- **Facebook**: Event page + groep
-- **Instagram**: Visual storytelling
-- **Email**: Nieuwsbrieven naar deelnemers
-- **WhatsApp**: Emergency & updates (event day)
-
-#### Content Planning
-
-**T-4 maanden**: Launch announcement
-**T-3 maanden**: Route preview, early bird deadline
-**T-2 maanden**: Rally zones spotlight series
-**T-1 maand**: Practical info, safety tips
-**T-1 week**: Final info, weather, meet & greet
-
-### During Event Communicatie
-
-**WhatsApp Groep:**
-
-- Enkel voor noodgevallen en belangrijke updates
-- Admin team + safety officers
-- Geen spam/social
-
-**Push Notifications:**
-
-- Welkom bericht bij start
-- Belangrijke waarschuwingen (weer, verkeer)
-- Finish reminder
-
-**Live Social Media:**
-
-- Instagram stories van checkpoints
-- Facebook updates met foto's
-- Real-time community engagement
-
-### Post-Event Communicatie
-
-**Week 1:**
-
-- Bedank je wel bericht
-- Gallery link delen
-- Blog posts promoten
-- Survey versturen
-
-**Week 2-4:**
-
-- Recap video publiceren
-- Best photos showcase
-- Lessons learned transparant delen
-- Save the date volgende editie
-
----
-
-## 🚨 Veiligheid & Noodprocedures
-
-### Pre-Event Safety
-
-#### Participant Requirements
-
-- Geldig rijbewijs (A categorie)
-- Geldige motorverzekering
-- Motor in goede technische staat
-- Helm + beschermende kledij verplicht
-
-#### Safety Briefing (07:30)
-
-**Topics:**
-
-1. Event is geen race - rustig rijden
-2. Verkeersregels blijven gelden
-3. Eigen tempo, geen groepsdruk
-4. Emergency SOS knop uitleg
-5. Noodcontacten delen
-6. Weersvoorspelling
-7. Gevaarlijke punten op route
-
-### Emergency Procedures
-
-#### Emergency SOS Systeem
-
-**Hoe werkt het:**
-
-1. Deelnemer drukt SOS knop in app
-2. GPS coördinaten + naam naar admin dashboard
-3. Automatische push notificatie naar safety officers
-4. Phone call naar participant (status check)
-5. Indien nodig: 112 bellen + road marshal sturen
-
-**Response Team:**
-
-- Safety Officer (coördinator)
-- 2 Road Marshals met motor (mobiel)
-- Admin met live tracking dashboard
-
-#### Emergency Categories
-
-##### Level 1: Minor (Pech/Verdwaald)
-
-- Response: Road marshal naar locatie
-- Timeline: 15-30 minuten
-- Follow-up: Hulp ter plaatse of tow truck
-
-##### Level 2: Moderate (Valpartij zonder letsel)
-
-- Response: Safety officer + road marshal
-- Timeline: 10-20 minuten
-- Follow-up: Medische check, incident rapport
-
-##### Level 3: Critical (Valpartij met letsel)
-
-- Response: 112 direct bellen
-- Action: Safety officer naar locatie, traffic control
-- Timeline: Ambulance ASAP
-- Follow-up: Hospital contact, familie informeren
-
-#### Communication Protocol
-
-1. **Participant → SOS button → Admin dashboard**
-2. **Admin → Phone call participant (assess severity)**
-3. **Admin → Notify response team (WhatsApp + phone)**
-4. **Response team → Navigate to location (live GPS)**
-5. **On-site → Status update to admin**
-6. **Resolution → Incident report + family contact**
-
-### Medical Support
-
-**Standby Team:**
-
-- EHBO-er bij start (06:30-08:30)
-- EHBO-er bij finish (16:00-21:00)
-- Road marshals met EHBO kit
-
-**Hospital Contacts:**
-
-- Route hospitals lijst in admin dashboard
-- Emergency contact numbers ready
-
----
-
-## 💰 Inschrijvingsformules
-
-**Deelname opties:**
-
-- **Basisdeelname**: €15 (motor + rijder, zonder maaltijden)
-- **All-in pakket**: €25 (motor + rijder + middag- en avondeten)
-
----
-
-## 📊 Post-Event & Evaluatie
-
-### Debrief Meeting (T+1 dag)
-
-**Agenda:**
-
-1. General impressions (quick round)
-2. Safety incidents review
-3. Tech issues & platform performance
-4. Participant feedback themes
-5. Financial quick look
-6. Top 3 successes
-7. Top 3 improvements
-8. Action items for next edition
-
-**Attendees:**
-
-- Full organisatie team
-- Key vrijwilligers
-- Optional: 2-3 deelnemers
-
-### Participant Survey (T+3 dagen)
-
-**Key Questions:**
-
-1. Overall satisfaction (1-10)
-2. Route quality & difficulty
-3. Rally zones experience (Adventure Track users)
-4. Complete route experience (Cruise Mode users)
-5. Check-in proces
-6. Safety & organization
-7. Value for money
-8. Would recommend to friends?
-9. What to improve?
-10. Suggestions for next edition
-
-**Distribution:**
-
-- Email to all participants
-- Response incentive: Early bird discount next year
-- Target: 60%+ response rate
-
-### Data Analysis (T+1 week)
-
-**Metrics to Track:**
-
-- Total participants: X/150
-- Route preference split: X% Adventure / Y% Complete
-- Average zones visited: X/8
-- Photo uploads: X photos
-- Blog posts: X stories
-- Emergency incidents: X (severity breakdown)
-- Survey satisfaction: X/10 average
-- Financial: €X profit/loss
-
-### Report Document (T+2 weeks)
-
-**Contents:**
-
-1. Executive summary
-2. Event statistics
-3. Financial overview
-4. Participant feedback analysis
-5. Safety & incidents
-6. What went well
-7. What to improve
-8. Recommendations for next edition
-9. Appendices (photos, data, etc.)
-
-**Distribution:**
-
-- VZW board
-- Sponsors
-- Key stakeholders
-- Archive for planning 2027
-
-### Community Follow-up (T+1 maand)
-
-**Actions:**
-
-1. Publish event recap video
-2. Showcase best photos on website
-3. Feature participant stories
-4. Thank sponsors publicly
-5. Share lessons learned transparently
-6. Tease next edition date
-
----
-
-## 🎯 Success Metrics
-
-### Quantitative
-
-- ✅ 150+ participants registered
-- ✅ 60%+ survey satisfaction (>8/10)
-- ✅ 0 serious safety incidents
-- ✅ Budget break-even or profit
-- ✅ 80%+ check-in rate at start
-- ✅ 100+ photo uploads
-- ✅ 20+ blog stories
-
-### Qualitative
-
-- ✅ Positive social media sentiment
-- ✅ Participant testimonials
-- ✅ Sponsor satisfaction
-- ✅ Community engagement
-- ✅ Team morale & learning
-- ✅ Legacy for next editions
-
----
-
-## 📝 Checklist Master
-
-### 6 Maanden Voor Event
-
-- [ ] Route design & testing
-- [ ] Rally zones selected
-- [ ] Website development
-- [ ] Budget planning
-- [ ] Sponsorship proposal
-
-### 4 Maanden Voor Event
-
-- [ ] Website live & registratie open
-- [ ] Social media campaign launch
-- [ ] Locaties geboekt (start/finish/lunch)
-- [ ] Insurance arranged
-- [ ] Sponsoren gecontacteerd
-
-### 2 Maanden Voor Event
-
-- [ ] Marketing full steam
-- [ ] Roadbook design finalized
-- [ ] GPX files tested
-- [ ] Admin team recruited
-- [ ] Vrijwilligers confirmed
-
-### 1 Maand Voor Event
-
-- [ ] QR codes generated
-- [ ] Participant pakketjes ready
-- [ ] Safety procedures documented
-- [ ] Emergency contacts list
-- [ ] Final participant count
-
-### 1 Week Voor Event
-
-- [ ] Weather check
-- [ ] All materials packed
-- [ ] Final team briefing
-- [ ] WhatsApp groep created
-- [ ] Test all tech systems
-
-### Event Day
-
-- [ ] Setup complete by 06:00
-- [ ] Check-in 06:30-08:00
-- [ ] Safety briefing 07:30
-- [ ] Rally start 08:00
-- [ ] Live monitoring active
-- [ ] Finish reception 17:00-20:30
-- [ ] Community time 21:00
-
-### Post-Event
-
-- [ ] Debrief meeting T+1
-- [ ] Survey sent T+3
-- [ ] Data analyzed T+1 week
-- [ ] Report created T+2 weeks
-- [ ] Community follow-up T+1 month
-- [ ] Archive & lessons learned
-
----
-
-## 🔗 Belangrijke Links & Contacten
-
-### Platforms
-
-- Website: <https://deur-den-bocht.be>
-- Admin Dashboard: <https://deur-den-bocht.be/admin>
-- Sanity CMS: <https://deur-den-bocht.sanity.studio>
-
-### Emergency Contacts
-
-- **112**: General emergency
-- **Safety Officer**: [GSM nummer]
-- **Event Director**: [GSM nummer]
-- **Tech Lead**: [GSM nummer] (24/7)
-
-### Leveranciers
-
-- **Start locatie**: Café Den Belami - [contact]
-- **Finish locatie**: Baraque de Fraiture - [contact]
-- **Verzekering**: [bedrijf + contact]
-- **Catering**: [bedrijf + contact]
-
-### Support
-
-- **Tech issues**: <tech@deur-den-bocht.be>
-- **General info**: <info@deur-den-bocht.be>
-- **Emergency**: 112 + [safety officer GSM]
-
----
-
-## 📄 Legal & Disclaimers
-
-### Participant Agreement
-
-Elke deelnemer accepteert bij inschrijving:
-
-1. **Eigen Risico**: Deelname volledig op eigen risico
-2. **Verzekering**: Geldige WA motorverzekering verplicht
-3. **Verkeersregels**: Blijven te allen tijde gelden
-4. **Geen Race**: Event is geen snelheidscompetitie
-5. **Foto's**: Akkoord met publicatie event foto's
-6. **Gegevens**: Privacy policy GDPR-compliant
-7. **Terugbetaling**: Tot 5 dagen voor event mogelijk
-8. **Wijzigingen**: Organisatie behoudt recht op aanpassingen
-
-### VZW Verantwoordelijkheden
-
-**Wij zorgen voor:**
-
+## 8. 🛡️ Veiligheid & Risico's
+
+### Veiligheidsmaatregelen
+
+#### Voor het Evenement
+- [ ] Route veiligheidscontrole (gevaarlijke punten markeren)
+- [ ] Noodnummers in rittenboek
+- [ ] Disclaimer laten ondertekenen
+- [ ] Weer voorspelling checken (dag ervoor)
+- [ ] Alternatieve route bij slecht weer
+
+#### Tijdens het Evenement
+
+**Incheck:**
+- Controleer geldige vergunningen (bij twijfel)
+- Motor geschikt voor lange rit? (visuele check)
+- Noodcontact van deelnemer registreren
+
+**Onderweg:**
+- Noodtelefoon 24/7 bereikbaar
+- SOS functie in app actief
+- Elke deelnemer heeft noodcontacten
+
+**Communicatie:**
+- Weersalert via app als het slecht wordt
+- Alternatieve routes communiceren
+- Laatste rijder tijd verwacht
+
+#### Noodprotocol
+
+**Bij Ongeval/Pech:**
+1. Deelnemer belt noodnummer
+2. Veiligheid verantwoordelijke neemt op
+3. Bepaal ernst situatie
+4. Bij nood: bel 112
+5. Bij pech: lokale garages lijst
+6. Log incident
+7. Verwittig team als het ernstig is
+
+**Bij Extreem Weer:**
+1. Monitor weerbericht constant
+2. Bij code oranje/rood → overweeg annulering
+3. Communiceer naar alle deelnemers
+4. Bied alternatief (andere datum?)
+
+**Bij Niet Aankomen op Eindpunt:**
+1. Check laatste bekende locatie (indien app)
+2. Bel deelnemer
+3. Bij geen antwoord binnen 30min → bel noodcontact
+4. Log incident
+
+### Risico's & Mitigatie
+
+| Risico | Impact | Waarschijnlijkheid | Mitigatie |
+|--------|--------|-------------------|-----------|
+| Slecht weer | Hoog | Middel | Reserve datum, weerverzekering |
+| Ongeval deelnemer | Hoog | Laag | Goede briefing, noodprotocol, verzekering |
+| Te weinig inschrijvingen | Middel | Middel | Minimaal aantal vooraf bepalen, goede marketing |
+| Locatie annuleert | Middel | Laag | Reserve locatie, contract maken |
+| Technische problemen app | Laag | Laag | Papieren rittenboek als reserveoptie |
+| Deelnemer verdwaalt | Laag | Middel | Duidelijke rittenboek, GPS routes, noodnummer |
+
+### Verantwoordelijkheden
+
+**Organisatie:**
 - Veilige route planning
+- Nood bereikbaarheid
+- Verzekering afsluiten
 - Duidelijke communicatie
-- Emergency procedures
-- EHBO aanwezig
-- Liability verzekering
 
-**Wij zijn NIET verantwoordelijk voor:**
-
-- Schade aan voertuigen
-- Persoonlijk letsel
-- Verlies/diefstal persoonlijke spullen
-- Verkeersboetes
-- Weersomstandigheden
+**Deelnemer:**
+- Eigen verantwoordelijkheid voor veiligheid
+- Verkeersregels respecteren
+- Motor in goede staat
+- Disclaimer ondertekenen
 
 ---
 
-## 🚀 Vision voor Toekomst
+## 9. ✅ Checklist
 
-### Editie 2027 Ideeën
+### T-6 Maanden
 
-- International expansion (NL/FR/DE riders)
-- Multi-day event optie
-- Camping/overnight bij finish
-- Partnerships met motorbedrijven
-- Mobile app (native iOS/Android)
-- Live tracker voor familie/vrienden
-- Charity component (goede doel)
+- [ ] Team samenstellen
+- [ ] Datum definitief vastleggen
+- [ ] Start & eindpunt locatie reserveren
+- [ ] Route uitstippelen
+- [ ] Budget opstellen
+- [ ] Sponsoring pitches maken
 
-### Long-term Vision (2026-2030)
+### T-4 Maanden
 
-- **Jaar 1-2**: Establish reputation (150-200 riders)
-- **Jaar 3-4**: Grow to 300+ riders, multi-day
-- **Jaar 5**: International recognition, signature event
-- **Community**: Year-round meetups, rides, training
-- **Brand**: Bochtenkoning Rally = synonymous met adventure riding
+- [ ] Website volledig af
+- [ ] Inschrijvingen openen
+- [ ] Social media campagne starten
+- [ ] Sponsors contacteren
+- [ ] Verzekering afsluiten
+
+### T-2 Maanden
+
+- [ ] Rittenboek design finaliseren
+- [ ] GPX routes maken en testen
+- [ ] Middagpauze locatie regelen
+- [ ] Materialen bestellen (signalisatie, print)
+- [ ] Vrijwilligers recruteren
+
+### T-1 Maand
+
+- [ ] Rittenboeken printen
+- [ ] Deelnemer pakketjes maken
+- [ ] Veiligheidsprotocol testen
+- [ ] Weerbericht monitoren starten
+- [ ] Finale controle alle reservaties
+
+### T-1 Week
+
+- [ ] Alle deelnemers email met instructies
+- [ ] Materialen inladen
+- [ ] Team briefing doen
+- [ ] Noodcontacten checken
+- [ ] Weer checken, plan B klaar?
+
+### Evenementdag -1
+
+- [ ] Alles ingepakt en klaargezet
+- [ ] Team weet waar en wanneer
+- [ ] Laptop/tablets opgeladen
+- [ ] Rittenboeken geteld
+- [ ] Vroeg naar bed!
+
+### Evenementdag
+
+- [ ] 05:30 - Opstelling starten
+- [ ] 06:00 - Incheck test
+- [ ] 06:30 - Deuren open
+- [ ] Incheck soepel laten verlopen
+- [ ] Start foto's maken
+- [ ] Noodlijn monitoren
+- [ ] Eindpunt foto's maken
+- [ ] Opruimen & danken
+
+### Na Evenement (Week Na)
+
+- [ ] Foto's online plaatsen
+- [ ] Dank email naar deelnemers
+- [ ] Dank email naar sponsors
+- [ ] Evaluatie meeting team
+- [ ] Financiën afronden
+- [ ] Lessen voor volgende keer
 
 ---
 
-**Document Version:** 1.0  
-**Datum:** 27 januari 2026  
-**Auteur:** VZW Deur Den Bocht Organisatie Team  
-**Status:** Living Document (updates doorlopend)
+## 📝 Samenvatting
+
+### In 1 Minuut
+
+We organiseren de **Bochtenkoning Rally** op **16 mei 2026**: een motor evenement door België voor 50-100 rijders. Het is géén race, maar een vrijheidsrit waar iedereen zelf zijn route kiest uit 4 rallyzones. Deelnemers krijgen een rittenboek, GPS routes, en een online platform. Ze starten bij Café Den Belami en eindigen bij Baraque de Fraiture na ~400km.
+
+**Wat nodig:**
+- Start/eindpunt locaties regelen
+- Rittenboeken maken & printen
+- Incheck materiaal (tablets/QR scanner)
+- Team van 6 mensen
+- Budget van ~€3.500 (sponsoring nodig)
+- Verzekering
+- Website (al online)
+
+**Focus:** Veiligheid, vrijheid, gemeenschap, verhalen delen.
 
 ---
 
-*Voor vragen of suggesties over deze gids, contacteer de Event Director of stuur een email naar <info@deur-den-bocht.be>*
+*Voor vragen of aanvullingen: updates in dit document.*
