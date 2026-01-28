@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
+import 'dotenv/config';
 
-const supabaseUrl = 'https://gxhseyrdqytkmujwtmlu.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4aHNleXJkcXl0a211and0bWx1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNzAzMzE3MCwiZXhwIjoyMDUyNjA5MTcwfQ.sb_secret_sZcvOeOZY7sGZsr6G-EFrg_HxgkhoWh';
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
