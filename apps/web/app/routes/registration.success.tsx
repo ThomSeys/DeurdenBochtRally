@@ -2,10 +2,11 @@ import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { redirect } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
-import { supabase } from '~/lib/supabase.server';
+import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { stripe } from '~/lib/stripe.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { createUserSession, getUserId } from '~/lib/session.server';
+import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
   return [
@@ -32,7 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // Get participant details
-  const { data: participant } = await supabase
+  const { data: participant } = await supabaseAdmin
     .from('participants')
     .select('*')
     .eq('id', session.metadata.participantId)
@@ -44,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Update payment status if not already completed (fallback for when webhook hasn't fired yet)
   if (participant.payment_status !== 'completed' && session.payment_status === 'paid') {
-    await supabase
+    await supabaseAdmin
       .from('participants')
       .update({
         payment_status: 'completed',
