@@ -161,16 +161,16 @@ export default function Rally() {
             </h2>
             
             {/* Complete Route User Notice */}
-            {user?.route_preference === 'complete_route' && (
+            {user?.route_preference === 'scenic' && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-sm mb-8 max-w-4xl mx-auto">
                 <div className="flex items-start">
                   <Icon name="info" className="w-6 h-6 text-blue-500 mr-3 flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                      Complete Route Modus
+                      Scenic Route Modus
                     </h3>
                     <p className="text-blue-800 mb-3">
-                      Je hebt gekozen voor de <strong>Complete Route</strong> ervaring. Deze rally zones zijn optioneel voor jou - je kunt de volledige route rijden zonder in te checken bij specifieke zones.
+                      Je hebt gekozen voor de <strong>Scenic Route</strong> ervaring. Deze rally zones zijn optioneel voor jou - je kunt de volledige route rijden zonder in te checken bij specifieke zones.
                     </p>
                     <p className="text-blue-700 text-sm">
                       💡 Tip: Download je GPX route vanuit het dashboard en geniet gewoon van de rit!

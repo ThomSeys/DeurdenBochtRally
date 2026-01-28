@@ -15,22 +15,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
   const user = await getUser(request);
 
-  // Redirect complete_route users
-  if (user?.route_preference === 'complete_route') {
+  // Redirect scenic route users
+  if (user?.route_preference === 'scenic') {
     throw redirect('/dashboard');
   }
 
   // Fetch all active rally zones
   const zones = await sanityClient.fetch(`
-    *[_type == "rallyZone" && is_active == true] | order(order asc) {
+    *[_type == "rallyZone" && is_open == true] | order(order asc) {
       _id,
       title,
       order,
       character,
       difficulty,
       distance_km,
-      start_location,
-      end_location
+      startPoint,
+      endPoint,
+      is_open
     }
   `);
 
@@ -68,11 +69,11 @@ export async function action({ request }: ActionFunctionArgs) {
     *[_type == "rallyZone" && _id == $zoneId][0] {
       _id,
       title,
-      start_location
+      startPoint
     }
   `, { zoneId });
 
-  if (!zone || !zone.start_location?.coordinates) {
+  if (!zone || !zone.startPoint) {
     return { error: 'Rally zone niet gevonden' };
   }
 
@@ -80,8 +81,8 @@ export async function action({ request }: ActionFunctionArgs) {
   const distance = calculateDistance(
     latitude,
     longitude,
-    zone.start_location.coordinates.lat,
-    zone.start_location.coordinates.lng
+    zone.startPoint.lat,
+    zone.startPoint.lng
   );
 
   // Check if within 100 meters
@@ -148,6 +149,12 @@ export default function RallySubmission() {
     const zone = zones.find((z: any) => z._id === zoneId);
     if (!zone) return;
 
+    // Check if zone has start location with coordinates
+    if (!zone.startPoint) {
+      setLocationError('Deze zone heeft geen startlocatie ingesteld. Neem contact op met de organisatie.');
+      return;
+    }
+
     setGettingLocation(true);
     setLocationError(null);
     setSelectedZone(zoneId);
@@ -163,8 +170,8 @@ export default function RallySubmission() {
       (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
-        const zoneLat = zone.start_location.coordinates.lat;
-        const zoneLng = zone.start_location.coordinates.lng;
+        const zoneLat = zone.startPoint.lat;
+        const zoneLng = zone.startPoint.lng;
 
         // Calculate distance
         const dist = calculateDistance(userLat, userLng, zoneLat, zoneLng);
@@ -218,8 +225,8 @@ export default function RallySubmission() {
       const mapElement = document.getElementById('check-in-map');
       if (!mapElement) return;
 
-      const zoneLat = currentZone.start_location.coordinates.lat;
-      const zoneLng = currentZone.start_location.coordinates.lng;
+      const zoneLat = currentZone.startPoint.lat;
+      const zoneLng = currentZone.startPoint.lng;
 
       // Create map centered between user and zone
       const centerLat = (location.latitude + zoneLat) / 2;

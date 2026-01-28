@@ -81,6 +81,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Dashboard() {
   const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference } = useLoaderData<typeof loader>();
+
+  console.log("🚀 ~ Dashboard ~ routePreference:", routePreference);
+
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
 
@@ -231,7 +234,7 @@ export default function Dashboard() {
         )}
 
         {/* Main CTA - Rally Submission (only for rally_zones preference) */}
-        {routePreference === 'rally_zones' && (
+        {routePreference === 'adventure' && (
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
               <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
@@ -245,26 +248,35 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-              <Link
-                to="/rally"
-                className="w-full md:w-auto text-center whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-              >
-                {completedZones > 0 ? 'Bekijk Zones' : 'Start Rally'}
-                <span>→</span>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Link
+                  to="/dashboard/rally-submission"
+                  className="text-center whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  <Icon name="map" className="w-5 h-5" />
+                  Check in
+                </Link>
+                <Link
+                  to="/rally"
+                  className="text-center whitespace-nowrap bg-white/10 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/20 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  Bekijk Zones
+                  <span>→</span>
+                </Link>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Complete Route - Simplified CTA */}
-        {routePreference === 'complete_route' && (
+        {/* Scenic Route - Simplified CTA */}
+        {routePreference === 'scenic' && (
           <div className="bg-gradient-to-r from-gray-600 to-gray-700 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8">
             <div className="flex items-start gap-4">
               <Icon name="map" className="w-16 h-16 flex-shrink-0" />
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold mb-2">Complete Route</h2>
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">Scenic Route</h2>
                 <p className="text-gray-100 text-base md:text-lg mb-4">
-                  Je hebt gekozen voor de complete route zonder rally zones. Download je GPX en geniet van de rit!
+                  Je hebt gekozen voor de rustige scenic route zonder rally zones. Download je GPX en geniet van de rit!
                 </p>
                 {gpxRouteUrl && (
                   <a

@@ -53,11 +53,36 @@ export async function getSiteConfig() {
       socialStrava,
       seoTitle,
       seoDescription,
-      seoImage,
-      heroBackgroundImage,
-      featureImage1,
-      featureImage2,
-      featureImage3,
+      seoImage{
+        asset->{
+          _id,
+          url
+        }
+      },
+      heroBackgroundImage{
+        asset->{
+          _id,
+          url
+        }
+      },
+      featureImage1{
+        asset->{
+          _id,
+          url
+        }
+      },
+      featureImage2{
+        asset->{
+          _id,
+          url
+        }
+      },
+      featureImage3{
+        asset->{
+          _id,
+          url
+        }
+      },
       noIndex,
       noFollow
     }`
@@ -130,6 +155,13 @@ export async function getStats(editionId: string) {
   return sanityClient.fetch(
     `*[_type == "stat" && edition._ref == $editionId] | order(order asc)`,
     { editionId }
+  );
+}
+
+export async function getFeatureCards(editionId: string, section: string) {
+  return sanityClient.fetch(
+    `*[_type == "featureCard" && edition._ref == $editionId && section == $section] | order(order asc)`,
+    { editionId, section }
   );
 }
 

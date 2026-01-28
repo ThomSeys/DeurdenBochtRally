@@ -74,7 +74,7 @@ export async function action({ request }: ActionFunctionArgs) {
       return {  error: 'Ongeldige formule geselecteerd', status: 400 };
     }
 
-    if (!['rally_zones', 'complete_route'].includes(routePreference)) {
+    if (!['adventure', 'scenic'].includes(routePreference)) {
       return {  error: 'Ongeldige route voorkeur geselecteerd', status: 400 };
     }
 
@@ -393,7 +393,7 @@ export default function Registration() {
                     <input
                       type="radio"
                       name="routePreference"
-                      value="rally_zones"
+                      value="adventure"
                       className="sr-only"
                       defaultChecked
                     />
@@ -428,14 +428,14 @@ export default function Registration() {
                     <input
                       type="radio"
                       name="routePreference"
-                      value="complete_route"
+                      value="scenic"
                       className="sr-only"
                     />
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-2xl">🗺️</span>
                       </div>
-                      <span className="block text-lg font-semibold text-gray-900 mb-2">Complete Route</span>
+                      <span className="block text-lg font-semibold text-gray-900 mb-2">Scenic Route</span>
                       <ul className="space-y-1 text-sm text-gray-600">
                         <li className="flex items-start">
                           <span className="text-gray-400 mr-1">✓</span>

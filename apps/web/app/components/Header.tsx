@@ -77,7 +77,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       onClick={() => setUserMenuOpen(false)}
                     />
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg py-2 z-50">
-                      {user.route_preference !== 'complete_route' && (
+                      {user.route_preference !== 'scenic' && (
                         <Link
                           to="/rally"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
@@ -197,7 +197,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               </Link>
               {user ? (
                 <>
-                  {user.route_preference !== 'complete_route' && (
+                  {user.route_preference !== 'scenic' && (
                     <Link
                       to="/rally"
                       className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"

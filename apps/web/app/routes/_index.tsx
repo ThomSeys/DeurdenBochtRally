@@ -3,7 +3,7 @@ import { useLoaderData, Link } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import PortableText from '~/components/PortableText';
-import { getActiveEdition, getSiteConfig, getStats, getPricingTiers, getSponsors, getPageContent } from '~/lib/sanity.server';
+import { getActiveEdition, getSiteConfig, getStats, getPricingTiers, getSponsors, getPageContent, getFeatureCards } from '~/lib/sanity.server';
 import { urlFor } from '~/lib/sanity';
 import { getUserId } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
@@ -23,12 +23,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const pricing = edition ? await getPricingTiers(edition._id) : [];
   const sponsors = edition ? await getSponsors(edition._id) : [];
   const pageContent = edition ? await getPageContent('homepage', edition._id) : [];
+  const rallyFeatures = edition ? await getFeatureCards(edition._id, 'rally-features') : [];
 
-  return {  userId, edition, siteConfig, stats, pricing, sponsors, pageContent };
+  return {  userId, edition, siteConfig, stats, pricing, sponsors, pageContent, rallyFeatures };
 }
 
 export default function Index() {
-  const { userId, edition, siteConfig, stats, pricing, sponsors, pageContent } = useLoaderData<typeof loader>();
+  const { userId, edition, siteConfig, stats, pricing, sponsors, pageContent, rallyFeatures } = useLoaderData<typeof loader>();
 
   // Get specific sections from page content
   const heroSection = pageContent.find((section: any) => section.section === 'hero-quote');
@@ -226,6 +227,10 @@ export default function Index() {
                   src={urlFor(siteConfig.featureImage1).width(800).height(600).url()}
                   alt={whatIsSection?.title || 'Deur Den Bocht'}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load featureImage1:', siteConfig.featureImage1);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               ) : (
                 <div className="text-center">
@@ -258,7 +263,6 @@ export default function Index() {
                       : 'border border-gray-200 shadow-lg'
                   } `}
                 >
-                  {tier.icon && <div className="text-5xl mb-6 text-center">{tier.icon}</div>}
                   <h3 className={"text-3xl font-bold mb-4 text-center uppercase " + (tier.highlighted ? "text-white" : "text-gray-900")}>
                     {tier.name}
                   </h3>
@@ -322,29 +326,43 @@ export default function Index() {
             )}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <Icon name="map" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
-              <h3 className="text-2xl font-black mb-4">8 Rally Zones</h3>
-              <p className="text-gray-600 text-lg">
-                Optionele lussen langs de route met unieke uitdagingen en verborgen parels
-              </p>
+          {rallyFeatures && rallyFeatures.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              {rallyFeatures.map((feature: any) => (
+                <div key={feature._id} className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+                  <Icon name={feature.icon} className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+                  <h3 className="text-2xl font-black mb-4">{feature.title}</h3>
+                  <p className="text-gray-600 text-lg">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
             </div>
-            <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <Icon name="book" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
-              <h3 className="text-2xl font-black mb-4">Het Bochtenboek</h3>
-              <p className="text-gray-600 text-lg">
-                Geschreven aanwijzingen in plaats van GPS-pijlen. Echt navigeren, echt avontuur.
-              </p>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+                <Icon name="map" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+                <h3 className="text-2xl font-black mb-4">8 Rally Zones</h3>
+                <p className="text-gray-600 text-lg">
+                  Optionele lussen langs de route met unieke uitdagingen en verborgen parels
+                </p>
+              </div>
+              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+                <Icon name="book" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+                <h3 className="text-2xl font-black mb-4">Het Bochtenboek</h3>
+                <p className="text-gray-600 text-lg">
+                  Geschreven aanwijzingen in plaats van GPS-pijlen. Echt navigeren, echt avontuur.
+                </p>
+              </div>
+              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
+                <Icon name="camera" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+                <h3 className="text-2xl font-black mb-4">Deel je verhaal</h3>
+                <p className="text-gray-600 text-lg">
+                  Maak foto's, verzamel verhalen en deel je avontuur met de community
+                </p>
+              </div>
             </div>
-            <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-              <Icon name="camera" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
-              <h3 className="text-2xl font-black mb-4">Deel je verhaal</h3>
-              <p className="text-gray-600 text-lg">
-                Maak foto's, verzamel verhalen en deel je avontuur met de community
-              </p>
-            </div>
-          </div>
+          )}
 
           <div className="text-center">
             <Link
