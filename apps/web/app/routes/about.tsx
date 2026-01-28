@@ -204,15 +204,15 @@ export default function About() {
                         {item.time}
                       </span>
                     </div>
-                    <div className="bg-white rounded-lg shadow-md lg:shadow-lg p-4 lg:p-6 border-l-4 border-primary-600 hover:shadow-xl transition-shadow">
-                      <h3 className="text-lg lg:text-2xl font-bold text-gray-900 mb-2 lg:mb-3">{item.title}</h3>
-                      <p className="text-gray-700 text-sm lg:text-lg mb-2 lg:mb-4">{item.description}</p>
+                    <div className="bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg shadow-md lg:shadow-lg p-4 lg:p-6 border-l-4 border-primary-600 hover:shadow-xl transition-shadow">
+                      <h3 className="text-lg lg:text-2xl font-bold text-white mb-2 lg:mb-3">{item.title}</h3>
+                      <p className="text-white text-sm lg:text-lg mb-2 lg:mb-4">{item.description}</p>
                       {item.details && item.details.length > 0 && (
                         <ul className="space-y-1 lg:space-y-2 text-sm lg:text-base lg:grid lg:grid-cols-2 lg:gap-3">
                           {item.details.map((detail: string, idx: number) => (
                             <li key={idx} className="flex items-start">
-                              <Icon name="check-circle" className="w-4 h-4 lg:w-5 lg:h-5 text-primary-600 mr-2 flex-shrink-0 mt-0.5" />
-                              <span className="text-gray-600">{detail}</span>
+                              <Icon name="check-circle" className="w-4 h-4 lg:w-5 lg:h-5 text-white mr-2 flex-shrink-0 mt-0.5" />
+                              <span className="text-white">{detail}</span>
                             </li>
                           ))}
                         </ul>
