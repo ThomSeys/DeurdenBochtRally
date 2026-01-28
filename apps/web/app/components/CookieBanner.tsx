@@ -54,18 +54,20 @@ export default function CookieBanner() {
   if (!showBanner) return null;
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 sm:p-6 shadow-2xl z-[1000] transition-all duration-300 ${isHiding ? 'translate-y-full' : 'translate-y-0'}`}>
+    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t-4 border-primary-600 p-4 sm:p-6 shadow-2xl z-[1000] transition-all duration-300 ${isHiding ? 'translate-y-full' : 'translate-y-0'}`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="text-lg font-semibold mb-2">🍪 Cookieverklaring</h3>
-            <p className="text-sm text-gray-200">
-              We gebruiken cookies om uw ervaring te verbeteren. We gebruiken essentiële cookies voor authenticatie en functionaliteit. 
-              <Link to="/cookie-policy" className="text-blue-400 hover:text-blue-300 ml-1 underline">
-                Lees meer over onze cookieverklaring
+            <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              🍪 Cookies & Privacy
+            </h3>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              We gebruiken cookies om je ervaring te verbeteren. Essentiële cookies zijn nodig voor authenticatie en functionaliteit. 
+              <Link to="/cookie-policy" className="text-primary-600 hover:text-primary-700 ml-1 font-medium underline">
+                Lees meer over cookies
               </Link>
-              {' '}en{' '}
-              <Link to="/privacy-policy" className="text-blue-400 hover:text-blue-300 underline">
+              {' '}en ons{' '}
+              <Link to="/privacy-policy" className="text-primary-600 hover:text-primary-700 font-medium underline">
                 privacybeleid
               </Link>.
             </p>
@@ -74,13 +76,13 @@ export default function CookieBanner() {
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
             <button
               onClick={handleAcceptEssential}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-sm transition-colors text-sm font-medium"
+              className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-sm transition-colors font-bold uppercase tracking-wide"
             >
               Alleen essentieel
             </button>
             <button
               onClick={handleAcceptAll}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-sm transition-colors text-sm font-medium"
+              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-sm transition-colors font-bold uppercase tracking-wide shadow-lg"
             >
               Alles accepteren
             </button>
