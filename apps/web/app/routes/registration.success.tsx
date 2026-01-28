@@ -2,8 +2,6 @@ import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { redirect } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
-import { supabase, supabaseAdmin } from '~/lib/supabase.server';
-import { stripe } from '~/lib/stripe.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { createUserSession, getUserId } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
@@ -15,6 +13,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  // Import server-only modules inside the loader to avoid bundling them in client code
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  const { stripe } = await import('~/lib/stripe.server');
+  
   const url = new URL(request.url);
   const sessionId = url.searchParams.get('session_id');
 
