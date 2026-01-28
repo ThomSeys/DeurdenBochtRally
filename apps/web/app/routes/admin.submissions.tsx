@@ -3,7 +3,6 @@ import { useLoaderData, Form, Link } from 'react-router';
 import { useState } from 'react';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
-import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
