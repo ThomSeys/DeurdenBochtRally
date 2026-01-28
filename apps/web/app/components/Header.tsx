@@ -38,7 +38,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
           <Link to="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <img src="/logo.svg" alt="Deur Den Bocht Logo" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" style={{ filter: 'brightness(0) invert(1)' }} />
             <div className={`${isTransparent ? 'text-white' : 'text-white'}`}>
-              <div className={`font-bold text-sm sm:text-lg tracking-wide uppercase whitespace-nowrap ${isTransparent ? 'drop-shadow-lg' : ''}`}>Deur Den Bocht</div>
+              <div className={`font-bold text-sm sm:text-lg tracking-wide uppercase whitespace-nowrap ${isTransparent ? 'drop-shadow-lg' : ''}`}>Den Bochtenkoning</div>
               <div className={`text-xs leading-tight uppercase whitespace-nowrap ${isTransparent ? 'text-white/90 drop-shadow-lg' : 'text-primary-100'}`}>Rally</div>
             </div>
           </Link>

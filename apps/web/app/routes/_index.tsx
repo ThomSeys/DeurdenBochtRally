@@ -55,7 +55,7 @@ export default function Index() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 h-full flex items-center justify-center py-32 md:py-48">
           <div className="text-center">
             {/* VZW Logo Badge */}
-            <div className="inline-flex items-center justify-center mb-8 bg-white/10 backdrop-blur-md border-2 border-white/30 rounded-2xl p-8 sm:p-12 hover:bg-white/20 transition-all duration-300">
+            <div className="inline-flex items-center justify-center mb-8 bg-white/10 backdrop-blur-md border-2 border-white/30 rounded-2xl p-8 sm:p-12 hover:backdrop-blur-lg transition-all duration-300">
               <img src="/logo.svg" alt="Deur Den Bocht Logo" className="w-32 sm:w-40 md:w-48 h-auto" style={{ filter: 'brightness(0) invert(1)' }} />
             </div>
 
@@ -65,12 +65,12 @@ export default function Index() {
               </h1>
             ) : (
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-6 tracking-tight gradient-text break-words">
-                MOTORRIT<br />RALLY 2026
+                Den<br /> BOCHTENKONING<br />RALLY
               </h1>
             )}
             
             <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-8 font-black tracking-wider text-primary-100 break-words">
-              DEUR DEN BOCHT
+              VZW DEUR DEN BOCHT
             </p>
             
             {edition && (
