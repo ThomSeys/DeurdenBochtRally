@@ -12,7 +12,7 @@ const components = {
       </h1>
     ),
     h2: ({ children }: any) => (
-      <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-8 mt-16 first:mt-0 tracking-tight border-l-4 border-primary-500 pl-6 leading-tight">
+      <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-8 mt-16 first:mt-0 tracking-tight border-l-4 border-accent-500 pl-6 leading-tight">
         {children}
       </h2>
     ),
@@ -29,7 +29,7 @@ const components = {
   },
   marks: {
     strong: ({ children }: any) => (
-      <strong className="font-black text-primary-700 bg-primary-50 px-1 py-0.5 rounded">{children}</strong>
+      <strong className="font-black text-primary-700 px-1 py-0.5 rounded">{children}</strong>
     ),
     em: ({ children }: any) => (
       <em className="not-italic font-semibold text-primary-600 border-b-2 border-primary-300">{children}</em>
@@ -47,16 +47,16 @@ const components = {
   },
   list: {
     bullet: ({ children }: any) => (
-      <ul className="space-y-5 mb-10 mt-8 bg-gradient-to-br from-gray-50 to-primary-50 p-6 rounded-xl border-l-4 border-primary-500">{children}</ul>
+      <ul className="space-y-5 mb-10 mt-8 bg-gradient-to-br from-gray-50 to-accent-50 p-6 border-l-4 border-accent-500">{children}</ul>
     ),
     number: ({ children }: any) => (
-      <ol className="space-y-5 mb-10 mt-8 bg-gradient-to-br from-gray-50 to-primary-50 p-6 rounded-xl border-l-4 border-primary-500 list-decimal list-inside">{children}</ol>
+      <ol className="space-y-5 mb-10 mt-8 bg-gradient-to-br from-gray-50 to-accent-50 p-6 border-l-4 border-accent-500 list-decimal list-inside">{children}</ol>
     ),
   },
   listItem: {
     bullet: ({ children }: any) => (
       <li className="flex items-start group">
-        <span className="text-primary-600 font-black text-2xl mr-4 group-hover:scale-110 transition-transform">✓</span>
+        <span className="text-accent-500 font-black text-2xl mr-4 group-hover:scale-110 transition-transform">✓</span>
         <span className="text-lg md:text-xl text-gray-800 font-medium">{children}</span>
       </li>
     ),

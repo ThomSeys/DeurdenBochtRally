@@ -219,7 +219,7 @@ export default function About() {
             </div>
             
             {/* Mobile & Desktop: Vertical timeline */}
-            <div className="relative px-10 border-l-4 border-primary-700">
+            <div className="relative px-10 border-l-4 border-accent-500">
               
               <div className="space-y-8">
                 {schedule.map((item: any, index: number) => (

@@ -90,7 +90,7 @@ export default function Index() {
               {!userId && edition?.registrationOpen && (
                 <Link
                   to="/registration"
-                  className="bg-white hover:bg-primary-50 text-primary-600 px-10 py-4 rounded-sm text-lg font-black uppercase transition-all duration-300 shadow-xl hover:shadow-2xl"
+                  className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-10 py-4 rounded-sm text-lg font-black uppercase transition-all duration-300 shadow-xl hover:shadow-2xl"
                 >
                   Nu inschrijven
                 </Link>
@@ -134,7 +134,7 @@ export default function Index() {
             {!userId && edition?.registrationOpen && (
               <Link
                 to="/registration"
-                className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-4 rounded-sm text-lg font-bold uppercase transition-colors shadow-lg"
+                className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-10 py-4 rounded-sm text-lg font-bold uppercase transition-colors shadow-lg"
               >
                 Nu inschrijven
               </Link>
@@ -155,7 +155,7 @@ export default function Index() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat: any) => (
-                <div key={stat._id} className="bg-white rounded-sm border-l-2 border-primary-600 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
+                <div key={stat._id} className="bg-white rounded-sm border-l-4 border-accent-500 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
                   {stat.icon && /^[\u{1F000}-\u{1F9FF}]$/u.test(stat.icon) && (
                     <div className="text-4xl mb-2">{stat.icon}</div>
                   )}
@@ -198,23 +198,23 @@ export default function Index() {
                   </p>
                   <ul className="space-y-4">
                     <li className="flex items-start">
-                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-accent-500 font-bold text-xl mr-3">✓</span>
                       <span className="text-lg">Je rijdt <strong>500+ km</strong> via de mooiste bochten</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-accent-500 font-bold text-xl mr-3">✓</span>
                       <span className="text-lg">Je <strong>vertrekt wanneer jij wil</strong></span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-accent-500 font-bold text-xl mr-3">✓</span>
                       <span className="text-lg">Je <strong>stopt wanneer jij wil</strong></span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-accent-500 font-bold text-xl mr-3">✓</span>
                       <span className="text-lg">Iedereen rijdt dezelfde prachtige <strong>bochten-GPX</strong></span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-primary-600 font-bold text-xl mr-3">✓</span>
+                      <span className="text-accent-500 font-bold text-xl mr-3">✓</span>
                       <span className="text-lg">Onderweg kan je <strong>optioneel deelnemen aan 8 Rally Zones</strong></span>
                     </li>
                   </ul>
@@ -262,7 +262,7 @@ export default function Index() {
                   key={tier._id}
                   className={`bg-white rounded-sm p-10 ${
                     tier.highlighted 
-                      ? 'bg-gradient-to-r from-primary-600 to-primary-400 shadow-2xl text-white' 
+                      ? 'bg-gradient-to-r from-primary-600 to-primary-400 shadow-2xl text-white border-2 border-primary-700' 
                       : 'border border-gray-200 shadow-lg'
                   } `}
                 >
@@ -272,12 +272,12 @@ export default function Index() {
                   <div className="text-center mb-8">
                     <span className={"text-5xl font-extrabold " + (tier.highlighted ? "text-white" : "text-primary-600")}>€{tier.price}</span>
                   </div>
-                  <hr className="mb-8" />
+                  <hr className="mb-8 border-accent-500" />
                   {tier.features && (
                     <ul className="space-y-4">
                       {tier.features.map((feature: string, idx: number) => (
                         <li key={idx} className="flex items-start">
-                          <span className={"text-primary-600 font-bold text-xl mr-3 " + (tier.highlighted ? "text-white" : "")}>✓</span>
+                          <span className={"text-primary font-bold text-xl mr-3 " + (tier.highlighted ? "text-white" : "")}>✓</span>
                           <span className="text-lg">{feature}</span>
                         </li>
                       ))}
@@ -291,7 +291,7 @@ export default function Index() {
               <div className="text-center mt-12">
                 <Link
                   to="/registration"
-                  className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-12 py-4 rounded-sm text-xl font-bold uppercase transition-colors shadow-lg"
+                  className="inline-block bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-12 py-4 rounded-sm text-xl font-bold uppercase transition-colors shadow-lg"
                 >
                   Nu inschrijven
                 </Link>
@@ -333,7 +333,7 @@ export default function Index() {
             <div className="grid md:grid-cols-3 gap-8 mb-12">
               {rallyFeatures.map((feature: any) => (
                 <div key={feature._id} className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-                  <Icon name={feature.icon} className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+                  <Icon name={feature.icon} className="w-20 h-20 mb-6 mx-auto text-accent-500" />
                   <h3 className="text-2xl font-black mb-4">{feature.title}</h3>
                   <p className="text-gray-600 text-lg">
                     {feature.description}
@@ -343,22 +343,22 @@ export default function Index() {
             </div>
           ) : (
             <div className="grid md:grid-cols-3 gap-8 mb-12">
-              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-                <Icon name="map" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-accent-500 text-center hover:bg-gradient-to-b hover:from-white hover:to-accent-50 transition-all duration-300">
+                <Icon name="map" className="w-20 h-20 mb-6 mx-auto text-accent-500" />
                 <h3 className="text-2xl font-black mb-4">8 Rally Zones</h3>
                 <p className="text-gray-600 text-lg">
                   Optionele lussen langs de route met unieke uitdagingen en verborgen parels
                 </p>
               </div>
-              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-                <Icon name="book" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-accent-500 text-center hover:bg-gradient-to-b hover:from-white hover:to-accent-50 transition-all duration-300">
+                <Icon name="book" className="w-20 h-20 mb-6 mx-auto text-accent-500" />
                 <h3 className="text-2xl font-black mb-4">Het Bochtenboek</h3>
                 <p className="text-gray-600 text-lg">
                   Geschreven aanwijzingen in plaats van GPS-pijlen. Echt navigeren, echt avontuur.
                 </p>
               </div>
-              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-                <Icon name="camera" className="w-20 h-20 mb-6 mx-auto text-primary-600" />
+              <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-accent-500 text-center hover:bg-gradient-to-b hover:from-white hover:to-accent-50 transition-all duration-300">
+                <Icon name="camera" className="w-20 h-20 mb-6 mx-auto text-accent-500" />
                 <h3 className="text-2xl font-black mb-4">Deel je verhaal</h3>
                 <p className="text-gray-600 text-lg">
                   Maak foto's, verzamel verhalen en deel je avontuur met de community

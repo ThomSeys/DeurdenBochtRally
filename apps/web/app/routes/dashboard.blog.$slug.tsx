@@ -252,7 +252,7 @@ export default function BlogDetail() {
       h3: ({ children }: any) => <h3 className="text-xl font-bold mt-4 mb-2">{children}</h3>,
       normal: ({ children }: any) => <p className="mb-4 leading-relaxed">{children}</p>,
       blockquote: ({ children }: any) => (
-        <blockquote className="border-l-4 border-primary-600 pl-4 italic my-6 text-gray-700">
+        <blockquote className="border-l-4 border-accent-500 pl-4 italic my-6 text-gray-700">
           {children}
         </blockquote>
       ),

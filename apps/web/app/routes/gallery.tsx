@@ -404,7 +404,7 @@ export default function Gallery() {
             <p className="text-gray-600 mb-6">Wees de eerste om een moment te delen!</p>
             <button
               onClick={() => setShowUpload(true)}
-              className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-full font-semibold transition-all shadow-lg"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-6 py-3 rounded-full font-semibold transition-all shadow-lg"
             >
               <Icon name="camera" className="w-5 h-5" />
               Upload Je Eerste Foto

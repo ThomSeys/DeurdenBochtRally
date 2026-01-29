@@ -54,7 +54,7 @@ export default function CookieBanner() {
   if (!showBanner) return null;
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t-4 border-primary-600 p-4 sm:p-6 shadow-2xl z-[1000] transition-all duration-300 ${isHiding ? 'translate-y-full' : 'translate-y-0'}`}>
+    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t-4 border-accent-500 p-4 sm:p-6 shadow-2xl z-[1000] transition-all duration-300 ${isHiding ? 'translate-y-full' : 'translate-y-0'}`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-4">
           <div>
@@ -82,7 +82,7 @@ export default function CookieBanner() {
             </button>
             <button
               onClick={handleAcceptAll}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-sm transition-colors font-bold uppercase tracking-wide shadow-lg"
+              className="px-6 py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white rounded-sm transition-colors font-bold uppercase tracking-wide shadow-lg"
             >
               Alles accepteren
             </button>
