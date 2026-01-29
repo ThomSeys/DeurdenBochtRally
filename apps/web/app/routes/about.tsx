@@ -145,7 +145,7 @@ export default function About() {
                     </>
                   )}
                   
-                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed mb-8">
+                  <div className="prose prose-lg prose-headings:text-gray-900 prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-p:text-gray-700 prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6 prose-strong:text-primary-700 prose-strong:font-extrabold prose-em:text-primary-600 prose-em:font-medium max-w-none mb-8">
                     <PortableText value={story.content} />
                   </div>
                   
@@ -234,7 +234,7 @@ export default function About() {
                       <h3 className="text-lg lg:text-2xl font-bold text-white mb-2 lg:mb-3">{item.title}</h3>
                       <p className="text-white text-sm lg:text-lg mb-2 lg:mb-4">{item.description}</p>
                       {item.details && item.details.length > 0 && (
-                        <ul className="space-y-1 lg:space-y-2 text-sm lg:text-base lg:grid lg:grid-cols-2 lg:gap-3">
+                        <ul className="space-y-1 lg:space-y-0 text-sm lg:text-base lg:grid lg:grid-cols-2 lg:gap-3 border-t border-primary-400 pt-2 lg:pt-4">
                           {item.details.map((detail: string, idx: number) => (
                             <li key={idx} className="flex items-start">
                               <Icon name="check-circle" className="w-4 h-4 lg:w-5 lg:h-5 text-white mr-2 flex-shrink-0 mt-0.5" />
