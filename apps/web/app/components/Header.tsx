@@ -31,7 +31,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
   const isTransparent = transparent && !isScrolled && isClient;
 
   return (
-    <header className={`${isTransparent ? 'bg-transparent backdrop-blur-lg border-b border-white/10' : 'bg-primary-600 shadow-lg'} ${fixed ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1100] transition-all duration-300`}>
+    <header className={`${isTransparent ? 'bg-transparent backdrop-blur-lg border-b border-white/10' : 'bg-gradient-to-tr from-primary-900 via-primary-600 to-primary-400'} ${fixed ? 'fixed' : 'sticky'} top-0 left-0 right-0 z-[1100] transition-all duration-300`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
