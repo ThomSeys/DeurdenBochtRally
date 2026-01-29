@@ -22,7 +22,7 @@ const components = {
       </h3>
     ),
     normal: ({ children }: any) => (
-      <p className="text-lg md:text-xl text-gray-700 leading-[1.8] mb-6 first-letter:text-5xl first-letter:font-black first-letter:text-primary-600 first-letter:mr-1 first-letter:float-left">
+      <p className="text-lg md:text-xl text-gray-700 leading-[1.8] mb-6">
         {children}
       </p>
     ),

@@ -156,6 +156,9 @@ export default function Index() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat: any) => (
                 <div key={stat._id} className="bg-white rounded-sm border-l-2 border-primary-600 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
+                  {stat.icon && /^[\u{1F000}-\u{1F9FF}]$/u.test(stat.icon) && (
+                    <div className="text-4xl mb-2">{stat.icon}</div>
+                  )}
                   <div className="text-6xl sm:text-3xl md:text-4xl font-extrabold text-primary-600 mb-2 break-words">
                     {stat.value}
                   </div>
