@@ -104,7 +104,7 @@ export default function About() {
                       <img
                         src={story.imageUrl}
                         alt={story.title}
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000"
+                        className="w-full h-full object-cover transform blur-sm group-hover:blur-none transition-all duration-1000"
                       />
                     </div>
                     
@@ -150,26 +150,52 @@ export default function About() {
                   </div>
                   
                   {story.highlights && story.highlights.length > 0 && (
-                    <div 
-                      className={`grid grid-cols-2 gap-4 md:grid-cols-${Math.min(story.highlights.length, 4)}`}
-                    >
-                      {story.highlights.map((highlight: any, idx: number) => (
-                        <div 
-                          key={idx} 
-                          className="group relative overflow-hidden text-center bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-6 rounded-xl transition-all duration-300 transform hover:-translate-y-1"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                          <div className="relative z-10">
-                            <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
-                              {highlight.number}
-                            </div>
-                            <div className="text-xs sm:text-sm text-primary-50 font-medium uppercase tracking-wider">
-                              {highlight.label}
+                    <div className={`grid grid-cols-2 gap-4 md:grid-cols-${Math.min(story.highlights.length, 4)}`}>
+                      {story.highlights.map((highlight: any, idx: number) => {
+                        // Rich gradient variations
+                        const variants = [
+                          {
+                            base: "bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600",
+                            hover: "hover:from-primary-500 hover:via-primary-600 hover:to-primary-700"
+                          },
+                          {
+                            base: "bg-gradient-to-bl from-primary-500 via-primary-600 to-primary-500",
+                            hover: "hover:from-primary-600 hover:via-primary-700 hover:to-primary-600"
+                          },
+                          {
+                            base: "bg-gradient-to-tr from-primary-400 via-primary-600 to-primary-500",
+                            hover: "hover:from-primary-500 hover:via-primary-700 hover:to-primary-600"
+                          },
+                          {
+                            base: "bg-gradient-to-tl from-primary-500 via-primary-400 to-primary-600",
+                            hover: "hover:from-primary-600 hover:via-primary-500 hover:to-primary-700"
+                          }
+                        ];
+                        const variant = variants[idx % variants.length];
+                        
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`group relative overflow-hidden cursor-pointer ${variant.base} ${variant.hover} p-6 rounded-xl transition-all duration-500 hover:shadow-2xl text-center`}
+                          >
+                            {/* Animated gradient overlay on hover */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            
+                            {/* Subtle glow effect */}
+                            <div className="absolute -inset-1 bg-gradient-to-r from-primary-300/0 via-primary-200/20 to-primary-300/0 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            
+                            {/* Content */}
+                            <div className="relative z-10">
+                              <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight drop-shadow-lg">
+                                {highlight.number}
+                              </div>
+                              <div className="text-xs sm:text-sm text-white/90 font-medium uppercase tracking-wide">
+                                {highlight.label}
+                              </div>
                             </div>
                           </div>
-                          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full"></div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
