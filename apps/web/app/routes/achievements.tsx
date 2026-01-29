@@ -251,22 +251,18 @@ export default function Achievements() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden rounded-sm bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 p-8 text-white shadow-2xl">
-          <div className="absolute inset-0 bg-black opacity-10"></div>
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white opacity-10"></div>
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white opacity-10"></div>
-          
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-              <Icon name="trophy" className="w-12 h-12" />
-              Achievements
-            </h1>
-            <p className="text-primary-100 text-lg">Ontgrendel achievements door deel te nemen aan de rally!</p>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+            <Icon name="trophy" className="w-10 h-10" />
           </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Achievements</h1>
+          <p className="text-xl text-primary-100">Ontgrendel achievements door deel te nemen aan de rally!</p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Total Progress */}

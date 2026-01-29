@@ -100,11 +100,7 @@ export default function EmergencyAlerts() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white py-16 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-        </div>
+      <div className={`relative ${activeAlerts.length > 0 ? 'bg-gradient-to-br from-red-600 via-red-700 to-red-800' : 'bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400'} text-white py-16 overflow-hidden`}>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
@@ -112,7 +108,7 @@ export default function EmergencyAlerts() {
             </div>
             <div>
               <h1 className="text-4xl font-bold">Nood SOS Meldingen</h1>
-              <p className="text-red-100 mt-1">Monitor en reageer op noodsituaties</p>
+              <p className={`${activeAlerts.length > 0 ? 'text-red-100' : 'text-primary-100'} mt-1`}>Monitor en reageer op noodsituaties</p>
             </div>
           </div>
           {activeAlerts.length > 0 && (

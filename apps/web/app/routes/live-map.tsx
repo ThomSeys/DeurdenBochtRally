@@ -205,7 +205,7 @@ export default function LiveMap() {
       <Header />
 
       {/* Page Header */}
-      <div className="bg-gradient-to-r h-full from-primary-600 to-primary-700 text-white">
+      <div className="bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white">
         <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
             <div>

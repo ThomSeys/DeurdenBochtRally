@@ -116,7 +116,7 @@ export default function Rally() {
       <Header />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
+      <section className="bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-bold mb-4">De Rally Route</h1>
           <p className="text-xl max-w-3xl mx-auto">
@@ -261,7 +261,7 @@ export default function Rally() {
 
       {/* CTA */}
       {!userId && edition?.registrationOpen && (
-        <section className="py-16 bg-primary-600 text-white">
+        <section className="py-16 bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Klaar voor het avontuur?</h2>
             <p className="text-xl mb-8">
