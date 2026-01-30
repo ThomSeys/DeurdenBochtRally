@@ -8,6 +8,7 @@ import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
+import { MARKER_COLORS } from '~/lib/constants';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   console.info('[live-map] loader start');
@@ -270,7 +271,7 @@ export default function LiveMap() {
                 <span style={{opacity: showCheckIns ? 1 : 0.5}}>Check-ins ({checkIns?.length || 0})</span>
               </div>
               <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
-                <div style={{ background: '#10b981', width: '14px', height: '14px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                <div style={{ background: MARKER_COLORS.green, width: '14px', height: '14px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                 <span>Zone Entry</span>
               </div>
               <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>

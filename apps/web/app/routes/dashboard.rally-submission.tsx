@@ -6,6 +6,7 @@ import { sanityClient } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { MARKER_COLORS } from '~/lib/constants';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Rally Zones Inchecken - Deur Den Bocht' }];
@@ -243,7 +244,7 @@ export default function RallySubmission() {
       L.marker([zoneLat, zoneLng], {
         icon: L.divIcon({
           className: 'custom-marker',
-          html: `<div style="background: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"></path></svg></div>`,
+          html: `<div style="background: ${MARKER_COLORS.green}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"></path></svg></div>`,
         }),
       })
         .addTo(map)
@@ -252,8 +253,8 @@ export default function RallySubmission() {
       // 100m radius circle
       L.circle([zoneLat, zoneLng], {
         radius: 100,
-        color: distance <= 100 ? '#10b981' : '#ef4444',
-        fillColor: distance <= 100 ? '#10b981' : '#ef4444',
+        color: distance <= 100 ? MARKER_COLORS.green : MARKER_COLORS.red,
+        fillColor: distance <= 100 ? MARKER_COLORS.green : MARKER_COLORS.red,
         fillOpacity: 0.2,
       }).addTo(map);
 
@@ -261,7 +262,7 @@ export default function RallySubmission() {
       L.marker([location.latitude, location.longitude], {
         icon: L.divIcon({
           className: 'custom-marker',
-          html: `<div style="background: #3b82f6; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>`,
+          html: `<div style="background: ${MARKER_COLORS.blue}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>`,
         }),
       })
         .addTo(map)

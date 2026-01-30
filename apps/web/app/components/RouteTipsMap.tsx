@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_ROUTE_COLORS, MARKER_COLORS } from '~/lib/constants';
 
 interface RouteTip {
   name: string;
@@ -19,17 +20,6 @@ interface RouteTipsMapProps {
   userLocation?: { lat: number; lng: number } | null;
   className?: string;
 }
-
-const DEFAULT_COLORS = [
-  '#3B82F6', // blue
-  '#EF4444', // red
-  '#10B981', // green
-  '#F59E0B', // amber
-  '#8B5CF6', // purple
-  '#EC4899', // pink
-  '#14B8A6', // teal
-  '#F97316', // orange
-];
 
 export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, zoneEndLocation, userLocation, className = '' }: RouteTipsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -62,9 +52,9 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         lng: userLocation.lng,
         name: 'Uw Locatie',
         type: 'user-location',
-        description: 'Uw huidige positie',
-        color: '#4F46E5',
-        routeName: 'Locatie',
+        description: '',
+        color: MARKER_COLORS.userLocation,
+        routeName: '',
       });
     }
 
@@ -76,7 +66,7 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         name: zoneStartLocation.name || 'Start',
         type: 'zone-start',
         description: `Start van ${zoneTitle || 'deze zone'}`,
-        color: '#22c55e',
+        color: MARKER_COLORS.zoneStart,
         routeName: 'Rally Zone',
       });
     }
@@ -89,13 +79,13 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         name: zoneEndLocation.name || 'Einde',
         type: 'zone-end',
         description: `Einde van ${zoneTitle || 'deze zone'}`,
-        color: '#ef4444',
+        color: MARKER_COLORS.zoneEnd,
         routeName: 'Rally Zone',
       });
     }
 
     routeTips.forEach((tip, tipIndex) => {
-      const color = tip.color || DEFAULT_COLORS[tipIndex % DEFAULT_COLORS.length];
+      const color = tip.color || DEFAULT_ROUTE_COLORS[tipIndex % DEFAULT_ROUTE_COLORS.length];
       if (tip.locations && tip.locations.length > 0) {
         tip.locations.forEach((loc) => {
           allLocations.push({
@@ -144,7 +134,7 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         // SVG icons for different location types
         const svgIcon = 
           loc.type === 'user-location' ?
-            '<svg viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="5" fill="white"/><circle cx="12" cy="12" r="2" fill="#4F46E5"/></svg>' :
+            `<svg viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="5" fill="white"/><circle cx="12" cy="12" r="2" fill="${MARKER_COLORS.userLocation}"/></svg>` :
           loc.type === 'zone-start' || loc.type === 'zone-end' ? 
             '<svg viewBox="0 0 24 24" fill="white" style="width: 18px; height: 18px;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>' :
           loc.type === 'highlight' ? 
@@ -158,8 +148,8 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         const iconHtml = `
           <div style="
             background-color: ${loc.color};
-            width: ${loc.type === 'zone-start' || loc.type === 'zone-end' || loc.type === 'user-location' ? '36px' : '30px'};
-            height: ${loc.type === 'zone-start' || loc.type === 'zone-end' || loc.type === 'user-location' ? '36px' : '30px'};
+            width: ${loc.type === 'zone-start' || loc.type === 'zone-end' ? '36px' : '30px'};
+            height: ${loc.type === 'zone-start' || loc.type === 'zone-end' ? '36px' : '30px'};
             border-radius: 50%;
             border: 3px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
