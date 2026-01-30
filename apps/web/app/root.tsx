@@ -94,13 +94,45 @@ export default function App() {
   useEffect(() => {
     // Register service worker on app load - uses network-first strategy
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      // Unregister old service workers first (cleanup)
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        console.info(`[sw] Found ${registrations.length} existing service worker(s)`);
+        registrations.forEach((registration) => {
+          console.info('[sw] Existing SW scope:', registration.scope);
+        });
+      });
+
+      navigator.serviceWorker.register('/sw.js', { 
+        scope: '/',
+        updateViaCache: 'none' // Always fetch fresh SW
+      })
         .then((registration) => {
-          console.info('[sw] Service worker registered', registration.scope);
+          console.info('[sw] Service worker registered successfully', {
+            scope: registration.scope,
+            installing: !!registration.installing,
+            waiting: !!registration.waiting,
+            active: !!registration.active
+          });
+
+          // Check for updates immediately
+          registration.update().catch((err) => {
+            console.warn('[sw] Update check failed:', err);
+          });
+
+          // Check for updates every 60 seconds
+          setInterval(() => {
+            registration.update().catch(() => {});
+          }, 60000);
         })
         .catch((error) => {
-          console.error('[sw] Service worker registration failed', error);
+          console.error('[sw] Service worker registration failed:', {
+            error: error.message,
+            name: error.name,
+            stack: error.stack
+          });
         });
+    } else {
+      console.warn('[sw] Service workers not supported in this browser');
     }
   }, []);
 

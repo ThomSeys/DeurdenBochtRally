@@ -1,5 +1,5 @@
 // Service Worker - Network-first strategy (no offline support needed)
-const VERSION = '10';
+const VERSION = '11';
 const CACHE_NAME = `ddb-rally-v${VERSION}`;
 
 // Install event - skip waiting
