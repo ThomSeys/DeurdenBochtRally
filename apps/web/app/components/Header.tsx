@@ -111,26 +111,26 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
       {/* Desktop User Menu Flyout */}
       <>
         <div
-          className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => setUserMenuOpen(false)}
         />
         {user && (
           <div className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out ${userMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="h-full flex flex-col">
               {/* Header */}
-              <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-6 flex items-center justify-between">
+              <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <Icon name="user" className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                    <Icon name="user" className="w-6 h-6 text-primary-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-lg">{user.first_name} {user.last_name}</h3>
-                    <p className="text-primary-100 text-sm">{user.email}</p>
+                    <h3 className="font-bold text-gray-900 text-lg">{user.first_name} {user.last_name}</h3>
+                    <p className="text-gray-500 text-sm">{user.email}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setUserMenuOpen(false)}
-                  className="text-white/80 hover:text-white p-1"
+                  className="text-gray-400 hover:text-gray-600 p-1"
                 >
                   <Icon name="x" className="w-6 h-6" />
                 </button>
@@ -217,17 +217,17 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
       {/* Mobile Menu Flyout */}
       <>
         <div
-          className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[1100] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[1100] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => setMobileMenuOpen(false)}
         />
-        <div className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed top-0 right-0 h-[100vh] w-80 max-w-[85vw] bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="h-full flex flex-col">
               {/* Header */}
-              <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-6 flex items-center justify-between">
+              <div className="bg-gradient-to-br from-primary-600 to-primary-700 border-b border-gray-200 p-6 flex items-center justify-between">
                 {user ? (
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                      <Icon name="user" className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                      <Icon name="user" className="w-6 h-6 text-primary-600" />
                     </div>
                     <div>
                       <h3 className="font-bold text-white">{user.first_name}</h3>
@@ -235,11 +235,11 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     </div>
                   </div>
                 ) : (
-                  <h3 className="font-bold text-white text-lg">Menu</h3>
+                  <h3 className="font-bold text-gray-900 text-lg">Menu</h3>
                 )}
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-white/80 hover:text-white p-1"
+                  className="text-gray-400 hover:text-gray-600 p-1"
                 >
                   <Icon name="x" className="w-6 h-6" />
                 </button>
