@@ -352,7 +352,7 @@ export function eventReminderEmail(participant: {
               <p><strong>Wat te verwachten:</strong></p>
               <ul>
                 <li>${participant.ride_type === 'guided' ? 'Je rijdt mee in een begeleide groep' : 'Je rijdt je eigen tempo'}</li>
-                <li>8 rally zones om te ontdekken</li>
+                <li>4 rally zones om te ontdekken</li>
                 <li>🏞️ 500+ km door prachtige landschappen</li>
                 <li>Finish aan de Baraque de Fraiture</li>
               </ul>

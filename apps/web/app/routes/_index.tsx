@@ -271,7 +271,7 @@ export default function Index() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-accent-500 font-bold text-xl mr-3">✓</span>
-                      <span className="text-lg">Onderweg kan je <strong>optioneel deelnemen aan 8 Rally Zones</strong></span>
+                      <span className="text-lg">Onderweg kan je <strong>optioneel deelnemen aan 4 Rally Zones</strong></span>
                     </li>
                   </ul>
                   <p className="text-xl text-gray-900 font-semibold mt-8">
@@ -378,7 +378,7 @@ export default function Index() {
                   Het Bochtenboek & De Rally
                 </h2>
                 <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                  Onderweg kan je deelnemen aan <strong>8 Rally Zones</strong> – optionele rally-lussen
+                  Onderweg kan je deelnemen aan <strong>4 Rally Zones</strong> – optionele rally-lussen
                   waar je foto's deelt en verhalen verzamelt
                 </p>
               </>
@@ -412,7 +412,7 @@ export default function Index() {
             <div className="grid md:grid-cols-3 gap-8 mb-12">
               <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-accent-500 text-center hover:bg-gradient-to-b hover:from-white hover:to-accent-50 transition-all duration-300">
                 <Icon name="map" className="w-20 h-20 mb-6 mx-auto text-accent-500" />
-                <h3 className="text-2xl font-black mb-4">8 Rally Zones</h3>
+                <h3 className="text-2xl font-black mb-4">4 Rally Zones</h3>
                 <p className="text-gray-600 text-lg">
                   Optionele lussen langs de route met unieke uitdagingen en verborgen parels
                 </p>

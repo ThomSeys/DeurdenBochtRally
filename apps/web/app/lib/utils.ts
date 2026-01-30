@@ -59,13 +59,13 @@ export function calculateRallyPoints(submission: {
 
     const totalZones = shortZones + mediumZones + longZones;
 
-    // Bonus for completing all 8 zones (strategic completion)
-    if (totalZones === 8) {
+    // Bonus for completing all 4 zones (strategic completion)
+    if (totalZones === 4) {
       points += 30; // Increased from 20 due to higher difficulty
     }
 
-    // Bonus for completing minimum zone requirements (4+ zones for qualification)
-    if (totalZones >= 4 && totalZones < 8) {
+    // Bonus for completing minimum zone requirements (3+ zones for qualification)
+    if (totalZones >= 3 && totalZones < 4) {
       points += 10;
     }
   } else {
@@ -77,10 +77,6 @@ export function calculateRallyPoints(submission: {
       submission.rz2_code,
       submission.rz3_code,
       submission.rz4_code,
-      submission.rz5_code,
-      submission.rz6_code,
-      submission.rz7_code,
-      submission.rz8_code,
     ];
 
     zones.forEach((code) => {
@@ -90,8 +86,8 @@ export function calculateRallyPoints(submission: {
       }
     });
 
-    // Bonus for all 8 zones (legacy)
-    if (completedZones === 8) {
+    // Bonus for all 4 zones (legacy)
+    if (completedZones === 4) {
       points += 20;
     }
   }
