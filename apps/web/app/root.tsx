@@ -25,6 +25,7 @@ import { AppStateProvider } from "~/contexts/AppStateContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
+  { rel: "manifest", href: "/manifest.json" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",

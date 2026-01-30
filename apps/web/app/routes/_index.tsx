@@ -318,7 +318,7 @@ export default function Index() {
                   key={tier._id}
                   className={`bg-white rounded-sm p-10 ${
                     tier.highlighted 
-                      ? 'bg-gradient-to-r from-primary-600 to-primary-400 shadow-2xl text-white border-2 border-primary-700' 
+                      ? 'bg-gradient-to-r from-primary-600 to-primary-400 shadow-2xl text-white' 
                       : 'border border-gray-200 shadow-lg'
                   } `}
                 >
