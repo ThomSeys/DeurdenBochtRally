@@ -39,26 +39,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { userId, edition, siteConfig, schedule, benefits, faq, stories };
 }
 
-// Map common benefit emoji icons to Icon component names
-function getBenefitIconName(icon: string): string {
-  const iconMap: Record<string, string> = {
-    'utensils': 'utensils',
-    'coffee': 'coffee',
-    'motorcycle': 'motorcycle',
-    'book': 'book',
-    'map': 'map',
-    'award': 'award',
-    'trophy': 'trophy',
-    'trophy2': 'trophy',
-    'money': 'award',
-    'party': 'award',
-    'camera': 'camera',
-    'document': 'document',
-    'clipboard': 'clipboard',
-    'marker': 'marker',
-    'target': 'target',
-  };
-  return iconMap[icon] || 'award';
+// List of available icon names in the Icon component
+const availableIcons = [
+  'bell', 'check', 'checkSimple', 'x', 'lightning', 'megaphone', 'target', 'chart', 'flag', 'trophy',
+  'cloud', 'lightbulb', 'filter', 'refresh', 'clock', 'map', 'marker', 'warning', 'alert-triangle',
+  'alert-circle', 'lock', 'users', 'document', 'search', 'settings', 'phone', 'calendar', 'utensils',
+  'motorcycle', 'coffee', 'info', 'eye', 'wave', 'crown', 'camera', 'book', 'clipboard', 'mail',
+  'award', 'rocket', 'cookie', 'database', 'ban', 'building', 'door', 'star', 'heart', 'diamond',
+  'hourglass', 'trash', 'home', 'shield', 'money', 'chevron-left', 'chevron-right', 'book-open',
+  'plus', 'send', 'loader', 'message-circle', 'check-circle', 'info-circle', 'arrow-left', 'cog',
+  'mountain', 'road', 'tree', 'party', 'user', 'arrow-back', 'alert'
+];
+
+// Check if icon name is valid, return null if not
+function getValidIconName(icon: string | null | undefined): string | null {
+  if (!icon) return null;
+  return availableIcons.includes(icon) ? icon : null;
 }
 
 export default function About() {
@@ -281,17 +277,22 @@ export default function About() {
                   </h3>
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                  {everyoneBenefits.map((benefit: any) => (
-                    <div key={benefit._id} className="group bg-gradient-to-br from-gray-50 to-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all border border-gray-100 hover:border-primary-200">
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                          <Icon name={getBenefitIconName(benefit.icon)} className="w-10 h-10 text-primary-600" />
+                  {everyoneBenefits.map((benefit: any) => {
+                    const iconName = getValidIconName(benefit.icon);
+                    return (
+                      <div key={benefit._id} className="group bg-gradient-to-br from-gray-50 to-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all border border-gray-100 hover:border-primary-200">
+                        <div className="flex flex-col items-center text-center">
+                          {iconName && (
+                            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                              <Icon name={iconName} className="w-10 h-10 text-primary-600" />
+                            </div>
+                          )}
+                          <h4 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h4>
+                          <p className="text-gray-600 leading-relaxed">{benefit.description}</p>
                         </div>
-                        <h4 className="text-xl font-bold text-gray-900 mb-3">{benefit.title}</h4>
-                        <p className="text-gray-600 leading-relaxed">{benefit.description}</p>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -304,18 +305,23 @@ export default function About() {
                   </h3>
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {winnerBenefits.map((benefit: any) => (
-                    <div key={benefit._id} className="group relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-700 p-8 rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                      <div className="relative flex flex-col items-center text-center">
-                        <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                          <Icon name={getBenefitIconName(benefit.icon)} className="w-10 h-10 text-white" />
+                  {winnerBenefits.map((benefit: any) => {
+                    const iconName = getValidIconName(benefit.icon);
+                    return (
+                      <div key={benefit._id} className="group relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-700 p-8 rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                        <div className="relative flex flex-col items-center text-center">
+                          {iconName && (
+                            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                              <Icon name={iconName} className="w-10 h-10 text-white" />
+                            </div>
+                          )}
+                          <h4 className="text-xl font-bold text-white mb-3">{benefit.title}</h4>
+                          <p className="text-primary-50 leading-relaxed">{benefit.description}</p>
                         </div>
-                        <h4 className="text-xl font-bold text-white mb-3">{benefit.title}</h4>
-                        <p className="text-primary-50 leading-relaxed">{benefit.description}</p>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -334,22 +340,27 @@ export default function About() {
               <p className="text-lg text-gray-600">We beantwoorden je vragen</p>
             </div>
             <div className="space-y-4">
-              {faq.map((item: any) => (
-                <details key={item._id} className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                  <summary className="font-semibold text-lg text-gray-900 cursor-pointer p-6 flex items-start justify-between gap-4">
-                    <span className="flex items-start gap-3">
-                      {item.icon && <span className="text-2xl flex-shrink-0">{item.icon}</span>}
-                      <span>{item.question}</span>
-                    </span>
-                    <Icon name="chevron-down" className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
-                  </summary>
-                  <div className="px-6 pb-6 pt-2">
-                    <div className="pl-11 text-gray-700 leading-relaxed border-l-4 border-primary-200 pl-4">
-                      {item.answer}
+              {faq.map((item: any) => {
+                const iconName = getValidIconName(item.icon);
+                return (
+                  <details key={item._id} className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <summary className="font-semibold text-lg text-gray-900 cursor-pointer p-6 flex items-start justify-between gap-4">
+                      <span className="flex items-start gap-3">
+                        {iconName && (
+                          <Icon name={iconName} className="w-6 h-6 flex-shrink-0 text-primary-600" />
+                        )}
+                        <span>{item.question}</span>
+                      </span>
+                      <Icon name="chevron-down" className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
+                    </summary>
+                    <div className="px-6 pb-6 pt-2">
+                      <div className="pl-11 text-gray-700 leading-relaxed border-l-4 border-primary-200 pl-4">
+                        {item.answer}
+                      </div>
                     </div>
-                  </div>
-                </details>
-              ))}
+                  </details>
+                );
+              })}
             </div>
           </div>
         </section>

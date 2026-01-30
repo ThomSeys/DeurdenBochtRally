@@ -10,6 +10,24 @@ import { urlFor } from '~/lib/sanity';
 import { getUserId } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
 
+// List of available icon names in the Icon component
+const availableIcons = [
+  'bell', 'check', 'checkSimple', 'x', 'lightning', 'megaphone', 'target', 'chart', 'flag', 'trophy',
+  'cloud', 'lightbulb', 'filter', 'refresh', 'clock', 'map', 'marker', 'warning', 'alert-triangle',
+  'alert-circle', 'lock', 'users', 'document', 'search', 'settings', 'phone', 'calendar', 'utensils',
+  'motorcycle', 'coffee', 'info', 'eye', 'wave', 'crown', 'camera', 'book', 'clipboard', 'mail',
+  'award', 'rocket', 'cookie', 'database', 'ban', 'building', 'door', 'star', 'heart', 'diamond',
+  'hourglass', 'trash', 'home', 'shield', 'money', 'chevron-left', 'chevron-right', 'book-open',
+  'plus', 'send', 'loader', 'message-circle', 'check-circle', 'info-circle', 'arrow-left', 'cog',
+  'mountain', 'road', 'tree', 'party', 'user', 'arrow-back', 'alert'
+];
+
+// Check if icon name is valid, return null if not
+function getValidIconName(icon: string | null | undefined): string | null {
+  if (!icon) return null;
+  return availableIcons.includes(icon) ? icon : null;
+}
+
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
     { title: data?.siteConfig?.seoTitle || 'Deur Den Bocht - Motorrit Rally 2026' },
@@ -40,15 +58,18 @@ export default function Index() {
   const whatIsSection = pageContent.find((section: any) => section.section === 'what-is-it');
   const rallyInfoSection = pageContent.find((section: any) => section.section === 'rally-intro');
 
-  const renderFeature = (feature: any) => (
-    <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300 h-full">
-      <Icon name={feature.icon} className="w-20 h-20 mb-6 mx-auto text-accent-500" />
-      <h3 className="text-2xl font-black mb-4">{feature.title}</h3>
-      <p className="text-gray-600 text-lg">
-        {feature.description}
-      </p>
-    </div>
-  );
+  const renderFeature = (feature: any) => {
+    const iconName = getValidIconName(feature.icon);
+    return (
+      <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300 h-full">
+        {iconName && <Icon name={iconName} className="w-20 h-20 mb-6 mx-auto text-accent-500" />}
+        <h3 className="text-2xl font-black mb-4">{feature.title}</h3>
+        <p className="text-gray-600 text-lg">
+          {feature.description}
+        </p>
+      </div>
+    );
+  };
 
   const renderSponsor = (sponsor: any) => (
     <a

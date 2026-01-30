@@ -5,10 +5,29 @@ import { Form, useActionData, useLoaderData } from 'react-router';
 import { useState } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
+import { Icon } from '~/components/Icon';
 import { getActiveEdition, getPricingTiers, getSiteConfig } from '~/lib/sanity.server';
 import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
 import { FORMULA_PRICES } from '~/lib/utils';
+
+// List of available icon names in the Icon component
+const availableIcons = [
+  'bell', 'check', 'checkSimple', 'x', 'lightning', 'megaphone', 'target', 'chart', 'flag', 'trophy',
+  'cloud', 'lightbulb', 'filter', 'refresh', 'clock', 'map', 'marker', 'warning', 'alert-triangle',
+  'alert-circle', 'lock', 'users', 'document', 'search', 'settings', 'phone', 'calendar', 'utensils',
+  'motorcycle', 'coffee', 'info', 'eye', 'wave', 'crown', 'camera', 'book', 'clipboard', 'mail',
+  'award', 'rocket', 'cookie', 'database', 'ban', 'building', 'door', 'star', 'heart', 'diamond',
+  'hourglass', 'trash', 'home', 'shield', 'money', 'chevron-left', 'chevron-right', 'book-open',
+  'plus', 'send', 'loader', 'message-circle', 'check-circle', 'info-circle', 'arrow-left', 'cog',
+  'mountain', 'road', 'tree', 'party', 'user', 'arrow-back', 'alert'
+];
+
+// Check if icon name is valid, return null if not
+function getValidIconName(icon: string | null | undefined): string | null {
+  if (!icon) return null;
+  return availableIcons.includes(icon) ? icon : null;
+}
 
 export const meta: MetaFunction = () => {
   return [
@@ -343,42 +362,45 @@ export default function Registration() {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Kies je formule *</h2>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {pricing.map((tier: any) => (
-                    <label
-                      key={tier._id}
-                      className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
-                        selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')
-                          ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
-                          : 'border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="formula"
-                        value={tier.price === 20 ? 'with_meals' : 'breakfast_only'}
-                        className="sr-only"
-                        onChange={(e) => setSelectedFormula(e.target.value)}
-                        checked={selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')}
-                      />
-                      <div className="flex flex-1 flex-col">
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl mb-2">{tier.icon}</span>
-                          <span className="text-2xl font-bold text-primary-600">€{tier.price}</span>
+                  {pricing.map((tier: any) => {
+                    const iconName = getValidIconName(tier.icon);
+                    return (
+                      <label
+                        key={tier._id}
+                        className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
+                          selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')
+                            ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
+                            : 'border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="formula"
+                          value={tier.price === 20 ? 'with_meals' : 'breakfast_only'}
+                          className="sr-only"
+                          onChange={(e) => setSelectedFormula(e.target.value)}
+                          checked={selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')}
+                        />
+                        <div className="flex flex-1 flex-col">
+                          <div className="flex items-center justify-between">
+                            {iconName && <Icon name={iconName} className="w-8 h-8 mb-2 text-primary-600" />}
+                            <span className="text-2xl font-bold text-primary-600">€{tier.price}</span>
+                          </div>
+                          <span className="block text-lg font-semibold text-gray-900">{tier.name}</span>
+                          {tier.features && (
+                            <ul className="mt-2 space-y-1">
+                              {tier.features.map((feature: string, idx: number) => (
+                                <li key={idx} className="text-sm text-gray-600 flex items-start">
+                                  <span className="text-primary-600 mr-1">✓</span>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
-                        <span className="block text-lg font-semibold text-gray-900">{tier.name}</span>
-                        {tier.features && (
-                          <ul className="mt-2 space-y-1">
-                            {tier.features.map((feature: string, idx: number) => (
-                              <li key={idx} className="text-sm text-gray-600 flex items-start">
-                                <span className="text-primary-600 mr-1">✓</span>
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
