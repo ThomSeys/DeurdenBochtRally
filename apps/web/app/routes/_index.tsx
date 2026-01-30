@@ -153,7 +153,7 @@ export default function Index() {
       {stats && stats.length > 0 && (
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               {stats.map((stat: any) => (
                 <div key={stat._id} className="bg-white rounded-sm border-l-4 border-accent-500 p-8 text-center shadow-md hover:shadow-lg transition-shadow">
                   {stat.icon && /^[\u{1F000}-\u{1F9FF}]$/u.test(stat.icon) && (
