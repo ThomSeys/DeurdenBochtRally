@@ -1,8 +1,10 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
+import { useState } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import PortableText from '~/components/PortableText';
+import Carousel from '~/components/Carousel';
 import { getActiveEdition, getSiteConfig, getStats, getPricingTiers, getSponsors, getPageContent, getFeatureCards } from '~/lib/sanity.server';
 import { urlFor } from '~/lib/sanity';
 import { getUserId } from '~/lib/session.server';
@@ -30,12 +32,45 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Index() {
   const { userId, edition, siteConfig, stats, pricing, sponsors, pageContent, rallyFeatures } = useLoaderData<typeof loader>();
+  const [useCarousel, setUseCarousel] = useState(false);
 
   // Get specific sections from page content
   const heroSection = pageContent.find((section: any) => section.section === 'hero-quote');
   const ctaSection = pageContent.find((section: any) => section.section === 'final-cta');
   const whatIsSection = pageContent.find((section: any) => section.section === 'what-is-it');
   const rallyInfoSection = pageContent.find((section: any) => section.section === 'rally-intro');
+
+  const renderFeature = (feature: any) => (
+    <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300 h-full">
+      <Icon name={feature.icon} className="w-20 h-20 mb-6 mx-auto text-accent-500" />
+      <h3 className="text-2xl font-black mb-4">{feature.title}</h3>
+      <p className="text-gray-600 text-lg">
+        {feature.description}
+      </p>
+    </div>
+  );
+
+  const renderSponsor = (sponsor: any) => (
+    <a
+      href={sponsor.website}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="bg-white p-6 rounded-sm shadow-md border-l-2 border-primary-600 hover:shadow-lg transition-all grayscale hover:grayscale-0 flex items-center justify-center h-32"
+    >
+      {sponsor.logo ? (
+        <img
+          src={urlFor(sponsor.logo).width(200).url()}
+          alt={sponsor.name}
+          className="max-h-16 w-auto"
+        />
+      ) : (
+        <div className="text-gray-400 text-sm text-center">
+          <div className="text-4xl mb-2">🏢</div>
+          <div>{sponsor.name}</div>
+        </div>
+      )}
+    </a>
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -330,17 +365,28 @@ export default function Index() {
           </div>
 
           {rallyFeatures && rallyFeatures.length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              {rallyFeatures.map((feature: any) => (
-                <div key={feature._id} className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-primary-600 text-center hover:bg-gradient-to-b hover:from-white hover:to-primary-50 transition-all duration-300">
-                  <Icon name={feature.icon} className="w-20 h-20 mb-6 mx-auto text-accent-500" />
-                  <h3 className="text-2xl font-black mb-4">{feature.title}</h3>
-                  <p className="text-gray-600 text-lg">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <>
+              {/* Desktop: Grid */}
+              <div className="hidden md:grid md:grid-cols-3 gap-8 mb-12">
+                {rallyFeatures.map((feature: any) => (
+                  <div key={feature._id}>
+                    {renderFeature(feature)}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Mobile: Carousel */}
+              <div className="md:hidden mb-12">
+                <Carousel
+                  items={rallyFeatures}
+                  renderItem={renderFeature}
+                  showControls={true}
+                  showDots={true}
+                  showCounter={false}
+                  className="max-w-md mx-auto"
+                />
+              </div>
+            </>
           ) : (
             <div className="grid md:grid-cols-3 gap-8 mb-12">
               <div className="fancy-card bg-white p-8 rounded-sm shadow-md border-l-2 border-accent-500 text-center hover:bg-gradient-to-b hover:from-white hover:to-accent-50 transition-all duration-300">
@@ -385,29 +431,26 @@ export default function Index() {
             <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 mb-12 uppercase">
               Onze sponsors
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            
+            {/* Desktop: Grid */}
+            <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-8">
               {sponsors.map((sponsor: any) => (
-                <a
-                  key={sponsor._id}
-                  href={sponsor.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white p-6 rounded-sm shadow-md border-l-2 border-primary-600 hover:shadow-lg transition-all grayscale hover:grayscale-0 flex items-center justify-center"
-                >
-                  {sponsor.logo ? (
-                    <img
-                      src={urlFor(sponsor.logo).width(200).url()}
-                      alt={sponsor.name}
-                      className="max-h-16 w-auto"
-                    />
-                  ) : (
-                    <div className="text-gray-400 text-sm text-center">
-                      <div className="text-4xl mb-2">🏢</div>
-                      <div>{sponsor.name}</div>
-                    </div>
-                  )}
-                </a>
+                <div key={sponsor._id}>
+                  {renderSponsor(sponsor)}
+                </div>
               ))}
+            </div>
+
+            {/* Mobile: Carousel */}
+            <div className="md:hidden">
+              <Carousel
+                items={sponsors}
+                renderItem={renderSponsor}
+                showControls={true}
+                showDots={true}
+                showCounter={false}
+                className="max-w-md mx-auto"
+              />
             </div>
           </div>
         </section>

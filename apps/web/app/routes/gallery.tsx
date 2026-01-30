@@ -3,7 +3,7 @@ import { useLoaderData, Form, useActionData, useRevalidator } from 'react-router
 import { requireUserId } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Icon } from '~/components/Icon';
 
 export const meta: MetaFunction = () => {
@@ -213,6 +213,10 @@ export default function Gallery() {
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  
+  // Touch/swipe state for lightbox
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
 
   // Revalidate data after like action succeeds
   useEffect(() => {
@@ -223,6 +227,49 @@ export default function Gallery() {
   }, [actionData?.success, revalidator]);
 
   const displayPhotos = filter === 'mine' ? myPhotos : photos;
+
+  const navigateLightbox = (direction: 'prev' | 'next') => {
+    if (!lightboxPhoto) return;
+    
+    const currentIndex = displayPhotos.findIndex((p: any) => p.id === lightboxPhoto.id);
+    if (currentIndex === -1) return;
+
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = (currentIndex + 1) % displayPhotos.length;
+    } else {
+      newIndex = currentIndex - 1 < 0 ? displayPhotos.length - 1 : currentIndex - 1;
+    }
+
+    setLightboxPhoto(displayPhotos[newIndex]);
+  };
+
+  // Swipe handlers for lightbox
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const swipeThreshold = 50;
+    const diff = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        // Swiped left - next photo
+        navigateLightbox('next');
+      } else {
+        // Swiped right - previous photo
+        navigateLightbox('prev');
+      }
+    }
+
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -241,22 +288,6 @@ export default function Gallery() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxPhoto, displayPhotos]);
-
-  const navigateLightbox = (direction: 'prev' | 'next') => {
-    if (!lightboxPhoto) return;
-    
-    const currentIndex = displayPhotos.findIndex((p: any) => p.id === lightboxPhoto.id);
-    if (currentIndex === -1) return;
-
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentIndex + 1) % displayPhotos.length;
-    } else {
-      newIndex = currentIndex - 1 < 0 ? displayPhotos.length - 1 : currentIndex - 1;
-    }
-
-    setLightboxPhoto(displayPhotos[newIndex]);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -526,7 +557,13 @@ export default function Gallery() {
               </button>
             )}
 
-            <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="max-w-4xl w-full touch-pan-y" 
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 src={lightboxPhoto.image_url}
                 alt={lightboxPhoto.caption}
