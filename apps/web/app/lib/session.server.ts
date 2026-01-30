@@ -61,6 +61,16 @@ export async function getUser(request: Request) {
     .eq('id', userId)
     .single();
 
+  // If user doesn't exist or payment is not completed, invalidate the session
+  if (!data || data.payment_status !== 'completed') {
+    const session = await getUserSession(request);
+    throw redirect('/login', {
+      headers: {
+        'Set-Cookie': await sessionStorage.destroySession(session),
+      },
+    });
+  }
+
   return data;
 }
 
@@ -69,11 +79,21 @@ export async function requireAdmin(request: Request) {
   
   const { data: user } = await supabaseAdmin
     .from('participants')
-    .select('is_admin')
+    .select('is_admin, payment_status')
     .eq('id', userId)
     .single();
 
-  if (!user?.is_admin) {
+  // Validate user exists and has completed payment
+  if (!user || user.payment_status !== 'completed') {
+    const session = await getUserSession(request);
+    throw redirect('/login', {
+      headers: {
+        'Set-Cookie': await sessionStorage.destroySession(session),
+      },
+    });
+  }
+
+  if (!user.is_admin) {
     throw redirect('/dashboard');
   }
 
