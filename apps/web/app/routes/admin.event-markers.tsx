@@ -234,7 +234,7 @@ export default function AdminEventMarkers() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <div className="hidden flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Evenementmarkeringen</h1>
               <p className="mt-1 text-xs sm:text-sm text-gray-500 break-words">
@@ -246,7 +246,7 @@ export default function AdminEventMarkers() {
                 onClick={() => setShowForm(!showForm)}
                 className="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors font-medium text-sm whitespace-nowrap"
               >
-                {showForm ? '✕ Annuleren' : '+ Markering Toevoegen'}
+                {showForm ? 'Annuleren' : '+ Markering Toevoegen'}
               </button>
               <a
                 href="/live-map"
@@ -310,13 +310,13 @@ export default function AdminEventMarkers() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="closure">🚧 Wegafsluiting</option>
-                    <option value="accident">🚨 Ongeval</option>
-                    <option value="stop">⛔ Stop</option>
-                    <option value="flood">🌊 Overstroomde Weg</option>
-                    <option value="warning"><Icon name="warning" className="w-4 h-4 inline" /> Waarschuwing</option>
-                    <option value="info">ℹ️ Informatie</option>
-                    <option value="station">💧 Water/Tank Station</option>
+                    <option value="closure">Wegafsluiting</option>
+                    <option value="accident">Ongeval</option>
+                    <option value="stop">Stop</option>
+                    <option value="flood">Overstroomde Weg</option>
+                    <option value="warning">Waarschuwing</option>
+                    <option value="info">Informatie</option>
+                    <option value="station">Water/Tank Station</option>
                   </select>
                 </div>
 
@@ -450,7 +450,7 @@ export default function AdminEventMarkers() {
                     <tr key={marker._id} className={!marker.isActive ? 'opacity-50' : ''}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <span className="text-2xl mr-2">{getEventTypeEmoji(marker.type)}</span>
+                          <span className="text-sm font-medium text-gray-700">{getEventTypeLabel(marker.type)}</span>
                           <div>
                             <div className="text-sm font-medium text-gray-900">{marker.title}</div>
                             <div className="text-sm text-gray-500">{marker.description}</div>
@@ -540,17 +540,17 @@ export default function AdminEventMarkers() {
   );
 }
 
-function getEventTypeEmoji(type: string): string {
-  const emojiMap: Record<string, string> = {
-    closure: '🚧',
-    accident: '🚨',
-    stop: '⛔',
-    flood: '🌊',
-    warning: '⚠️',
-    info: 'ℹ️',
-    station: '💧',
+function getEventTypeLabel(type: string): string {
+  const labelMap: Record<string, string> = {
+    closure: 'Wegafsluiting',
+    accident: 'Ongeval',
+    stop: 'Stop',
+    flood: 'Overstroming',
+    warning: 'Waarschuwing',
+    info: 'Info',
+    station: 'Station',
   };
-  return emojiMap[type] || '📍';
+  return labelMap[type] || 'Marker';
 }
 
 function getSeverityClass(severity: string): string {

@@ -8,6 +8,7 @@ interface ZoneRouteTipsProps {
   zoneTitle: string;
   zoneStartLocation: { lat: number; lng: number } | null;
   zoneEndLocation: { lat: number; lng: number } | null;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 export default function ZoneRouteTips({
@@ -15,6 +16,7 @@ export default function ZoneRouteTips({
   zoneTitle,
   zoneStartLocation,
   zoneEndLocation,
+  userLocation,
 }: ZoneRouteTipsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const hasLocations = routeTips.some((tip: any) => tip.locations && tip.locations.length > 0);
@@ -152,6 +154,7 @@ export default function ZoneRouteTips({
               zoneTitle={zoneTitle}
               zoneStartLocation={zoneStartLocation ?? undefined}
               zoneEndLocation={zoneEndLocation ?? undefined}
+              userLocation={userLocation ?? undefined}
               className="h-[400px] lg:h-full lg:flex-1"
             />
           </div>

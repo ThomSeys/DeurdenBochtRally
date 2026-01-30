@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { useLoaderData, Link } from 'react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
@@ -97,7 +97,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Rally() {
   const { userId, user, edition, segments, siteConfig, userCheckIns } = useLoaderData<typeof loader>();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const checkedInSet = new Set(userCheckIns);
+
+  // Get user's current location
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.log('[rally] Geolocation error:', error.message);
+        }
+      );
+    }
+  }, []);
 
   const toggleMap = (segmentId: string) => {
     setVisibleMaps(prev => {
@@ -239,6 +257,7 @@ export default function Rally() {
                           zoneTitle={segment.title}
                           zoneStartLocation={segment.startLocation}
                           zoneEndLocation={segment.endLocation}
+                          userLocation={userLocation}
                         />
                       )}
                       

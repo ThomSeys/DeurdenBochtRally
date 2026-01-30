@@ -242,63 +242,68 @@ export default function LiveMap() {
         />
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-white rounded-sm shadow-lg p-4 max-w-xs z-20">
-          <h3 className="font-semibold text-gray-900 mb-3">Legenda</h3>
-          <div className="space-y-2 text-sm">
-            <div className="border-b pb-2">
-              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
-                <span style={{opacity: showZoneRoutes ? 1 : 0.5}}>Rally Zones:</span>
+        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-20">
+          <div className="flex items-center gap-2 mb-3">
+            <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
+            <h3 className="font-semibold text-gray-900">Legenda</h3>
+          </div>
+          <div className="space-y-2.5 text-sm">
+            <div className="border-b pb-2.5">
+              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors flex items-center gap-2" onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                <Icon name="map" className="w-4 h-4" />
+                <span style={{opacity: showZoneRoutes ? 1 : 0.5}}>Rally Zones</span>
               </div>
-              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
-                <div className="w-3 h-3 bg-primary-600 rounded-full"></div>
+              <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                <div className="w-3 h-0.5 bg-primary-600"></div>
                 <span>Zone Routes</span>
               </div>
-              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
-                <span>S{isAdmin ? ' / E' : ''}</span>
+              <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showZoneRoutes ? 1 : 0.5}} onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                <span className="font-bold text-xs">S{isAdmin ? ' / E' : ''}</span>
                 <span>Start{isAdmin ? ' / Eind' : ''} Punt{isAdmin ? 'en' : ''}</span>
               </div>
             </div>
 
             {isAdmin && (
-            <div className="border-b pb-2">
-              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowCheckIns(!showCheckIns)}>
+            <div className="border-b pb-2.5">
+              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors flex items-center gap-2" onClick={() => setShowCheckIns(!showCheckIns)}>
+                <Icon name="check-circle" className="w-4 h-4" />
                 <span style={{opacity: showCheckIns ? 1 : 0.5}}>Check-ins ({checkIns?.length || 0})</span>
               </div>
-              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
-                <div style={{ background: '#10b981', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
-                <span className="flex items-center gap-1">
-                  <Icon name="marker" className="w-3 h-3" />
-                  Zone Entry
-                </span>
+              <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
+                <div style={{ background: '#10b981', width: '14px', height: '14px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                <span>Zone Entry</span>
               </div>
-              <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
-                <div style={{ background: '#f59e0b', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}></div>
-                <span>✓ Code Submission</span>
+              <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-primary-600 transition-colors" style={{opacity: showCheckIns ? 1 : 0.5}} onClick={() => setShowCheckIns(!showCheckIns)}>
+                <div style={{ background: '#f59e0b', width: '14px', height: '14px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                <span>Code Submission</span>
               </div>
             </div>
             )}
 
-            <div className="border-b pb-2">
+            <div className="border-b pb-2.5">
               <div className="flex items-center gap-2">
+                <Icon name="marker" className="w-4 h-4 text-purple-600" />
                 <div className="w-4 h-4 bg-purple-600 border-2 border-white rounded-full shadow"></div>
                 <span>Uw Locatie</span>
               </div>
             </div>
 
             {eventMarkers.length > 0 && (
-              <div>
-                <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors" onClick={() => setShowEventMarkers(!showEventMarkers)}>
+              <div className="border-b pb-2.5">
+                <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors flex items-center gap-2" onClick={() => setShowEventMarkers(!showEventMarkers)}>
+                  <Icon name="alert" className="w-4 h-4" />
                   <span style={{opacity: showEventMarkers ? 1 : 0.5}}>Live Evenementen ({eventMarkers.length})</span>
                 </div>
               </div>
             )}
 
             {isAdmin && emergencyAlerts && emergencyAlerts.length > 0 && (
-              <div className="border-t pt-2">
-                <div className="font-medium text-red-600 mb-2 cursor-pointer hover:text-red-700 transition-colors" onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
-                  <span style={{opacity: showEmergencyAlerts ? 1 : 0.5}}>🚨 Nood SOS ({emergencyAlerts.length})</span>
+              <div className="border-t pt-2.5">
+                <div className="font-medium text-red-600 mb-2 cursor-pointer hover:text-red-700 transition-colors flex items-center gap-2" onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
+                  <Icon name="alert-circle" className="w-4 h-4" />
+                  <span style={{opacity: showEmergencyAlerts ? 1 : 0.5}}>Nood SOS ({emergencyAlerts.length})</span>
                 </div>
-                <div className="flex items-center gap-2 pl-2 cursor-pointer hover:text-red-600 transition-colors" style={{opacity: showEmergencyAlerts ? 1 : 0.5}} onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
+                <div className="flex items-center gap-2 pl-6 cursor-pointer hover:text-red-600 transition-colors" style={{opacity: showEmergencyAlerts ? 1 : 0.5}} onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
                   <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
                   <span className="text-red-600 font-medium">Actieve Meldingen</span>
                 </div>
@@ -306,7 +311,7 @@ export default function LiveMap() {
             )}
           </div>
           {eventMarkers.length === 0 && checkIns.length === 0 && (
-            <p className="text-xs text-gray-500 mt-2">Geen actieve evenementen of check-ins</p>
+            <p className="text-xs text-gray-500 mt-3 italic">Geen actieve evenementen of check-ins</p>
           )}
         </div>
       </div>

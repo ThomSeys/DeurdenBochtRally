@@ -16,6 +16,7 @@ interface RouteTipsMapProps {
   zoneTitle?: string;
   zoneStartLocation?: { lat: number; lng: number; name?: string };
   zoneEndLocation?: { lat: number; lng: number; name?: string };
+  userLocation?: { lat: number; lng: number } | null;
   className?: string;
 }
 
@@ -30,7 +31,7 @@ const DEFAULT_COLORS = [
   '#F97316', // orange
 ];
 
-export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, zoneEndLocation, className = '' }: RouteTipsMapProps) {
+export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, zoneEndLocation, userLocation, className = '' }: RouteTipsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -53,6 +54,19 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
       color: string;
       routeName: string;
     }> = [];
+
+    // Add user location
+    if (userLocation && userLocation.lat && userLocation.lng) {
+      allLocations.push({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        name: 'Uw Locatie',
+        type: 'user-location',
+        description: 'Uw huidige positie',
+        color: '#4F46E5',
+        routeName: 'Locatie',
+      });
+    }
 
     // Add zone start location
     if (zoneStartLocation && zoneStartLocation.lat && zoneStartLocation.lng) {
@@ -129,6 +143,8 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         // Custom icon based on type
         // SVG icons for different location types
         const svgIcon = 
+          loc.type === 'user-location' ?
+            '<svg viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="5" fill="white"/><circle cx="12" cy="12" r="2" fill="#4F46E5"/></svg>' :
           loc.type === 'zone-start' || loc.type === 'zone-end' ? 
             '<svg viewBox="0 0 24 24" fill="white" style="width: 18px; height: 18px;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>' :
           loc.type === 'highlight' ? 
@@ -142,8 +158,8 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         const iconHtml = `
           <div style="
             background-color: ${loc.color};
-            width: ${loc.type === 'zone-start' || loc.type === 'zone-end' ? '36px' : '30px'};
-            height: ${loc.type === 'zone-start' || loc.type === 'zone-end' ? '36px' : '30px'};
+            width: ${loc.type === 'zone-start' || loc.type === 'zone-end' || loc.type === 'user-location' ? '36px' : '30px'};
+            height: ${loc.type === 'zone-start' || loc.type === 'zone-end' || loc.type === 'user-location' ? '36px' : '30px'};
             border-radius: 50%;
             border: 3px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -155,11 +171,12 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
           </div>
         `;
 
+        const isLargeIcon = loc.type === 'zone-start' || loc.type === 'zone-end' || loc.type === 'user-location';
         const customIcon = L.divIcon({
           html: iconHtml,
           className: 'custom-marker',
-          iconSize: [loc.type === 'zone-start' || loc.type === 'zone-end' ? 36 : 30, loc.type === 'zone-start' || loc.type === 'zone-end' ? 36 : 30],
-          iconAnchor: [loc.type === 'zone-start' || loc.type === 'zone-end' ? 18 : 15, loc.type === 'zone-start' || loc.type === 'zone-end' ? 18 : 15],
+          iconSize: [isLargeIcon ? 36 : 30, isLargeIcon ? 36 : 30],
+          iconAnchor: [isLargeIcon ? 18 : 15, isLargeIcon ? 18 : 15],
         });
 
         const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).addTo(mapRef.current);
@@ -174,8 +191,9 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
               ${loc.name}
             </div>
             <div style="font-size: 12px; color: #666; margin-bottom: 2px;">
-              ${loc.type === 'zone-start' ? '🏁 Zone Start' : 
-                loc.type === 'zone-end' ? '🏁 Zone Einde' :
+              ${loc.type === 'user-location' ? 'Uw Positie' :
+                loc.type === 'zone-start' ? 'Zone Start' : 
+                loc.type === 'zone-end' ? 'Zone Einde' :
                 loc.type === 'start' ? 'Start punt' : 
                 loc.type === 'end' ? 'Eind punt' : 
                 loc.type === 'highlight' ? 'Highlight' : 
@@ -204,7 +222,7 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         markersRef.current = [];
       }
     };
-  }, [isClient, routeTips, zoneStartLocation, zoneEndLocation, zoneTitle]);
+  }, [isClient, routeTips, zoneStartLocation, zoneEndLocation, zoneTitle, userLocation]);
 
   if (!isClient) {
     return <div className={`bg-gray-200 rounded-lg ${className}`} style={{ height: '400px' }} />;

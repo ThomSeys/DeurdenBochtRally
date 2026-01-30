@@ -60,83 +60,15 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
             {user ? (
               <>
                 <NotificationBell isTransparent={isTransparent} />
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
-                  >
-                    <span>{user.first_name}</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                {userMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0"
-                      onClick={() => setUserMenuOpen(false)}
-                    />
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-lg py-2 z-50">
-                      {user.route_preference !== 'scenic' && (
-                        <Link
-                          to="/rally"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b-2 border-primary-200"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <Icon name="target" className="w-4 h-4" />
-                          Rally Zones
-                        </Link>
-                      )}
-                      <Link
-                        to="/live-map"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Icon name="map" className="w-4 h-4" />
-                        Live Kaart
-                      </Link>
-                      <Link
-                        to="/dashboard"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Icon name="chart" className="w-4 h-4" />
-                        Dashboard
-                      </Link>
-                      <button
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left border-t"
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          const event = new CustomEvent('trigger-emergency-sos');
-                          window.dispatchEvent(event);
-                        }}
-                      >
-                        <Icon name="alert-triangle" className="w-4 h-4" />
-                        Noodknop
-                      </button>
-                      {user.is_admin && (
-                        <Link
-                          to="/admin"
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <Icon name="shield" className="w-4 h-4" />
-                          Admin
-                        </Link>
-                      )}
-                      <Form method="post" action="/logout">
-                        <button
-                          type="submit"
-                          className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <Icon name="door" className="w-4 h-4" />
-                          Uitloggen
-                        </button>
-                      </Form>
-                    </div>
-                  </>
-                )}
-                </div>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
+                >
+                  <span>{user.first_name}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </>
             ) : (
               <>
@@ -174,108 +106,262 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
             </button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-primary-700">
-            <div className="flex flex-col space-y-3">
-              <Link
-                to="/"
-                className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Icon name="home" className="w-4 h-4" />
-                Home
-              </Link>
-              <Link
-                to="/about"
-                className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Icon name="info" className="w-4 h-4" />
-                Over het event
-              </Link>
-              {user ? (
-                <>
+      {/* Desktop User Menu Flyout */}
+      <>
+        <div
+          className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setUserMenuOpen(false)}
+        />
+        {user && (
+          <div className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out ${userMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <Icon name="user" className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-lg">{user.first_name} {user.last_name}</h3>
+                    <p className="text-primary-100 text-sm">{user.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setUserMenuOpen(false)}
+                  className="text-white/80 hover:text-white p-1"
+                >
+                  <Icon name="x" className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Navigation */}
+              <div className="flex-1 overflow-y-auto py-4">
+                <div className="px-2 space-y-1">
                   {user.route_preference !== 'scenic' && (
                     <Link
                       to="/rally"
-                      className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                      onClick={() => setUserMenuOpen(false)}
                     >
-                      <Icon name="target" className="w-4 h-4" />
-                      Rally Zones
+                      <Icon name="target" className="w-5 h-5" />
+                      <span>Rally Zones</span>
                     </Link>
                   )}
                   <Link
                     to="/live-map"
-                    className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => setUserMenuOpen(false)}
                   >
-                    <Icon name="map" className="w-4 h-4" />
-                    Live Kaart
+                    <Icon name="map" className="w-5 h-5" />
+                    <span>Live Kaart</span>
                   </Link>
                   <Link
                     to="/dashboard"
-                    className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => setUserMenuOpen(false)}
                   >
-                    <Icon name="chart" className="w-4 h-4" />
-                    Dashboard
+                    <Icon name="chart" className="w-5 h-5" />
+                    <span>Dashboard</span>
                   </Link>
+                </div>
+
+                {/* Emergency Button */}
+                <div className="px-2 mt-4 pt-4 border-t border-gray-200">
                   <button
-                    className="flex items-center gap-2 text-red-200 hover:text-red-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 w-full text-left border-t border-primary-700 pt-3"
+                    className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
                     onClick={() => {
-                      setMobileMenuOpen(false);
+                      setUserMenuOpen(false);
                       const event = new CustomEvent('trigger-emergency-sos');
                       window.dispatchEvent(event);
                     }}
                   >
-                    <Icon name="alert-triangle" className="w-4 h-4" />
-                    Noodknop
+                    <Icon name="alert-triangle" className="w-5 h-5" />
+                    <span>Noodknop</span>
                   </button>
-                  {user.is_admin && (
+                </div>
+
+                {/* Admin Link */}
+                {user.is_admin && (
+                  <div className="px-2 mt-2">
                     <Link
                       to="/admin"
-                      className="mt-2 flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 pt-4 border-t border-primary-700"
-                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-lg transition-colors font-medium"
+                      onClick={() => setUserMenuOpen(false)}
                     >
-                      <Icon name="shield" className="w-4 h-4" />
-                      Admin
+                      <Icon name="shield" className="w-5 h-5" />
+                      <span>Admin Panel</span>
                     </Link>
-                  )}
-                  <Form method="post" action="/logout" className="border-t border-primary-700 pt-3">
-                    <button
-                      type="submit"
-                      className="flex items-center gap-2 text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2 w-full text-left"
-                    >
-                      <Icon name="door" className="w-4 h-4" />
-                      Uitloggen
-                    </button>
-                  </Form>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="text-white hover:text-primary-100 text-sm font-semibold uppercase tracking-wide transition-colors px-4 py-2"
-                    onClick={() => setMobileMenuOpen(false)}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer / Logout */}
+              <div className="border-t border-gray-200 p-4">
+                <Form method="post" action="/logout">
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
                   >
-                    Inloggen
-                  </Link>
-                  <Link
-                    to="/registration"
-                    className="bg-white text-primary-600 hover:bg-primary-50 mx-4 px-6 py-2.5 rounded font-bold uppercase tracking-wide text-sm transition-colors shadow-md text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Inschrijven
-                  </Link>
-                </>
-              )}
+                    <Icon name="door" className="w-5 h-5" />
+                    <span>Uitloggen</span>
+                  </button>
+                </Form>
+              </div>
             </div>
           </div>
         )}
-      </nav>
+      </>
+
+      {/* Mobile Menu Flyout */}
+      <>
+        <div
+          className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[1100] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        <div className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-6 flex items-center justify-between">
+                {user ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <Icon name="user" className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white">{user.first_name}</h3>
+                      <p className="text-primary-100 text-sm">{user.email}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <h3 className="font-bold text-white text-lg">Menu</h3>
+                )}
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-white/80 hover:text-white p-1"
+                >
+                  <Icon name="x" className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Navigation */}
+              <div className="flex-1 overflow-y-auto py-4">
+                <div className="px-2 space-y-1">
+                  <Link
+                    to="/"
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Icon name="home" className="w-5 h-5" />
+                    <span>Home</span>
+                  </Link>
+                  <Link
+                    to="/about"
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Icon name="info" className="w-5 h-5" />
+                    <span>Over het event</span>
+                  </Link>
+
+                  {user ? (
+                    <>
+                      <div className="my-4 border-t border-gray-200" />
+                      {user.route_preference !== 'scenic' && (
+                        <Link
+                          to="/rally"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Icon name="target" className="w-5 h-5" />
+                          <span>Rally Zones</span>
+                        </Link>
+                      )}
+                      <Link
+                        to="/live-map"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon name="map" className="w-5 h-5" />
+                        <span>Live Kaart</span>
+                      </Link>
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon name="chart" className="w-5 h-5" />
+                        <span>Dashboard</span>
+                      </Link>
+
+                      {/* Emergency Button */}
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <button
+                          className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            const event = new CustomEvent('trigger-emergency-sos');
+                            window.dispatchEvent(event);
+                          }}
+                        >
+                          <Icon name="alert-triangle" className="w-5 h-5" />
+                          <span>Noodknop</span>
+                        </button>
+                      </div>
+
+                      {/* Admin Link */}
+                      {user.is_admin && (
+                        <div className="mt-2">
+                          <Link
+                            to="/admin"
+                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 rounded-lg transition-colors font-medium"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Icon name="shield" className="w-5 h-5" />
+                            <span>Admin Panel</span>
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-200 p-4">
+                {user ? (
+                  <Form method="post" action="/logout">
+                    <button
+                      type="submit"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                    >
+                      <Icon name="door" className="w-5 h-5" />
+                      <span>Uitloggen</span>
+                    </button>
+                  </Form>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      to="/login"
+                      className="flex items-center justify-center w-full px-4 py-3 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors font-semibold border-2 border-primary-600"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Inloggen
+                    </Link>
+                    <Link
+                      to="/registration"
+                      className="flex items-center justify-center w-full px-4 py-3 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors font-bold shadow-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Inschrijven
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
     </header>
   );
 }
