@@ -48,7 +48,7 @@ const availableIcons = [
   'award', 'rocket', 'cookie', 'database', 'ban', 'building', 'door', 'star', 'heart', 'diamond',
   'hourglass', 'trash', 'home', 'shield', 'money', 'chevron-left', 'chevron-right', 'book-open',
   'plus', 'send', 'loader', 'message-circle', 'check-circle', 'info-circle', 'arrow-left', 'cog',
-  'mountain', 'road', 'tree', 'party', 'user', 'arrow-back', 'alert'
+  'mountain', 'road', 'tree', 'party', 'user', 'arrow-back', 'alert', 'gift'
 ];
 
 // Check if icon name is valid, return null if not
@@ -272,8 +272,8 @@ export default function About() {
             {everyoneBenefits.length > 0 && (
               <>
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-semibold text-gray-800 inline-block px-6 py-2 bg-primary-50 rounded-full">
-                    🎁 Iedere deelnemer krijgt
+                  <h3 className="text-2xl font-semibold text-gray-800 inline-flex items-center gap-2 px-6 py-2 bg-primary-50 rounded-full">
+                    <Icon name="gift" className="w-6 h-6 text-primary-600" /> Iedere deelnemer krijgt
                   </h3>
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">

@@ -328,7 +328,7 @@ async function populateContent() {
     }
 
     // Create benefit items
-    console.log('\n🎁 Creating benefit items...');
+    console.log('\n[BENEFITS] Creating benefit items...');
     for (const item of benefitItems) {
       const doc = {
         _type: 'benefitItem',
