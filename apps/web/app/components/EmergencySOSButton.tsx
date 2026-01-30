@@ -114,7 +114,7 @@ export function EmergencySOSButton({
         type="button"
         onClick={handleSOSClick}
         disabled={isLocating}
-        className="fixed bottom-24 right-11 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+        className="fixed bottom-24 right-8 z-[1000] bg-red-600 hover:bg-red-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
         aria-label="Nood SOS"
       >
         {isLocating ? (

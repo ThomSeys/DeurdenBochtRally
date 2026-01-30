@@ -212,22 +212,20 @@ export default function Rally() {
                     <summary className="p-6 md:p-8 cursor-pointer hover:bg-gray-50 transition-colors list-none">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <svg className="w-5 h-5 text-gray-400 group-open:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
-                              {segment.title}
-                            </h3>
+                          <div className="flex flex-col gap-3 mb-2">
+                            <div>
                             {segment.is_open ? (
                               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                                Uitdagend
+                                Open
                               </span>
                             ) : (
                               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                                Binnenkort
+                                Gesloten
                               </span>
-                            )}
+                            )}</div>
+                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+                              {segment.title}
+                            </h3>
                           </div>
                           <p className="text-gray-600 text-sm ml-8">{segment.location}</p>
                         </div>
