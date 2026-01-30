@@ -42,21 +42,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 // Map common benefit emoji icons to Icon component names
 function getBenefitIconName(icon: string): string {
   const iconMap: Record<string, string> = {
-    '🍽️': 'utensils',
-    '☕': 'coffee',
-    '🏍️': 'motorcycle',
-    '📕': 'book',
-    '🗺️': 'map',
-    '🎁': 'award',
-    '🏆': 'award',
-    '🥇': 'trophy',
-    '💰': 'award',
-    '🎉': 'award',
-    '📸': 'camera',
-    '🎫': 'document',
-    '📋': 'clipboard',
-    '📍': 'marker',
-    '🎯': 'target',
+    'utensils': 'utensils',
+    'coffee': 'coffee',
+    'motorcycle': 'motorcycle',
+    'book': 'book',
+    'map': 'map',
+    'award': 'award',
+    'trophy': 'trophy',
+    'trophy2': 'trophy',
+    'money': 'award',
+    'party': 'award',
+    'camera': 'camera',
+    'document': 'document',
+    'clipboard': 'clipboard',
+    'marker': 'marker',
+    'target': 'target',
   };
   return iconMap[icon] || 'award';
 }

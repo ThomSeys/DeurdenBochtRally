@@ -218,7 +218,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
           if (checkIn.location_lat && checkIn.location_lng) {
             // Zone check-in marker
             const checkInIcon = L.default.divIcon({
-              html: `<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">📍</div>`,
+              html: `<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
               className: '',
               iconSize: [20, 20],
               iconAnchor: [10, 10],
@@ -232,7 +232,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                   <span style="color: #666; font-size: 12px;">
                     ${checkIn.participants?.motorcycle_brand} ${checkIn.participants?.motorcycle_model}
                   </span><br/>
-                  <span style="color: #10b981; font-weight: bold; font-size: 11px;">📍 Zone Check-in</span><br/>
+                  <span style="color: #10b981; font-weight: bold; font-size: 11px;">Zone Check-in</span><br/>
                   <span style="color: #666; font-size: 11px;">
                     ${new Date(checkIn.checked_in_at).toLocaleTimeString()}
                   </span>
@@ -330,7 +330,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                     ${statusBadge}
                   </div>
                   <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                    🏁 Zone Start
+                    Zone Start
                   </div>
                 </div>
               `);
@@ -354,7 +354,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                       ${statusBadge}
                     </div>
                     <div style="margin-top: 4px; color: #666; font-size: 12px;">
-                      🏁 Zone Einde
+                      Zone Einde
                     </div>
                   </div>
                 `);
@@ -574,7 +574,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                       <span style="color: #6b7280;">⏰ ${timeAgo}</span>
                     </div>
                     <a href="https://www.google.com/maps?q=${alert.latitude},${alert.longitude}" target="_blank" style="display: block; text-align: center; background-color: #2f7184; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">
-                      📍 Open in Google Maps
+                      Open in Google Maps
                     </a>
                     <a href="/admin/emergency-alerts" style="display: block; text-align: center; background-color: #dc2626; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 6px;">
                       🚨 Bekijk Alle Meldingen

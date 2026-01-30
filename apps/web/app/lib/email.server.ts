@@ -99,10 +99,10 @@ export function registrationConfirmationEmail(participant: {
               <p>In je dashboard vind je:</p>
               <ul>
                 <li>✅ Jouw registratiegegevens</li>
-                <li>🗺️ GPX routes</li>
+                <li>GPX routes</li>
                 <li>📖 Het bochtenboek</li>
                 <li>📄 Alle documenten en instructies</li>
-                <li>🏁 Rally zone informatie</li>
+                <li>Rally zone informatie</li>
               </ul>
 
               <div class="footer">
@@ -211,7 +211,7 @@ export function rallySubmissionEmail(participant: {
   rank?: number;
 }) {
   return {
-    subject: '🏁 Rally Inzending Ontvangen - Deur Den Bocht 2026',
+    subject: 'Rally Inzending Ontvangen - Deur Den Bocht 2026',
     html: `
       <!DOCTYPE html>
       <html>
@@ -232,7 +232,7 @@ export function rallySubmissionEmail(participant: {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎉 Rally Inzending Ontvangen!</h1>
+              <h1>Rally Inzending Ontvangen!</h1>
             </div>
             <div class="content">
               <p>Beste ${participant.first_name} ${participant.last_name},</p>
@@ -246,7 +246,7 @@ export function rallySubmissionEmail(participant: {
                   <div>Punten</div>
                 </div>
                 <div class="stat-box">
-                  <div>🎯</div>
+                  <div></div>
                   <div class="stat-value">${participant.zones_completed}/8</div>
                   <div>Zones</div>
                 </div>
@@ -276,7 +276,7 @@ export function rallySubmissionEmail(participant: {
                 <li>✅ Bekijk je positie op de leaderboard</li>
                 <li>📊 Zie gedetailleerde statistieken</li>
                 <li>🏆 Check wanneer winnaars bekend worden gemaakt</li>
-                <li>📸 Deel je ervaring op social media!</li>
+                <li>Deel je ervaring op social media!</li>
               </ul>
 
               <div class="footer">
@@ -345,16 +345,16 @@ export function eventReminderEmail(participant: {
               </div>
 
               <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
-                <p style="margin: 0;"><strong>📍 Verzamelpunt:</strong> Café Den Belami, Aalter</p>
+                <p style="margin: 0;"><strong>Verzamelpunt:</strong> Café Den Belami, Aalter</p>
                 <p style="margin: 5px 0 0 0;"><strong>⏰ Start:</strong> 06:30 uur - Wees op tijd!</p>
               </div>
 
               <p><strong>Wat te verwachten:</strong></p>
               <ul>
-                <li>🗺️ ${participant.ride_type === 'guided' ? 'Je rijdt mee in een begeleide groep' : 'Je rijdt je eigen tempo'}</li>
-                <li>🎯 8 rally zones om te ontdekken</li>
+                <li>${participant.ride_type === 'guided' ? 'Je rijdt mee in een begeleide groep' : 'Je rijdt je eigen tempo'}</li>
+                <li>8 rally zones om te ontdekken</li>
                 <li>🏞️ 500+ km door prachtige landschappen</li>
-                <li>🏁 Finish aan de Baraque de Fraiture</li>
+                <li>Finish aan de Baraque de Fraiture</li>
               </ul>
 
               <div class="footer">

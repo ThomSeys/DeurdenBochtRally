@@ -342,13 +342,13 @@ export async function retryFailedNotifications(notificationHistoryId: number) {
 // Notification templates
 export const notificationTemplates = {
   rallyStart: {
-    title: '🏁 Rally Gestart!',
+    title: 'Rally Gestart!',
     body: 'Het evenement is officieel begonnen. Veel plezier!',
     tag: 'rally-start',
   },
 
   rallyEnd: {
-    title: '🏁 Rally Afgelopen!',
+    title: 'Rally Afgelopen!',
     body: 'Dank je wel voor je deelname! Bekijk je resultaten op de leaderboard.',
     tag: 'rally-end',
   },
@@ -361,7 +361,7 @@ export const notificationTemplates = {
   },
   
   zoneOpened: (zoneNumber: number, zoneName: string) => ({
-    title: `🎯 Rally Zone ${zoneNumber} Geopend`,
+    title: `Rally Zone ${zoneNumber} Geopend`,
     body: `${zoneName} is nu beschikbaar!`,
     tag: `zone-${zoneNumber}-open`,
     actions: [
@@ -379,7 +379,7 @@ export const notificationTemplates = {
     title: `${eventTitle}`,
     body: [
       eventDescription,
-      options?.type && `📍 Type: ${options.type}`,
+      options?.type && `Type: ${options.type}`,
       options?.severity && `⚠️ Ernstniveau: ${options.severity === 'critical' ? 'Kritiek' : options.severity === 'high' ? 'Hoog' : 'Normaal'}`,
       options?.source === 'live-map' && '📡 Gemeld via Live Kaart',
     ]
@@ -421,7 +421,7 @@ export const notificationTemplates = {
   }),
 
   achievementUnlocked: (achievementTitle: string, achievementIcon: string) => ({
-    title: '🎉 Achievement Unlocked!',
+    title: 'Achievement Unlocked!',
     body: `${achievementIcon} ${achievementTitle}`,
     tag: 'achievement',
   }),

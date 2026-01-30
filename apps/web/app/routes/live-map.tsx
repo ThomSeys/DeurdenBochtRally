@@ -432,12 +432,12 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
 function getEventTypeEmoji(type: string): string {
   const emojiMap: Record<string, string> = {
     closure: '🚧',
-    accident: '🚨',
-    stop: '⛔',
-    flood: '🌊',
-    warning: '⚠️',
-    info: 'ℹ️',
-    station: '💧',
+    accident: '!',
+    stop: 'X',
+    flood: '~',
+    warning: '!',
+    info: 'i',
+    station: 'S',
   };
-  return emojiMap[type] || '📍';
+  return emojiMap[type] || 'M';
 }

@@ -277,7 +277,7 @@ export default function Dashboard() {
                   }}
                   className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-sm hover:bg-gray-200 transition-colors"
                 >
-                  🔍 Debug Info
+                  Debug Info
                 </button>
                 <button
                   onClick={async () => {
@@ -322,7 +322,7 @@ export default function Dashboard() {
                   }}
                   className="px-4 py-2 bg-red-50 border border-red-300 text-red-700 text-sm rounded-sm hover:bg-red-100 transition-colors"
                 >
-                  🔄 Reset Service Worker
+                  Reset Service Worker
                 </button>
               </div>
               {pushDebugInfo && (
