@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Icon } from './Icon';
 import RouteTipsMap from './RouteTipsMap';
 
@@ -15,8 +15,6 @@ export default function ZoneRouteTips({
   zoneStartLocation,
   zoneEndLocation,
 }: ZoneRouteTipsProps) {
-  const [showMap, setShowMap] = useState(false);
-  const [mapKey, setMapKey] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const hasLocations = routeTips.some((tip: any) => tip.locations && tip.locations.length > 0);
 
@@ -32,17 +30,6 @@ export default function ZoneRouteTips({
     setCurrentIndex(index);
   };
 
-  // Refresh map when it becomes visible
-  useEffect(() => {
-    if (showMap) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        setMapKey(prev => prev + 1);
-        window.dispatchEvent(new Event('resize'));
-      }, 100);
-    }
-  }, [showMap]);
-
   const currentTip = routeTips[currentIndex];
 
   return (
@@ -52,27 +39,14 @@ export default function ZoneRouteTips({
           <Icon name="map" className="w-5 h-5" />
           {routeTips.length} Route Opties
         </h4>
-        
-        {/* Mobile toggle */}
-        {hasLocations && (
-          <div className="lg:hidden">
-            <button
-              onClick={() => setShowMap(!showMap)}
-              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
-            >
-              <Icon name="map" className="w-4 h-4" />
-              {showMap ? 'Toon Routes' : 'Toon Kaart'}
-            </button>
-          </div>
-        )}
       </div>
       
       <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-        {/* Map showing all route tips for this zone */}
+        {/* Map showing current route tip */}
         {hasLocations && (
-          <div className={`bg-gray-50 p-4 rounded-lg flex flex-col ${showMap ? 'block' : 'hidden lg:flex'}`}>
+          <div className="bg-gray-50 p-4 rounded-lg flex flex-col">
             <RouteTipsMap 
-              key={`${mapKey}-${currentIndex}`}
+              key={currentIndex}
               routeTips={[currentTip]} 
               zoneTitle={zoneTitle}
               zoneStartLocation={zoneStartLocation ?? undefined}
@@ -83,7 +57,7 @@ export default function ZoneRouteTips({
         )}
         
         {/* Carousel */}
-        <div className={`flex flex-col ${showMap ? 'hidden lg:flex' : 'flex'}`}>
+        <div className="flex flex-col">
           {/* Current Route Tip */}
           <div className="flex-1 flex flex-col">
             {(() => {
