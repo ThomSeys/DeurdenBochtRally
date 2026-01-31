@@ -28,7 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Get recent SOS alerts
   const { data: recentSOS, error: sosError } = await supabaseAdmin
     .from('emergency_sos')
-    .select('*, participants(first_name, last_name)')
+    .select('*, participants!emergency_sos_participant_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
     .limit(5);
 

@@ -97,6 +97,18 @@ export async function requireAdmin(request: Request) {
     throw redirect('/dashboard');
   }
 
+  // Check if admin dashboard is enabled
+  const { isFeatureEnabled } = await import('./feature-flags.server');
+  const adminDashboardEnabled = await isFeatureEnabled('admin-dashboard-enabled');
+  
+  if (!adminDashboardEnabled) {
+    console.log('[admin] Blocking access - admin-dashboard-enabled is disabled');
+    throw new Response('Admin dashboard is currently disabled', { 
+      status: 403,
+      statusText: 'Forbidden'
+    });
+  }
+
   return userId;
 }
 

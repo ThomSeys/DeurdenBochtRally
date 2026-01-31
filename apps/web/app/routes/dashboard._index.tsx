@@ -6,6 +6,7 @@ import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
+import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
@@ -65,6 +66,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Generate QR code URL on server to avoid hydration mismatch
   const checkInUrl = `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}/check-in/${user.id}`;
   const qrCodeUrl = `/api/qrcode?text=${encodeURIComponent(checkInUrl)}`;
+// Get feature flags
+  const rallyZonesEnabled = await isFeatureEnabled('rally-zones-enabled');
+  const photoGalleryEnabled = await isFeatureEnabled('photo-gallery-enabled');
+  const rideStoriesEnabled = await isFeatureEnabled('ride-stories-enabled');
+  const achievementsEnabled = await isFeatureEnabled('achievements-enabled');
+  const profileEditingEnabled = await isFeatureEnabled('profile-editing-enabled');
+  const pushNotificationsEnabled = await isFeatureEnabled('push-notifications-enabled');
 
   return { 
     user, 
@@ -74,13 +82,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
     isBochtenkoning, 
     eventDate,
     gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
-    qrCodeUrl,
+    qrCodeUrl, 
+    rallyZonesEnabled,
+    photoGalleryEnabled, 
+    rideStoriesEnabled, 
+    achievementsEnabled,
+    profileEditingEnabled, 
+    pushNotificationsEnabled, 
     routePreference: user.route_preference || 'adventure', // Default to adventure
   };
 }
 
 export default function Dashboard() {
-  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference } = useLoaderData<typeof loader>();
+  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled } = useLoaderData<typeof loader>();
 
   console.log("🚀 ~ Dashboard ~ routePreference:", routePreference);
 
@@ -135,7 +149,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         {/* Push Notifications Setup Banner - Only show if not subscribed */}
-        {!isNotificationSubscribed && (
+        {pushNotificationsEnabled && !isNotificationSubscribed && (
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-sm shadow p-6 mb-8">
           <div className="flex items-start gap-4">
             <Icon name="bell" className="w-10 h-10 flex-shrink-0 text-blue-600" />
@@ -336,7 +350,7 @@ export default function Dashboard() {
         )}
 
         {/* Main CTA - Rally Submission (only for rally_zones preference) */}
-        {routePreference === 'adventure' && (
+        {rallyZonesEnabled && routePreference === 'adventure' && (
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
               <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
@@ -444,73 +458,98 @@ export default function Dashboard() {
                 Toon dit bij de start
               </p>
             </div>
+            <Link
+              to="/dashboard/profile-edit"
+              className="mt-4 block text-center text-primary-600 hover:text-primary-700 font-medium text-sm"
+            >
+              Bewerk mijn gegevens →
+            </Link>
           </div>
 
           {/* Rally Progress */}
-          <div className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon name="map" className="w-6 h-6 text-primary-600" />
-              Rally Avontuur
-            </h3>
-            {completedZones > 0 ? (
-              <div className="space-y-3 text-sm">
-                <div>
-                  <dt className="text-gray-600">Zones bezocht:</dt>
-                  <dd className="font-medium text-2xl text-primary-600">{completedZones}/4</dd>
+          {rallyZonesEnabled && routePreference === 'adventure' && (
+            <div className="bg-white rounded-sm shadow p-6">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Icon name="map" className="w-6 h-6 text-primary-600" />
+                Rally Avontuur
+              </h3>
+              {completedZones > 0 ? (
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <dt className="text-gray-600">Zones bezocht:</dt>
+                    <dd className="font-medium text-2xl text-primary-600">{completedZones}/4</dd>
+                  </div>
+                  <Link
+                    to="/rally"
+                    className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                  >
+                    Bekijk alle zones →
+                  </Link>
                 </div>
-                <Link
-                  to="/rally"
-                  className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
-                >
-                  Bekijk alle zones →
-                </Link>
-              </div>
-            ) : (
-              <div className="text-gray-600 text-sm space-y-2">
-                <p>Start je avontuur!</p>
-                <Link
-                  to="/rally"
-                  className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Ontdek de zones →
-                </Link>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="text-gray-600 text-sm space-y-2">
+                  <p>Start je avontuur!</p>
+                  <Link
+                    to="/rally"
+                    className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    Ontdek de zones →
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* New Feature Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Link
-            to="/gallery"
-            className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
-          >
-            <Icon name="camera" className="w-16 h-16 mb-3" />
-            <h3 className="font-bold text-xl mb-2">Fotogalerij</h3>
-            <p className="text-sm text-purple-100">
-              Deel jouw rally momenten en bekijk foto's van andere deelnemers!
-            </p>
-          </Link>
+          {photoGalleryEnabled && (
+            <Link
+              to="/gallery"
+              className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+            >
+              <Icon name="camera" className="w-16 h-16 mb-3" />
+              <h3 className="font-bold text-xl mb-2">Fotogalerij</h3>
+              <p className="text-sm text-purple-100">
+                Deel jouw rally momenten en bekijk foto's van andere deelnemers!
+              </p>
+            </Link>
+          )}
+
+          {rideStoriesEnabled && (
+            <Link
+              to="/dashboard/blog"
+              className="bg-gradient-to-br from-orange-500 to-red-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+            >
+              <Icon name="book-open" className="w-16 h-16 mb-3" />
+              <h3 className="font-bold text-xl mb-2">Ride Stories</h3>
+              <p className="text-sm text-orange-100">
+                Schrijf en lees verhalen over de rally ervaringen van deelnemers!
+              </p>
+            </Link>
+          )}
+
+          {achievementsEnabled && (
+            <Link
+              to="/achievements"
+              className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+            >
+              <Icon name="trophy" className="w-16 h-16 mb-3" />
+              <h3 className="font-bold text-xl mb-2">Achievements</h3>
+              <p className="text-sm text-yellow-100">
+                Ontgrendel achievements door deel te nemen aan de rally zones!
+              </p>
+            </Link>
+          )}
 
           <Link
-            to="/dashboard/blog"
-            className="bg-gradient-to-br from-orange-500 to-red-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+            to="/dashboard/profile-edit"
+            className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
-            <Icon name="book-open" className="w-16 h-16 mb-3" />
-            <h3 className="font-bold text-xl mb-2">Ride Stories</h3>
-            <p className="text-sm text-orange-100">
-              Schrijf en lees verhalen over de rally ervaringen van deelnemers!
-            </p>
-          </Link>
-
-          <Link
-            to="/achievements"
-            className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
-          >
-            <Icon name="trophy" className="w-16 h-16 mb-3" />
-            <h3 className="font-bold text-xl mb-2">Achievements</h3>
-            <p className="text-sm text-yellow-100">
-              Ontgrendel achievements door deel te nemen aan de rally zones!
+            <Icon name="user" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Mijn Profiel</h3>
+            <p className="text-sm text-teal-100">
+              Bewerk je gegevens, motor info en route voorkeuren!
             </p>
           </Link>
 

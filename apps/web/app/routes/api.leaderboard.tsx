@@ -1,8 +1,19 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { supabase } from '~/lib/supabase.server';
+import { isFeatureEnabled } from '~/lib/feature-flags.server';
 
 // V1: Leaderboard disabled - focus on stories and experience, not competition
 export async function loader({ request }: LoaderFunctionArgs) {
+  // Check if leaderboard is enabled
+  const leaderboardEnabled = await isFeatureEnabled('leaderboard-enabled');
+  
+  if (!leaderboardEnabled) {
+    return new Response(JSON.stringify({ error: 'Leaderboard is currently disabled' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     // Get participant info for simple zone visit tracking
     const { data: participants } = await supabase

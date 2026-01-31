@@ -13,6 +13,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { getUser } from "~/lib/session.server";
 import { requireSitePassword } from "~/lib/site-password.server";
+import { getFeatureFlags } from "~/lib/feature-flags.server";
 import CookieBanner from "~/components/CookieBanner";
 import RallySubmissionFAB from "~/components/RallySubmissionFAB";
 import { EmergencySOSButton } from "~/components/EmergencySOSButton";
@@ -22,6 +23,7 @@ import { ToastContainer } from "~/components/ToastContainer";
 import { ModalProvider } from "~/contexts/ModalContext";
 import { ModalContainer } from "~/components/ModalContainer";
 import { AppStateProvider } from "~/contexts/AppStateContext";
+import { FeatureFlagsProvider, useFeatureFlags } from "~/contexts/FeatureFlagsContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
@@ -54,9 +56,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { getCSRFToken } = await import("~/lib/csrf.server");
   const csrfToken = await getCSRFToken(request);
   
+  // Get feature flags from Sanity
+  const featureFlags = await getFeatureFlags();
+  
   return { 
     user,
     csrfToken,
+    featureFlags,
   };
 }
 
@@ -139,18 +145,28 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <ToastProvider>
-        <ModalProvider>
-          <AppStateProvider>
-            <Outlet />
-            {data?.user && <EmergencySOSButton />}
-            <ToastContainer />
-            <ModalContainer />
-          </AppStateProvider>
-        </ModalProvider>
-      </ToastProvider>
+      <FeatureFlagsProvider flags={data?.featureFlags || {}}>
+        <EmergencySOSWrapper user={data?.user} />
+        <ToastProvider>
+          <ModalProvider>
+            <AppStateProvider>
+              <Outlet />
+              <ToastContainer />
+              <ModalContainer />
+            </AppStateProvider>
+          </ModalProvider>
+        </ToastProvider>
+      </FeatureFlagsProvider>
     </AuthProvider>
   );
+}
+
+function EmergencySOSWrapper({ user }: { user: any }) {
+  const { isEnabled } = useFeatureFlags();
+  const emergencySosEnabled = isEnabled('emergency-sos-enabled');
+  
+  if (!user || !emergencySosEnabled) return null;
+  return <EmergencySOSButton />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

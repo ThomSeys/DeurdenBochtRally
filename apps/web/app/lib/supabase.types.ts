@@ -425,6 +425,7 @@ export type Database = {
           license_plate: string
           motorcycle_brand: string
           motorcycle_model: string
+          paper_roadbook: boolean | null
           password_hash: string | null
           payment_status: string
           phone: string
@@ -456,6 +457,7 @@ export type Database = {
           license_plate: string
           motorcycle_brand: string
           motorcycle_model: string
+          paper_roadbook?: boolean | null
           password_hash?: string | null
           payment_status?: string
           phone: string
@@ -487,6 +489,7 @@ export type Database = {
           license_plate?: string
           motorcycle_brand?: string
           motorcycle_model?: string
+          paper_roadbook?: boolean | null
           password_hash?: string | null
           payment_status?: string
           phone?: string

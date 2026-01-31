@@ -12,6 +12,7 @@ import eventMarker from './eventMarker';
 import eventStory from './eventStory';
 import rideStory from './rideStory';
 import featureCard from './featureCard';
+import featureFlags from './featureFlags';
 
 export const schemaTypes = [
   edition,
@@ -28,5 +29,6 @@ export const schemaTypes = [
   eventStory,
   rideStory,
   featureCard,
+  featureFlags,
 ];
 

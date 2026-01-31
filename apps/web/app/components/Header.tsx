@@ -3,15 +3,23 @@ import { useState, useEffect } from 'react';
 import { NotificationBell } from './NotificationBell';
 import { Icon } from '~/components/Icon';
 import { EmergencySOSButton } from './EmergencySOSButton';
+import { useFeatureFlags } from '~/contexts/FeatureFlagsContext';
 
 export default function Header({ transparent, fixed }: { transparent?: boolean; fixed?: boolean }) {
   const matches = useMatches();
   const rootMatch = matches.find(m => m.id === 'root');
   const user = (rootMatch?.data as any)?.user;
+  const { isEnabled } = useFeatureFlags();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Feature flags
+  const rallyZonesEnabled = isEnabled('rally-zones-enabled');
+  const liveMapEnabled = isEnabled('live-map-enabled');
+  const adminDashboardEnabled = isEnabled('admin-dashboard-enabled');
+  const emergencySosEnabled = isEnabled('emergency-sos-enabled');
 
   useEffect(() => {
     setIsClient(true);
@@ -139,7 +147,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               {/* Navigation */}
               <div className="flex-1 overflow-y-auto py-4">
                 <div className="px-2 space-y-1">
-                  {user.route_preference !== 'scenic' && (
+                  {rallyZonesEnabled && user.route_preference !== 'scenic' && (
                     <Link
                       to="/rally"
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -149,14 +157,16 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       <span>Rally Zones</span>
                     </Link>
                   )}
-                  <Link
-                    to="/live-map"
-                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    <Icon name="map" className="w-5 h-5" />
-                    <span>Live Kaart</span>
-                  </Link>
+                  {liveMapEnabled && (
+                    <Link
+                      to="/live-map"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Icon name="map" className="w-5 h-5" />
+                      <span>Live Kaart</span>
+                    </Link>
+                  )}
                   <Link
                     to="/dashboard"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -165,25 +175,35 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Icon name="chart" className="w-5 h-5" />
                     <span>Dashboard</span>
                   </Link>
+                  <Link
+                    to="/dashboard/profile-edit"
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <Icon name="user" className="w-5 h-5" />
+                    <span>Mijn Profiel</span>
+                  </Link>
                 </div>
 
                 {/* Emergency Button */}
-                <div className="px-2 mt-4 pt-4 border-t border-gray-200">
-                  <button
-                    className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      const event = new CustomEvent('trigger-emergency-sos');
-                      window.dispatchEvent(event);
-                    }}
-                  >
-                    <Icon name="alert-triangle" className="w-5 h-5" />
-                    <span>Noodknop</span>
-                  </button>
-                </div>
+                {emergencySosEnabled && (
+                  <div className="px-2 mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        const event = new CustomEvent('trigger-emergency-sos');
+                        window.dispatchEvent(event);
+                      }}
+                    >
+                      <Icon name="alert-triangle" className="w-5 h-5" />
+                      <span>Noodknop</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Admin Link */}
-                {user.is_admin && (
+                {user.is_admin && adminDashboardEnabled && (
                   <div className="px-2 mt-2">
                     <Link
                       to="/admin"
@@ -268,7 +288,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   {user ? (
                     <>
                       <div className="my-4 border-t border-gray-200" />
-                      {user.route_preference !== 'scenic' && (
+                      {rallyZonesEnabled && user.route_preference !== 'scenic' && (
                         <Link
                           to="/rally"
                           className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -278,14 +298,16 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                           <span>Rally Zones</span>
                         </Link>
                       )}
-                      <Link
-                        to="/live-map"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Icon name="map" className="w-5 h-5" />
-                        <span>Live Kaart</span>
-                      </Link>
+                      {liveMapEnabled && (
+                        <Link
+                          to="/live-map"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Icon name="map" className="w-5 h-5" />
+                          <span>Live Kaart</span>
+                        </Link>
+                      )}
                       <Link
                         to="/dashboard"
                         className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -294,24 +316,34 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                         <Icon name="chart" className="w-5 h-5" />
                         <span>Dashboard</span>
                       </Link>
+                      <Link
+                        to="/dashboard/profile-edit"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon name="user" className="w-5 h-5" />
+                        <span>Mijn Profiel</span>
+                      </Link>
 
                       {/* Emergency Button */}
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <button
-                          className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            const event = new CustomEvent('trigger-emergency-sos');
-                            window.dispatchEvent(event);
-                          }}
-                        >
-                          <Icon name="alert-triangle" className="w-5 h-5" />
-                          <span>Noodknop</span>
-                        </button>
-                      </div>
+                      {emergencySosEnabled && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <button
+                            className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              const event = new CustomEvent('trigger-emergency-sos');
+                              window.dispatchEvent(event);
+                            }}
+                          >
+                            <Icon name="alert-triangle" className="w-5 h-5" />
+                            <span>Noodknop</span>
+                          </button>
+                        </div>
+                      )}
 
                       {/* Admin Link */}
-                      {user.is_admin && (
+                      {user.is_admin && adminDashboardEnabled && (
                         <div className="mt-2">
                           <Link
                             to="/admin"

@@ -10,6 +10,7 @@ import { getActiveEdition, getPricingTiers, getSiteConfig } from '~/lib/sanity.s
 import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
 import { FORMULA_PRICES } from '~/lib/utils';
+import { isFeatureEnabled } from '~/lib/feature-flags.server';
 
 // List of available icon names in the Icon component
 const availableIcons = [
@@ -38,15 +39,18 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const edition = await getActiveEdition();
+  const registrationEnabled = await isFeatureEnabled('registration-open');
   
-  if (!edition?.registrationOpen) {
+  // Check both edition setting and feature flag
+  if (!edition?.registrationOpen || !registrationEnabled) {
     return redirect('/');
   }
 
   const pricing = await getPricingTiers(edition._id);
   const siteConfig = await getSiteConfig();
+  const paperRoadbookEnabled = await isFeatureEnabled('paper-roadbook-option');
 
-  return {  edition, pricing, siteConfig };
+  return {  edition, pricing, siteConfig, paperRoadbookEnabled };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -68,6 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const formula = formData.get('formula');
     const rideType = formData.get('rideType');
     const routePreference = formData.get('routePreference');
+    const paperRoadbook = formData.get('paperRoadbook') === 'on';
 
     if (
       typeof firstName !== 'string' ||
@@ -140,6 +145,7 @@ export async function action({ request }: ActionFunctionArgs) {
         formula,
         ride_type: rideType,
         route_preference: routePreference,
+        paper_roadbook: paperRoadbook,
         amount_paid: amount,
         qr_code: qrCode,
         payment_status: 'pending',
@@ -209,7 +215,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Registration() {
-  const { edition, pricing, siteConfig } = useLoaderData<typeof loader>();
+  const { edition, pricing, siteConfig, paperRoadbookEnabled } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [selectedFormula, setSelectedFormula] = useState<string>('with_meals');
 
@@ -428,7 +434,7 @@ export default function Registration() {
                       <ul className="space-y-1 text-sm text-gray-600">
                         <li className="flex items-start">
                           <span className="text-primary-600 mr-1">✓</span>
-                          Complete route met 8 optionele rally zones
+                          Complete route met 4 optionele rally zones
                         </li>
                         <li className="flex items-start">
                           <span className="text-primary-600 mr-1">✓</span>
@@ -483,6 +489,27 @@ export default function Registration() {
 
               {/* Ride Type - Hidden, always free */}
               <input type="hidden" name="rideType" value="free" />
+
+              {/* Paper Roadbook Option */}
+              {paperRoadbookEnabled && (
+                <div className="pt-6 border-t">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Extra optie</h2>
+                  <div className="flex items-start">
+                    <input
+                      id="paperRoadbook"
+                      name="paperRoadbook"
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                    <label htmlFor="paperRoadbook" className="ml-3 text-sm text-gray-700">
+                      <span className="font-semibold">Ik wil een papieren roadbook ontvangen</span>
+                      <p className="text-gray-600 mt-1">
+                        Naast de digitale versie ontvang je een fysiek roadbook met alle route-informatie en rally zones.
+                      </p>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               {/* Consent Checkboxes */}
               <div className="pt-6 border-t space-y-4">

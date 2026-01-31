@@ -31,6 +31,7 @@ export default [
   route("dashboard/notification-history", "routes/dashboard.notification-history.tsx"),
   route("dashboard/privacy", "routes/dashboard.privacy.tsx"),
   route("dashboard/rally-submission", "routes/dashboard.rally-submission.tsx"),
+  route("dashboard/profile-edit", "routes/dashboard.profile-edit.tsx"),
   
   // Zones
   
