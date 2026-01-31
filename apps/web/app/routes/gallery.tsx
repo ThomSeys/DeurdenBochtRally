@@ -686,11 +686,97 @@ export default function Gallery() {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <img
-                src={lightboxPhoto.image_url}
-                alt={lightboxPhoto.caption}
-                className="max-h-[70vh] max-w-[80vw] h-auto w-auto mx-auto rounded-lg shadow-2xl object-contain"
-              />
+              {/* Image with overlays */}
+              <div className="relative mx-auto" style={{ maxWidth: '80vw', maxHeight: '70vh' }}>
+                <img
+                  src={lightboxPhoto.image_url}
+                  alt={lightboxPhoto.caption}
+                  className="max-h-[70vh] max-w-[80vw] h-auto w-auto mx-auto rounded-lg shadow-2xl object-contain"
+                />
+                
+                {/* Tagged People Overlay - Bottom Left */}
+                {lightboxPhoto.photo_tags && lightboxPhoto.photo_tags.length > 0 && (
+                  <div className="absolute bottom-2 left-8 flex flex-col gap-2">
+                    {lightboxPhoto.photo_tags.map((tag: any) => (
+                      <div key={tag.participant_id} className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-full px-3 py-2">
+                        <Icon name="user" className="w-4 h-4 text-white" />
+                        <span className="text-white text-sm font-medium">
+                          {tag.participant?.first_name} {tag.participant?.last_name}
+                        </span>
+                        {lightboxPhoto.participant_id === userId && (
+                          <Form method="post" className="inline">
+                            <input type="hidden" name="action" value="untag" />
+                            <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
+                            <input type="hidden" name="tagged_participant_id" value={tag.participant_id} />
+                            <button
+                              type="submit"
+                              className="text-white/70 hover:text-white transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Icon name="x" className="w-3 h-3" />
+                            </button>
+                          </Form>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tag Interface Overlay - Only for photo owner */}
+                {lightboxPhoto.participant_id === userId && (
+                  <div className="absolute bottom-4 right-8">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTagging(!showTagging);
+                      }}
+                      className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-full font-semibold transition-all shadow-lg text-sm"
+                    >
+                      <Icon name="user-plus" className="w-4 h-4" />
+                      {showTagging ? 'Sluiten' : 'Tag'}
+                    </button>
+
+                    {showTagging && (
+                      <div className="absolute bottom-full right-0 mb-2 w-64 max-h-64 overflow-y-auto bg-black/90 backdrop-blur-md rounded-lg shadow-2xl">
+                        <div className="p-3 space-y-2">
+                          {buddies.length === 0 ? (
+                            <p className="text-white/70 text-sm px-2 py-4 text-center">Je hebt nog geen naftgenoten om te taggen</p>
+                          ) : (
+                            buddies.map((buddy: any) => {
+                              const isTagged = lightboxPhoto.photo_tags?.some(
+                                (tag: any) => tag.participant_id === buddy.buddy_id
+                              );
+                              return (
+                                <Form method="post" key={buddy.buddy_id} onClick={(e) => e.stopPropagation()}>
+                                  <input type="hidden" name="action" value="tag" />
+                                  <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
+                                  <input type="hidden" name="tagged_participant_id" value={buddy.buddy_id} />
+                                  <button
+                                    type="submit"
+                                    disabled={isTagged}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
+                                      isTagged
+                                        ? 'bg-white/5 text-white/50 cursor-not-allowed'
+                                        : 'bg-white/10 hover:bg-white/20 text-white'
+                                    }`}
+                                  >
+                                    <Icon name="user" className="w-4 h-4" />
+                                    <span>{buddy.buddy?.first_name} {buddy.buddy?.last_name}</span>
+                                    {isTagged && (
+                                      <Icon name="check" className="w-4 h-4 ml-auto" />
+                                    )}
+                                  </button>
+                                </Form>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="mt-6 space-y-4">
                 {lightboxPhoto.caption && (
                   <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
@@ -714,91 +800,7 @@ export default function Gallery() {
                   </div>
                 )}
 
-                {/* Tagged People */}
-                {lightboxPhoto.photo_tags && lightboxPhoto.photo_tags.length > 0 && (
-                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon name="users" className="w-4 h-4 text-white" />
-                      <span className="text-white text-sm font-semibold">In deze foto:</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {lightboxPhoto.photo_tags.map((tag: any) => (
-                        <div key={tag.participant_id} className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1.5">
-                          <Icon name="user" className="w-4 h-4 text-white" />
-                          <span className="text-white text-sm">
-                            {tag.participant?.first_name} {tag.participant?.last_name}
-                          </span>
-                          {lightboxPhoto.participant_id === userId && (
-                            <Form method="post" className="inline">
-                              <input type="hidden" name="action" value="untag" />
-                              <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
-                              <input type="hidden" name="tagged_participant_id" value={tag.participant_id} />
-                              <button
-                                type="submit"
-                                className="text-white/70 hover:text-white transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Icon name="x" className="w-3 h-3" />
-                              </button>
-                            </Form>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
-                {/* Tag Interface - Only for photo owner */}
-                {lightboxPhoto.participant_id === userId && (
-                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-4">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowTagging(!showTagging);
-                      }}
-                      className="flex items-center gap-2 text-white hover:text-white/80 transition-colors text-sm font-semibold mb-3"
-                    >
-                      <Icon name="user-plus" className="w-4 h-4" />
-                      {showTagging ? 'Sluiten' : 'Tag Naftgenoot'}
-                    </button>
-
-                    {showTagging && (
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {buddies.length === 0 ? (
-                          <p className="text-white/70 text-sm">Je hebt nog geen naftgenoten om te taggen</p>
-                        ) : (
-                          buddies.map((buddy: any) => {
-                            const isTagged = lightboxPhoto.photo_tags?.some(
-                              (tag: any) => tag.participant_id === buddy.buddy_id
-                            );
-                            return (
-                              <Form method="post" key={buddy.buddy_id} onClick={(e) => e.stopPropagation()}>
-                                <input type="hidden" name="action" value="tag" />
-                                <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
-                                <input type="hidden" name="tagged_participant_id" value={buddy.buddy_id} />
-                                <button
-                                  type="submit"
-                                  disabled={isTagged}
-                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
-                                    isTagged
-                                      ? 'bg-white/5 text-white/50 cursor-not-allowed'
-                                      : 'bg-white/20 hover:bg-white/30 text-white'
-                                  }`}
-                                >
-                                  <Icon name="user" className="w-4 h-4" />
-                                  <span>{buddy.buddy?.first_name} {buddy.buddy?.last_name}</span>
-                                  {isTagged && (
-                                    <Icon name="check" className="w-4 h-4 ml-auto" />
-                                  )}
-                                </button>
-                              </Form>
-                            );
-                          })
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           </div>
