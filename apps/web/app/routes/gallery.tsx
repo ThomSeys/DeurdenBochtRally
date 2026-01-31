@@ -196,6 +196,45 @@ export async function action({ request }: ActionFunctionArgs) {
       return { error: 'Failed to tag person' };
     }
 
+    // Send push notification to tagged person
+    try {
+      const { data: tagger } = await supabaseAdmin
+        .from('participants')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .single();
+
+      const { data: subscriptions } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('participant_id', taggedParticipantId)
+        .eq('is_active', true);
+
+      if (subscriptions && subscriptions.length > 0) {
+        const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
+        
+        await sendPushNotificationWithHistory(
+          subscriptions,
+          {
+            title: 'Je bent getagd! 📸',
+            body: `${tagger?.first_name} ${tagger?.last_name} heeft je getagd in een foto`,
+            tag: 'photo-tag',
+          },
+          {
+            title: 'Je bent getagd! 📸',
+            body: `${tagger?.first_name} ${tagger?.last_name} heeft je getagd in een foto`,
+            eventType: 'photo_tag',
+            targetType: 'targeted',
+            sentBy: userId,
+            eventData: { photo_id: photoId, tagged_by: userId },
+          }
+        );
+      }
+    } catch (notifError) {
+      console.error('[gallery] Failed to send tag notification:', notifError);
+      // Don't fail the whole operation if notification fails
+    }
+
     return { success: true, message: 'Person tagged!' };
   }
 

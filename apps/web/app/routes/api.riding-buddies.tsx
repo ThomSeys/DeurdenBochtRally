@@ -64,6 +64,45 @@ export async function action({ request }: ActionFunctionArgs) {
       return data({ error: 'Kon verzoek niet versturen' }, { status: 500 });
     }
 
+    // Send push notification to buddy
+    try {
+      const { data: requester } = await supabaseAdmin
+        .from('participants')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .single();
+
+      const { data: subscriptions } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('participant_id', buddyId)
+        .eq('is_active', true);
+
+      if (subscriptions && subscriptions.length > 0) {
+        const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
+        
+        await sendPushNotificationWithHistory(
+          subscriptions,
+          {
+            title: 'Nieuw Naftgenoot Verzoek 🏍️',
+            body: `${requester?.first_name} ${requester?.last_name} wil je naftgenoot worden!`,
+            tag: 'buddy-request',
+          },
+          {
+            title: 'Nieuw Naftgenoot Verzoek 🏍️',
+            body: `${requester?.first_name} ${requester?.last_name} wil je naftgenoot worden!`,
+            eventType: 'buddy_request',
+            targetType: 'single',
+            sentBy: userId,
+            eventData: { requester_id: userId },
+          }
+        );
+      }
+    } catch (notifError) {
+      console.error('[riding-buddies] Failed to send request notification:', notifError);
+      // Don't fail the whole operation if notification fails
+    }
+
     return data({ success: true, message: 'Verzoek verstuurd!' });
   } else if (action === 'accept') {
     // Accept buddy request
@@ -77,6 +116,45 @@ export async function action({ request }: ActionFunctionArgs) {
     if (error) {
       console.error('Error accepting buddy request:', error);
       return data({ error: 'Kon verzoek niet accepteren' }, { status: 500 });
+    }
+
+    // Send push notification to requester
+    try {
+      const { data: accepter } = await supabaseAdmin
+        .from('participants')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .single();
+
+      const { data: subscriptions } = await supabaseAdmin
+        .from('push_subscriptions')
+        .select('*')
+        .eq('participant_id', buddyId)
+        .eq('is_active', true);
+
+      if (subscriptions && subscriptions.length > 0) {
+        const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
+        
+        await sendPushNotificationWithHistory(
+          subscriptions,
+          {
+            title: 'Naftgenoot Geaccepteerd! 🎉',
+            body: `${accepter?.first_name} ${accepter?.last_name} heeft je verzoek geaccepteerd!`,
+            tag: 'buddy-accepted',
+          },
+          {
+            title: 'Naftgenoot Geaccepteerd! 🎉',
+            body: `${accepter?.first_name} ${accepter?.last_name} heeft je verzoek geaccepteerd!`,
+            eventType: 'buddy_accepted',
+            targetType: 'single',
+            sentBy: userId,
+            eventData: { accepter_id: userId },
+          }
+        );
+      }
+    } catch (notifError) {
+      console.error('[riding-buddies] Failed to send acceptance notification:', notifError);
+      // Don't fail the whole operation if notification fails
     }
 
     return data({ success: true, message: 'Rijdmaatje toegevoegd!' });
