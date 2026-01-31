@@ -581,6 +581,17 @@ export default function Dashboard() {
             </p>
           </Link>
 
+          <Link
+            to="/dashboard/riding-buddies"
+            className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="users" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Naftgenoten</h3>
+            <p className="text-sm text-blue-100">
+              Voeg mederijders toe om samen in groep te rijden!
+            </p>
+          </Link>
+
           {/* Removed: Certificates - Concept A only */}
         </div>
 

@@ -44,6 +44,90 @@ export async function action({ request }: ActionFunctionArgs) {
   const intent = formData.get('intent');
 
   try {
+    if (intent === 'upload-photo') {
+      const photo = formData.get('photo') as File;
+      
+      if (!photo || !(photo instanceof File)) {
+        return { error: 'Geen foto geselecteerd', status: 400 };
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(photo.type)) {
+        return { error: 'Alleen JPG, PNG en WebP bestanden zijn toegestaan', status: 400 };
+      }
+
+      // Validate file size (max 5MB)
+      if (photo.size > 5 * 1024 * 1024) {
+        return { error: 'Foto mag maximaal 5MB zijn', status: 400 };
+      }
+
+      // Generate unique filename
+      const fileExt = photo.name.split('.').pop();
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `profiles/${fileName}`;
+
+      // Convert File to ArrayBuffer
+      const arrayBuffer = await photo.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('profile-photos')
+        .upload(filePath, buffer, {
+          contentType: photo.type,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error('[profile-edit] upload error', uploadError);
+        return { error: 'Er ging iets mis bij het uploaden van de foto', status: 500 };
+      }
+
+      // Get public URL
+      const { data: urlData } = supabaseAdmin.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      // Update user profile with photo URL
+      const { error: updateError } = await supabaseAdmin
+        .from('participants')
+        .update({ profile_photo_url: urlData.publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('[profile-edit] profile update error', updateError);
+        return { error: 'Foto geüpload maar profiel niet bijgewerkt', status: 500 };
+      }
+
+      return { success: 'Profielfoto succesvol geüpload' };
+    }
+
+    if (intent === 'remove-photo') {
+      // Remove photo URL from profile
+      const { error: updateError } = await supabaseAdmin
+        .from('participants')
+        .update({ profile_photo_url: null })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('[profile-edit] remove photo error', updateError);
+        return { error: 'Er ging iets mis bij het verwijderen van de foto', status: 500 };
+      }
+
+      // Optionally delete from storage (we could keep it for history)
+      if (user.profile_photo_url) {
+        const pathMatch = user.profile_photo_url.match(/profiles\/(.+)$/);
+        if (pathMatch) {
+          await supabaseAdmin.storage
+            .from('profile-photos')
+            .remove([`profiles/${pathMatch[1]}`]);
+        }
+      }
+
+      return { success: 'Profielfoto succesvol verwijderd' };
+    }
+
     if (intent === 'update-profile') {
       const firstName = formData.get('firstName');
       const lastName = formData.get('lastName');
@@ -179,6 +263,74 @@ export default function ProfileEdit() {
               <span className="font-medium">{actionData.error}</span>
             </div>
           )}
+
+          {/* Profile Photo */}
+          <div className="bg-white rounded-sm shadow-md p-6 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Profielfoto</h2>
+            
+            <div className="flex items-start gap-6">
+              {/* Current Photo */}
+              <div className="flex-shrink-0">
+                {user.profile_photo_url ? (
+                  <img
+                    src={user.profile_photo_url}
+                    alt="Profielfoto"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-primary-100"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-primary-100 flex items-center justify-center">
+                    <Icon name="user" className="w-16 h-16 text-primary-600" />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Controls */}
+              <div className="flex-grow">
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload een profielfoto om je profiel persoonlijker te maken. Deze foto wordt getoond bij je naftgenoten en in de achievements.
+                </p>
+                <p className="text-xs text-gray-500 mb-4">
+                  Toegestane formaten: JPG, PNG, WebP. Maximaal 5MB.
+                </p>
+
+                <Form method="post" encType="multipart/form-data" className="space-y-3">
+                  <input type="hidden" name="intent" value="upload-photo" />
+                  
+                  <div className="flex items-center gap-3">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors">
+                      <Icon name="upload" className="w-4 h-4" />
+                      <span className="text-sm font-medium">Kies foto</span>
+                      <input
+                        type="file"
+                        name="photo"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const form = e.target.form;
+                          if (form && e.target.files?.[0]) {
+                            // Auto-submit form when file is selected
+                            form.requestSubmit();
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </Form>
+
+                {user.profile_photo_url && (
+                  <Form method="post" className="mt-3">
+                    <input type="hidden" name="intent" value="remove-photo" />
+                    <button
+                      type="submit"
+                      className="text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                      Foto verwijderen
+                    </button>
+                  </Form>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Personal Information */}
           <div className="bg-white rounded-sm shadow-md p-6 mb-6">

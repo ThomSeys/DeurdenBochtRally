@@ -34,6 +34,8 @@ export default [
   route("dashboard/profile-edit", "routes/dashboard.profile-edit.tsx"),
   route("dashboard/checklist", "routes/dashboard.checklist.tsx"),
   route("dashboard/emergency-contacts", "routes/dashboard.emergency-contacts.tsx"),
+  route("dashboard/riding-buddies", "routes/dashboard.riding-buddies.tsx"),
+  route("dashboard/buddies/:buddyId", "routes/dashboard.buddies.$buddyId.tsx"),
   
   // Zones
   
@@ -43,6 +45,7 @@ export default [
   // Admin
   route("admin", "routes/admin._index.tsx"),
   route("admin/blog", "routes/admin.blog.tsx"),
+  route("admin/buddy-stats", "routes/admin.buddy-stats.tsx"),
   route("admin/check-in", "routes/admin.check-in.tsx"),
   route("admin/emergency-alerts", "routes/admin.emergency-alerts.tsx"),
   route("admin/emergency-contact-dashboard", "routes/admin.emergency-contact-dashboard.tsx"),
@@ -78,6 +81,7 @@ export default [
   route("api/qrcode", "routes/api.qrcode.tsx"),
   // route("api/rally-submission", "routes/api.rally-submission.tsx"), // REMOVED - Concept A only
   route("api/rally-zones", "routes/api.rally-zones.tsx"),
+  route("api/riding-buddies", "routes/api.riding-buddies.tsx"),
   // route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"), // REMOVED - Concept A only
   route("api/webhook", "routes/api.webhook.tsx"),
   route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),

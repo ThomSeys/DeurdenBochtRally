@@ -13,6 +13,8 @@ export interface FeatureFlags {
   'admin-dashboard-enabled': boolean;
   'emergency-sos-enabled': boolean;
   'achievements-enabled': boolean;
+  'riding-tours-enabled': boolean;
+  'onboarding-tour-enabled': boolean;
 }
 
 interface FeatureFlagsContextType {
@@ -42,6 +44,8 @@ export function FeatureFlagsProvider({ children, flags }: FeatureFlagsProviderPr
     'admin-dashboard-enabled': false,
     'emergency-sos-enabled': false,
     'achievements-enabled': false,
+    'riding-tours-enabled': false,
+    'onboarding-tour-enabled': false,
   };
 
   const mergedFlags: FeatureFlags = {

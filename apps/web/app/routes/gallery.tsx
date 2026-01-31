@@ -21,20 +21,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .single();
 
   // Get all photos (filtering happens client-side based on user preference)
-  const { data: photos } = await supabaseAdmin
+  const { data: photos, error: photosError } = await supabaseAdmin
     .from('participant_photos')
     .select(`
       *,
       participant:participants(first_name, last_name, motorcycle_brand, motorcycle_model)
-    `)
-    .order('created_at', { ascending: false });
+    `);
+
+  if (photosError) {
+    console.error('[gallery] error loading photos:', photosError);
+  }
+  
+  console.log('[gallery] total photos found:', photos?.length || 0);
+  console.log('[gallery] approved photos:', photos?.filter((p: any) => p.is_approved).length || 0);
 
   // Get user's own photos (including pending)
   const { data: myPhotos } = await supabaseAdmin
     .from('participant_photos')
     .select('*')
-    .eq('participant_id', userId)
-    .order('created_at', { ascending: false });
+    .eq('participant_id', userId);
 
   return { userId, participant, photos: photos || [], myPhotos: myPhotos || [] };
 }
@@ -81,13 +86,13 @@ export async function action({ request }: ActionFunctionArgs) {
         console.warn('[gallery] RPC decrement failed, using direct update', rpcError);
         const { data: photo } = await supabaseAdmin
           .from('participant_photos')
-          .select('likes_count')
+          .select('like_count')
           .eq('id', photoId)
           .single();
         
         await supabaseAdmin
           .from('participant_photos')
-          .update({ likes_count: Math.max((photo?.likes_count || 0) - 1, 0) })
+          .update({ like_count: Math.max((photo?.like_count || 0) - 1, 0) })
           .eq('id', photoId);
       }
 
@@ -111,13 +116,13 @@ export async function action({ request }: ActionFunctionArgs) {
         console.warn('[gallery] RPC increment failed, using direct update', rpcError);
         const { data: photo } = await supabaseAdmin
           .from('participant_photos')
-          .select('likes_count')
+          .select('like_count')
           .eq('id', photoId)
           .single();
         
         await supabaseAdmin
           .from('participant_photos')
-          .update({ likes_count: (photo?.likes_count || 0) + 1 })
+          .update({ like_count: (photo?.like_count || 0) + 1 })
           .eq('id', photoId);
       }
 
@@ -444,7 +449,7 @@ export default function Gallery() {
             </button>
           </div>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayPhotos.map((photo: any) => {
               return (
                 <div
@@ -508,7 +513,7 @@ export default function Gallery() {
                           className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full font-semibold text-sm shadow-lg transition-all transform hover:scale-110"
                         >
                           <Icon name="heart" className="w-4 h-4" />
-                          {photo.likes_count}
+                          {photo.like_count}
                         </button>
                       </Form>
                     </div>

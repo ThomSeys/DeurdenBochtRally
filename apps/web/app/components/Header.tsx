@@ -204,6 +204,15 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <span>Mijn Profiel</span>
                   </Link>
                   
+                  <Link
+                    to="/dashboard/riding-buddies"
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <Icon name="users" className="w-5 h-5" />
+                    <span>Naftgenoten</span>
+                  </Link>
+                  
                   {/* Help / Tour Button */}
                   {onboardingTourEnabled && (
                     <button
@@ -357,6 +366,15 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       >
                         <Icon name="user" className="w-5 h-5" />
                         <span>Mijn Profiel</span>
+                      </Link>
+                      
+                      <Link
+                        to="/dashboard/riding-buddies"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon name="users" className="w-5 h-5" />
+                        <span>Naftgenoten</span>
                       </Link>
                       
                       {/* Help / Tour Button */}

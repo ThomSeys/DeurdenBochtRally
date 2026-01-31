@@ -50,6 +50,123 @@ export type Database = {
         }
         Relationships: []
       }
+      buddy_achievements: {
+        Row: {
+          achievement_key: string
+          badge_color: string
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          name: string
+          points: number
+          requirement_type: string
+          requirement_value: number
+        }
+        Insert: {
+          achievement_key: string
+          badge_color?: string
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          name: string
+          points?: number
+          requirement_type: string
+          requirement_value: number
+        }
+        Update: {
+          achievement_key?: string
+          badge_color?: string
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          points?: number
+          requirement_type?: string
+          requirement_value?: number
+        }
+        Relationships: []
+      }
+      buddy_group_achievement_members: {
+        Row: {
+          group_achievement_id: string
+          id: string
+          participant_id: string
+        }
+        Insert: {
+          group_achievement_id: string
+          id?: string
+          participant_id: string
+        }
+        Update: {
+          group_achievement_id?: string
+          id?: string
+          participant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_group_achievement_members_group_achievement_id_fkey"
+            columns: ["group_achievement_id"]
+            isOneToOne: false
+            referencedRelation: "buddy_group_achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_group_achievement_members_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buddy_group_achievements: {
+        Row: {
+          achievement_id: string
+          created_at: string | null
+          id: string
+          is_unlocked: boolean | null
+          primary_participant_id: string
+          progress_value: number | null
+          unlocked_at: string | null
+        }
+        Insert: {
+          achievement_id: string
+          created_at?: string | null
+          id?: string
+          is_unlocked?: boolean | null
+          primary_participant_id: string
+          progress_value?: number | null
+          unlocked_at?: string | null
+        }
+        Update: {
+          achievement_id?: string
+          created_at?: string | null
+          id?: string
+          is_unlocked?: boolean | null
+          primary_participant_id?: string
+          progress_value?: number | null
+          unlocked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_group_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "buddy_achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_group_achievements_primary_participant_id_fkey"
+            columns: ["primary_participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           downloaded_at: string | null
@@ -1291,6 +1408,45 @@ export type Database = {
           },
         ]
       }
+      riding_buddies: {
+        Row: {
+          buddy_id: string
+          created_at: string | null
+          id: string
+          participant_id: string
+          status: string
+        }
+        Insert: {
+          buddy_id: string
+          created_at?: string | null
+          id?: string
+          participant_id: string
+          status?: string
+        }
+        Update: {
+          buddy_id?: string
+          created_at?: string | null
+          id?: string
+          participant_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "riding_buddies_buddy_id_fkey"
+            columns: ["buddy_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "riding_buddies_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_reports: {
         Row: {
           created_at: string | null
@@ -1373,12 +1529,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      participant_buddies: {
+        Row: {
+          buddy_email: string | null
+          buddy_first_name: string | null
+          buddy_id: string | null
+          buddy_last_name: string | null
+          buddy_motorcycle_brand: string | null
+          buddy_motorcycle_model: string | null
+          buddy_profile_photo_url: string | null
+          created_at: string | null
+          participant_id: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_next_run_time: {
         Args: { p_current_time?: string; p_frequency?: string }
         Returns: string
+      }
+      check_buddy_achievements: {
+        Args: { p_participant_id: string }
+        Returns: undefined
       }
       decrement_photo_likes: { Args: { photo_id: string }; Returns: undefined }
       get_leaderboard: {

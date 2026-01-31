@@ -407,6 +407,15 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Templates, broadcast & targeted</p>
           </Link>
 
+          <Link
+            to="/admin/buddy-stats"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="users" className="w-6 h-6 text-white mb-2" />
+            <h3 className="font-semibold text-white">Naftgenoten Statistieken</h3>
+            <p className="text-sm text-white mt-1">Groepsformatie & naftgenoten insights</p>
+          </Link>
+
 
           {/* V1: Reports page not implemented
           <Link
