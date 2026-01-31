@@ -553,6 +553,28 @@ export default function Dashboard() {
             </p>
           </Link>
 
+          <Link
+            to="/dashboard/emergency-contacts"
+            className="bg-gradient-to-br from-red-500 to-red-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="phone" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Noodcontacten</h3>
+            <p className="text-sm text-red-100">
+              Vul je noodcontacten in voor tijdens het event!
+            </p>
+          </Link>
+
+          <Link
+            to="/dashboard/checklist"
+            className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <Icon name="check-square" className="w-16 h-16 mb-3" />
+            <h3 className="font-bold text-xl mb-2">Mijn Checklist</h3>
+            <p className="text-sm text-primary-100">
+              Bereid je voor op het event met je persoonlijke checklist!
+            </p>
+          </Link>
+
           {/* Removed: Certificates - Concept A only */}
         </div>
 

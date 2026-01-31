@@ -345,6 +345,42 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            to="/admin/event-dashboard"
+            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="activity" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Event Dashboard</h3>
+            <p className="text-sm text-white mt-1">Real-time statistieken</p>
+          </Link>
+
+          <Link
+            to="/admin/financial-report"
+            className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:via-green-800 hover:to-green-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="dollar-sign" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Financieel Rapport</h3>
+            <p className="text-sm text-white mt-1">Inkomsten & betalingen</p>
+          </Link>
+
+          <Link
+            to="/admin/emergency-contact-dashboard"
+            className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="phone" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Emergency Contacts</h3>
+            <p className="text-sm text-white mt-1">Noodcontacten & GPS</p>
+          </Link>
+
+          <Link
+            to="/admin/event-checklist"
+            className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="check-square" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Event Checklist</h3>
+            <p className="text-sm text-white mt-1">Voorbereiding & taken</p>
+          </Link>
+
+          <Link
             to="/admin/gallery"
             className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
           >

@@ -32,6 +32,8 @@ export default [
   route("dashboard/privacy", "routes/dashboard.privacy.tsx"),
   route("dashboard/rally-submission", "routes/dashboard.rally-submission.tsx"),
   route("dashboard/profile-edit", "routes/dashboard.profile-edit.tsx"),
+  route("dashboard/checklist", "routes/dashboard.checklist.tsx"),
+  route("dashboard/emergency-contacts", "routes/dashboard.emergency-contacts.tsx"),
   
   // Zones
   
@@ -43,12 +45,17 @@ export default [
   route("admin/blog", "routes/admin.blog.tsx"),
   route("admin/check-in", "routes/admin.check-in.tsx"),
   route("admin/emergency-alerts", "routes/admin.emergency-alerts.tsx"),
+  route("admin/emergency-contact-dashboard", "routes/admin.emergency-contact-dashboard.tsx"),
+  route("admin/event-checklist", "routes/admin.event-checklist.tsx"),
+  route("admin/event-dashboard", "routes/admin.event-dashboard.tsx"),
   route("admin/event-markers", "routes/admin.event-markers.tsx"),
   route("admin/fallback-review", "routes/admin.fallback-review.tsx"),
+  route("admin/financial-report", "routes/admin.financial-report.tsx"),
   route("admin/gallery", "routes/admin.gallery.tsx"),
   route("admin/manual-scan", "routes/admin.manual-scan.tsx"),
   route("admin/participants", "routes/admin.participants.tsx"),
   route("admin/participants/:participantId/submissions", "routes/admin.participants.$participantId.submissions.tsx"),
+  route("admin/participants/:participantId/timeline", "routes/admin.participants.$participantId.timeline.tsx"),
   route("admin/pending-scans", "routes/admin.pending-scans.tsx"),
   route("admin/prepare-edition", "routes/admin.prepare-edition.tsx"),
   route("admin/push-notifications", "routes/admin.push-notifications.tsx"),

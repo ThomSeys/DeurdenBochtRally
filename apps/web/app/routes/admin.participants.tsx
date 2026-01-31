@@ -303,12 +303,18 @@ export default function AdminParticipants() {
               </div>
 
               {/* View Answers Button */}
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 space-y-2">
                 <Link
                   to={`/admin/participants/${selectedParticipant.id}/submissions`}
                   className="block w-full bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 rounded-sm transition-colors"
                 >
-                  <Icon name="document" className="w-4 h-4 inline" /> Bekijk Rally Antwoorden
+                  <Icon name="document" className="w-4 h-4 inline mr-2" /> Bekijk Rally Antwoorden
+                </Link>
+                <Link
+                  to={`/admin/participants/${selectedParticipant.id}/timeline`}
+                  className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center font-semibold py-3 rounded-sm transition-colors"
+                >
+                  <Icon name="clock" className="w-4 h-4 inline mr-2" /> Bekijk Tijdlijn
                 </Link>
               </div>
             </div>
