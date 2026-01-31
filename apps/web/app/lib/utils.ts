@@ -129,11 +129,6 @@ export function formatDate(date: string): string {
   });
 }
 
-export const FORMULA_PRICES = {
-  with_meals: 2000, // €20.00 in cents
-  breakfast_only: 1000, // €10.00 in cents
-} as const;
-
 export const FORMULA_LABELS = {
   with_meals: 'Met alle maaltijden',
   breakfast_only: 'Enkel ontbijt',

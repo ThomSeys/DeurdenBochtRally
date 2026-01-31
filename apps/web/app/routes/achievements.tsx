@@ -10,11 +10,11 @@ export const meta: MetaFunction = () => {
 };
 
 // SVG Icons for achievements
-const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boolean }) => {
+export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boolean }) => {
   const className = `w-20 h-20 ${isUnlocked ? 'drop-shadow-lg' : 'opacity-40 grayscale'}`;
   
   const icons: Record<string, React.ReactElement> = {
-    'first_zone': (
+    'first_checkin': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -46,7 +46,7 @@ const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boole
         <text x="50" y="63" textAnchor="middle" fontSize="38" fill="#164E63" fontWeight="bold" fontFamily="Arial, sans-serif">½</text>
       </svg>
     ),
-    'all_zones': (
+    'zone_master': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="trophyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -119,7 +119,7 @@ const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boole
         <path d="M45 35 L48 38 L55 31" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
       </svg>
     ),
-    'social_butterfly': (
+    'photo_star': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="pinkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -136,7 +136,7 @@ const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boole
         <circle cx="47" cy="44" r="2" fill="#3B82F6"/>
       </svg>
     ),
-    'popular': (
+    'story_teller': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="redGradient" x1="0%" y1="0%" x2="0%" y2="100%">

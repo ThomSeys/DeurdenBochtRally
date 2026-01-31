@@ -9,7 +9,6 @@ import { Icon } from '~/components/Icon';
 import { getActiveEdition, getPricingTiers, getSiteConfig } from '~/lib/sanity.server';
 import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
-import { FORMULA_PRICES } from '~/lib/utils';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 
 // List of available icon names in the Icon component
@@ -128,8 +127,22 @@ export async function action({ request }: ActionFunctionArgs) {
     const qrCode = generateQRCode();
     const participantId = authData.user.id;
     const qrCodeUrl = `${new URL(request.url).origin}/check-in/${participantId}`;
-    const amountInCents = FORMULA_PRICES[formula as keyof typeof FORMULA_PRICES];
-    const amount = amountInCents / 100; // Convert from cents to euros
+    
+    // Get pricing from Sanity
+    const edition = await getActiveEdition();
+    const pricing = await getPricingTiers(edition._id);
+    const selectedTier = pricing.find((tier: any) => 
+      (formula === 'with_meals' && tier.price === 30) || 
+      (formula === 'breakfast_only' && tier.price === 20)
+    );
+    
+    if (!selectedTier) {
+      console.error('[registration] pricing tier not found', { formula });
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      return { error: 'Prijsinformatie niet beschikbaar. Probeer later opnieuw.', status: 500 };
+    }
+    
+    const amount = selectedTier.price; // Price in euros from Sanity
 
     const { data: participant, error: dbError } = await supabaseAdmin
       .from('participants')
@@ -187,7 +200,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const host = new URL(request.url).host;
       const session = await createCheckoutSession({
         email: email.toLowerCase(),
-        amount: amount / 100,
+        amount: amount, // Already in euros from line 132
         host,
         metadata: {
           participantId: participant.id,
@@ -374,7 +387,7 @@ export default function Registration() {
                       <label
                         key={tier._id}
                         className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
-                          selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')
+                          selectedFormula === (tier.price === 30 ? 'with_meals' : 'breakfast_only')
                             ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
                             : 'border-gray-300'
                         }`}
@@ -382,10 +395,10 @@ export default function Registration() {
                         <input
                           type="radio"
                           name="formula"
-                          value={tier.price === 20 ? 'with_meals' : 'breakfast_only'}
+                          value={tier.price === 30 ? 'with_meals' : 'breakfast_only'}
                           className="sr-only"
                           onChange={(e) => setSelectedFormula(e.target.value)}
-                          checked={selectedFormula === (tier.price === 20 ? 'with_meals' : 'breakfast_only')}
+                          checked={selectedFormula === (tier.price === 30 ? 'with_meals' : 'breakfast_only')}
                         />
                         <div className="flex flex-1 flex-col">
                           <div className="flex items-center justify-between">

@@ -4,10 +4,11 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { AchievementIcon } from './achievements';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Deelnemer Antwoorden - Admin - Deur Den Bocht' },
+    { title: 'Deelnemer Detail - Admin - Deur Den Bocht' },
   ];
 };
 
@@ -27,70 +28,90 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response('Participant not found', { status: 404 });
   }
 
-  // Get the rally submission (single row with all zone codes)
-  const { data: rallySubmission } = await supabaseAdmin
-    .from('rally_submissions')
+  // Get rally zone check-ins
+  const { data: checkIns, error: checkInsError } = await supabaseAdmin
+    .from('rally_zone_checkins')
     .select('*')
     .eq('participant_id', participantId)
-    .single();
+    .order('checked_in_at', { ascending: false });
 
-  // Transform the single row into individual zone submissions
-  const submissions = [];
-  if (rallySubmission) {
-    for (let i = 1; i <= 8; i++) {
-      const code = (rallySubmission as any)[`rz${i}_code`];
-      if (code && code.trim() !== '') {
-        submissions.push({
-          zone_id: i,
-          code: code,
-          submitted_at: rallySubmission.submitted_at,
-          // Note: We don't have individual correct/incorrect info per zone in this structure
-          // Would need to compare against correct answers to determine this
-        });
-      }
-    }
-  }
+  console.log('CheckIns query result:', { checkIns, checkInsError, count: checkIns?.length });
 
-  // Calculate total points from the rally_submission row
-  const totalPoints = rallySubmission?.total_points || 0;
-  
-  const score = {
-    total_points: totalPoints,
-    shadow_total: rallySubmission?.shadow_total || 0,
-    final_score: rallySubmission?.final_score || totalPoints
-  };
+  // Get photo submissions count
+  const { count: photoCount, error: photoError } = await supabaseAdmin
+    .from('participant_photos')
+    .select('*', { count: 'exact', head: true })
+    .eq('participant_id', participantId);
 
-  // No need to query zone start times separately since we only have one submission row
+  console.log('Photo submissions count:', { photoCount, photoError });
+
+  // Get achievements earned
+  const { data: achievements, error: achievementsError } = await supabaseAdmin
+    .from('participant_achievements')
+    .select('*')
+    .eq('participant_id', participantId);
+
+  console.log('Achievements query result:', { achievements, achievementsError, count: achievements?.length });
+
+  // Get achievement details separately
+  const achievementIds = achievements?.map(pa => pa.achievement_id).filter(Boolean) || [];
+  const { data: achievementDetails } = await supabaseAdmin
+    .from('achievements')
+    .select('id, name, title, description, icon, points')
+    .in('id', achievementIds.length > 0 ? achievementIds : [0]);
+
+  // Map achievement details to participant achievements
+  const achievementsWithDetails = achievements?.map(pa => ({
+    ...pa,
+    achievements: achievementDetails?.find(a => a.id === pa.achievement_id)
+  })) || [];
+
+  // Calculate total achievement points
+  const totalAchievementPoints = achievementsWithDetails.reduce((sum, pa) => {
+    return sum + (pa.achievements?.points || 0);
+  }, 0);
+
   return { 
     participant,
-    submissions,
-    score,
-    rallySubmission
+    checkIns: checkIns || [],
+    photoCount: photoCount || 0,
+    achievements: achievementsWithDetails,
+    totalAchievementPoints
   };
 }
 
 export default function ParticipantSubmissions() {
-  const { participant, submissions, score, rallySubmission } = useLoaderData<typeof loader>();
-
-  // Group submissions by zone
-  const submissionsByZone: Record<string, any[]> = {};
-  submissions.forEach((sub: any) => {
-    const zoneId = String(sub.zone_id);
-    if (!submissionsByZone[zoneId]) {
-      submissionsByZone[zoneId] = [];
-    }
-    submissionsByZone[zoneId].push(sub);
-  });
-
-  const zoneIds = Object.keys(submissionsByZone).sort((a, b) => Number(a) - Number(b));
+  const { participant, checkIns, photoCount, achievements, totalAchievementPoints } = useLoaderData<typeof loader>();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
+      <section className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+                {participant.first_name} {participant.last_name}
+              </h1>
+              <div className="space-y-1 text-xl text-primary-100">
+                <p>{participant.email}</p>
+                <p>{participant.motorcycle_brand} {participant.motorcycle_model} • {participant.license_plate}</p>
+              </div>
+            </div>
+            <div className="text-right bg-white/10 backdrop-blur-sm rounded-lg px-6 py-4 border border-white/20">
+              <div className="text-sm text-primary-100 mb-1">Achievements</div>
+              <div className="text-5xl font-bold text-white">
+                {achievements.length}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-4">
+        <div className="mb-6">
           <Link 
             to="/admin/participants" 
             className="text-primary-600 hover:text-primary-800 text-sm"
@@ -99,127 +120,134 @@ export default function ParticipantSubmissions() {
           </Link>
         </div>
 
-        {/* Participant Header */}
-        <div className="bg-white rounded-sm shadow p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {participant.first_name} {participant.last_name}
-              </h1>
-              <div className="mt-2 space-y-1 text-sm text-gray-600">
-                <p>{participant.email}</p>
-                <p>{participant.motorcycle_brand} {participant.motorcycle_model} • {participant.license_plate}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-600 mb-1">Rally Punten</div>
-              <div className="text-4xl font-bold text-primary-600">
-                {score.total_points}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Uit {submissions.length} ingevulde zones
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Rally Info */}
-        {rallySubmission && (
-          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Totale afstand:</span>
-                <span className="ml-2 font-semibold">{rallySubmission.total_distance} km</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Start KM:</span>
-                <span className="ml-2 font-semibold">{rallySubmission.start_km}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Eind KM:</span>
-                <span className="ml-2 font-semibold">{rallySubmission.end_km}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Snelweg gebruikt:</span>
-                <span className={`ml-2 font-semibold ${rallySubmission?.used_highways ? 'text-red-600' : 'text-green-600'}`}>
-                  {rallySubmission?.used_highways ? 'Ja' : 'Nee'}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-sm shadow p-4">
-            <div className="text-sm text-gray-600">Zones Ingevuld</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
-              {submissions.length} / 8
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-sm shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-600">Zones Bezocht</div>
+              <Icon name="marker" className="w-6 h-6 text-primary-600" />
+            </div>
+            <div className="text-3xl font-bold text-gray-900">
+              {checkIns.length}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Rally zone check-ins
             </div>
           </div>
-          <div className="bg-white rounded-sm shadow p-4">
-            <div className="text-sm text-gray-600">Totale Afstand</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
-              {rallySubmission?.total_distance || 0} km
+          
+          <div className="bg-white rounded-sm shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-600">Foto's Ingediend</div>
+              <Icon name="camera" className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="text-3xl font-bold text-gray-900">
+              {photoCount}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Goedgekeurde foto's
             </div>
           </div>
-          <div className="bg-white rounded-sm shadow p-4">
-            <div className="text-sm text-gray-600">Rally Punten</div>
-            <div className="text-2xl font-bold text-green-600 mt-1">
-              {score.total_points}
+
+          <div className="bg-white rounded-sm shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-600">Achievements</div>
+              <Icon name="trophy" className="w-6 h-6 text-yellow-500" />
             </div>
-          </div>
-          <div className="bg-white rounded-sm shadow p-4">
-            <div className="text-sm text-gray-600">Ingediend</div>
-            <div className="text-sm font-bold text-gray-900 mt-1">
-              {rallySubmission?.submitted_at 
-                ? new Date(rallySubmission.submitted_at).toLocaleString('nl-BE')
-                : 'Nog niet ingediend'}
+            <div className="text-3xl font-bold text-gray-900">
+              {achievements.length}
             </div>
           </div>
         </div>
 
-        {/* Submissions by Zone */}
-        <div className="space-y-6">
-          {zoneIds.length === 0 ? (
+        {/* Achievements Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Achievements Verdiend</h2>
+          {achievements.length === 0 ? (
             <div className="bg-white rounded-sm shadow p-12 text-center text-gray-500">
-              <Icon name="document" className="w-16 h-16 text-gray-400 mb-4" />
-              <p>Deze deelnemer heeft nog geen rally codes ingediend</p>
+              <Icon name="trophy" className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p>Nog geen achievements verdiend</p>
             </div>
           ) : (
-            zoneIds.map((zoneId) => {
-              const zoneSubmissions = submissionsByZone[zoneId];
-              const submission = zoneSubmissions[0]; // Only one submission per zone in this data structure
-
-              return (
-                <div key={zoneId} className="bg-white rounded-sm shadow overflow-hidden">
-                  <div className="bg-primary-50 px-6 py-4">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-gray-900">Rally Zone {zoneId}</h2>
-                    </div>
-                  </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {achievements.map((pa: any) => (
+                <div 
+                  key={pa.id}
+                  className="group relative rounded-sm shadow-xl overflow-hidden transition-all duration-300 bg-gradient-to-br from-white via-teal-100 to-teal-200 border-2 border-teal-400"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 bg-gradient-to-br from-teal-400 to-teal-500 rotate-45 opacity-20"></div>
+                  
                   <div className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <Icon name="marker" className="w-16 h-16 text-gray-400" />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="text-sm font-medium text-gray-600">Antwoord:</span>
-                          <code className="px-4 py-2 bg-gray-100 rounded font-mono text-lg font-semibold">
-                            {submission.code}
-                          </code>
-                        </div>
-                        {rallySubmission?.submitted_at && (
-                          <div className="text-xs text-gray-500">
-                            Ingediend op {new Date(rallySubmission.submitted_at).toLocaleString('nl-BE')}
-                          </div>
-                        )}
+                    {/* Icon and Status */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-shrink-0">
+                        <AchievementIcon name={pa.achievements?.name || ''} isUnlocked={true} />
+                      </div>
+                      <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                        <span>✓</span> Unlocked
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-xl font-bold mb-2 text-gray-900">
+                      {pa.achievements?.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm mb-4 leading-relaxed text-gray-700">
+                      {pa.achievements?.description}
+                    </p>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-end pt-4 border-t-2 border-gray-200">
+                      <div className="text-xs text-green-600 font-semibold px-2 py-1 bg-green-100 rounded-full">
+                        ✨ Voltooid
                       </div>
                     </div>
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Zone Check-ins Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Rally Zone Check-ins</h2>
+          {checkIns.length === 0 ? (
+            <div className="bg-white rounded-sm shadow p-12 text-center text-gray-500">
+              <Icon name="marker" className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p>Nog geen zones bezocht</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {checkIns.map((checkIn: any) => {
+                return <div key={checkIn.id} className="bg-white rounded-sm shadow overflow-hidden">
+                  <div className="bg-primary-50 px-6 py-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Zone #{checkIn.zone_id}
+                      </h3>
+                      <div className="text-sm text-gray-600">
+                        {new Date(checkIn.checked_in_at).toLocaleString('nl-BE')}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {checkIn.location_lat && checkIn.location_lng && (
+                        <div>
+                          <div className="text-sm text-gray-600 mb-1">Locatie</div>
+                          <div className="text-sm font-mono bg-gray-100 px-3 py-2 rounded">
+                            {checkIn.location_lat.toFixed(6)}, {checkIn.location_lng.toFixed(6)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>;
+              })}
+            </div>
           )}
         </div>
       </div>

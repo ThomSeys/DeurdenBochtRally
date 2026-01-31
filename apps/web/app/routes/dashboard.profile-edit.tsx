@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Link, redirect } from 'react-router';
 import { Form, useActionData, useLoaderData } from 'react-router';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
@@ -133,12 +133,32 @@ export default function ProfileEdit() {
   const actionData = useActionData<typeof action>();
   
   const [routePreference, setRoutePreference] = useState(user.route_preference || 'adventure');
+  const alertRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to alert when actionData changes
+  useEffect(() => {
+    if (actionData && alertRef.current) {
+      alertRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [actionData]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Header />
 
-      <div className="flex-grow py-8">
+      {/* Hero with gradient */}
+      <section className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+            Profiel bewerken
+          </h1>
+          <p className="text-xl text-primary-100">
+            Pas je gegevens en voorkeuren aan
+          </p>
+        </div>
+      </section>
+
+      <div className="flex-grow py-8 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <Link to="/dashboard" className="inline-flex items-center text-primary-600 hover:text-primary-700">
@@ -146,18 +166,17 @@ export default function ProfileEdit() {
               Terug naar dashboard
             </Link>
           </div>
-
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Profiel bewerken</h1>
-
           {actionData?.success && (
-            <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-              {actionData.success}
+            <div ref={alertRef} className="mb-6 bg-green-50 border-2 border-green-500 text-green-800 px-4 py-3 rounded-sm flex items-center gap-3 animate-in slide-in-from-top">
+              <Icon name="check-circle" className="w-6 h-6 text-green-600 flex-shrink-0" />
+              <span className="font-medium">{actionData.success}</span>
             </div>
           )}
 
           {actionData?.error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {actionData.error}
+            <div ref={alertRef} className="mb-6 bg-red-50 border-2 border-red-500 text-red-800 px-4 py-3 rounded-sm flex items-center gap-3 animate-in slide-in-from-top">
+              <Icon name="alert-circle" className="w-6 h-6 text-red-600 flex-shrink-0" />
+              <span className="font-medium">{actionData.error}</span>
             </div>
           )}
 
