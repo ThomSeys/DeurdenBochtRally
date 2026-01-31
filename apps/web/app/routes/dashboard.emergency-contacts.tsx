@@ -166,7 +166,7 @@ export default function EmergencyContacts() {
             <div className="space-y-4">
               {contacts.map((contact: any) => (
                 <div key={contact.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900">{contact.name}</h3>
                       {contact.relationship && (
@@ -184,14 +184,15 @@ export default function EmergencyContacts() {
                       <input type="hidden" name="contactId" value={contact.id} />
                       <button
                         type="submit"
-                        className="text-red-600 hover:text-red-700 p-2"
+                        className="flex items-center gap-2 px-3 py-2 text-red-600 hover:text-white hover:bg-red-600 border border-red-600 rounded-lg transition-colors"
                         onClick={(e) => {
                           if (!confirm('Weet je zeker dat je dit contact wilt verwijderen?')) {
                             e.preventDefault();
                           }
                         }}
                       >
-                        <Icon name="trash-2" className="w-5 h-5" />
+                        <Icon name="trash-2" className="w-4 h-4" />
+                        <span className="text-sm font-medium">Verwijder</span>
                       </button>
                     </Form>
                   </div>

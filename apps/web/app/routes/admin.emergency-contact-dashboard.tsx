@@ -18,10 +18,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Get all participants with emergency contact info
   const { data: participants } = await supabaseAdmin
     .from('participants')
-    .select('id, first_name, last_name, email, phone, motorcycle_brand, motorcycle_model, license_plate, emergency_contact_name, emergency_contact_phone, checked_in')
+    .select('id, first_name, last_name, email, phone, motorcycle_brand, motorcycle_model, license_plate, checked_in')
     .order('last_name', { ascending: true });
 
-  // Get active SOS alerts
+  // Get all emergency contacts
+  const { data: emergencyContacts } = await supabaseAdmin
+    .from('emergency_contacts')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  // Group emergency contacts by participant_id
+  const contactsByParticipant = new Map();
+  emergencyContacts?.forEach((contact: any) => {
+    if (!contactsByParticipant.has(contact.participant_id)) {
+      contactsByParticipant.set(contact.participant_id, []);
+    }
+    contactsByParticipant.get(contact.participant_id).push(contact);
+  });
+
+  // Active SOS alerts
   const { data: activeSOS } = await supabaseAdmin
     .from('emergency_sos')
     .select('*, participants(first_name, last_name, phone, motorcycle_brand)')
@@ -38,7 +53,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Get latest GPS locations from rally zone check-ins
   const { data: latestLocations } = await supabaseAdmin
     .from('rally_zone_checkins')
-    .select('participant_id, checked_in_at, rally_zones(name, location), participants(first_name, last_name)')
+    .select('participant_id, checked_in_at, location_lat, location_lng, participants(first_name, last_name)')
+    .not('location_lat', 'is', null)
+    .not('location_lng', 'is', null)
     .order('checked_in_at', { ascending: false });
 
   // Get the most recent location per participant
@@ -48,8 +65,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       participantLocations.set(loc.participant_id, {
         participant_id: loc.participant_id,
         participant_name: `${loc.participants?.first_name} ${loc.participants?.last_name}`,
-        zone_name: loc.rally_zones?.name,
-        location: loc.rally_zones?.location,
+        lat: loc.location_lat,
+        lng: loc.location_lng,
         timestamp: loc.checked_in_at,
       });
     }
@@ -57,6 +74,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   return {
     participants: participants || [],
+    emergencyContactsByParticipant: Object.fromEntries(contactsByParticipant),
     activeSOS: activeSOS || [],
     sosHistory: sosHistory || [],
     latestLocations: Array.from(participantLocations.values()),
@@ -64,9 +82,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function EmergencyContactDashboard() {
-  const { participants, activeSOS, sosHistory, latestLocations } = useLoaderData<typeof loader>();
+  const { participants, emergencyContactsByParticipant, activeSOS, sosHistory, latestLocations } = useLoaderData<typeof loader>();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCheckedIn, setFilterCheckedIn] = useState<'all' | 'checked_in' | 'not_checked_in'>('all');
+  const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
+  const [showContactsModal, setShowContactsModal] = useState(false);
 
   const filteredParticipants = participants.filter((p: any) => {
     const matchesSearch = 
@@ -283,9 +303,9 @@ export default function EmergencyContactDashboard() {
                       <div className="text-sm text-gray-900">{loc.zone_name || 'Onbekend'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {loc.location ? (
+                      {loc.lat && loc.lng ? (
                         <div className="text-sm text-gray-600">
-                          {loc.location.coordinates[1].toFixed(4)}, {loc.location.coordinates[0].toFixed(4)}
+                          {parseFloat(loc.lat).toFixed(4)}, {parseFloat(loc.lng).toFixed(4)}
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">Geen GPS</span>
@@ -295,9 +315,9 @@ export default function EmergencyContactDashboard() {
                       {new Date(loc.timestamp).toLocaleTimeString('nl-BE')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {loc.location && (
+                      {loc.lat && loc.lng && (
                         <a
-                          href={`https://www.google.com/maps?q=${loc.location.coordinates[1]},${loc.location.coordinates[0]}`}
+                          href={`https://www.google.com/maps?q=${loc.lat},${loc.lng}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-700 font-medium"
@@ -411,22 +431,24 @@ export default function EmergencyContactDashboard() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {participant.emergency_contact_name ? (
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {participant.emergency_contact_name}
-                          </div>
-                          {participant.emergency_contact_phone && (
-                            <button
-                              onClick={() => callEmergencyNumber(participant.emergency_contact_phone)}
-                              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                            >
-                              {participant.emergency_contact_phone}
-                            </button>
-                          )}
-                        </div>
+                      {emergencyContactsByParticipant[participant.id]?.length > 0 ? (
+                        <button
+                          onClick={() => {
+                            setSelectedParticipant(participant);
+                            setShowContactsModal(true);
+                          }}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        >
+                          <Icon name="check-circle" className="w-4 h-4" />
+                          <span className="text-sm font-medium">
+                            {emergencyContactsByParticipant[participant.id].length} contact{emergencyContactsByParticipant[participant.id].length > 1 ? 'en' : ''}
+                          </span>
+                        </button>
                       ) : (
-                        <span className="text-sm text-gray-400">Geen noodcontact</span>
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm">
+                          <Icon name="alert-triangle" className="w-4 h-4" />
+                          Geen noodcontact
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -458,6 +480,64 @@ export default function EmergencyContactDashboard() {
             </table>
           </div>
         </div>
+
+        {/* Emergency Contacts Modal */}
+        {showContactsModal && selectedParticipant && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Noodcontacten - {selectedParticipant.first_name} {selectedParticipant.last_name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">{selectedParticipant.email}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowContactsModal(false);
+                    setSelectedParticipant(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Icon name="x" className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {emergencyContactsByParticipant[selectedParticipant.id]?.length > 0 ? (
+                  <div className="space-y-4">
+                    {emergencyContactsByParticipant[selectedParticipant.id].map((contact: any) => (
+                      <div key={contact.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-gray-900">{contact.name}</h4>
+                            {contact.relationship && (
+                              <p className="text-sm text-gray-600 mb-2">{contact.relationship}</p>
+                            )}
+                            <div className="flex items-center gap-2 text-gray-700 mt-2">
+                              <Icon name="phone" className="w-4 h-4" />
+                              <button
+                                onClick={() => callEmergencyNumber(contact.phone)}
+                                className="text-blue-600 hover:text-blue-700 font-medium"
+                              >
+                                {contact.phone}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Icon name="alert-triangle" className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Geen noodcontacten beschikbaar</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

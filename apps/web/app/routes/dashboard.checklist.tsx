@@ -41,11 +41,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Get completed tasks (from event_tasks table)
   const { data: completedTasks } = await supabaseAdmin
     .from('event_tasks')
-    .select('task_name')
-    .eq('participant_id', user.id)
+    .select('title')
+    .eq('assigned_to', user.id)
     .eq('completed', true);
 
-  const completedTaskNames = new Set(completedTasks?.map(t => t.task_name) || []);
+  const completedTaskNames = new Set(completedTasks?.map(t => t.title) || []);
 
   // Merge default items with completion status
   const checklistItems = DEFAULT_CHECKLIST_ITEMS.map(item => ({
@@ -89,16 +89,17 @@ export async function action({ request }: ActionFunctionArgs) {
       await supabaseAdmin
         .from('event_tasks')
         .delete()
-        .eq('participant_id', user.id)
-        .eq('task_name', taskName);
+        .eq('assigned_to', user.id)
+        .eq('title', taskName);
     } else {
       // Check - insert into event_tasks
       await supabaseAdmin
         .from('event_tasks')
         .insert({
-          participant_id: user.id,
-          task_name: taskName,
+          assigned_to: user.id,
+          title: taskName,
           completed: true,
+          priority: 'medium',
         });
     }
 
