@@ -57,7 +57,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     zoneCheckInCounts[record.zone_id] = (zoneCheckInCounts[record.zone_id] || 0) + 1;
   });
 
-  return { zones, checkedZoneIds: Array.from(checkedZoneIds), user, zoneCheckInCounts };
+  // Get user's accepted buddies for group check-in
+  const { data: buddies } = await supabaseAdmin
+    .from('participant_buddies')
+    .select('*')
+    .eq('participant_id', userId)
+    .eq('status', 'accepted');
+
+  const buddiesList = (buddies || []).map(b => ({
+    buddy_id: b.buddy_id,
+    buddy: {
+      id: b.buddy_id,
+      first_name: b.buddy_first_name,
+      last_name: b.buddy_last_name
+    }
+  }));
+
+  return { zones, checkedZoneIds: Array.from(checkedZoneIds), user, zoneCheckInCounts, buddies: buddiesList };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -104,23 +120,92 @@ export async function action({ request }: ActionFunctionArgs) {
     };
   }
 
-  // Insert check-in
-  const { error } = await supabaseAdmin
-    .from('rally_zone_checkins')
-    .insert({
+  // Get selected buddy IDs from form (comma-separated string)
+  const selectedBuddiesStr = formData.get('selectedBuddies') as string;
+  const selectedBuddyIds = selectedBuddiesStr ? selectedBuddiesStr.split(',').filter(Boolean) : [];
+
+  // Prepare check-ins array (user + selected buddies)
+  const checkInsToCreate = [
+    {
       participant_id: userId,
       zone_id: zoneId,
       location_lat: latitude,
       location_lng: longitude,
       checked_in_at: new Date().toISOString(),
+      checked_in_by: userId, // Self check-in
+    }
+  ];
+
+  // Add buddy check-ins (they get same location/time, but marked as checked in by the user)
+  for (const buddyId of selectedBuddyIds) {
+    checkInsToCreate.push({
+      participant_id: buddyId,
+      zone_id: zoneId,
+      location_lat: latitude,
+      location_lng: longitude,
+      checked_in_at: new Date().toISOString(),
+      checked_in_by: userId, // Checked in by the user, not themselves
     });
+  }
+
+  // Insert all check-ins
+  const { error } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .insert(checkInsToCreate);
 
   if (error) {
     console.error('[rally-submission] Check-in error:', error);
     return { error: 'Check-in mislukt. Probeer opnieuw.' };
   }
 
-  return { success: true };
+  // Send notifications to buddies who were checked in
+  if (selectedBuddyIds.length > 0) {
+    try {
+      const { data: checkerInfo } = await supabaseAdmin
+        .from('participants')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .single();
+
+      const zoneInfo = await sanityClient.fetch(`
+        *[_type == "rallyZone" && _id == $zoneId][0] {
+          title
+        }
+      `, { zoneId });
+
+      for (const buddyId of selectedBuddyIds) {
+        const { data: subscriptions } = await supabaseAdmin
+          .from('push_subscriptions')
+          .select('*')
+          .eq('participant_id', buddyId)
+          .eq('is_active', true);
+
+        if (subscriptions && subscriptions.length > 0) {
+          const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
+          
+          await sendPushNotificationWithHistory(
+            subscriptions,
+            {
+              title: 'Groeps Check-in! 🏍️',
+              body: `${checkerInfo?.first_name} ${checkerInfo?.last_name} heeft je ingecheckt bij ${zoneInfo?.title || 'een zone'}`,
+              tag: 'buddy-checkin',
+            },
+            {
+              eventType: 'buddy_checkin',
+              targetType: 'individual',
+              sentBy: userId,
+              eventData: { zone_id: zoneId, checked_in_by: userId },
+            }
+          );
+        }
+      }
+    } catch (notifError) {
+      console.error('[rally-submission] Failed to send buddy check-in notifications:', notifError);
+      // Don't fail the whole operation if notifications fail
+    }
+  }
+
+  return { success: true, buddiesCheckedIn: selectedBuddyIds.length };
 }
 
 // Haversine formula to calculate distance between two coordinates in meters
@@ -140,7 +225,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function RallySubmission() {
-  const { zones, checkedZoneIds, user, zoneCheckInCounts } = useLoaderData<typeof loader>();
+  const { zones, checkedZoneIds, user, zoneCheckInCounts, buddies } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
@@ -150,6 +235,7 @@ export default function RallySubmission() {
   const [showMapModal, setShowMapModal] = useState(false);
   const [currentZone, setCurrentZone] = useState<any>(null);
   const [distance, setDistance] = useState<number>(0);
+  const [selectedBuddies, setSelectedBuddies] = useState<string[]>([]);
   const mapRef = useRef<any>(null);
   const isSubmitting = navigation.state === 'submitting';
 
@@ -456,10 +542,10 @@ export default function RallySubmission() {
 
       {/* Location Confirmation Modal */}
       {showMapModal && location && currentZone && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowMapModal(false)}>
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 text-white">
+        <div className="fixed inset-0 bg-black/50 z-[1500] flex items-center justify-center p-4" onClick={() => setShowMapModal(false)}>
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header - Fixed */}
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 text-white flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold">Check-in Locatie</h3>
@@ -476,7 +562,8 @@ export default function RallySubmission() {
               </div>
             </div>
 
-            {/* Distance Info */}
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1">{/* Distance Info */}
             <div className={`px-6 py-4 border-b ${
               distance <= 100 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             }`}>
@@ -523,8 +610,55 @@ export default function RallySubmission() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="px-6 py-4 bg-white border-t flex gap-3">
+            {/* Buddy Selector - only if user has buddies and within range */}
+            {buddies && buddies.length > 0 && distance <= 100 && (
+              <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon name="users" className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-semibold text-gray-900">Check ook je naftgenoten in</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Rijd je samen? Selecteer wie er bij je is om hen ook in te checken.
+                </p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {buddies.map((buddy: any) => (
+                    <label
+                      key={buddy.buddy_id}
+                      className="flex items-center gap-3 p-2 rounded hover:bg-blue-100 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedBuddies.includes(buddy.buddy_id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedBuddies([...selectedBuddies, buddy.buddy_id]);
+                          } else {
+                            setSelectedBuddies(selectedBuddies.filter(id => id !== buddy.buddy_id));
+                          }
+                        }}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Icon name="user" className="w-4 h-4 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {buddy.buddy.first_name} {buddy.buddy.last_name}
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {selectedBuddies.length > 0 && (
+                  <div className="mt-3 p-2 bg-blue-100 rounded text-sm text-blue-800">
+                    <Icon name="info" className="w-4 h-4 inline mr-1" />
+                    {selectedBuddies.length} naftgenoot{selectedBuddies.length > 1 ? 'en' : ''} worden ook ingecheckt
+                  </div>
+                )}
+              </div>
+            )}
+            </div>
+
+            {/* Action Buttons - Fixed at bottom */}
+            <div className="px-6 py-4 bg-white border-t flex gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowMapModal(false)}
                 className="flex-1 px-4 py-2.5 border border-gray-300 rounded-sm text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
@@ -537,13 +671,14 @@ export default function RallySubmission() {
                   <input type="hidden" name="action" value="manual_checkin" />
                   <input type="hidden" name="latitude" value={location.latitude} />
                   <input type="hidden" name="longitude" value={location.longitude} />
+                  <input type="hidden" name="selectedBuddies" value={selectedBuddies.join(',')} />
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     className="w-full px-4 py-2.5 bg-green-600 text-white font-semibold rounded-sm hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
                     <Icon name="check" className="w-4 h-4 inline mr-2" />
-                    Bevestig Check-in
+                    Bevestig Check-in{selectedBuddies.length > 0 && ` (+${selectedBuddies.length})`}
                   </button>
                 </Form>
               ) : (
