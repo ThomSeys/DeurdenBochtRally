@@ -5,6 +5,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useToast } from '~/contexts/ToastContext';
+import { useState } from 'react';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -15,18 +16,33 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select('*')
     .order('created_at', { ascending: false });
 
+  // Get all emergency contacts
+  const { data: emergencyContacts } = await supabaseAdmin
+    .from('emergency_contacts')
+    .select('*');
+
+  // Group emergency contacts by participant_id
+  const contactsByParticipant = new Map();
+  emergencyContacts?.forEach((contact: any) => {
+    if (!contactsByParticipant.has(contact.participant_id)) {
+      contactsByParticipant.set(contact.participant_id, []);
+    }
+    contactsByParticipant.get(contact.participant_id).push(contact);
+  });
+
   // Fetch participant data for each alert
   const alerts = await Promise.all(
     (alertsRaw || []).map(async (alert: any) => {
       const { data: participant } = await supabaseAdmin
         .from('participants')
-        .select('first_name, last_name, phone, email')
+        .select('first_name, last_name, phone, email, motorcycle_brand, motorcycle_model, license_plate')
         .eq('id', alert.participant_id)
         .single();
       
       return {
         ...alert,
         participants: participant || null,
+        emergency_contacts: contactsByParticipant.get(alert.participant_id) || [],
       };
     })
   );
@@ -91,6 +107,8 @@ export default function EmergencyAlerts() {
   const { alerts } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
   const { warning } = useToast();
+  const [selectedAlert, setSelectedAlert] = useState<any>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const activeAlerts = alerts.filter((a: any) => a.status === 'active');
   const acknowledgedAlerts = alerts.filter((a: any) => a.status === 'acknowledged');
@@ -133,7 +151,14 @@ export default function EmergencyAlerts() {
             </h2>
             <div className="space-y-4">
               {activeAlerts.map((alert: any) => (
-                <AlertCard key={alert.id} alert={alert} />
+                <AlertCard 
+                  key={alert.id} 
+                  alert={alert} 
+                  onShowDetails={() => {
+                    setSelectedAlert(alert);
+                    setShowDetailsModal(true);
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -148,7 +173,14 @@ export default function EmergencyAlerts() {
             </h2>
             <div className="space-y-4">
               {acknowledgedAlerts.map((alert: any) => (
-                <AlertCard key={alert.id} alert={alert} />
+                <AlertCard 
+                  key={alert.id} 
+                  alert={alert}
+                  onShowDetails={() => {
+                    setSelectedAlert(alert);
+                    setShowDetailsModal(true);
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -163,7 +195,14 @@ export default function EmergencyAlerts() {
             </h2>
             <div className="space-y-4">
               {resolvedAlerts.map((alert: any) => (
-                <AlertCard key={alert.id} alert={alert} />
+                <AlertCard 
+                  key={alert.id} 
+                  alert={alert}
+                  onShowDetails={() => {
+                    setSelectedAlert(alert);
+                    setShowDetailsModal(true);
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -175,12 +214,23 @@ export default function EmergencyAlerts() {
             <p className="text-gray-600 text-lg">Geen noodmeldingen</p>
           </div>
         )}
+
+        {/* Details Modal */}
+        {showDetailsModal && selectedAlert && (
+          <ParticipantDetailsModal 
+            alert={selectedAlert}
+            onClose={() => {
+              setShowDetailsModal(false);
+              setSelectedAlert(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-function AlertCard({ alert }: { alert: any }) {
+function AlertCard({ alert, onShowDetails }: { alert: any; onShowDetails: () => void }) {
   const participant = alert.participants;
   const statusColors = {
     active: 'bg-red-100 border-red-200 text-red-800',
@@ -202,9 +252,18 @@ function AlertCard({ alert }: { alert: any }) {
             </p>
           </div>
         </div>
-        <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase bg-white/50">
-          {alert.status}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onShowDetails}
+            className="px-3 py-1.5 bg-white/70 hover:bg-white rounded text-sm font-medium transition-colors flex items-center gap-2"
+          >
+            <Icon name="user" className="w-4 h-4" />
+            Details
+          </button>
+          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase bg-white/50">
+            {alert.status}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -270,6 +329,148 @@ function AlertCard({ alert }: { alert: any }) {
           </Form>
         </div>
       )}
+    </div>
+  );
+}
+
+function ParticipantDetailsModal({ alert, onClose }: { alert: any; onClose: () => void }) {
+  const participant = alert.participants;
+  const emergencyContacts = alert.emergency_contacts || [];
+
+  const callNumber = (phone: string) => {
+    window.location.href = `tel:${phone}`;
+  };
+
+  return (
+    <div className="fixed z-[1200] inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-sm max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              {participant?.first_name} {participant?.last_name}
+            </h2>
+            <p className="text-sm text-gray-200 mt-1">
+              SOS Melding - {new Date(alert.created_at).toLocaleString('nl-BE')}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-200 hover:text-gray-600 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Participant Info */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Deelnemer Gegevens</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Email</label>
+                <p className="text-gray-900">{participant?.email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Telefoon</label>
+                {participant?.phone ? (
+                  <button
+                    onClick={() => callNumber(participant.phone)}
+                    className="text-primary-600 hover:text-blue-700 font-medium"
+                  >
+                    {participant.phone}
+                  </button>
+                ) : (
+                  <p className="text-gray-400">Geen telefoon</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Motor Merk</label>
+                <p className="text-gray-900">{participant?.motorcycle_brand}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Motor Model</label>
+                <p className="text-gray-900">{participant?.motorcycle_model}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Kenteken</label>
+                <p className="text-gray-900">{participant?.license_plate}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* GPS Location */}
+          <div className="pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">GPS Locatie</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Coördinaten</label>
+                <p className="text-gray-900 font-mono text-sm">
+                  {alert.location_lat}, {alert.location_lng}
+                </p>
+              </div>
+              <a
+                href={`https://www.google.com/maps?q=${alert.location_lat},${alert.location_lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-primary-600 hover:text-blue-700 font-medium text-sm"
+              >
+                <Icon name="external-link" className="w-4 h-4 mr-2" />
+                Open in Google Maps
+              </a>
+            </div>
+          </div>
+
+          {/* Emergency Contacts */}
+          <div className="pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              Noodcontacten ({emergencyContacts.length})
+            </h3>
+            {emergencyContacts.length > 0 ? (
+              <div className="space-y-3">
+                {emergencyContacts.map((contact: any) => (
+                  <div key={contact.id} className="bg-gray-50 rounded-sm p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Naam</label>
+                        <p className="text-gray-900 font-medium">{contact.name}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Relatie</label>
+                        <p className="text-gray-900">{contact.relationship || '-'}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-sm font-medium text-gray-500">Telefoon</label>
+                        <button
+                          onClick={() => callNumber(contact.phone)}
+                          className="text-primary-600 hover:text-blue-700 font-medium"
+                        >
+                          {contact.phone}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-red-50 border border-red-200 rounded-sm p-4 text-center">
+                <Icon name="alert-triangle" className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                <p className="text-red-600 font-medium">Geen noodcontacten beschikbaar</p>
+                <p className="text-sm text-red-500 mt-1">Deze deelnemer heeft geen noodcontacten ingevuld</p>
+              </div>
+            )}
+          </div>
+
+          {/* Resolution Notes */}
+          {alert.resolution_notes && (
+            <div className="pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Oplossingsnotities</h3>
+              <div className="bg-green-50 border border-green-200 rounded-sm p-4">
+                <p className="text-gray-700">{alert.resolution_notes}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
