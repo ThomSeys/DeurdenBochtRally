@@ -1,9 +1,10 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { data } from 'react-router';
-import { requireUserId } from '~/lib/session.server';
-import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const { requireUserId } = await import('~/lib/session.server');
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   const userId = await requireUserId(request);
   const url = new URL(request.url);
   const email = url.searchParams.get('email');
@@ -40,6 +41,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  const { requireUserId } = await import('~/lib/session.server');
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const action = formData.get('action');
@@ -89,10 +93,8 @@ export async function action({ request }: ActionFunctionArgs) {
             tag: 'buddy-request',
           },
           {
-            title: 'Nieuw Naftgenoot Verzoek 🏍️',
-            body: `${requester?.first_name} ${requester?.last_name} wil je naftgenoot worden!`,
             eventType: 'buddy_request',
-            targetType: 'single',
+            targetType: 'individual',
             sentBy: userId,
             eventData: { requester_id: userId },
           }
@@ -143,10 +145,8 @@ export async function action({ request }: ActionFunctionArgs) {
             tag: 'buddy-accepted',
           },
           {
-            title: 'Naftgenoot Geaccepteerd! 🎉',
-            body: `${accepter?.first_name} ${accepter?.last_name} heeft je verzoek geaccepteerd!`,
             eventType: 'buddy_accepted',
-            targetType: 'single',
+            targetType: 'individual',
             sentBy: userId,
             eventData: { accepter_id: userId },
           }
