@@ -19,6 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const searchQuery = url.searchParams.get('search') || '';
   const paymentFilter = url.searchParams.get('payment') || 'all';
   const checkedInFilter = url.searchParams.get('checkedIn') || 'all';
+  const selectedId = url.searchParams.get('id') || null;
 
   let query = supabaseAdmin
     .from('participants')
@@ -46,12 +47,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
     console.error('Error fetching participants:', error);
   }
 
-  return { participants: participants || [], searchQuery, paymentFilter, checkedInFilter };
+  // Get selected participant if id provided
+  let selectedParticipant = null;
+  if (selectedId) {
+    selectedParticipant = participants?.find(p => p.id === selectedId) || null;
+  }
+
+  return { participants: participants || [], searchQuery, paymentFilter, checkedInFilter, selectedParticipant: selectedParticipant };
 }
 
 export default function AdminParticipants() {
-  const { participants, searchQuery, paymentFilter, checkedInFilter } = useLoaderData<typeof loader>();
-  const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
+  const { participants, searchQuery, paymentFilter, checkedInFilter, selectedParticipant: loaderSelectedParticipant } = useLoaderData<typeof loader>();
+  const [selectedParticipant, setSelectedParticipant] = useState<any>(loaderSelectedParticipant);
 
   return (
     <div className="min-h-screen bg-gray-50">

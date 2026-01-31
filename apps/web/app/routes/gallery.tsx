@@ -20,14 +20,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .eq('id', userId)
     .single();
 
-  // Get approved photos
+  // Get all photos (filtering happens client-side based on user preference)
   const { data: photos } = await supabaseAdmin
     .from('participant_photos')
     .select(`
       *,
       participant:participants(first_name, last_name, motorcycle_brand, motorcycle_model)
     `)
-    .eq('is_approved', true)
     .order('created_at', { ascending: false });
 
   // Get user's own photos (including pending)
@@ -226,7 +225,10 @@ export default function Gallery() {
     }
   }, [actionData?.success, revalidator]);
 
-  const displayPhotos = filter === 'mine' ? myPhotos : photos;
+  // Filter photos: 'mine' shows user's photos (all statuses), 'all' shows only approved photos
+  const displayPhotos = filter === 'mine' 
+    ? myPhotos 
+    : photos.filter((p: any) => p.is_approved);
 
   const navigateLightbox = (direction: 'prev' | 'next') => {
     if (!lightboxPhoto) return;

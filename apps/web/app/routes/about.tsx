@@ -6,7 +6,7 @@ import MapView from '~/components/MapView';
 import { Icon } from '~/components/Icon';
 import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { getUserId } from '~/lib/session.server';
-import { PortableText } from '@portabletext/react';
+import PortableText from '~/components/PortableText';
 
 export const meta: MetaFunction = () => {
   return [
@@ -87,11 +87,17 @@ export default function About() {
 
       {/* Event Stories */}
       {stories && stories.length > 0 && (
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-4">
+        <section className="py-24 bg-gradient-to-b from-white via-gray-50 to-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
             {stories.map((story: any, index: number) => (
-              <>
-              <div key={story._id}>
+              <div key={story._id} className="relative">
+                {/* Decorative elements */}
+                {index % 2 === 0 && (
+                  <div className="absolute -top-12 -left-12 w-32 h-32 bg-primary-100 rounded-full blur-3xl opacity-30"></div>
+                )}
+                {index % 2 === 1 && (
+                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent-100 rounded-full blur-3xl opacity-30"></div>
+                )}
                 {/* Full-width hero image banner */}
                 {story.imageUrl && (
                   <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] mb-12 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden group">
@@ -129,7 +135,7 @@ export default function About() {
                 )}
 
                 {/* Content section */}
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-4xl mx-auto px-6">
                   {!story.imageUrl && (
                     <>
                       <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
@@ -141,7 +147,7 @@ export default function About() {
                     </>
                   )}
                   
-                  <div className="prose prose-lg prose-headings:text-gray-900 prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-p:text-gray-700 prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6 prose-strong:text-primary-700 prose-strong:font-extrabold prose-em:text-primary-600 prose-em:font-medium max-w-none mb-8">
+                  <div className="mb-12">
                     <PortableText value={story.content} />
                   </div>
                   
@@ -196,8 +202,6 @@ export default function About() {
                   )}
                 </div>
               </div>
-              <hr />
-              </>
             ))}
           </div>
         </section>

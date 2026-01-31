@@ -12,27 +12,27 @@ const components = {
       </h1>
     ),
     h2: ({ children }: any) => (
-      <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-8 mt-16 first:mt-0 tracking-tight border-l-4 border-accent-500 pl-6 leading-tight">
+      <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 mt-16 first:mt-0 tracking-tight border-l-4 border-accent-500 pl-6 leading-tight">
         {children}
       </h2>
     ),
     h3: ({ children }: any) => (
-      <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 mt-10 tracking-tight">
+      <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 mt-4 tracking-tight">
         {children}
       </h3>
     ),
     normal: ({ children }: any) => (
-      <p className="text-lg md:text-xl text-gray-700 leading-[1.8] mb-6">
+      <p className="text-sm md:text-xl text-gray-700">
         {children}
       </p>
     ),
   },
   marks: {
     strong: ({ children }: any) => (
-      <strong className="font-black text-primary-700 px-1 py-0.5 rounded">{children}</strong>
+      <strong className="font-extrabold text-primary-600 text-xl !font-extrabold !text-primary-600">{children}</strong>
     ),
     em: ({ children }: any) => (
-      <em className="not-italic font-semibold text-primary-600 border-b-2 border-primary-300">{children}</em>
+      <em className="not-italic font-medium text-primary-600 text-lg !not-italic !font-medium !text-primary-600">{children}</em>
     ),
     link: ({ children, value }: any) => (
       <a
