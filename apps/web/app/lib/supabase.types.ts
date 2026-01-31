@@ -731,6 +731,52 @@ export type Database = {
           },
         ]
       }
+      photo_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          participant_id: string
+          photo_id: string
+          tagged_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          participant_id: string
+          photo_id: string
+          tagged_by: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          participant_id?: string
+          photo_id?: string
+          tagged_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_tags_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_tags_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "participant_photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_tags_tagged_by_fkey"
+            columns: ["tagged_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_delivery_log: {
         Row: {
           created_at: string | null

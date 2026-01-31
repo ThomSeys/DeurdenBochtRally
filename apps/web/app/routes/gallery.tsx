@@ -25,7 +25,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .from('participant_photos')
     .select(`
       *,
-      participant:participants(first_name, last_name, motorcycle_brand, motorcycle_model)
+      participant:participants(first_name, last_name, motorcycle_brand, motorcycle_model),
+      photo_tags(participant_id, participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name))
     `);
 
   if (photosError) {
@@ -38,10 +39,44 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Get user's own photos (including pending)
   const { data: myPhotos } = await supabaseAdmin
     .from('participant_photos')
-    .select('*')
+    .select(`
+      *,
+      photo_tags(participant_id, participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name))
+    `)
     .eq('participant_id', userId);
 
-  return { userId, participant, photos: photos || [], myPhotos: myPhotos || [] };
+  // Get user's accepted buddies for tagging - participant_buddies view already contains buddy info
+  const { data: allBuddies, error: buddiesError } = await supabaseAdmin
+    .from('participant_buddies')
+    .select('*')
+    .eq('participant_id', userId)
+    .eq('status', 'accepted');
+
+  if (buddiesError) {
+    console.error('[gallery] error loading buddies:', buddiesError);
+  }
+
+  console.log('[gallery] allBuddies from view:', allBuddies);
+
+  // Transform to expected format - the view already has buddy info in buddy_* fields
+  const buddiesList = (allBuddies || []).map(b => ({
+    buddy_id: b.buddy_id,
+    buddy: {
+      id: b.buddy_id,
+      first_name: b.buddy_first_name,
+      last_name: b.buddy_last_name
+    }
+  }));
+
+  console.log('[gallery] transformed buddiesList:', buddiesList);
+
+  return { 
+    userId, 
+    participant, 
+    photos: photos || [], 
+    myPhotos: myPhotos || [],
+    buddies: buddiesList
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -132,6 +167,67 @@ export async function action({ request }: ActionFunctionArgs) {
     return { success: true };
   }
 
+  if (action === 'tag') {
+    const photoId = formData.get('photo_id') as string;
+    const taggedParticipantId = formData.get('tagged_participant_id') as string;
+
+    // Verify photo ownership
+    const { data: photo } = await supabaseAdmin
+      .from('participant_photos')
+      .select('participant_id')
+      .eq('id', photoId)
+      .single();
+
+    if (!photo || photo.participant_id !== userId) {
+      return { error: 'You can only tag people in your own photos' };
+    }
+
+    // Add tag
+    const { error: tagError } = await supabaseAdmin.from('photo_tags').insert({
+      photo_id: photoId,
+      participant_id: taggedParticipantId,
+      tagged_by: userId,
+    });
+
+    if (tagError) {
+      if (tagError.code === '23505') {
+        return { error: 'This person is already tagged in this photo' };
+      }
+      return { error: 'Failed to tag person' };
+    }
+
+    return { success: true, message: 'Person tagged!' };
+  }
+
+  if (action === 'untag') {
+    const photoId = formData.get('photo_id') as string;
+    const taggedParticipantId = formData.get('tagged_participant_id') as string;
+
+    // Verify photo ownership
+    const { data: photo } = await supabaseAdmin
+      .from('participant_photos')
+      .select('participant_id')
+      .eq('id', photoId)
+      .single();
+
+    if (!photo || photo.participant_id !== userId) {
+      return { error: 'You can only remove tags from your own photos' };
+    }
+
+    // Remove tag
+    const { error: untagError } = await supabaseAdmin
+      .from('photo_tags')
+      .delete()
+      .eq('photo_id', photoId)
+      .eq('participant_id', taggedParticipantId);
+
+    if (untagError) {
+      return { error: 'Failed to remove tag' };
+    }
+
+    return { success: true, message: 'Tag removed!' };
+  }
+
   if (action === 'upload') {
     const file = formData.get('image') as File;
     const caption = formData.get('caption') as string;
@@ -211,12 +307,13 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Gallery() {
-  const { photos, myPhotos, userId } = useLoaderData<typeof loader>();
+  const { photos, myPhotos, userId, buddies } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const revalidator = useRevalidator();
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  const [showTagging, setShowTagging] = useState(false);
   
   // Touch/swipe state for lightbox
   const touchStartX = useRef<number>(0);
@@ -476,6 +573,24 @@ export default function Gallery() {
                           ⏳ Wacht op goedkeuring
                         </div>
                       )}
+                      {photo.photo_tags && photo.photo_tags.length > 0 && (
+                        <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+                          {photo.photo_tags.slice(0, 3).map((tag: any) => (
+                            <div 
+                              key={tag.participant_id}
+                              className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center gap-1"
+                            >
+                              <Icon name="user" className="w-3 h-3" />
+                              {tag.participant?.first_name}
+                            </div>
+                          ))}
+                          {photo.photo_tags.length > 3 && (
+                            <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
+                              +{photo.photo_tags.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Caption Area - Handwritten Style */}
@@ -576,27 +691,115 @@ export default function Gallery() {
                 alt={lightboxPhoto.caption}
                 className="max-h-[70vh] max-w-[80vw] h-auto w-auto mx-auto rounded-lg shadow-2xl object-contain"
               />
-              {lightboxPhoto.caption && (
-                <div className="mt-6 bg-white/10 backdrop-blur-md rounded-lg p-6">
-                  <p className="text-white text-lg mb-2">{lightboxPhoto.caption}</p>
-                  <div className="flex items-center justify-between text-white/70 text-sm">
-                    <span>{lightboxPhoto.participant?.first_name} {lightboxPhoto.participant?.last_name}</span>
-                    <div className="flex items-center gap-4">
-                      {lightboxPhoto.location && (
-                        <span className="flex items-center gap-1">
-                          <Icon name="marker" className="w-4 h-4" />
-                          {lightboxPhoto.location}
-                        </span>
-                      )}
-                      {displayPhotos.length > 1 && (
-                        <span className="text-xs">
-                          {displayPhotos.findIndex((p: any) => p.id === lightboxPhoto.id) + 1} / {displayPhotos.length}
-                        </span>
-                      )}
+              <div className="mt-6 space-y-4">
+                {lightboxPhoto.caption && (
+                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
+                    <p className="text-white text-lg mb-2">{lightboxPhoto.caption}</p>
+                    <div className="flex items-center justify-between text-white/70 text-sm">
+                      <span>{lightboxPhoto.participant?.first_name} {lightboxPhoto.participant?.last_name}</span>
+                      <div className="flex items-center gap-4">
+                        {lightboxPhoto.location && (
+                          <span className="flex items-center gap-1">
+                            <Icon name="marker" className="w-4 h-4" />
+                            {lightboxPhoto.location}
+                          </span>
+                        )}
+                        {displayPhotos.length > 1 && (
+                          <span className="text-xs">
+                            {displayPhotos.findIndex((p: any) => p.id === lightboxPhoto.id) + 1} / {displayPhotos.length}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Tagged People */}
+                {lightboxPhoto.photo_tags && lightboxPhoto.photo_tags.length > 0 && (
+                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Icon name="users" className="w-4 h-4 text-white" />
+                      <span className="text-white text-sm font-semibold">In deze foto:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {lightboxPhoto.photo_tags.map((tag: any) => (
+                        <div key={tag.participant_id} className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1.5">
+                          <Icon name="user" className="w-4 h-4 text-white" />
+                          <span className="text-white text-sm">
+                            {tag.participant?.first_name} {tag.participant?.last_name}
+                          </span>
+                          {lightboxPhoto.participant_id === userId && (
+                            <Form method="post" className="inline">
+                              <input type="hidden" name="action" value="untag" />
+                              <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
+                              <input type="hidden" name="tagged_participant_id" value={tag.participant_id} />
+                              <button
+                                type="submit"
+                                className="text-white/70 hover:text-white transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Icon name="x" className="w-3 h-3" />
+                              </button>
+                            </Form>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tag Interface - Only for photo owner */}
+                {lightboxPhoto.participant_id === userId && (
+                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTagging(!showTagging);
+                      }}
+                      className="flex items-center gap-2 text-white hover:text-white/80 transition-colors text-sm font-semibold mb-3"
+                    >
+                      <Icon name="user-plus" className="w-4 h-4" />
+                      {showTagging ? 'Sluiten' : 'Tag Naftgenoot'}
+                    </button>
+
+                    {showTagging && (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {buddies.length === 0 ? (
+                          <p className="text-white/70 text-sm">Je hebt nog geen naftgenoten om te taggen</p>
+                        ) : (
+                          buddies.map((buddy: any) => {
+                            const isTagged = lightboxPhoto.photo_tags?.some(
+                              (tag: any) => tag.participant_id === buddy.buddy_id
+                            );
+                            return (
+                              <Form method="post" key={buddy.buddy_id} onClick={(e) => e.stopPropagation()}>
+                                <input type="hidden" name="action" value="tag" />
+                                <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
+                                <input type="hidden" name="tagged_participant_id" value={buddy.buddy_id} />
+                                <button
+                                  type="submit"
+                                  disabled={isTagged}
+                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
+                                    isTagged
+                                      ? 'bg-white/5 text-white/50 cursor-not-allowed'
+                                      : 'bg-white/20 hover:bg-white/30 text-white'
+                                  }`}
+                                >
+                                  <Icon name="user" className="w-4 h-4" />
+                                  <span>{buddy.buddy?.first_name} {buddy.buddy?.last_name}</span>
+                                  {isTagged && (
+                                    <Icon name="check" className="w-4 h-4 ml-auto" />
+                                  )}
+                                </button>
+                              </Form>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
