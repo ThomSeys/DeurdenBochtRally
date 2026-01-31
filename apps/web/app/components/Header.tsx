@@ -36,6 +36,19 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isClient]);
 
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (userMenuOpen || mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [userMenuOpen, mobileMenuOpen]);
+
   const isTransparent = transparent && !isScrolled && isClient;
 
   return (
@@ -119,12 +132,12 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
       {/* Desktop User Menu Flyout */}
       <>
         <div
-          className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`fixed inset-0 z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isTransparent ? 'bg-black/40 backdrop-blur-md h-[100vh]' : 'bg-black/30 backdrop-blur-sm'}`}
           onClick={() => setUserMenuOpen(false)}
         />
         {user && (
-          <div className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out ${userMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-            <div className="h-full flex flex-col">
+          <div className={`fixed top-0 right-0 h-screen w-80 shadow-2xl z-[1110] transform transition-transform duration-300 ease-out ${userMenuOpen ? 'translate-x-0' : 'translate-x-full'} bg-white`}>
+            <div className="h-full flex flex-col bg-white">
               {/* Header */}
               <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -237,11 +250,11 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
       {/* Mobile Menu Flyout */}
       <>
         <div
-          className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[1100] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`fixed inset-0 z-[1100] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isTransparent ? 'bg-black/40 backdrop-blur-md' : 'bg-black/30 backdrop-blur-sm'}`}
           onClick={() => setMobileMenuOpen(false)}
         />
-        <div className={`fixed top-0 right-0 h-[100vh] w-80 max-w-[85vw] bg-white shadow-2xl z-[1110] transform transition-transform duration-300 ease-out md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-            <div className="h-full flex flex-col">
+        <div className={`fixed top-0 right-0 h-screen w-80 max-w-[85vw] shadow-2xl z-[1110] transform transition-transform duration-300 ease-out md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} bg-white`}>
+            <div className="h-full flex flex-col bg-white">
               {/* Header */}
               <div className="bg-gradient-to-br from-primary-600 to-primary-700 border-b border-gray-200 p-6 flex items-center justify-between">
                 {user ? (
