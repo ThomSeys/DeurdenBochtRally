@@ -191,8 +191,10 @@ export async function action({ request }: ActionFunctionArgs) {
               tag: 'buddy-checkin',
             },
             {
+              title: 'Groeps Check-in! 🏍️',
+              body: `${checkerInfo?.first_name} ${checkerInfo?.last_name} heeft je ingecheckt bij ${zoneInfo?.title || 'een zone'}`,
               eventType: 'buddy_checkin',
-              targetType: 'individual',
+              targetType: 'single',
               sentBy: userId,
               eventData: { zone_id: zoneId, checked_in_by: userId },
             }
