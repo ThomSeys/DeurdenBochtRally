@@ -239,49 +239,49 @@ function AlertCard({ alert, onShowDetails }: { alert: any; onShowDetails: () => 
   };
 
   return (
-    <div className={`border-2 rounded-lg p-6 ${statusColors[alert.status as keyof typeof statusColors]}`}>
-      <div className="flex items-start justify-between mb-4">
+    <div className={`border-2 rounded-sm p-4 sm:p-6 ${statusColors[alert.status as keyof typeof statusColors]}`}>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 mb-4">
         <div className="flex items-center gap-3">
-          <Icon name="alert-triangle" className="w-8 h-8" />
-          <div>
-            <h3 className="text-lg font-bold">
+          <Icon name="alert-triangle" className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg font-bold truncate">
               {participant?.first_name} {participant?.last_name}
             </h3>
-            <p className="text-sm opacity-75">
+            <p className="text-xs sm:text-sm opacity-75">
               {new Date(alert.created_at).toLocaleString('nl-NL')}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={onShowDetails}
-            className="px-3 py-1.5 bg-white/70 hover:bg-white rounded text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 bg-white/70 hover:bg-white rounded-sm text-xs sm:text-sm font-medium transition-colors flex items-center gap-2"
           >
             <Icon name="user" className="w-4 h-4" />
-            Details
+            <span className="hidden sm:inline">Details</span>
           </button>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase bg-white/50">
+          <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold uppercase bg-white/50">
             {alert.status}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
         <div>
-          <p className="text-sm font-semibold mb-1">Contactinfo</p>
-          <p className="text-sm">{participant?.email}</p>
-          {participant?.phone && <p className="text-sm">{participant.phone}</p>}
+          <p className="text-xs sm:text-sm font-semibold mb-1">Contactinfo</p>
+          <p className="text-xs sm:text-sm break-words">{participant?.email}</p>
+          {participant?.phone && <p className="text-xs sm:text-sm">{participant.phone}</p>}
         </div>
         <div>
-          <p className="text-sm font-semibold mb-1">Locatie</p>
-          <p className="text-sm">
+          <p className="text-xs sm:text-sm font-semibold mb-1">Locatie</p>
+          <p className="text-xs sm:text-sm break-all">
             Lat: {alert.location_lat}, Lng: {alert.location_lng}
           </p>
           <a
             href={`https://www.google.com/maps?q=${alert.location_lat},${alert.location_lng}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm underline hover:no-underline inline-flex items-center gap-1"
+            className="text-xs sm:text-sm underline hover:no-underline inline-flex items-center gap-1"
           >
             Bekijk op kaart <Icon name="external-link" className="w-3 h-3" />
           </a>
@@ -289,39 +289,39 @@ function AlertCard({ alert, onShowDetails }: { alert: any; onShowDetails: () => 
       </div>
 
       {alert.resolution_notes && (
-        <div className="mb-4 p-3 bg-white/50 rounded">
-          <p className="text-sm font-semibold mb-1">Oplossingsnotities</p>
-          <p className="text-sm">{alert.resolution_notes}</p>
+        <div className="mb-4 p-3 bg-white/50 rounded-sm">
+          <p className="text-xs sm:text-sm font-semibold mb-1">Oplossingsnotities</p>
+          <p className="text-xs sm:text-sm break-words">{alert.resolution_notes}</p>
         </div>
       )}
 
       {alert.status !== 'resolved' && (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           {alert.status === 'active' && (
             <Form method="post">
               <input type="hidden" name="intent" value="acknowledge" />
               <input type="hidden" name="alertId" value={alert.id} />
               <button
                 type="submit"
-                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-medium"
+                className="w-full sm:w-auto px-4 py-2 bg-yellow-600 text-white rounded-sm hover:bg-yellow-700 text-sm font-medium"
               >
                 Bevestigen
               </button>
             </Form>
           )}
-          <Form method="post" className="flex-1">
+          <Form method="post" className="flex-1 w-full sm:w-auto">
             <input type="hidden" name="intent" value="resolve" />
             <input type="hidden" name="alertId" value={alert.id} />
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 name="notes"
                 placeholder="Oplossingsnotities (optioneel)"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-sm text-sm"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium whitespace-nowrap"
+                className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700 text-sm font-medium whitespace-nowrap"
               >
                 Markeer als Opgelost
               </button>
@@ -343,68 +343,68 @@ function ParticipantDetailsModal({ alert, onClose }: { alert: any; onClose: () =
 
   return (
     <div className="fixed z-[1200] inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-sm max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-white">
+      <div className="bg-white rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-white truncate">
               {participant?.first_name} {participant?.last_name}
             </h2>
-            <p className="text-sm text-gray-200 mt-1">
+            <p className="text-xs sm:text-sm text-gray-200 mt-1">
               SOS Melding - {new Date(alert.created_at).toLocaleString('nl-BE')}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-200 hover:text-gray-600 text-2xl"
+            className="text-gray-200 hover:text-white text-2xl ml-4 flex-shrink-0"
           >
             ×
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Participant Info */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Deelnemer Gegevens</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Deelnemer Gegevens</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-500">Email</label>
-                <p className="text-gray-900">{participant?.email}</p>
+                <p className="text-gray-900 text-sm break-words">{participant?.email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Telefoon</label>
                 {participant?.phone ? (
                   <button
                     onClick={() => callNumber(participant.phone)}
-                    className="text-primary-600 hover:text-blue-700 font-medium"
+                    className="text-primary-600 hover:text-blue-700 font-medium text-sm"
                   >
                     {participant.phone}
                   </button>
                 ) : (
-                  <p className="text-gray-400">Geen telefoon</p>
+                  <p className="text-gray-400 text-sm">Geen telefoon</p>
                 )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Motor Merk</label>
-                <p className="text-gray-900">{participant?.motorcycle_brand}</p>
+                <p className="text-gray-900 text-sm">{participant?.motorcycle_brand}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Motor Model</label>
-                <p className="text-gray-900">{participant?.motorcycle_model}</p>
+                <p className="text-gray-900 text-sm">{participant?.motorcycle_model}</p>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="text-sm font-medium text-gray-500">Kenteken</label>
-                <p className="text-gray-900">{participant?.license_plate}</p>
+                <p className="text-gray-900 text-sm">{participant?.license_plate}</p>
               </div>
             </div>
           </div>
 
           {/* GPS Location */}
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">GPS Locatie</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">GPS Locatie</h3>
             <div className="space-y-2">
               <div>
                 <label className="text-sm font-medium text-gray-500">Coördinaten</label>
-                <p className="text-gray-900 font-mono text-sm">
+                <p className="text-gray-900 font-mono text-xs sm:text-sm break-all">
                   {alert.location_lat}, {alert.location_lng}
                 </p>
               </div>
@@ -422,27 +422,27 @@ function ParticipantDetailsModal({ alert, onClose }: { alert: any; onClose: () =
 
           {/* Emergency Contacts */}
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">
               Noodcontacten ({emergencyContacts.length})
             </h3>
             {emergencyContacts.length > 0 ? (
               <div className="space-y-3">
                 {emergencyContacts.map((contact: any) => (
-                  <div key={contact.id} className="bg-gray-50 rounded-sm p-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div key={contact.id} className="bg-gray-50 rounded-sm p-3 sm:p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <label className="text-sm font-medium text-gray-500">Naam</label>
-                        <p className="text-gray-900 font-medium">{contact.name}</p>
+                        <p className="text-gray-900 font-medium text-sm">{contact.name}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">Relatie</label>
-                        <p className="text-gray-900">{contact.relationship || '-'}</p>
+                        <p className="text-gray-900 text-sm">{contact.relationship || '-'}</p>
                       </div>
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <label className="text-sm font-medium text-gray-500">Telefoon</label>
                         <button
                           onClick={() => callNumber(contact.phone)}
-                          className="text-primary-600 hover:text-blue-700 font-medium"
+                          className="text-primary-600 hover:text-blue-700 font-medium text-sm break-all"
                         >
                           {contact.phone}
                         </button>
@@ -454,8 +454,8 @@ function ParticipantDetailsModal({ alert, onClose }: { alert: any; onClose: () =
             ) : (
               <div className="bg-red-50 border border-red-200 rounded-sm p-4 text-center">
                 <Icon name="alert-triangle" className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                <p className="text-red-600 font-medium">Geen noodcontacten beschikbaar</p>
-                <p className="text-sm text-red-500 mt-1">Deze deelnemer heeft geen noodcontacten ingevuld</p>
+                <p className="text-red-600 font-medium text-sm">Geen noodcontacten beschikbaar</p>
+                <p className="text-xs sm:text-sm text-red-500 mt-1">Deze deelnemer heeft geen noodcontacten ingevuld</p>
               </div>
             )}
           </div>
@@ -463,9 +463,9 @@ function ParticipantDetailsModal({ alert, onClose }: { alert: any; onClose: () =
           {/* Resolution Notes */}
           {alert.resolution_notes && (
             <div className="pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Oplossingsnotities</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Oplossingsnotities</h3>
               <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-                <p className="text-gray-700">{alert.resolution_notes}</p>
+                <p className="text-gray-700 text-sm">{alert.resolution_notes}</p>
               </div>
             </div>
           )}
