@@ -4,6 +4,7 @@ import { NotificationBell } from './NotificationBell';
 import { Icon } from '~/components/Icon';
 import { EmergencySOSButton } from './EmergencySOSButton';
 import { useFeatureFlags } from '~/contexts/FeatureFlagsContext';
+import { startOnboardingTour } from './OnboardingTour';
 
 export default function Header({ transparent, fixed }: { transparent?: boolean; fixed?: boolean }) {
   const matches = useMatches();
@@ -21,6 +22,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
   const liveMapEnabled = isEnabled('live-map-enabled');
   const adminDashboardEnabled = isEnabled('admin-dashboard-enabled');
   const emergencySosEnabled = isEnabled('emergency-sos-enabled');
+  const onboardingTourEnabled = isEnabled('onboarding-tour-enabled');
 
   // Check if live map should be visible (event day or admin)
   const isEventDay = new Date().toISOString().split('T')[0] === eventDate;
@@ -201,6 +203,20 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Icon name="user" className="w-5 h-5" />
                     <span>Mijn Profiel</span>
                   </Link>
+                  
+                  {/* Help / Tour Button */}
+                  {onboardingTourEnabled && (
+                    <button
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium w-full text-left"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setTimeout(() => startOnboardingTour(), 300);
+                      }}
+                    >
+                      <Icon name="info" className="w-5 h-5" />
+                      <span>Rondleiding</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Emergency Button */}
@@ -342,6 +358,20 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                         <Icon name="user" className="w-5 h-5" />
                         <span>Mijn Profiel</span>
                       </Link>
+                      
+                      {/* Help / Tour Button */}
+                      {onboardingTourEnabled && (
+                        <button
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium w-full text-left"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setTimeout(() => startOnboardingTour(), 300);
+                          }}
+                        >
+                          <Icon name="info" className="w-5 h-5" />
+                          <span>Rondleiding</span>
+                        </button>
+                      )}
 
                       {/* Emergency Button */}
                       {emergencySosEnabled && (

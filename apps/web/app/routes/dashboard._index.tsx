@@ -9,6 +9,7 @@ import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { OnboardingTour, startOnboardingTour } from '~/components/OnboardingTour';
 
 declare global {
   interface Window {
@@ -73,6 +74,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const achievementsEnabled = await isFeatureEnabled('achievements-enabled');
   const profileEditingEnabled = await isFeatureEnabled('profile-editing-enabled');
   const pushNotificationsEnabled = await isFeatureEnabled('push-notifications-enabled');
+  const onboardingTourEnabled = await isFeatureEnabled('onboarding-tour-enabled');
 
   return { 
     user, 
@@ -88,13 +90,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     rideStoriesEnabled, 
     achievementsEnabled,
     profileEditingEnabled, 
-    pushNotificationsEnabled, 
+    pushNotificationsEnabled,
+    onboardingTourEnabled, 
     routePreference: user.route_preference || 'adventure', // Default to adventure
   };
 }
 
 export default function Dashboard() {
-  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled } = useLoaderData<typeof loader>();
+  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, onboardingTourEnabled } = useLoaderData<typeof loader>();
 
   console.log("🚀 ~ Dashboard ~ routePreference:", routePreference);
 
@@ -134,6 +137,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {onboardingTourEnabled && <OnboardingTour />}
       <Header />
 
       <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
@@ -150,7 +154,7 @@ export default function Dashboard() {
 
         {/* Push Notifications Setup Banner - Only show if not subscribed */}
         {pushNotificationsEnabled && !isNotificationSubscribed && (
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-sm shadow p-6 mb-8">
+        <div data-tour="notifications" className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-sm shadow p-6 mb-8">
           <div className="flex items-start gap-4">
             <Icon name="bell" className="w-10 h-10 flex-shrink-0 text-blue-600" />
             <div className="flex-1">
@@ -351,7 +355,7 @@ export default function Dashboard() {
 
         {/* Main CTA - Rally Submission (only for rally_zones preference) */}
         {rallyZonesEnabled && routePreference === 'adventure' && (
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
+          <div data-tour="route-preference" className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-sm shadow-xl p-6 md:p-8 text-white mb-8 transition-all hover:shadow-2xl border-2 border-primary-500">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
               <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
                 <Icon name="flag" className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0" />
@@ -411,7 +415,7 @@ export default function Dashboard() {
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
-          <div className="bg-white rounded-sm shadow p-6">
+          <div data-tour="profile-section" className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Icon name="check" className="w-6 h-6 text-green-600" />
               Inschrijving
@@ -433,7 +437,7 @@ export default function Dashboard() {
           </div>
 
           {/* QR Code */}
-          <div className="bg-white rounded-sm shadow p-6">
+          <div data-tour="qr-code" className="bg-white rounded-sm shadow p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Icon name="phone" className="w-6 h-6 text-primary-600" />
               QR-code
@@ -468,7 +472,7 @@ export default function Dashboard() {
 
           {/* Rally Progress */}
           {rallyZonesEnabled && routePreference === 'adventure' && (
-            <div className="bg-white rounded-sm shadow p-6">
+            <div data-tour="rally-zones" className="bg-white rounded-sm shadow p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Icon name="map" className="w-6 h-6 text-primary-600" />
                 Rally Avontuur
@@ -506,6 +510,7 @@ export default function Dashboard() {
           {photoGalleryEnabled && (
             <Link
               to="/gallery"
+              data-tour="gallery"
               className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
             >
               <Icon name="camera" className="w-16 h-16 mb-3" />
@@ -519,6 +524,7 @@ export default function Dashboard() {
           {rideStoriesEnabled && (
             <Link
               to="/dashboard/blog"
+              data-tour="ride-stories"
               className="bg-gradient-to-br from-orange-500 to-red-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
             >
               <Icon name="book-open" className="w-16 h-16 mb-3" />
@@ -617,7 +623,7 @@ export default function Dashboard() {
         </div>
 
         {/* Documents Section */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div data-tour="documents" className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Live Map - ONLY visible on event day or for admins */}
           {(user.is_admin || new Date().toISOString().split('T')[0] === eventDate) && (
             <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-sm shadow-lg p-6 text-white md:col-span-2">
