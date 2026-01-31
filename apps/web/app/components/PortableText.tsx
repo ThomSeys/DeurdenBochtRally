@@ -29,7 +29,7 @@ const components = {
   },
   marks: {
     strong: ({ children }: any) => (
-      <strong className="font-extrabold text-primary-600 text-xl !font-extrabold !text-primary-600">{children}</strong>
+      <strong className="font-extrabold text-primary-600 text-sm !font-extrabold !text-primary-600">{children}</strong>
     ),
     em: ({ children }: any) => (
       <em className="not-italic font-medium text-primary-600 text-lg !not-italic !font-medium !text-primary-600">{children}</em>
