@@ -14,6 +14,7 @@ import "./app.css";
 import { getUser } from "~/lib/session.server";
 import { requireSitePassword } from "~/lib/site-password.server";
 import { getFeatureFlags } from "~/lib/feature-flags.server";
+import { getSiteConfig } from "~/lib/sanity.server";
 import CookieBanner from "~/components/CookieBanner";
 import RallySubmissionFAB from "~/components/RallySubmissionFAB";
 import { EmergencySOSButton } from "~/components/EmergencySOSButton";
@@ -59,10 +60,15 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Get feature flags from Sanity
   const featureFlags = await getFeatureFlags();
   
+  // Get site config for event date
+  const siteConfig = await getSiteConfig();
+  const eventDate = siteConfig?.eventDate || '2026-05-16';
+  
   return { 
     user,
     csrfToken,
     featureFlags,
+    eventDate,
   };
 }
 

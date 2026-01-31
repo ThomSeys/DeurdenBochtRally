@@ -9,6 +9,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
   const matches = useMatches();
   const rootMatch = matches.find(m => m.id === 'root');
   const user = (rootMatch?.data as any)?.user;
+  const eventDate = (rootMatch?.data as any)?.eventDate || '2026-05-16';
   const { isEnabled } = useFeatureFlags();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -20,6 +21,10 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
   const liveMapEnabled = isEnabled('live-map-enabled');
   const adminDashboardEnabled = isEnabled('admin-dashboard-enabled');
   const emergencySosEnabled = isEnabled('emergency-sos-enabled');
+
+  // Check if live map should be visible (event day or admin)
+  const isEventDay = new Date().toISOString().split('T')[0] === eventDate;
+  const showLiveMap = liveMapEnabled && (isEventDay || user?.is_admin);
 
   useEffect(() => {
     setIsClient(true);
@@ -170,7 +175,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       <span>Rally Zones</span>
                     </Link>
                   )}
-                  {liveMapEnabled && (
+                  {showLiveMap && (
                     <Link
                       to="/live-map"
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -311,7 +316,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                           <span>Rally Zones</span>
                         </Link>
                       )}
-                      {liveMapEnabled && (
+                      {showLiveMap && (
                         <Link
                           to="/live-map"
                           className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"

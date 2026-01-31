@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { type LoaderFunctionArgs } from 'react-router';
-import { useLoaderData, useRevalidator } from 'react-router';
+import { useLoaderData, useRevalidator, redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { sanityClient, getActiveEdition } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
@@ -24,7 +24,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Only allow access on event day OR if user is admin
   if (!isEventDay && !isAdmin) {
-    throw new Response('Live map is only available on the event day', { status: 403 });
+    console.info('[live-map] access denied - not event day and not admin');
+    throw redirect('/dashboard');
   }
 
   // Fetch rally zones with GPX routes (Concept B)

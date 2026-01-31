@@ -46,7 +46,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Get unique zone IDs that user has checked into
   const checkedZoneIds = new Set(checkIns?.map(c => c.zone_id) || []);
 
-  return { zones, checkedZoneIds: Array.from(checkedZoneIds), user };
+  // Get check-in counts per zone
+  const { data: zoneCounts } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('zone_id');
+  
+  // Count check-ins per zone
+  const zoneCheckInCounts: Record<string, number> = {};
+  zoneCounts?.forEach((record: any) => {
+    zoneCheckInCounts[record.zone_id] = (zoneCheckInCounts[record.zone_id] || 0) + 1;
+  });
+
+  return { zones, checkedZoneIds: Array.from(checkedZoneIds), user, zoneCheckInCounts };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -129,7 +140,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function RallySubmission() {
-  const { zones, checkedZoneIds, user } = useLoaderData<typeof loader>();
+  const { zones, checkedZoneIds, user, zoneCheckInCounts } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
@@ -388,6 +399,11 @@ export default function RallySubmission() {
                         <span>Moeilijkheid: {zone.difficulty}</span>
                       </div>
                     )}
+                    {/* Show number of check-ins */}
+                    <div className="flex items-center gap-2 text-sm text-primary-600 font-semibold">
+                      <Icon name="users" className="w-4 h-4" />
+                      <span>{zoneCheckInCounts[zone._id] || 0} deelnemers ingecheckt</span>
+                    </div>
                   </div>
 
                   {/* Check-in Button */}

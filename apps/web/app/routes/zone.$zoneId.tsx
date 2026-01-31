@@ -144,6 +144,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   // Get user's check-in for this zone
   let checkIns = null;
+  let totalCheckInsCount = 0;
   if (user) {
     const { data } = await supabaseAdmin
       .from('rally_zone_checkins')
@@ -153,6 +154,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
       .order('checked_in_at', { ascending: false });
     
     checkIns = data;
+
+    // Get total number of check-ins for this zone
+    const { count } = await supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('*', { count: 'exact', head: true })
+      .eq('zone_id', zone._id);
+    
+    totalCheckInsCount = count || 0;
   }
 
   return { 
@@ -160,12 +169,13 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     nextZone,
     user,
     checkIns,
-    zoneNumber: zoneOrder
+    zoneNumber: zoneOrder,
+    totalCheckInsCount
   };
 }
 
 export default function ZonePage() {
-  const { zone, nextZone, user, checkIns, zoneNumber } = useLoaderData<typeof loader>();
+  const { zone, nextZone, user, checkIns, zoneNumber, totalCheckInsCount } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
