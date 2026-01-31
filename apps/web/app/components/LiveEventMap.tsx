@@ -550,7 +550,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
               ? `${participant.first_name} ${participant.last_name}` 
               : 'Onbekende Deelnemer';
 
-            L.default.marker([alert.latitude, alert.longitude], { icon: emergencyIcon })
+            L.default.marker([alert.location_lat, alert.location_lng], { icon: emergencyIcon })
               .addTo(mapRef.current)
               .bindPopup(`
                 <div style="min-width: 260px; max-width: 300px;">
