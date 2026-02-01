@@ -358,18 +358,29 @@ export default function Gallery() {
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
 
-  // Revalidate data after like action succeeds
+  // Revalidate data after actions succeed and update lightbox photo
   useEffect(() => {
     if (actionData?.success) {
-      console.info('[gallery] like successful, revalidating data');
+      console.info('[gallery] action successful, revalidating data');
       revalidator.revalidate();
     }
   }, [actionData?.success, revalidator]);
+
 
   // Filter photos: 'mine' shows user's photos (all statuses), 'all' shows only approved photos
   const displayPhotos = filter === 'mine' 
     ? myPhotos 
     : photos.filter((p: any) => p.is_approved);
+
+  // Update lightbox photo after revalidation to show new tags
+  useEffect(() => {
+    if (lightboxPhoto && revalidator.state === 'idle') {
+      const updatedPhoto = displayPhotos.find((p: any) => p.id === lightboxPhoto.id);
+      if (updatedPhoto) {
+        setLightboxPhoto(updatedPhoto);
+      }
+    }
+  }, [revalidator.state, displayPhotos]);
 
   const navigateLightbox = (direction: 'prev' | 'next') => {
     if (!lightboxPhoto) return;
@@ -543,27 +554,27 @@ export default function Gallery() {
         )}
 
         {/* Filter Tabs */}
-        <div className="flex justify-center gap-4 mb-12">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8 md:mb-12 px-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-8 py-3 rounded-full font-semibold transition-all ${
+            className={`px-6 sm:px-8 py-3 rounded-full font-semibold transition-all min-h-[44px] ${
               filter === 'all'
                 ? 'bg-white text-primary-600 shadow-lg'
                 : 'bg-white/50 text-gray-600 hover:bg-white hover:shadow-md'
             }`}
           >
-            <Icon name="users" className="w-5 h-5 inline mr-2" />
+            <Icon name="users" className="w-4 h-4 sm:w-5 sm:h-5 inline mr-2" />
             Alle Foto's ({photos.length})
           </button>
           <button
             onClick={() => setFilter('mine')}
-            className={`px-8 py-3 rounded-full font-semibold transition-all ${
+            className={`px-6 sm:px-8 py-3 rounded-full font-semibold transition-all min-h-[44px] ${
               filter === 'mine'
                 ? 'bg-white text-primary-600 shadow-lg'
                 : 'bg-white/50 text-gray-600 hover:bg-white hover:shadow-md'
             }`}
           >
-            <Icon name="user" className="w-5 h-5 inline mr-2" />
+            <Icon name="user" className="w-4 h-4 sm:w-5 sm:h-5 inline mr-2" />
             Mijn Foto's ({myPhotos.length})
           </button>
         </div>
@@ -585,7 +596,7 @@ export default function Gallery() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {displayPhotos.map((photo: any) => {
               return (
                 <div
@@ -687,9 +698,9 @@ export default function Gallery() {
             {/* Close button */}
             <button
               onClick={() => setLightboxPhoto(null)}
-              className="absolute top-4 right-4 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
             >
-              <Icon name="x" className="w-6 h-6" />
+              <Icon name="x" className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
             {/* Previous button */}
@@ -699,9 +710,9 @@ export default function Gallery() {
                   e.stopPropagation();
                   navigateLightbox('prev');
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
               >
-                <Icon name="chevron-left" className="w-6 h-6" />
+                <Icon name="chevron-left" className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             )}
 
@@ -712,38 +723,44 @@ export default function Gallery() {
                   e.stopPropagation();
                   navigateLightbox('next');
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
               >
-                <Icon name="chevron-right" className="w-6 h-6" />
+                <Icon name="chevron-right" className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             )}
 
             <div 
-              className="max-w-4xl w-full touch-pan-y" 
+              className="max-w-4xl w-full touch-pan-y px-2 sm:px-4" 
               onClick={(e) => e.stopPropagation()}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
               {/* Image with overlays */}
-              <div className="relative mx-auto" style={{ maxWidth: '80vw', maxHeight: '70vh' }}>
+              <div className="relative mx-auto" style={{ maxWidth: '90vw', maxHeight: '70vh' }}>
                 <img
                   src={lightboxPhoto.image_url}
                   alt={lightboxPhoto.caption}
-                  className="max-h-[70vh] max-w-[80vw] h-auto w-auto mx-auto rounded-lg shadow-2xl object-contain"
+                  className="max-h-[70vh] max-w-[90vw] h-auto w-auto mx-auto rounded-lg shadow-2xl object-contain"
                 />
                 
                 {/* Tagged People Overlay - Bottom Left */}
                 {lightboxPhoto.photo_tags && lightboxPhoto.photo_tags.length > 0 && (
-                  <div className="absolute bottom-2 left-8 flex flex-col gap-2">
+                  <div 
+                    className="absolute bottom-2 left-2 sm:left-8 flex flex-col gap-2 max-w-[90%] z-20"
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                  >
                     {lightboxPhoto.photo_tags.map((tag: any) => (
-                      <div key={tag.participant_id} className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-full px-3 py-2">
-                        <Icon name="user" className="w-4 h-4 text-white" />
-                        <span className="text-white text-sm font-medium">
+                      <div key={tag.participant_id} className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-full px-2 sm:px-3 py-1.5 sm:py-2">
+                        <Icon name="user" className="w-3 h-3 sm:w-4 sm:h-4 text-white flex-shrink-0" />
+                        <span className="text-white text-xs sm:text-sm font-medium truncate">
                           {tag.participant?.first_name} {tag.participant?.last_name}
                         </span>
                         {lightboxPhoto.participant_id === userId && (
-                          <Form method="post" className="inline">
+                          <Form method="post" className="inline" onClick={(e) => e.stopPropagation()}>
                             <input type="hidden" name="action" value="untag" />
                             <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
                             <input type="hidden" name="tagged_participant_id" value={tag.participant_id} />
@@ -763,20 +780,26 @@ export default function Gallery() {
 
                 {/* Tag Interface Overlay - Only for photo owner */}
                 {lightboxPhoto.participant_id === userId && (
-                  <div className="absolute bottom-4 right-8">
+                  <div 
+                    className="absolute bottom-2 sm:bottom-4 right-2 sm:right-8 z-20" 
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowTagging(!showTagging);
                       }}
-                      className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-full font-semibold transition-all shadow-lg text-sm"
+                      className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-3 sm:px-4 py-2 rounded-full font-semibold transition-all shadow-lg text-xs sm:text-sm min-h-[44px]"
                     >
                       <Icon name="user-plus" className="w-4 h-4" />
                       {showTagging ? 'Sluiten' : 'Tag'}
                     </button>
 
                     {showTagging && (
-                      <div className="absolute bottom-full right-0 mb-2 w-64 max-h-64 overflow-y-auto bg-black/90 backdrop-blur-md rounded-lg shadow-2xl">
+                      <div className="absolute bottom-full right-0 mb-2 w-56 sm:w-64 max-h-56 sm:max-h-64 overflow-y-auto bg-black/90 backdrop-blur-md rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className="p-3 space-y-2">
                           {buddies.length === 0 ? (
                             <p className="text-white/70 text-sm px-2 py-4 text-center">Je hebt nog geen naftgenoten om te taggen</p>

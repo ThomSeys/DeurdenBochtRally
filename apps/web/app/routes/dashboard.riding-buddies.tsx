@@ -292,25 +292,25 @@ export default function RidingBuddies() {
             <div className="divide-y divide-gray-200">
               {pendingReceived.map((request: any) => (
                 <div key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4 flex-1">
                       {request.requester.profile_photo_url ? (
                         <img
                           src={request.requester.profile_photo_url}
                           alt={request.requester.first_name}
-                          className="w-14 h-14 rounded-full object-cover"
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center">
-                          <Icon name="user" className="w-7 h-7 text-yellow-600" />
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Icon name="user" className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-600" />
                         </div>
                       )}
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                           {request.requester.first_name} {request.requester.last_name}
                         </h3>
-                        <p className="text-gray-600 text-sm">{request.requester.email}</p>
-                        <p className="text-gray-600 text-sm">
+                        <p className="text-gray-600 text-sm truncate">{request.requester.email}</p>
+                        <p className="text-gray-600 text-sm truncate">
                           {request.requester.motorcycle_brand} {request.requester.motorcycle_model}
                         </p>
                         {request.requester.route_preference && (
@@ -325,25 +325,25 @@ export default function RidingBuddies() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Form method="post">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Form method="post" className="flex-1">
                         <input type="hidden" name="action" value="accept" />
                         <input type="hidden" name="buddyId" value={request.participant_id} />
                         <button
                           type="submit"
                           disabled={navigation.state !== 'idle'}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                          className="w-full px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 min-h-[44px]"
                         >
                           Accepteer
                         </button>
                       </Form>
-                      <Form method="post">
+                      <Form method="post" className="flex-1">
                         <input type="hidden" name="action" value="reject" />
                         <input type="hidden" name="buddyId" value={request.participant_id} />
                         <button
                           type="submit"
                           disabled={navigation.state !== 'idle'}
-                          className="px-4 py-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50"
+                          className="w-full px-4 py-3 sm:py-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
                         >
                           Weiger
                         </button>
@@ -367,38 +367,38 @@ export default function RidingBuddies() {
             </div>
             <div className="divide-y divide-gray-200">
               {pendingSent.map((request: any) => (
-                <div key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <div key={request.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
                       {request.buddy.profile_photo_url ? (
                         <img
                           src={request.buddy.profile_photo_url}
                           alt={request.buddy.first_name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
                           <Icon name="user" className="w-6 h-6 text-gray-400" />
                         </div>
                       )}
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">
                           {request.buddy.first_name} {request.buddy.last_name}
                         </h3>
-                        <p className="text-gray-600 text-sm">{request.buddy.email}</p>
+                        <p className="text-gray-600 text-sm truncate">{request.buddy.email}</p>
                         <p className="text-yellow-600 text-xs mt-1 flex items-center gap-1">
                           <Icon name="clock" className="w-3 h-3" />
                           Wacht op acceptatie
                         </p>
                       </div>
                     </div>
-                    <Form method="post">
+                    <Form method="post" className="w-full sm:w-auto">
                       <input type="hidden" name="action" value="remove" />
                       <input type="hidden" name="buddyId" value={request.buddy_id} />
                       <button
                         type="submit"
                         disabled={navigation.state !== 'idle'}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50"
+                        className="w-full px-4 py-3 sm:py-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
                       >
                         Intrekken
                       </button>
@@ -524,20 +524,20 @@ export default function RidingBuddies() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Zoek op e-mailadres
               </label>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <input
                   type="email"
                   id="email"
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
                   placeholder="voorbeeld@email.com"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
                   disabled={searching}
                 />
                 <button
                   type="submit"
                   disabled={searching}
-                  className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                 >
                   {searching ? 'Zoeken...' : 'Zoeken'}
                 </button>
@@ -552,40 +552,40 @@ export default function RidingBuddies() {
 
             {searchResult && (
               <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1">
                     {searchResult.participant.profile_photo_url ? (
                       <img
                         src={searchResult.participant.profile_photo_url}
                         alt={searchResult.participant.first_name}
-                        className="w-16 h-16 rounded-full object-cover"
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-primary-200 rounded-full flex items-center justify-center">
-                        <Icon name="user" className="w-8 h-8 text-primary-600" />
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary-200 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Icon name="user" className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" />
                       </div>
                     )}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                         {searchResult.participant.first_name} {searchResult.participant.last_name}
                       </h3>
-                      <p className="text-gray-600 text-sm">{searchResult.participant.email}</p>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-gray-600 text-sm truncate">{searchResult.participant.email}</p>
+                      <p className="text-gray-600 text-sm truncate">
                         {searchResult.participant.motorcycle_brand} {searchResult.participant.motorcycle_model}
                       </p>
                     </div>
                   </div>
-                  <div>
+                  <div className="w-full sm:w-auto">
                     {searchResult.alreadyBuddy ? (
-                      <span className="text-green-600 font-medium">✓ Al naftgenoten</span>
+                      <span className="text-green-600 font-medium block text-center sm:text-left">✓ Al naftgenoten</span>
                     ) : searchResult.isPending ? (
-                      <span className="text-yellow-600 font-medium">⏳ Verzoek verstuurd</span>
+                      <span className="text-yellow-600 font-medium block text-center sm:text-left">⏳ Verzoek verstuurd</span>
                     ) : (
                       <button
                         type="button"
                         onClick={handleAddBuddy}
                         disabled={addingBuddy}
-                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                        className="w-full px-4 py-3 sm:py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 min-h-[44px]"
                       >
                         {addingBuddy ? 'Versturen...' : 'Verzoek Versturen'}
                       </button>
@@ -615,25 +615,25 @@ export default function RidingBuddies() {
           ) : (
             <div className="divide-y divide-gray-200">
               {buddies.map((buddy: any) => (
-                <div key={buddy.buddy_id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1">
+                <div key={buddy.buddy_id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4 flex-1 w-full">
                       <Link to={`/dashboard/buddies/${buddy.buddy_id}`} className="flex-shrink-0">
                         {buddy.buddy_profile_photo_url ? (
                           <img
                             src={buddy.buddy_profile_photo_url}
                             alt={buddy.buddy_first_name}
-                            className="w-16 h-16 rounded-full object-cover hover:ring-2 hover:ring-primary-500 transition-all"
+                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover hover:ring-2 hover:ring-primary-500 transition-all"
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center hover:bg-primary-200 transition-colors">
-                            <Icon name="user" className="w-8 h-8 text-primary-600" />
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary-100 rounded-full flex items-center justify-center hover:bg-primary-200 transition-colors">
+                            <Icon name="user" className="w-7 h-7 sm:w-8 sm:h-8 text-primary-600" />
                           </div>
                         )}
                       </Link>
                       <div className="flex-1 min-w-0">
-                        <Link to={`/dashboard/buddies/${buddy.buddy_id}`} className="hover:text-primary-600">
-                          <h3 className="font-semibold text-gray-900 text-lg">
+                        <Link to={`/dashboard/buddies/${buddy.buddy_id}`} className="hover:text-primary-600 block">
+                          <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                             {buddy.buddy_first_name} {buddy.buddy_last_name}
                           </h3>
                         </Link>
@@ -641,13 +641,13 @@ export default function RidingBuddies() {
                         {/* Contact Info */}
                         <div className="mt-2 space-y-1.5">
                           <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Icon name="mail" className="w-4 h-4 text-gray-400" />
-                            <a href={`mailto:${buddy.buddy_email}`} className="hover:text-primary-600">
+                            <Icon name="mail" className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <a href={`mailto:${buddy.buddy_email}`} className="hover:text-primary-600 truncate">
                               {buddy.buddy_email}
                             </a>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Icon name="phone" className="w-4 h-4 text-gray-400" />
+                            <Icon name="phone" className="w-4 h-4 text-gray-400 flex-shrink-0" />
                             <a href={`tel:${buddy.buddy_phone}`} className="hover:text-primary-600">
                               {buddy.buddy_phone}
                             </a>
@@ -655,10 +655,10 @@ export default function RidingBuddies() {
                         </div>
 
                         {/* Motorcycle Info */}
-                        <div className="mt-3 flex items-center gap-2 text-sm">
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-lg">
-                            <Icon name="bike" className="w-4 h-4 text-gray-600" />
-                            <span className="font-medium text-gray-700">
+                        <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm">
+                          <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-100 rounded-lg">
+                            <Icon name="bike" className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
+                            <span className="font-medium text-gray-700 truncate">
                               {buddy.buddy_motorcycle_brand} {buddy.buddy_motorcycle_model}
                             </span>
                           </div>
@@ -690,20 +690,20 @@ export default function RidingBuddies() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       <Link
                         to={`/dashboard/buddies/${buddy.buddy_id}`}
-                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+                        className="px-4 py-3 sm:py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors text-center min-h-[44px] flex items-center justify-center"
                       >
                         Bekijk Profiel
                       </Link>
-                      <Form method="post">
+                      <Form method="post" className="w-full sm:w-auto">
                         <input type="hidden" name="action" value="remove" />
                         <input type="hidden" name="buddyId" value={buddy.buddy_id} />
                         <button
                           type="submit"
                           disabled={navigation.state !== 'idle'}
-                          className="px-4 py-2 text-red-600 hover:bg-red-50 border border-red-300 rounded-lg font-medium transition-colors disabled:opacity-50"
+                          className="w-full px-4 py-3 sm:py-2 text-red-600 hover:bg-red-50 border border-red-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
                         >
                           Verwijderen
                         </button>
