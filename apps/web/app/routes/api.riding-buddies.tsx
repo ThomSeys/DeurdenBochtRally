@@ -93,8 +93,10 @@ export async function action({ request }: ActionFunctionArgs) {
             tag: 'buddy-request',
           },
           {
+            title: 'Nieuw Naftgenoot Verzoek 🏍️',
+            body: `${requester?.first_name} ${requester?.last_name} wil je naftgenoot worden!`,
             eventType: 'buddy_request',
-            targetType: 'individual',
+            targetType: 'single',
             sentBy: userId,
             eventData: { requester_id: userId },
           }
@@ -145,8 +147,10 @@ export async function action({ request }: ActionFunctionArgs) {
             tag: 'buddy-accepted',
           },
           {
+            title: 'Naftgenoot Geaccepteerd! 🎉',
+            body: `${accepter?.first_name} ${accepter?.last_name} heeft je verzoek geaccepteerd!`,
             eventType: 'buddy_accepted',
-            targetType: 'individual',
+            targetType: 'single',
             sentBy: userId,
             eventData: { accepter_id: userId },
           }
