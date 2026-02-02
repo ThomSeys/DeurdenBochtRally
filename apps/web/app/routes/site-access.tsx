@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { Form, useSearchParams, useActionData } from 'react-router';
 import { getSiteAccessSession, verifySitePassword, createSiteAccessSession } from '~/lib/site-password.server';
 import { redirect } from 'react-router';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const requestLogger = createRequestLogger(request);
