@@ -4,6 +4,7 @@ import { useLoaderData, useRevalidator, redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { sanityClient, getActiveEdition } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
@@ -11,10 +12,12 @@ import { Icon } from '~/components/Icon';
 import { MARKER_COLORS } from '~/lib/constants';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  console.info('[live-map] loader start');
-
   try {
-    await requireUserId(request);
+    const userId = await requireUserId(request);
+    const requestLogger = createRequestLogger(request, userId);
+    
+    await requestLogger.info('page-view', 'Live map loaded');
+    
     const user = await getUser(request);
 
   const EVENT_DATE = process.env.EVENT_DATE || '2026-05-16';

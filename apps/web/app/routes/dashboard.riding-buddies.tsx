@@ -6,6 +6,7 @@ import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Naftgenoten - Deur Den Bocht' }];
@@ -13,6 +14,9 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard riding buddies loaded');
   const user = await getUser(request);
 
   if (!user) {
@@ -102,6 +106,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
   const formData = await request.formData();
   const action = formData.get('action');
   const buddyId = formData.get('buddyId');

@@ -9,6 +9,7 @@ import { createClient as createSanityClient } from '@sanity/client';
 import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 // Create writable Sanity client
 const sanityWriteClient = createSanityClient({
@@ -20,7 +21,10 @@ const sanityWriteClient = createSanityClient({
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin zone control page loaded');
   
   // Get all rally zones with their open/close status (Concept B)
   const rallyZones = await sanityClient.fetch(`

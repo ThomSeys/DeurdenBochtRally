@@ -2,6 +2,7 @@ import type { ActionFunctionArgs } from 'react-router';
 import { requireUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sendEmail } from '~/lib/email.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -9,6 +10,9 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.warn('gdpr', 'Account deletion initiated');
 
   try {
     // Get participant info for confirmation email
@@ -19,6 +23,7 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (!participant) {
+      await requestLogger.error('gdpr', 'Account deletion failed: participant not found');
       return Response.json({ error: 'Participant not found' }, { status: 404 });
     }
 
@@ -49,9 +54,17 @@ export async function action({ request }: ActionFunctionArgs) {
       .eq('id', userId);
 
     if (deleteError) {
-      console.error('[delete-account] Error deleting participant:', deleteError);
+      await requestLogger.error('gdpr', 'Account deletion failed: database error', deleteError as Error, {
+        email: participant.email
+      });
       return Response.json({ error: 'Failed to delete account' }, { status: 500 });
     }
+
+    await requestLogger.warn('gdpr', 'Account successfully deleted', {
+      email: participant.email,
+      firstName: participant.first_name,
+      lastName: participant.last_name
+    });
 
     // Step 3: Send confirmation email
     try {

@@ -7,6 +7,7 @@ import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import PortableText from '~/components/PortableText';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,16 +16,20 @@ export const meta: MetaFunction = () => {
 };
 
 export async function action({ params, request }: ActionFunctionArgs) {
-  console.info('[zone] action start');
+  const requestLogger = createRequestLogger(request);
 
   try {
     const user = await getUser(request);
     if (!user) {
+      await requestLogger.warn('zone', 'Zone action failed: user not authenticated');
       return { error: 'Je moet ingelogd zijn' };
     }
 
+    const userLogger = requestLogger.withUser(user.id);
+
     const { zoneId } = params;
     if (!zoneId) {
+      await userLogger.warn('zone', 'Zone action failed: missing zone ID');
       return { error: 'Zone ID is required' };
     }
 
@@ -45,16 +50,22 @@ export async function action({ params, request }: ActionFunctionArgs) {
     );
 
     if (!zone) {
+      await userLogger.warn('zone', 'Zone not found', { zoneId });
       return { error: 'Rally zone niet gevonden' };
     }
 
     // Admins can check in/out even if zone is not active
     if (!zone.is_active && !user.is_admin) {
+      await userLogger.warn('zone', 'Zone check-in failed: zone not active', { 
+        zoneId,
+        zoneName: zone.title 
+      });
       return { error: 'Deze zone is momenteel niet actief' };
     }
 
     // Check if action is valid
     if (action !== 'CHECKIN' && action !== 'CHECKOUT') {
+      await userLogger.warn('zone', 'Invalid zone action', { action, zoneId });
       return { error: 'Ongeldige actie' };
     }
 
@@ -68,6 +79,10 @@ export async function action({ params, request }: ActionFunctionArgs) {
         .single();
 
       if (existingCheckIn) {
+        await userLogger.warn('zone', 'Duplicate check-in attempt', { 
+          zoneId,
+          zoneName: zone.title 
+        });
         return { error: 'Je hebt deze zone al bezocht!' };
       }
     }
@@ -83,18 +98,30 @@ export async function action({ params, request }: ActionFunctionArgs) {
       });
 
     if (insertError) {
-      console.error('[zone] insert error', insertError);
+      await userLogger.error('zone', 'Zone check-in database error', insertError as Error, {
+        zoneId,
+        zoneName: zone.title,
+        action
+      });
       return { error: 'Er ging iets mis bij het opslaan' };
     }
 
-    console.info('[zone] action success', { zoneId, action });
+    await userLogger.info('zone', `Zone ${action.toLowerCase()} successful`, { 
+      zoneId,
+      zoneName: zone.title,
+      action,
+      latitude,
+      longitude
+    });
     return { 
       success: true, 
       action,
       message: action === 'CHECKIN' ? 'Check-in succesvol!' : 'Check-out succesvol!'
     };
   } catch (error) {
-    console.error('[zone] action error', error);
+    await requestLogger.error('zone', 'Zone action failed with exception', error as Error, {
+      zoneId: params.zoneId
+    });
     return { error: 'Onverwachte fout' };
   }
 }

@@ -5,12 +5,16 @@ import type { Database } from '~/lib/database.types';
 import { useState } from 'react';
 import { Icon } from '~/components/Icon';
 import Header from '~/components/Header';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const handle = { title: 'Push Notifications History - Admin' };
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { requireAdmin } = await import('~/lib/session.server');
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin push history loaded');
 
   const url = new URL(request.url);
   const limit = parseInt(url.searchParams.get('limit') || '20');

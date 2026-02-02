@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
 import { useState } from 'react';
+import { createRequestLogger } from '~/lib/logger.server';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import PortableText from '~/components/PortableText';
@@ -37,6 +38,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Homepage loaded');
+  
   const edition = await getActiveEdition();
   const siteConfig = await getSiteConfig();
   const stats = edition ? await getStats(edition._id) : [];

@@ -2,13 +2,17 @@ import type { ActionFunctionArgs } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('api-call', 'Prepare edition API called');
 
   try {
     const body = await request.json();

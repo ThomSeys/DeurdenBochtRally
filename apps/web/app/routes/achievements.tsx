@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
 import { requireUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
@@ -177,6 +178,9 @@ export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Achievements page loaded');
 
   // Get all achievements
   const { data: allAchievements } = await supabaseAdmin

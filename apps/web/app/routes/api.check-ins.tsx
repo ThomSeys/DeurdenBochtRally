@@ -1,7 +1,11 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('api-call', 'Check-ins API called');
   // Concept B: Return rally zone check-ins
   const { data: checkIns } = await supabaseAdmin
     .from('rally_zone_checkins')

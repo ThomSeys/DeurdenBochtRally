@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 /**
  * GDPR Compliance: Export user data
@@ -8,10 +9,14 @@ import { supabaseAdmin } from '~/lib/supabase.server';
  */
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUser(request);
+  const requestLogger = createRequestLogger(request, user?.id);
   
   if (!user) {
+    await requestLogger.warn('gdpr', 'Data download rejected: unauthorized');
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  await requestLogger.info('gdpr', 'GDPR data export initiated');
 
   try {
     // Get participant data
@@ -33,7 +38,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .order('checked_at', { ascending: false });
 
     if (checkInsError) {
-      console.error('Error fetching check-ins:', checkInsError);
+      await requestLogger.warn('gdpr', 'Failed to fetch check-ins for export', { error: checkInsError.message });
     }
 
     // Get ride stories
@@ -43,7 +48,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .eq('participant_id', user.id);
 
     if (storiesError) {
-      console.error('Error fetching ride stories:', storiesError);
+      await requestLogger.warn('gdpr', 'Failed to fetch ride stories for export', { error: storiesError.message });
     }
 
     // Get emergency SOS history
@@ -53,7 +58,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .eq('participant_id', user.id);
 
     if (sosError) {
-      console.error('Error fetching emergency alerts:', sosError);
+      await requestLogger.warn('gdpr', 'Failed to fetch emergency alerts for export', { error: sosError.message });
     }
 
     // Get push notification history
@@ -63,7 +68,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .eq('participant_id', user.id);
 
     if (pushError) {
-      console.error('Error fetching push history:', pushError);
+      await requestLogger.warn('gdpr', 'Failed to fetch push history for export', { error: pushError.message });
     }
 
     // Compile all data

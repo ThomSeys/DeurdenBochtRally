@@ -10,6 +10,7 @@ import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { OnboardingTour, startOnboardingTour } from '~/components/OnboardingTour';
+import { createRequestLogger } from '~/lib/logger.server';
 
 declare global {
   interface Window {
@@ -26,7 +27,11 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard home loaded');
+  
   const user = await getUser(request);
 
   if (!user) {

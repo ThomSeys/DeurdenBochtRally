@@ -4,6 +4,7 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,7 +24,10 @@ interface TimelineEvent {
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin participant timeline loaded', { participantId: params.participantId });
   
   const participantId = params.participantId || "";
 

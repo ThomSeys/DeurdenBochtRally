@@ -1,7 +1,11 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { sanityClient } from '~/lib/sanity.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ params }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger();
+  
+  await requestLogger.info('api-call', 'Zone GPX download', { zoneId: params.zoneId });
   const { zoneId } = params;
 
   if (!zoneId) {

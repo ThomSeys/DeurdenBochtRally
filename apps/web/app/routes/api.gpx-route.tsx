@@ -1,7 +1,12 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { sanityClient } from '~/lib/sanity.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('api-call', 'GPX route download');
+  
   try {
     const siteConfig = await sanityClient.fetch(`
       *[_type == "siteConfig"][0] {

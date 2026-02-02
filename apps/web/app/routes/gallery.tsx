@@ -5,6 +5,7 @@ import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Fotogalerij - Deur Den Bocht' }];
@@ -30,7 +31,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     `);
 
   if (photosError) {
-    console.error('[gallery] error loading photos:', photosError);
+    const requestLogger = createRequestLogger(request, userId);
+    await requestLogger.error('gallery', 'Failed to load photos', photosError as Error);
   }
   
   console.log('[gallery] total photos found:', photos?.length || 0);
@@ -53,7 +55,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .eq('status', 'accepted');
 
   if (buddiesError) {
-    console.error('[gallery] error loading buddies:', buddiesError);
+    const requestLogger = createRequestLogger(request, userId);
+    await requestLogger.error('gallery', 'Failed to load buddies for tagging', buddiesError as Error);
   }
 
   console.log('[gallery] allBuddies from view:', allBuddies);
@@ -81,13 +84,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
   const formData = await request.formData();
   const action = formData.get('action');
 
   if (action === 'like') {
     const photoId = formData.get('photo_id') as string;
     
-    console.info('[gallery] like action start', { photoId, userId });
+    await requestLogger.info('gallery', 'Photo like action', { photoId });
 
     // Toggle like
     const { data: existing, error: checkError } = await supabaseAdmin

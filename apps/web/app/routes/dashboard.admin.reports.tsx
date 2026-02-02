@@ -4,9 +4,13 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const adminId = await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard admin reports loaded');
 
   // Get report queue
   const { data: reportQueue } = await (supabaseAdmin as any)

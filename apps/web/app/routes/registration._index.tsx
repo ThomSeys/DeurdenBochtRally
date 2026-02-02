@@ -10,6 +10,7 @@ import { getActiveEdition, getPricingTiers, getSiteConfig } from '~/lib/sanity.s
 import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 // List of available icon names in the Icon component
 const availableIcons = [
@@ -54,8 +55,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const { supabaseAdmin } = await import('~/lib/supabase.server');
+  const requestLogger = createRequestLogger(request);
   
-  console.info('[registration] action start');
+  await requestLogger.info('registration', 'Registration attempt initiated');
 
   try {
     const formData = await request.formData();
@@ -86,18 +88,22 @@ export async function action({ request }: ActionFunctionArgs) {
       typeof rideType !== 'string' ||
       typeof routePreference !== 'string'
     ) {
+      await requestLogger.warn('registration', 'Registration failed: missing required fields');
       return {  error: 'Alle velden zijn verplicht', status: 400 };
     }
 
     if (password.length < 6) {
+      await requestLogger.warn('registration', 'Registration failed: password too short');
       return {  error: 'Wachtwoord moet minstens 6 karakters lang zijn', status: 400 };
     }
 
     if (!['with_meals', 'breakfast_only'].includes(formula)) {
+      await requestLogger.warn('registration', 'Registration failed: invalid formula', { formula });
       return {  error: 'Ongeldige formule geselecteerd', status: 400 };
     }
 
     if (!['adventure', 'scenic'].includes(routePreference)) {
+      await requestLogger.warn('registration', 'Registration failed: invalid route preference', { routePreference });
       return {  error: 'Ongeldige route voorkeur geselecteerd', status: 400 };
     }
 
@@ -110,6 +116,9 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (existing) {
+      await requestLogger.warn('registration', 'Registration failed: email already exists', {
+        email: email.toLowerCase()
+      });
       return {  error: 'Dit emailadres is al geregistreerd', status: 400 };
     }
 
@@ -120,7 +129,9 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (authError || !authData.user) {
-      console.error('[registration] auth error', authError);
+      await requestLogger.error('registration', 'Registration failed: auth creation error', authError as Error, {
+        email: email.toLowerCase()
+      });
       return {  error: 'Er ging iets mis bij het aanmaken van je account. Probeer opnieuw.', status: 500 };
     }
 
@@ -137,7 +148,10 @@ export async function action({ request }: ActionFunctionArgs) {
     );
     
     if (!selectedTier) {
-      console.error('[registration] pricing tier not found', { formula });
+      await requestLogger.error('registration', 'Registration failed: pricing tier not found', undefined, { 
+        formula,
+        userId: authData.user.id
+      });
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return { error: 'Prijsinformatie niet beschikbaar. Probeer later opnieuw.', status: 500 };
     }
@@ -167,7 +181,10 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (dbError || !participant) {
-      console.error('[registration] database error', dbError);
+      await requestLogger.error('registration', 'Registration failed: database insert error', dbError as Error, {
+        userId: authData.user.id,
+        email: email.toLowerCase()
+      });
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return {  error: 'Er ging iets mis bij het registreren. Probeer opnieuw.', status: 500 };
     }
@@ -180,7 +197,9 @@ export async function action({ request }: ActionFunctionArgs) {
         .update({ qr_code_image_url: qrCodeImageUrl })
         .eq('id', participant.id);
     } catch (qrError) {
-      console.error('[registration] QR code generation error', qrError);
+      await requestLogger.error('registration', 'QR code generation failed', qrError as Error, {
+        participantId: participant.id
+      });
     }
 
     const bypassPayment = process.env.BYPASS_PAYMENT === 'true';
@@ -192,7 +211,13 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('id', participant.id);
       
       const { createUserSession } = await import('~/lib/session.server');
-      console.info('[registration] bypass payment success', { participantId });
+      await requestLogger
+        .withUser(participant.id)
+        .info('registration', 'Registration successful with bypassed payment', {
+          participantId,
+          email: email.toLowerCase(),
+          formula
+        });
       return createUserSession(participant.id, '/dashboard');
     }
 

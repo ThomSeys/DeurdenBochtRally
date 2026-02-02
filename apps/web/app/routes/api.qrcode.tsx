@@ -1,7 +1,12 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import QRCode from 'qrcode';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('api-call', 'QR code generated');
+  
   const url = new URL(request.url);
   const text = url.searchParams.get('text');
   const format = url.searchParams.get('format') || 'png';

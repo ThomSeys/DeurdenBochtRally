@@ -4,6 +4,7 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Naftgenoten Statistieken - Admin - Deur Den Bocht' }];
@@ -24,7 +25,10 @@ interface BuddyGroup {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin buddy stats loaded');
 
   // Get total buddy connections
   const { count: totalConnections } = await supabaseAdmin

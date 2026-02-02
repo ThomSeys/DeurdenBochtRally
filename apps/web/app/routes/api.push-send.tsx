@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from 'react-router';
 import type { Database } from '~/lib/database.types';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const { supabaseAdmin } = await import('~/lib/supabase.server');
@@ -8,8 +9,10 @@ export async function action({ request }: ActionFunctionArgs) {
   
   await requireAdmin(request);
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
 
   if (request.method !== 'POST') {
+    await requestLogger.warn('push', 'Push send rejected: invalid method');
     return { error: 'Methode niet toegestaan' };
   }
 
@@ -17,7 +20,11 @@ export async function action({ request }: ActionFunctionArgs) {
     const body = await request.json();
     const { action: bodyAction, ...payload } = body;
 
-    console.info('[api.push-send] received request', { action: bodyAction, userId });
+    await requestLogger.info('push', 'Push notification send request received', { 
+      action: bodyAction,
+      hasTitle: !!payload.title,
+      hasBody: !!payload.body
+    });
 
     // ACTION: broadcast - send to all active subscribers
     if (bodyAction === 'broadcast') {
@@ -30,11 +37,12 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('is_active', true);
 
       if (error) {
-        console.error('[api.push-send] Error fetching subscriptions:', error);
+        await requestLogger.error('push', 'Failed to fetch push subscriptions', error as Error);
         return { error: error.message };
       }
 
       if (!subscriptions || subscriptions.length === 0) {
+        await requestLogger.warn('push', 'No active subscriptions found for broadcast');
         return { error: 'Geen actieve abonnementen gevonden' };
       }
 

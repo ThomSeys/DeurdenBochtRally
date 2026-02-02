@@ -11,6 +11,7 @@ import { getActiveEdition, getSiteConfig, sanityClient } from '~/lib/sanity.serv
 import { getUserId, getUser } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -21,6 +22,10 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Rally page loaded');
+  
   const user = await getUser(request);
   const edition = await getActiveEdition();
   const siteConfig = await getSiteConfig();

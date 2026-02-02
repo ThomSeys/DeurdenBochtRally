@@ -1,7 +1,10 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { supabase } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
   const url = new URL(request.url);
   const participantId = url.searchParams.get('participant_id');
 

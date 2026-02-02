@@ -3,6 +3,7 @@ import { useLoaderData, Form, useActionData } from 'react-router';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -11,14 +12,17 @@ export const meta: MetaFunction = () => {
 };
 
 export async function action({ params, request }: ActionFunctionArgs) {
-  console.info('[check-in] action start');
+  const requestLogger = createRequestLogger(request);
 
   try {
     const { participantId } = params;
     
     if (!participantId) {
+      await requestLogger.warn('check-in', 'Check-in failed: missing participant ID');
       return { error: 'Participant ID is required' };
     }
+
+    await requestLogger.info('check-in', 'Participant check-in initiated', { participantId });
 
     const { error: updateError } = await supabaseAdmin
       .from('participants')
@@ -29,14 +33,16 @@ export async function action({ params, request }: ActionFunctionArgs) {
       .eq('id', participantId);
 
     if (updateError) {
-      console.error('[check-in] action error', updateError);
+      await requestLogger.error('check-in', 'Check-in database error', updateError as Error, { participantId });
       return { error: 'Er ging iets mis bij het inchecken' };
     }
 
-    console.info('[check-in] action success', { participantId });
+    await requestLogger.info('check-in', 'Check-in successful', { participantId });
     return { success: true };
   } catch (error) {
-    console.error('[check-in] action error', error);
+    await requestLogger.error('check-in', 'Check-in failed with exception', error as Error, {
+      participantId: params.participantId
+    });
     return { error: 'Onverwachte fout' };
   }
 }

@@ -7,9 +7,13 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin pending scans loaded');
   
   // Get pending scans (valid = null)
   const { data: pendingScans } = await supabaseAdmin

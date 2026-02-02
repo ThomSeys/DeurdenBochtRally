@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Header from '~/components/Header';
 import { notificationTemplates } from '~/lib/push-notifications-enhanced.server';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Push Meldingen - Admin - Deur Den Bocht' }];
@@ -15,6 +16,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { supabaseAdmin } = await import('~/lib/supabase.server');
   
   await requireAdmin(request);
+  const requestLogger = createRequestLogger(request);
 
   const url = new URL(request.url);
   const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -35,7 +37,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { data: history, count, error } = await query;
 
   if (error) {
-    console.error('[admin.push-notifications] Error fetching history:', error);
+    await requestLogger.error('admin', 'Failed to fetch push notification history', error as Error, {
+      eventTypeFilter,
+      limit,
+      offset
+    });
     return { history: [], total: 0, error: error.message, limit, offset, eventTypeFilter, eventTypes: [], participants: [], participantZones: {}, activeSubscriptions: 0 };
   }
 

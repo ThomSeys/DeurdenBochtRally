@@ -34,12 +34,38 @@ npm run script scripts/master-setup.ts
 
 ```
 scripts/
-├── master-setup.ts     # 🎯 Complete setup wizard
-├── clean-slate.ts      # 💀 Delete everything (dangerous!)
-├── sanity/             # Sanity CMS management
-├── supabase/           # Supabase infrastructure
-└── archive/            # Old scripts (reference only)
+├── master-setup.ts              # 🎯 Complete setup wizard
+├── clean-slate.ts               # 💀 Delete everything (dangerous!)
+├── generate-supabase-types.sh   # 🔧 Generate TypeScript types from Supabase
+├── add-system-logs.sql          # 📊 Setup logging system in database
+├── sanity/                      # Sanity CMS management
+├── supabase/                    # Supabase infrastructure
+└── archive/                     # Old scripts (reference only)
 ```
+
+## 🔧 Type Generation
+
+### Generate Supabase Types
+
+After making database schema changes, regenerate TypeScript types:
+
+```bash
+# From apps/web directory
+npm run generate:types
+
+# Or from project root
+bash scripts/generate-supabase-types.sh
+```
+
+This updates:
+- `apps/web/app/lib/supabase.types.ts`
+- `apps/web/app/lib/database.types.ts`
+
+**When to run:**
+- After creating/modifying database tables
+- After adding/removing columns
+- After changing column types
+- After SQL migrations
 
 ## 📝 Available Scripts
 

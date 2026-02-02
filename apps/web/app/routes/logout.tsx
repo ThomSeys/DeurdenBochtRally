@@ -1,26 +1,29 @@
 import type { ActionFunctionArgs } from 'react-router';
 import { logout } from '~/lib/session.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: ActionFunctionArgs) {
-  console.info('[logout] action start');
+  const requestLogger = createRequestLogger(request);
+  await requestLogger.info('auth', 'Logout initiated via action');
   try {
     const res = await logout(request);
-    console.info('[logout] action success');
+    await requestLogger.info('auth', 'Logout successful');
     return res;
   } catch (error) {
-    console.error('[logout] action error', error);
+    await requestLogger.error('auth', 'Logout failed', error as Error);
     throw error;
   }
 }
 
 export async function loader({ request }: ActionFunctionArgs) {
-  console.info('[logout] loader start');
+  const requestLogger = createRequestLogger(request);
+  await requestLogger.info('auth', 'Logout initiated via loader');
   try {
     const res = await logout(request);
-    console.info('[logout] loader success');
+    await requestLogger.info('auth', 'Logout successful');
     return res;
   } catch (error) {
-    console.error('[logout] loader error', error);
+    await requestLogger.error('auth', 'Logout failed', error as Error);
     throw error;
   }
 }

@@ -2,6 +2,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { Form, useLoaderData, useNavigation } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { createRequestLogger } from '~/lib/logger.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 
@@ -156,7 +157,11 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin fallback review loaded');
+  
   const user = await getUser(request);
 
   // Check if user is admin

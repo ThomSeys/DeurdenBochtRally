@@ -4,6 +4,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import { useState } from 'react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Notification History - Deur Den Bocht' }];
@@ -12,6 +13,9 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const { requireUserId } = await import('~/lib/session.server');
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard notification history loaded');
 
   const url = new URL(request.url);
   const limit = parseInt(url.searchParams.get('limit') || '20');

@@ -5,6 +5,7 @@ import { useLoaderData, Link } from 'react-router';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { createUserSession, getUserId } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -13,6 +14,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('page-view', 'Registration success page loaded');
+  
   // Import server-only modules inside the loader to avoid bundling them in client code
   const { supabaseAdmin } = await import('~/lib/supabase.server');
   const { stripe } = await import('~/lib/stripe.server');

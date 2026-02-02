@@ -4,6 +4,7 @@ import { requireUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.buddy) {
@@ -14,6 +15,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Buddy detail page loaded', { buddyId: params.buddyId });
+  
   const { buddyId } = params;
 
   if (!buddyId) {

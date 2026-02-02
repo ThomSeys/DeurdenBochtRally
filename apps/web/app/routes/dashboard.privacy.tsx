@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -12,7 +13,11 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard privacy page loaded');
+  
   const user = await getUser(request);
 
   if (!user) {

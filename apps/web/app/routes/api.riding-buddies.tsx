@@ -1,17 +1,22 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { data } from 'react-router';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { requireUserId } = await import('~/lib/session.server');
   const { supabaseAdmin } = await import('~/lib/supabase.server');
   
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
   const url = new URL(request.url);
   const email = url.searchParams.get('email');
 
   if (!email) {
+    await requestLogger.warn('buddies', 'Buddy search failed: missing email parameter');
     return data({ error: 'Email parameter required' }, { status: 400 });
   }
+
+  await requestLogger.info('buddies', 'Searching for buddy by email', { searchEmail: email });
 
   // Search for participant by email (excluding self)
   const { data: participant, error } = await supabaseAdmin
@@ -22,8 +27,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .single();
 
   if (error || !participant) {
+    await requestLogger.info('buddies', 'Buddy search: no participant found', { searchEmail: email });
     return data({ error: 'Geen deelnemer gevonden met dit e-mailadres' }, { status: 404 });
   }
+
+  await requestLogger.info('buddies', 'Buddy search successful', {
+    searchEmail: email,
+    foundParticipantId: participant.id
+  });
 
   // Check if already buddies or pending request
   const { data: existingBuddy } = await supabaseAdmin
@@ -45,15 +56,19 @@ export async function action({ request }: ActionFunctionArgs) {
   const { supabaseAdmin } = await import('~/lib/supabase.server');
   
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
   const formData = await request.formData();
   const action = formData.get('action');
   const buddyId = formData.get('buddyId');
 
   if (!buddyId || typeof buddyId !== 'string') {
+    await requestLogger.warn('buddies', 'Buddy action failed: missing buddy ID', { action });
     return data({ error: 'Buddy ID is verplicht' }, { status: 400 });
   }
 
   if (action === 'add') {
+    await requestLogger.info('buddies', 'Sending buddy request', { buddyId });
+    
     // Send buddy request (pending status)
     const { error } = await supabaseAdmin
       .from('riding_buddies')
@@ -64,9 +79,11 @@ export async function action({ request }: ActionFunctionArgs) {
       });
 
     if (error) {
-      console.error('Error sending buddy request:', error);
+      await requestLogger.error('buddies', 'Buddy request failed', error as Error, { buddyId });
       return data({ error: 'Kon verzoek niet versturen' }, { status: 500 });
     }
+
+    await requestLogger.info('buddies', 'Buddy request sent successfully', { buddyId });
 
     // Send push notification to buddy
     try {

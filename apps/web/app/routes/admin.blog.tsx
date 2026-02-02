@@ -6,6 +6,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useToast } from '~/contexts/ToastContext';
+import { createRequestLogger } from '~/lib/logger.server';
 
 interface Story {
   id: string;
@@ -27,7 +28,10 @@ interface Story {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin blog management loaded');
 
   // Get all ride stories with participant info
   const { data: stories, error } = await (supabaseAdmin as any)

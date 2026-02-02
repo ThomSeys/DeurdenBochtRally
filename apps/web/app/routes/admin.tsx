@@ -2,14 +2,16 @@ import { Outlet, redirect } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: any) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin layout loaded');
   
   // Check if admin dashboard is enabled
   const adminDashboardEnabled = await isFeatureEnabled('admin-dashboard-enabled');
-  
-  console.log('[admin] Admin dashboard feature flag:', adminDashboardEnabled);
   
   if (!adminDashboardEnabled) {
     console.log('[admin] Blocking access - feature flag is disabled');

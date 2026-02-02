@@ -29,7 +29,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
   const formData = await request.formData();
   const action = formData.get('action');
   const photoId = formData.get('photo_id') as string;

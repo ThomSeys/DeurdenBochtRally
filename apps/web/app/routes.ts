@@ -55,6 +55,7 @@ export default [
   route("admin/fallback-review", "routes/admin.fallback-review.tsx"),
   route("admin/financial-report", "routes/admin.financial-report.tsx"),
   route("admin/gallery", "routes/admin.gallery.tsx"),
+  route("admin/logs", "routes/admin.logs.tsx"),
   route("admin/manual-scan", "routes/admin.manual-scan.tsx"),
   route("admin/participants", "routes/admin.participants.tsx"),
   route("admin/participants/:participantId/submissions", "routes/admin.participants.$participantId.submissions.tsx"),

@@ -5,6 +5,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { AchievementIcon } from './achievements';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -13,7 +14,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin participant submissions loaded', { participantId: params.participantId });
   
   const participantId = params.participantId || "";
 

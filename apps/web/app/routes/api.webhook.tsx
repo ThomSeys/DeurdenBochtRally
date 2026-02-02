@@ -2,19 +2,23 @@ import type { ActionFunctionArgs } from 'react-router';
 
 import { verifyWebhookSignature } from '~/lib/stripe.server';
 import { sendEmail, paymentConfirmationEmail, registrationConfirmationEmail } from '~/lib/email.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const { supabaseAdmin } = await import('~/lib/supabase.server');
+  const requestLogger = createRequestLogger(request);
   
-  console.info('[api.webhook] action start', { method: request.method });
+  await requestLogger.info('payment', 'Webhook received', { method: request.method });
 
   if (request.method !== 'POST') {
+    await requestLogger.warn('payment', 'Webhook rejected: invalid method', { method: request.method });
     return {  error: 'Methode niet toegestaan',  status: 405 };
   }
 
   const signature = request.headers.get('stripe-signature');
   
   if (!signature) {
+    await requestLogger.warn('payment', 'Webhook rejected: missing signature');
     return {  error: 'Geen handtekening', status: 400 };
   }
 
@@ -39,7 +43,10 @@ export async function action({ request }: ActionFunctionArgs) {
           .single();
 
         if (fetchError || !participant) {
-          console.error('Failed to fetch participant:', fetchError);
+          await requestLogger.error('payment', 'Webhook failed: participant not found', fetchError as Error, {
+            participantId,
+            eventType: event.type
+          });
           return {  error: 'Deelnemer niet gevonden', status: 404 };
         }
 
@@ -54,7 +61,10 @@ export async function action({ request }: ActionFunctionArgs) {
           .eq('id', participantId);
 
         if (error) {
-          console.error('Failed to update participant:', error);
+          await requestLogger.error('payment', 'Webhook failed: database update error', error as Error, {
+            participantId,
+            stripePaymentId
+          });
           return {  error: 'Databaseupdate mislukt', status: 500 };
         }
 
@@ -96,13 +106,20 @@ export async function action({ request }: ActionFunctionArgs) {
           subject: regEmail.subject,
         });
 
-        console.info('[api.webhook] payment completed & emails sent', { participantId });
+        await requestLogger
+          .withUser(participantId)
+          .info('payment', 'Payment completed and confirmation emails sent', {
+            participantId,
+            stripePaymentId,
+            amount: session.amount_total / 100,
+            eventType: event.type
+          });
       }
     }
 
     return {  received: true };
   } catch (error) {
-    console.error('[api.webhook] action error', error);
+    await requestLogger.error('payment', 'Webhook signature verification failed', error as Error);
     return {  error: 'Webhookhandtekeningverificatie mislukt', status: 400 };
   }
 }

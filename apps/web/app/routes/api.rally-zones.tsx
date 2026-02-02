@@ -1,7 +1,11 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { sanityClient } from '~/lib/sanity.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('api-call', 'Rally zones API called');
   try {
     // Return JSON to be cached by service worker (Concept B: QR check-in zones)
     const rallyZones = await sanityClient.fetch(`

@@ -8,6 +8,7 @@ import { PortableText } from '@portabletext/react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useToast } from '~/contexts/ToastContext';
+import { createRequestLogger } from '~/lib/logger.server';
 
 const sanityClient = createClient({
   projectId: process.env.SANITY_PROJECT_ID || '',
@@ -17,7 +18,11 @@ const sanityClient = createClient({
 });
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Edit ride story page loaded', { slug: params.slug });
+  
   const user = await getUser(request);
 
   if (!user) {

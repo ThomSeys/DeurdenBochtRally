@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { logger } from './logger.server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -18,10 +19,17 @@ export async function sendEmail({ to, subject, html, from }: EmailOptions) {
       html,
     });
 
-    console.info('[email] sent successfully', { to, subject, id: result.data?.id });
+    await logger.info('email', 'Email sent successfully', { 
+      to, 
+      subject, 
+      emailId: result.data?.id 
+    });
     return { success: true, id: result.data?.id };
   } catch (error) {
-    console.error('[email] failed to send', { to, subject, error });
+    await logger.error('email', 'Email failed to send', error as Error, { 
+      to, 
+      subject 
+    });
     return { success: false, error };
   }
 }

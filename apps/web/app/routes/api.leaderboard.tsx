@@ -1,9 +1,14 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { supabase } from '~/lib/supabase.server';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 // V1: Leaderboard disabled - focus on stories and experience, not competition
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('api-call', 'Leaderboard API called');
+  
   // Check if leaderboard is enabled
   const leaderboardEnabled = await isFeatureEnabled('leaderboard-enabled');
   

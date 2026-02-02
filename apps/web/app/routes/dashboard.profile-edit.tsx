@@ -7,6 +7,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { getActiveEdition } from '~/lib/sanity.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -35,8 +36,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
   const user = await getUser(request);
+  const requestLogger = createRequestLogger(request, userId);
 
   if (!user) {
+    await requestLogger.warn('profile', 'Profile edit failed: user not found');
     return { error: 'Gebruiker niet gevonden', status: 404 };
   }
 
@@ -45,20 +48,24 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     if (intent === 'upload-photo') {
+      await requestLogger.info('profile', 'Profile photo upload initiated');
       const photo = formData.get('photo') as File;
       
       if (!photo || !(photo instanceof File)) {
+        await requestLogger.warn('profile', 'Photo upload failed: no photo selected');
         return { error: 'Geen foto geselecteerd', status: 400 };
       }
 
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(photo.type)) {
+        await requestLogger.warn('profile', 'Photo upload failed: invalid file type', { fileType: photo.type });
         return { error: 'Alleen JPG, PNG en WebP bestanden zijn toegestaan', status: 400 };
       }
 
       // Validate file size (max 5MB)
       if (photo.size > 5 * 1024 * 1024) {
+        await requestLogger.warn('profile', 'Photo upload failed: file too large', { fileSize: photo.size });
         return { error: 'Foto mag maximaal 5MB zijn', status: 400 };
       }
 
@@ -80,7 +87,10 @@ export async function action({ request }: ActionFunctionArgs) {
         });
 
       if (uploadError) {
-        console.error('[profile-edit] upload error', uploadError);
+        await requestLogger.error('profile', 'Photo upload failed: storage error', uploadError as Error, {
+          fileName,
+          fileSize: photo.size
+        });
         return { error: 'Er ging iets mis bij het uploaden van de foto', status: 500 };
       }
 
@@ -96,7 +106,9 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('id', userId);
 
       if (updateError) {
-        console.error('[profile-edit] profile update error', updateError);
+        await requestLogger.error('profile', 'Profile photo update failed', updateError as Error, {
+          photoUrl: urlData.publicUrl
+        });
         return { error: 'Foto geüpload maar profiel niet bijgewerkt', status: 500 };
       }
 

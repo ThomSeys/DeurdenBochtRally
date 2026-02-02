@@ -7,6 +7,7 @@ import { Icon } from '~/components/Icon';
 import { useEffect, useState } from 'react';
 import ClientOnly from '~/components/ClientOnly';
 import React from 'react';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,7 +16,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin event dashboard loaded');
 
   // Get check-in timeline data (group by hour)
   const { data: checkIns } = await supabaseAdmin

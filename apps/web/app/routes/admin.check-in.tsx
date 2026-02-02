@@ -6,6 +6,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -52,15 +53,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  console.info('[admin.check-in] action start');
+  await requireAdmin(request);
+  const requestLogger = createRequestLogger(request);
 
   try {
-    await requireAdmin(request);
     const formData = await request.formData();
     const intent = formData.get('intent') as string;
     const participantId = formData.get('participant_id') as string;
 
+    await requestLogger.info('check-in', 'Admin check-in action initiated', { intent, participantId });
+
     if (!participantId) {
+      await requestLogger.warn('check-in', 'Check-in failed: no participant selected');
       return { error: 'Selecteer een deelnemer', success: false };
     }
 
@@ -71,10 +75,15 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (fetchError || !participant) {
+      await requestLogger.error('check-in', 'Participant not found', fetchError as Error, { participantId });
       return { error: 'Deelnemer niet gevonden', success: false };
     }
 
     if (participant.payment_status !== 'completed') {
+      await requestLogger.warn('check-in', 'Check-in rejected: payment not completed', { 
+        participantId,
+        paymentStatus: participant.payment_status 
+      });
       return { 
         error: 'Betaling niet voltooid.',
         success: false,

@@ -1,14 +1,19 @@
 import { type LoaderFunctionArgs } from 'react-router';
 import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: LoaderFunctionArgs) {
   const { requireUserId } = await import('~/lib/session.server');
   const { sanityClient } = await import('~/lib/sanity.server');
   const { supabaseAdmin } = await import('~/lib/supabase.server');
   
-  console.info('[api.events.submit] action start', { method: request.method });
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('events', 'Event submission initiated');
 
   if (request.method !== 'POST') {
+    await requestLogger.warn('events', 'Event submit rejected: invalid method');
     return Response.json(
       { error: 'Methode niet toegestaan' },
       { status: 405 }
@@ -16,13 +21,18 @@ export async function action({ request }: LoaderFunctionArgs) {
   }
 
   try {
-    await requireUserId(request);
 
     const body = await request.json();
     const { title, description, type, severity, location } = body;
 
     // Validation
     if (!title || !type || !severity || !location) {
+      await requestLogger.warn('events', 'Event submit failed: missing required fields', {
+        hasTitle: !!title,
+        hasType: !!type,
+        hasSeverity: !!severity,
+        hasLocation: !!location
+      });
       return Response.json(
         { error: 'Verplichte velden ontbreken' },
         { status: 400 }
@@ -30,6 +40,7 @@ export async function action({ request }: LoaderFunctionArgs) {
     }
 
     if (!location.lat || !location.lng) {
+      await requestLogger.warn('events', 'Event submit failed: invalid location', { location });
       return Response.json(
         { error: 'Ongeldige locatie' },
         { status: 400 }
@@ -70,12 +81,17 @@ export async function action({ request }: LoaderFunctionArgs) {
 
     const result = await sanityClient.create(eventMarker);
 
-    console.info('[api.events.submit] action success', { eventId: result._id });
+    await requestLogger.info('events', 'Event marker created successfully', {
+      eventId: result._id,
+      type,
+      severity,
+      location
+    });
 
     // Send push notification for critical events
     if (severity === 'critical' || severity === 'high') {
       try {
-        console.info('[api.events.submit] fetching subscriptions for critical event...');
+        await requestLogger.info('events', 'Fetching subscriptions for critical event notification', { severity });
         const { data: subscriptions, error: subscriptionError } = await supabaseAdmin
           .from('push_subscriptions')
           .select('endpoint, keys')
@@ -88,7 +104,7 @@ export async function action({ request }: LoaderFunctionArgs) {
         });
 
         if (subscriptionError) {
-          console.error('[api.events.submit] error fetching subscriptions', subscriptionError);
+          await requestLogger.error('events', 'Failed to fetch subscriptions for critical event', subscriptionError as Error);
         }
 
         if (subscriptions && subscriptions.length > 0) {

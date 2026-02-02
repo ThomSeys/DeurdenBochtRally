@@ -7,6 +7,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { MARKER_COLORS } from '~/lib/constants';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Rally Zones Inchecken - Deur Den Bocht' }];
@@ -14,6 +15,10 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard rally submission loaded');
+  
   const user = await getUser(request);
 
   // Redirect scenic route users

@@ -4,6 +4,10 @@ import { getSiteAccessSession, verifySitePassword, createSiteAccessSession } fro
 import { redirect } from 'react-router';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('page-view', 'Site access page loaded');
+  
   const session = await getSiteAccessSession(request);
   const hasAccess = session.get('hasAccess');
   
@@ -18,7 +22,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  console.info('[site-access] action start');
+  const requestLogger = createRequestLogger(request);
+  
+  await requestLogger.info('authentication', 'Site access password attempt');
 
   try {
     const formData = await request.formData();

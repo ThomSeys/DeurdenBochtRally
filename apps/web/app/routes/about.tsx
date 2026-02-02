@@ -7,6 +7,7 @@ import { Icon } from '~/components/Icon';
 import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { getUserId } from '~/lib/session.server';
 import PortableText from '~/components/PortableText';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -17,6 +18,10 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'About page loaded');
+  
   const edition = await getActiveEdition();
   const siteConfig = await getSiteConfig();
   const schedule = edition ? await getScheduleItems(edition._id) : [];

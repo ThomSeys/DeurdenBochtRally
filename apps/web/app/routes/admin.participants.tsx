@@ -5,6 +5,7 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -44,7 +45,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { data: participants, error } = await query;
 
   if (error) {
-    console.error('Error fetching participants:', error);
+    const requestLogger = createRequestLogger(request);
+    await requestLogger.error('admin', 'Failed to fetch participants', error as Error, {
+      searchQuery,
+      paymentFilter,
+      checkedInFilter
+    });
   }
 
   // Get selected participant if id provided

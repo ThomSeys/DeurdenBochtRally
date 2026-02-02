@@ -5,6 +5,7 @@ import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 // Standard checklist items for all participants
 const DEFAULT_CHECKLIST_ITEMS = [
@@ -24,7 +25,11 @@ const DEFAULT_CHECKLIST_ITEMS = [
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Dashboard checklist loaded');
+  
   const user = await getUser(request);
 
   if (!user) {
@@ -70,7 +75,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
   const user = await getUser(request);
 
   if (!user) {

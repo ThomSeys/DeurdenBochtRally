@@ -1540,6 +1540,71 @@ export type Database = {
           },
         ]
       }
+      system_logs: {
+        Row: {
+          category: string
+          created_at: string
+          duration_ms: number | null
+          error_stack: string | null
+          id: number
+          ip_address: unknown
+          level: string
+          message: string
+          metadata: Json | null
+          method: string | null
+          participant_id: string | null
+          request_id: string | null
+          status_code: number | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          duration_ms?: number | null
+          error_stack?: string | null
+          id?: number
+          ip_address?: unknown
+          level: string
+          message: string
+          metadata?: Json | null
+          method?: string | null
+          participant_id?: string | null
+          request_id?: string | null
+          status_code?: number | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          duration_ms?: number | null
+          error_stack?: string | null
+          id?: number
+          ip_address?: unknown
+          level?: string
+          message?: string
+          metadata?: Json | null
+          method?: string | null
+          participant_id?: string | null
+          request_id?: string | null
+          status_code?: number | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_logs_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zone_closure_log: {
         Row: {
           closed_at: string | null

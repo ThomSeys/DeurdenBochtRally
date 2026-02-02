@@ -10,9 +10,13 @@ import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
 import ClientOnly from '~/components/ClientOnly';
 import LocationPicker from '~/components/LocationPicker';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin event markers page loaded');
 
   // Fetch all event markers
   const eventMarkers = await sanityClient.fetch(`

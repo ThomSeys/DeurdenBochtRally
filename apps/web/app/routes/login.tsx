@@ -4,6 +4,7 @@ import { Form, useActionData, useSearchParams, Link } from 'react-router';
 import React from 'react';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
@@ -12,7 +13,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  console.info('[login] action start');
+  const requestLogger = createRequestLogger(request);
+  await requestLogger.info('auth', 'Login attempt initiated');
 
   try {
     const formData = await request.formData();
@@ -20,6 +22,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const password = formData.get('password');
 
     if (typeof email !== 'string' || typeof password !== 'string') {
+      await requestLogger.warn('auth', 'Login failed: missing credentials');
       return { 
         error: 'Email en wachtwoord zijn verplicht',
         status: 400
@@ -33,7 +36,10 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (authError || !user) {
-      console.error('[login] auth error', authError?.message);
+      await requestLogger.warn('auth', 'Login failed: invalid credentials', { 
+        email: email.toLowerCase(),
+        error: authError?.message 
+      });
       return { 
         error: 'Ongeldige inloggegevens. Controleer je email en wachtwoord.',
         status: 401
@@ -49,7 +55,10 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (!participant) {
-      console.error('[login] participant not found or payment not completed');
+      await requestLogger.warn('auth', 'Login failed: participant not found or payment incomplete', {
+        userId: user.id,
+        email: email.toLowerCase()
+      });
       return { 
         error: 'Je account is niet actief. Controleer je betaling.',
         status: 403
@@ -59,10 +68,15 @@ export async function action({ request }: ActionFunctionArgs) {
     const url = new URL(request.url);
     const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
 
-    console.info('[login] action success', { userId: user.id, participantId: participant.id });
+    await requestLogger
+      .withUser(participant.id)
+      .info('auth', 'Login successful', { 
+        email: email.toLowerCase(),
+        redirectTo 
+      });
     return createUserSession(participant.id, redirectTo);
   } catch (error) {
-    console.error('[login] action error', error);
+    await requestLogger.error('auth', 'Login failed: unexpected error', error as Error);
     return { error: 'Onverwachte fout', status: 500 };
   }
 }

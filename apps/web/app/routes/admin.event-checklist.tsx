@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -14,7 +15,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin event checklist page loaded');
 
   // Get checklist items
   const { data: checklistItems } = await supabaseAdmin

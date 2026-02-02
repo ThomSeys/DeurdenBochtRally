@@ -13,7 +13,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin submissions page loaded');
   
   const url = new URL(request.url);
   const zoneFilter = url.searchParams.get('zone') || 'all';

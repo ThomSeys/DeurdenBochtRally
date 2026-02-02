@@ -6,9 +6,13 @@ import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useToast } from '~/contexts/ToastContext';
 import { useState } from 'react';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin emergency alerts page loaded');
 
   // Get all emergency SOS alerts
   const { data: alertsRaw } = await supabaseAdmin

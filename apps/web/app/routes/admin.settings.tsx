@@ -4,6 +4,7 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -30,7 +31,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  console.info('[admin.settings] action start');
+  const requestLogger = createRequestLogger(request);
+  await requestLogger.info('admin', 'Admin settings action initiated');
 
   try {
     await requireAdmin(request);
@@ -41,23 +43,29 @@ export async function action({ request }: ActionFunctionArgs) {
       const participantId = formData.get('participant_id') as string;
       const currentStatus = formData.get('current_status') === 'true';
 
+      await requestLogger.warn('admin', 'Admin status toggle', {
+        participantId,
+        from: currentStatus,
+        to: !currentStatus
+      });
+
       const { error } = await supabaseAdmin
         .from('participants')
         .update({ is_admin: !currentStatus })
         .eq('id', participantId);
 
       if (error) {
+        await requestLogger.error('admin', 'Failed to toggle admin status', error as Error, { participantId });
         return { error: error.message };
       }
 
-      console.info('[admin.settings] action success', { action, participantId });
+      await requestLogger.warn('admin', 'Admin status toggled successfully', { participantId, newStatus: !currentStatus });
       return redirect('/admin/settings');
     }
 
-    console.info('[admin.settings] action success', { action: 'noop' });
     return null;
   } catch (error) {
-    console.error('[admin.settings] action error', error);
+    await requestLogger.error('admin', 'Admin settings action failed', error as Error);
     return { error: 'Onverwachte fout' };
   }
 }

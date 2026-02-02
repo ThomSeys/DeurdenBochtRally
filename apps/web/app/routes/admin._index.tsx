@@ -4,6 +4,7 @@ import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -12,7 +13,10 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdmin(request);
+  const userId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, userId);
+  
+  await requestLogger.info('page-view', 'Admin dashboard loaded');
   
   // Get urgent counts (Concept B: check-ins don't need verification)
   const { count: checkInsCount, error: checkInsError } = await supabaseAdmin
@@ -446,6 +450,15 @@ export default function AdminDashboard() {
             <Icon name="settings" className="w-6 h-6 text-white mb-2" />
             <h3 className="font-semibold text-white">Settings</h3>
             <p className="text-sm text-white mt-1">Admin gebruikers</p>
+          </Link>
+
+          <Link
+            to="/admin/logs"
+            className="bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 hover:from-gray-800 hover:via-gray-900 hover:to-black rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="document-text" className="w-6 h-6 text-white mb-2" />
+            <h3 className="font-semibold text-white">System Logs</h3>
+            <p className="text-sm text-white mt-1">Debug & monitoring</p>
           </Link>
 
           <Link
