@@ -89,12 +89,84 @@ export default function DashboardNotificationHistory() {
 
         {notifications.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="flex justify-center mb-4">
+              <Icon name="bell" className="w-16 h-16 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Geen notificaties</h3>
             <p className="text-gray-600">Je hebt nog geen meldingen ontvangen.</p>
           </div>
         ) : (
           <>
-            {/* Notifications Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            {/* Mobile Card Layout */}
+            <div className="md:hidden space-y-4">
+              {notifications.map((notif: any) => (
+                <div key={notif.id} className="bg-white rounded-lg shadow p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 break-words">
+                        {notif.push_notifications_history?.title || 'Melding'}
+                      </h3>
+                      <div className="flex items-center flex-wrap gap-2 mt-2">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium whitespace-nowrap">
+                          {notif.push_notifications_history?.event_type || 'custom'}
+                        </span>
+                        {notif.delivery_status === 'sent' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold whitespace-nowrap">
+                            <Icon name="check" className="w-3 h-3" />
+                            Bezorgd
+                          </span>
+                        ) : notif.delivery_status === 'expired' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-semibold whitespace-nowrap">
+                            <Icon name="clock" className="w-3 h-3" />
+                            Verlopen
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold whitespace-nowrap">
+                            <Icon name="x" className="w-3 h-3" />
+                            Mislukt
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600">
+                      {notif.first_attempt_at
+                        ? new Date(notif.first_attempt_at).toLocaleDateString('nl-NL', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '-'}
+                    </p>
+
+                    <button
+                      onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                      className="w-full px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                    >
+                      {expandedId === notif.id ? 'Verberg Details' : 'Toon Details'}
+                    </button>
+
+                    {expandedId === notif.id && (
+                      <div className="pt-3 border-t space-y-2 text-sm">
+                        <p className="break-words">
+                          <strong>Bericht:</strong> {notif.push_notifications_history?.body}
+                        </p>
+                        {notif.error_message && (
+                          <p className="text-red-600">
+                            <strong>Fout:</strong> {notif.error_message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
@@ -117,14 +189,19 @@ export default function DashboardNotificationHistory() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {notif.delivery_status === 'success' ? (
+                        {notif.delivery_status === 'sent' ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                            <Icon name="check-circle" className="w-4 h-4" />
+                            <Icon name="check" className="w-4 h-4" />
                             Bezorgd
+                          </span>
+                        ) : notif.delivery_status === 'expired' ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">
+                            <Icon name="clock" className="w-4 h-4" />
+                            Verlopen
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
-                            <Icon name="x-circle" className="w-4 h-4" />
+                            <Icon name="x" className="w-4 h-4" />
                             Mislukt
                           </span>
                         )}
@@ -157,7 +234,7 @@ export default function DashboardNotificationHistory() {
               {expandedId &&
                 notifications.find((n: any) => n.id === expandedId) && (
                   <div className="bg-gray-50 px-6 py-4 border-t">
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-sm">
                       <p>
                         <strong>Titel:</strong>{' '}
                         {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.title}
@@ -167,8 +244,8 @@ export default function DashboardNotificationHistory() {
                         {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.body}
                       </p>
                       {notifications.find((n: any) => n.id === expandedId)?.error_message && (
-                        <p>
-                          <strong>Reden:</strong> {notifications.find((n: any) => n.id === expandedId)?.error_message}
+                        <p className="text-red-600">
+                          <strong>Fout:</strong> {notifications.find((n: any) => n.id === expandedId)?.error_message}
                         </p>
                       )}
                     </div>
@@ -178,22 +255,22 @@ export default function DashboardNotificationHistory() {
 
             {/* Pagination */}
             {total > limit && (
-              <div className="mt-6 flex gap-2 justify-between">
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-2 justify-between items-center">
                 <button
                   onClick={() => handlePageChange(Math.max(0, (offset ?? 0) - (limit ?? 20)))}
                   disabled={(offset ?? 0) === 0}
-                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium text-sm"
                 >
                   ← Vorige
                 </button>
-                <span className="py-2">
+                <span className="text-sm text-gray-600">
                   Pagina {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} van{' '}
                   {Math.ceil(total / (limit ?? 20))}
                 </span>
                 <button
                   onClick={() => handlePageChange((offset ?? 0) + (limit ?? 20))}
                   disabled={(offset ?? 0) + (limit ?? 20) >= total}
-                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium text-sm"
                 >
                   Volgende →
                 </button>
