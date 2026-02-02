@@ -293,7 +293,39 @@ export default function AdminAchievements() {
 
         {/* Achievements List */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          {/* Mobile Card View */}
+          <div className="block md:hidden divide-y divide-gray-200">
+            {achievements.map((achievement) => (
+              <div key={achievement.id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{achievement.icon}</span>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{achievement.title}</h3>
+                      <p className="text-sm text-gray-600">{achievement.description}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800">
+                    {achievement.category}
+                  </span>
+                  <button
+                    onClick={() => setEditingId(editingId === achievement.id ? null : achievement.id)}
+                    className="text-sm text-primary-600 hover:text-primary-900 font-medium"
+                  >
+                    Bewerken
+                  </button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <strong>Criteria:</strong> {getCriteriaDisplay(achievement)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <table className="hidden md:table min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
