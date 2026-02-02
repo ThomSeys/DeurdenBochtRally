@@ -834,7 +834,7 @@ export default function AdminPushNotifications() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
                     <input
-                      type="url"
+                      type="text"
                       name="actionUrl"
                       placeholder="bijv. /dashboard/live-map, https://..."
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
