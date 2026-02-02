@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { getEventTypeDisplay } from '~/lib/notification-types';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Notification History - Deur Den Bocht' }];
@@ -108,9 +109,15 @@ export default function DashboardNotificationHistory() {
                         {notif.push_notifications_history?.title || 'Melding'}
                       </h3>
                       <div className="flex items-center flex-wrap gap-2 mt-2">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium whitespace-nowrap">
-                          {notif.push_notifications_history?.event_type || 'custom'}
-                        </span>
+                        {(() => {
+                          const eventType = notif.push_notifications_history?.event_type || 'custom';
+                          const typeDisplay = getEventTypeDisplay(eventType);
+                          return (
+                            <span className={`px-2 py-1 ${typeDisplay.bgColor} ${typeDisplay.color} rounded text-xs font-medium whitespace-nowrap`}>
+                              {typeDisplay.label}
+                            </span>
+                          );
+                        })()}
                         {notif.delivery_status === 'sent' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold whitespace-nowrap">
                             <Icon name="check" className="w-3 h-3" />
@@ -172,9 +179,15 @@ export default function DashboardNotificationHistory() {
                         {notif.push_notifications_history?.title || 'Melding'}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                          {notif.push_notifications_history?.event_type || 'custom'}
-                        </span>
+                        {(() => {
+                          const eventType = notif.push_notifications_history?.event_type || 'custom';
+                          const typeDisplay = getEventTypeDisplay(eventType);
+                          return (
+                            <span className={`px-2 py-1 ${typeDisplay.bgColor} ${typeDisplay.color} rounded text-xs font-medium`}>
+                              {typeDisplay.label}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         {notif.delivery_status === 'sent' ? (
@@ -263,9 +276,15 @@ export default function DashboardNotificationHistory() {
                   {selectedNotification.push_notifications_history?.title || 'Melding'}
                 </h2>
                 <div className="flex items-center flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                    {selectedNotification.push_notifications_history?.event_type || 'custom'}
-                  </span>
+                  {(() => {
+                    const eventType = selectedNotification.push_notifications_history?.event_type || 'custom';
+                    const typeDisplay = getEventTypeDisplay(eventType);
+                    return (
+                      <span className={`px-2 py-1 ${typeDisplay.bgColor} ${typeDisplay.color} rounded text-xs font-medium`}>
+                        {typeDisplay.label}
+                      </span>
+                    );
+                  })()}
                   {selectedNotification.delivery_status === 'sent' ? (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
                       <Icon name="check" className="w-3 h-3" />

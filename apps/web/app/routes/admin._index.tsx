@@ -420,6 +420,15 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Groepsformatie & naftgenoten insights</p>
           </Link>
 
+          <Link
+            to="/admin/achievements"
+            className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="award" className="w-6 h-6 text-white mb-2" />
+            <h3 className="font-semibold text-white">Achievements</h3>
+            <p className="text-sm text-white mt-1">Beheer achievements & criteria</p>
+          </Link>
+
 
           {/* V1: Reports page not implemented
           <Link

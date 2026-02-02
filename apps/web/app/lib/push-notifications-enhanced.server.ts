@@ -159,6 +159,7 @@ export async function sendPushNotificationWithHistory(
     data: {
       ...(notification.data || {}),
       ...(eventData || {}),
+      eventType: eventType, // Include event type for UI display
     },
   };
   

@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import { notificationTemplates } from '~/lib/push-notifications-enhanced.server';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { eventTypeConfig } from '~/lib/notification-types';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Push Meldingen - Admin - Deur Den Bocht' }];
@@ -808,12 +809,12 @@ export default function AdminPushNotifications() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type Evenement (optioneel)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type Evenement</label>
                 <select name="eventType" className="w-full px-4 py-2 border rounded-lg">
                   <option value="custom">Aangepast</option>
-                  {(eventTypes || []).map((type: string) => (
-                    <option key={type} value={type}>
-                      {type}
+                  {Object.entries(eventTypeConfig).filter(([key]) => key !== 'custom').map(([key, config]) => (
+                    <option key={key} value={key}>
+                      {config.label}
                     </option>
                   ))}
                 </select>
@@ -877,12 +878,12 @@ export default function AdminPushNotifications() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type Evenement (optioneel)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type Evenement</label>
                   <select name="eventType" className="w-full px-4 py-2 border rounded-lg">
-                    <option value="custom">Custom</option>
-                    {(eventTypes || []).map((type: string) => (
-                      <option key={type} value={type}>
-                        {type}
+                    <option value="custom">Aangepast</option>
+                    {Object.entries(eventTypeConfig).filter(([key]) => key !== 'custom').map(([key, config]) => (
+                      <option key={key} value={key}>
+                        {config.label}
                       </option>
                     ))}
                   </select>

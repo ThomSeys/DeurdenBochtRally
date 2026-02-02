@@ -85,6 +85,18 @@ export async function action({ request }: ActionFunctionArgs) {
       return { error: 'Fout bij het maken van verhaal' };
     }
 
+    // Trigger achievement check after blog story creation (async, don't block)
+    fetch('/api/check-achievements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'check-participant',
+        participantId: participant.id
+      })
+    }).catch(err => {
+      console.error('[blog.new] achievement check failed', err);
+    });
+
     return redirect('/dashboard/blog');
   } catch (error) {
     console.error('Unexpected error:', error);

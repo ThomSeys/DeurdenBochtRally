@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import { getEventTypeDisplay } from '~/lib/notification-types';
 
 export function NotificationBell({ isTransparent }: { isTransparent?: boolean }) {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -123,6 +124,14 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
                         <h4 className={`font-semibold text-gray-900 text-sm truncate ${!notif.read ? 'font-bold' : ''}`}>
                           {notif.title}
                         </h4>
+                        {notif.data?.eventType && (() => {
+                          const typeDisplay = getEventTypeDisplay(notif.data.eventType);
+                          return (
+                            <span className={`inline-block px-2 py-0.5 ${typeDisplay.bgColor} ${typeDisplay.color} rounded text-xs font-medium mt-1`}>
+                              {typeDisplay.label}
+                            </span>
+                          );
+                        })()}
                         <p className="text-gray-600 text-sm line-clamp-2 mt-1">
                           {notif.body}
                         </p>
@@ -182,6 +191,14 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
 
               {/* Modal Content */}
               <div className="p-6">
+                {selectedNotification.data?.eventType && (() => {
+                  const typeDisplay = getEventTypeDisplay(selectedNotification.data.eventType);
+                  return (
+                    <span className={`inline-block px-2 py-1 ${typeDisplay.bgColor} ${typeDisplay.color} rounded text-xs font-medium mb-3`}>
+                      {typeDisplay.label}
+                    </span>
+                  );
+                })()}
                 <p className="text-gray-700 whitespace-pre-wrap mb-4">
                   {selectedNotification.body}
                 </p>

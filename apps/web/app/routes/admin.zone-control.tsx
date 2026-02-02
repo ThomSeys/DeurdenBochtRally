@@ -6,7 +6,7 @@ import { getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import { createClient as createSanityClient } from '@sanity/client';
-import { sendBulkPushNotifications, notificationTemplates } from '~/lib/push-notifications.server';
+import { sendPushNotificationWithHistory, notificationTemplates } from '~/lib/push-notifications-enhanced.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
@@ -107,15 +107,21 @@ export async function action({ request }: ActionFunctionArgs) {
       try {
         const { data: subscriptions } = await supabaseAdmin
           .from('push_subscriptions')
-          .select('endpoint, keys')
+          .select('*')
           .eq('is_active', true);
 
         if (subscriptions && subscriptions.length > 0) {
           const zoneName = rallyZones.find((z: any) => z.zoneNumber === parseInt(zoneNumber))?.title || `Zone ${zoneNumber}`;
           const notification = notificationTemplates.zoneClosed(parseInt(zoneNumber), zoneName);
           
-          await sendBulkPushNotifications(subscriptions, notification);
-          console.info('[admin.zone-control] zone closure notification sent');
+          await sendPushNotificationWithHistory(subscriptions, notification, {
+            title: notification.title,
+            body: notification.body,
+            eventType: 'zoneClosed',
+            eventData: { zoneNumber, zoneName },
+            sentBy: admin.id,
+          });
+          console.info('[admin.zone-control] zone closure notification sent with history');
         }
       } catch (pushError) {
         console.error('[admin.zone-control] error sending zone closure notification', pushError);
@@ -158,15 +164,21 @@ export async function action({ request }: ActionFunctionArgs) {
       try {
         const { data: subscriptions } = await supabaseAdmin
           .from('push_subscriptions')
-          .select('endpoint, keys')
+          .select('*')
           .eq('is_active', true);
 
         if (subscriptions && subscriptions.length > 0) {
           const zoneName = rallyZones.find((z: any) => z.zoneNumber === parseInt(zoneNumber))?.title || `Zone ${zoneNumber}`;
           const notification = notificationTemplates.zoneOpened(parseInt(zoneNumber), zoneName);
           
-          await sendBulkPushNotifications(subscriptions, notification);
-          console.info('[admin.zone-control] zone opening notification sent');
+          await sendPushNotificationWithHistory(subscriptions, notification, {
+            title: notification.title,
+            body: notification.body,
+            eventType: 'zoneOpened',
+            eventData: { zoneNumber, zoneName },
+            sentBy: admin.id,
+          });
+          console.info('[admin.zone-control] zone opening notification sent with history');
         }
       } catch (pushError) {
         console.error('[admin.zone-control] error sending zone opening notification', pushError);

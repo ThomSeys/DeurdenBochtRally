@@ -113,6 +113,21 @@ export async function action({ params, request }: ActionFunctionArgs) {
       latitude,
       longitude
     });
+
+    // Trigger achievement check after successful check-in (async, don't block)
+    if (action === 'CHECKIN') {
+      fetch('/api/check-achievements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          action: 'check-all',
+          participantId: user.id
+        })
+      }).catch(err => {
+        console.error('[zone] achievement check failed', err);
+      });
+    }
+
     return { 
       success: true, 
       action,

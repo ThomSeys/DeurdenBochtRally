@@ -44,6 +44,7 @@ export default [
   
   // Admin
   route("admin", "routes/admin._index.tsx"),
+  route("admin/achievements", "routes/admin.achievements.tsx"),
   route("admin/blog", "routes/admin.blog.tsx"),
   route("admin/buddy-stats", "routes/admin.buddy-stats.tsx"),
   route("admin/check-in", "routes/admin.check-in.tsx"),

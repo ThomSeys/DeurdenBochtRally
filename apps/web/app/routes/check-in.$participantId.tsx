@@ -38,6 +38,19 @@ export async function action({ params, request }: ActionFunctionArgs) {
     }
 
     await requestLogger.info('check-in', 'Check-in successful', { participantId });
+
+    // Trigger achievement check after event check-in (async, don't block)
+    fetch('/api/check-achievements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'check-participant',
+        participantId: participantId
+      })
+    }).catch(err => {
+      console.error('[check-in] achievement check failed', err);
+    });
+
     return { success: true };
   } catch (error) {
     await requestLogger.error('check-in', 'Check-in failed with exception', error as Error, {

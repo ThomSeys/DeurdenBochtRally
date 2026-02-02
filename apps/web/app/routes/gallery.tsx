@@ -339,6 +339,18 @@ export async function action({ request }: ActionFunctionArgs) {
         return { error: dbError.message };
       }
 
+      // Trigger achievement check after photo upload (async, don't block)
+      fetch('/api/check-achievements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          action: 'check-participant',
+          participantId: userId
+        })
+      }).catch(err => {
+        console.error('[gallery] achievement check failed', err);
+      });
+
       return { success: true, message: 'Photo uploaded! Waiting for admin approval.' };
     } catch (err) {
       console.error('Upload error:', err);
