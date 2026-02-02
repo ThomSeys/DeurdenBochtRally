@@ -611,30 +611,30 @@ function EventHeatmap({ locations }: { locations: Array<{ lat: number; lng: numb
         className="rounded-lg w-full bg-gray-100"
         style={{ height: '400px', minHeight: '400px' }}
       />
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500"></div>
-            <span>1 deelnemer</span>
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-sm"></div>
+            <span className="whitespace-nowrap">1 deelnemer</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-cyan-400"></div>
-            <span>2 deelnemers</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-cyan-400 rounded-sm"></div>
+            <span className="whitespace-nowrap">2 deelnemers</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-lime-400"></div>
-            <span>3 deelnemers</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-lime-400 rounded-sm"></div>
+            <span className="whitespace-nowrap">3 deelnemers</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-400"></div>
-            <span>4 deelnemers</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-400 rounded-sm"></div>
+            <span className="whitespace-nowrap">4 deelnemers</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500"></div>
-            <span>5+ deelnemers</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-sm"></div>
+            <span className="whitespace-nowrap">5+ deelnemers</span>
           </div>
         </div>
-        <div className="text-gray-500">
+        <div className="text-xs sm:text-sm text-gray-500">
           Klik op een cirkel voor details
         </div>
       </div>

@@ -185,7 +185,7 @@ export default function DashboardBlog() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header with Create Button */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col md:flex-row items-center justify-between">
           <div></div>
           <a
             href="/dashboard/blog/new"

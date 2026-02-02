@@ -425,117 +425,185 @@ export default function AdminEventMarkers() {
               <p className="text-sm mt-2">Klik op "Markering Toevoegen" om er een aan te maken</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Evenement
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Locatie
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ernstniveau
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Aangemaakt
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acties
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {eventMarkers.map((marker: any) => (
-                    <tr key={marker._id} className={!marker.isActive ? 'opacity-50' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-sm font-medium text-gray-700">{getEventTypeLabel(marker.type)}</span>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{marker.title}</div>
-                            <div className="text-sm text-gray-500">{marker.description}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {marker.location.lat.toFixed(4)}, {marker.location.lng.toFixed(4)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getSeverityClass(marker.severity)}`}>
-                          {marker.severity}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Form 
-                          method="post" 
-                          className="inline"
+            <>
+              {/* Mobile card layout */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {eventMarkers.map((marker: any) => (
+                  <div key={marker._id} className={`p-4 ${!marker.isActive ? 'opacity-50' : ''}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-gray-700 mb-1">{getEventTypeLabel(marker.type)}</div>
+                        <div className="text-base font-medium text-gray-900 break-words">{marker.title}</div>
+                        <div className="text-sm text-gray-500 mt-1 break-words">{marker.description}</div>
+                      </div>
+                      <span className={`ml-2 px-2 py-1 text-xs leading-5 font-semibold rounded-full whitespace-nowrap ${getSeverityClass(marker.severity)}`}>
+                        {marker.severity}
+                      </span>
+                    </div>
+                    
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Locatie:</span>
+                        <span className="text-gray-900 font-mono text-xs">{marker.location.lat.toFixed(4)}, {marker.location.lng.toFixed(4)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Aangemaakt:</span>
+                        <span className="text-gray-900 text-xs">{new Date(marker.createdAt).toLocaleString('nl-BE', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 flex gap-2">
+                      <Form method="post" className="flex-1">
+                        <input type="hidden" name="intent" value="toggle" />
+                        <input type="hidden" name="id" value={marker._id} />
+                        <input type="hidden" name="isActive" value={marker.isActive.toString()} />
+                        <input type="hidden" name="title" value={marker.title} />
+                        <button
+                          type="submit"
+                          className={`w-full px-3 py-2 text-xs font-semibold rounded ${
+                            marker.isActive
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
                         >
-                          <input type="hidden" name="intent" value="toggle" />
-                          <input type="hidden" name="id" value={marker._id} />
-                          <input type="hidden" name="isActive" value={marker.isActive.toString()} />
-                          <input type="hidden" name="title" value={marker.title} />
-                          <button
-                            type="submit"
-                            className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                              marker.isActive
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`}
-                          >
-                            {marker.isActive ? '✓ Actief' : '✗ Inactief'}
-                          </button>
-                        </Form>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(marker.createdAt).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Form 
-                          method="post" 
-                          className="inline"
+                          {marker.isActive ? '✓ Actief' : '✗ Inactief'}
+                        </button>
+                      </Form>
+                      <Form method="post">
+                        <input type="hidden" name="intent" value="delete" />
+                        <input type="hidden" name="id" value={marker._id} />
+                        <button
+                          type="submit"
+                          onClick={(e) => {
+                            const resolutionMessage = prompt(
+                              'Voer een bericht in voor de deelnemers (optioneel):\n\nBijvoorbeeld: "Probleem opgelost" of "Weg is weer vrij"'
+                            );
+                            if (resolutionMessage === null) {
+                              e.preventDefault();
+                              return;
+                            }
+                            const form = e.currentTarget.form;
+                            if (form) {
+                              const existingInput = form.querySelector('input[name="resolutionMessage"]');
+                              if (existingInput) existingInput.remove();
+                              const input = document.createElement('input');
+                              input.type = 'hidden';
+                              input.name = 'resolutionMessage';
+                              input.value = resolutionMessage;
+                              form.appendChild(input);
+                            }
+                          }}
+                          className="px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded"
                         >
-                          <input type="hidden" name="intent" value="delete" />
-                          <input type="hidden" name="id" value={marker._id} />
-                          <button
-                            type="submit"
-                            onClick={(e) => {
-                              const resolutionMessage = prompt(
-                                'Voer een bericht in voor de deelnemers (optioneel):\n\nBijvoorbeeld: "Probleem opgelost" of "Weg is weer vrij"'
-                              );
-                              if (resolutionMessage === null) {
-                                // User clicked cancel
-                                e.preventDefault();
-                                return;
-                              }
-                              // Add resolution message to form
-                              const form = e.currentTarget.form;
-                              if (form) {
-                                const existingInput = form.querySelector('input[name="resolutionMessage"]');
-                                if (existingInput) {
-                                  existingInput.remove();
-                                }
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = 'resolutionMessage';
-                                input.value = resolutionMessage;
-                                form.appendChild(input);
-                              }
-                            }}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Verwijderen
-                          </button>
-                        </Form>
-                      </td>
+                          Verwijderen
+                        </button>
+                      </Form>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop table layout */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Evenement
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Locatie
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ernstniveau
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Aangemaakt
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acties
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {eventMarkers.map((marker: any) => (
+                      <tr key={marker._id} className={!marker.isActive ? 'opacity-50' : ''}>
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="text-xs font-medium text-gray-500 mb-1">{getEventTypeLabel(marker.type)}</div>
+                            <div className="text-sm font-medium text-gray-900">{marker.title}</div>
+                            <div className="text-sm text-gray-500 mt-1">{marker.description}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                          {marker.location.lat.toFixed(4)}, {marker.location.lng.toFixed(4)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getSeverityClass(marker.severity)}`}>
+                            {marker.severity}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Form method="post" className="inline">
+                            <input type="hidden" name="intent" value="toggle" />
+                            <input type="hidden" name="id" value={marker._id} />
+                            <input type="hidden" name="isActive" value={marker.isActive.toString()} />
+                            <input type="hidden" name="title" value={marker.title} />
+                            <button
+                              type="submit"
+                              className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                                marker.isActive
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                              }`}
+                            >
+                              {marker.isActive ? '✓ Actief' : '✗ Inactief'}
+                            </button>
+                          </Form>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(marker.createdAt).toLocaleString('nl-BE')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Form method="post" className="inline">
+                            <input type="hidden" name="intent" value="delete" />
+                            <input type="hidden" name="id" value={marker._id} />
+                            <button
+                              type="submit"
+                              onClick={(e) => {
+                                const resolutionMessage = prompt(
+                                  'Voer een bericht in voor de deelnemers (optioneel):\n\nBijvoorbeeld: "Probleem opgelost" of "Weg is weer vrij"'
+                                );
+                                if (resolutionMessage === null) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                const form = e.currentTarget.form;
+                                if (form) {
+                                  const existingInput = form.querySelector('input[name="resolutionMessage"]');
+                                  if (existingInput) existingInput.remove();
+                                  const input = document.createElement('input');
+                                  input.type = 'hidden';
+                                  input.name = 'resolutionMessage';
+                                  input.value = resolutionMessage;
+                                  form.appendChild(input);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Verwijderen
+                            </button>
+                          </Form>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
