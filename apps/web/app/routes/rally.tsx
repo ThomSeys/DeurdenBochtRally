@@ -1,12 +1,13 @@
-import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
+import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
 
-import { useLoaderData, Link } from 'react-router';
+import { useLoaderData, Link, Form, useActionData, useNavigation } from 'react-router';
 import { useState, useEffect } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
 import RouteTipsMap from '~/components/RouteTipsMap';
 import ZoneRouteTips from '~/components/ZoneRouteTips';
+import CheckInModal from '~/components/CheckInModal';
 import { getActiveEdition, getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { getUserId, getUser } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
@@ -19,6 +20,85 @@ export const meta: MetaFunction = () => {
     { name: 'description', content: 'Ontdek de rally route van Deur Den Bocht' },
   ];
 };
+
+export async function action({ request }: ActionFunctionArgs) {
+  const requestLogger = createRequestLogger(request);
+
+  try {
+    const user = await getUser(request);
+    if (!user) {
+      await requestLogger.warn('rally-checkin', 'Check-in failed: user not authenticated');
+      return { error: 'Je moet ingelogd zijn' };
+    }
+
+    const userLogger = requestLogger.withUser(user.id);
+    const formData = await request.formData();
+    const zoneId = formData.get('zoneId') as string;
+    const latitude = formData.get('latitude') as string;
+    const longitude = formData.get('longitude') as string;
+
+    if (!zoneId) {
+      await userLogger.warn('rally-checkin', 'Check-in failed: missing zone ID');
+      return { error: 'Zone ID is required' };
+    }
+
+    // Check if already checked in
+    if (!user.is_admin) {
+      const { data: existingCheckIn } = await supabaseAdmin
+        .from('rally_zone_checkins')
+        .select('id')
+        .eq('participant_id', user.id)
+        .eq('zone_id', zoneId)
+        .single();
+
+      if (existingCheckIn) {
+        await userLogger.warn('rally-checkin', 'Duplicate check-in attempt', { zoneId });
+        return { error: 'Je hebt deze zone al bezocht!' };
+      }
+    }
+
+    // Create check-in
+    const { error: insertError } = await supabaseAdmin
+      .from('rally_zone_checkins')
+      .insert({
+        participant_id: user.id,
+        zone_id: zoneId,
+        location_lat: latitude ? parseFloat(latitude) : null,
+        location_lng: longitude ? parseFloat(longitude) : null,
+      });
+
+    if (insertError) {
+      await userLogger.error('rally-checkin', 'Database error during check-in', {
+        error: insertError.message,
+        zoneId
+      });
+      return { error: 'Er is iets misgegaan bij het opslaan' };
+    }
+
+    await userLogger.info('rally-checkin', 'Check-in successful', { zoneId });
+
+    // Trigger achievement check
+    try {
+      await fetch(`${new URL(request.url).origin}/api/check-achievements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          participantId: user.id,
+          action: 'check-participant'
+        })
+      });
+    } catch (error) {
+      console.error('Failed to trigger achievement check:', error);
+    }
+
+    return { success: true, message: 'Check-in succesvol!' };
+  } catch (error: any) {
+    await requestLogger.error('rally-checkin', 'Unexpected error during check-in', {
+      error: error.message
+    });
+    return { error: 'Er is een onverwachte fout opgetreden' };
+  }
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
@@ -101,9 +181,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Rally() {
   const { userId, user, edition, segments, siteConfig, userCheckIns } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [checkInModalZone, setCheckInModalZone] = useState<any>(null);
   const checkedInSet = new Set(userCheckIns);
+  const isSubmitting = navigation.state === 'submitting';
 
   // Get user's current location
   useEffect(() => {
@@ -121,6 +205,13 @@ export default function Rally() {
       );
     }
   }, []);
+
+  // Close modal on successful check-in
+  useEffect(() => {
+    if (actionData?.success) {
+      setCheckInModalZone(null);
+    }
+  }, [actionData]);
 
   const toggleMap = (segmentId: string) => {
     setVisibleMaps(prev => {
@@ -263,9 +354,29 @@ export default function Rally() {
                           userLocation={userLocation}
                         />
                       )}
+
+                      {/* Check-in Button */}
+                      {userId && !checkedInSet.has(segment._id) && (
+                        <button
+                          onClick={() => setCheckInModalZone(segment)}
+                          className="w-full mt-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-4 rounded-sm font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                        >
+                          <Icon name="map-pin" className="w-5 h-5" />
+                          Check In bij deze Zone
+                        </button>
+                      )}
+
+                      {userId && checkedInSet.has(segment._id) && (
+                        <div className="mt-4 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-400 p-4 rounded-sm shadow-sm">
+                          <p className="text-teal-900 font-bold flex items-center gap-2">
+                            <Icon name="check-circle" className="w-5 h-5" />
+                            Je hebt deze zone al bezocht!
+                          </p>
+                        </div>
+                      )}
                       
                       {!segment.is_open && (
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg mt-4">
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-sm mt-4">
                           <p className="text-yellow-800 font-semibold flex items-center gap-2">
                             <Icon name="info" className="w-5 h-5" />
                             Dit segment is momenteel niet actief
@@ -279,6 +390,17 @@ export default function Rally() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Check-in Modal */}
+      {checkInModalZone && (
+        <CheckInModal
+          isOpen={!!checkInModalZone}
+          onClose={() => setCheckInModalZone(null)}
+          zone={checkInModalZone}
+          actionData={actionData}
+          isSubmitting={isSubmitting}
+        />
       )}
 
       {/* CTA */}
