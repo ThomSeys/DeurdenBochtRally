@@ -11,6 +11,154 @@ export const meta: MetaFunction = () => {
   return [{ title: 'Achievements - Deur Den Bocht' }];
 };
 
+// SVG Icon Component for Achievements
+export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked: boolean }) => {
+  const className = `w-20 h-20 ${isUnlocked ? 'drop-shadow-lg' : 'opacity-40 grayscale'}`;
+  
+  const icons: Record<string, React.ReactElement> = {
+    'first_checkin': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FCD34D" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+          <filter id="shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+          </filter>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#goldGradient)" stroke="#F59E0B" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="50" cy="50" r="35" fill="#D97706" opacity="0.3"/>
+        <path d="M45 25 L55 25 L55 35 L60 35 L50 20 L40 35 L45 35 Z" fill="#DC2626"/>
+        <rect x="40" y="35" width="20" height="4" fill="#DC2626"/>
+        <text x="50" y="68" textAnchor="middle" fontSize="42" fill="#78350F" fontWeight="bold" fontFamily="Arial, sans-serif">1</text>
+      </svg>
+    ),
+    'half_complete': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#7DD3FC" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#blueGradient)" stroke="#0891B2" strokeWidth="3" filter="url(#shadow)"/>
+        <path d="M 50 50 L 50 10 A 40 40 0 0 1 50 90 Z" fill="#0369A1" opacity="0.8"/>
+        <circle cx="50" cy="50" r="25" fill="#164E63" opacity="0.5"/>
+        <text x="50" y="63" textAnchor="middle" fontSize="38" fill="#164E63" fontWeight="bold" fontFamily="Arial, sans-serif">½</text>
+      </svg>
+    ),
+    'zone_master': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="trophyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEF3C7" />
+            <stop offset="100%" stopColor="#FCD34D" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#trophyGradient)" stroke="#F59E0B" strokeWidth="4" filter="url(#shadow)"/>
+        <path d="M35 25 H65 L70 35 L50 55 L30 35 Z" fill="#B45309"/>
+        <path d="M30 45 H70 L65 55 H35 Z" fill="#D97706"/>
+        <path d="M28 60 H72 L68 75 H32 Z" fill="#B45309"/>
+        <circle cx="50" cy="35" r="5" fill="#FBBF24" stroke="#F59E0B" strokeWidth="2"/>
+      </svg>
+    ),
+    'perfect_score': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#E9D5FF" />
+            <stop offset="100%" stopColor="#C084FC" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#purpleGradient)" stroke="#A855F7" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="50" cy="50" r="35" stroke="#9333EA" strokeWidth="2" strokeDasharray="4 2" fill="none" opacity="0.5"/>
+        <path d="M25 50 L40 65 L75 30" stroke="#7C3AED" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    ),
+    'early_bird': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sunriseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEF3C7" />
+            <stop offset="100%" stopColor="#FCD34D" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#sunriseGradient)" stroke="#F59E0B" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="70" cy="30" r="16" fill="#FBBF24" opacity="0.7"/>
+        <path d="M35 45 Q35 35 45 35 Q50 30 55 35 Q65 35 65 45 Q65 60 50 70 Q35 60 35 45 Z" fill="#EA580C"/>
+        <circle cx="42" cy="42" r="2.5" fill="white"/>
+        <path d="M45 50 L48 52 L52 48" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+      </svg>
+    ),
+    'night_rider': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="nightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#312E81" />
+            <stop offset="100%" stopColor="#1E1B4B" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#nightGradient)" stroke="#4C1D95" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="65" cy="30" r="12" fill="#FCD34D" opacity="0.9"/>
+        <path d="M30 40 Q35 30 45 35 Q48 32 50 35 Q55 30 60 40" fill="#1E3A8A" stroke="#1E40AF" strokeWidth="2"/>
+        <circle cx="38" cy="38" r="1.5" fill="#FCD34D"/>
+        <circle cx="45" cy="35" r="1" fill="#FCD34D"/>
+        <circle cx="52" cy="36" r="1.5" fill="#FCD34D"/>
+      </svg>
+    ),
+    'photo_star': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pinkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FCE7F3" />
+            <stop offset="100%" stopColor="#F9A8D4" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#pinkGradient)" stroke="#EC4899" strokeWidth="3" filter="url(#shadow)"/>
+        <rect x="35" y="35" width="30" height="25" rx="2" fill="#6B7280" stroke="#4B5563" strokeWidth="2"/>
+        <circle cx="50" cy="28" r="5" fill="#4B5563"/>
+        <rect x="38" y="38" width="24" height="16" fill="#D1D5DB"/>
+        <circle cx="47" cy="46" r="2" fill="#3B82F6"/>
+      </svg>
+    ),
+    'story_teller': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="redGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEE2E2" />
+            <stop offset="100%" stopColor="#FCA5A5" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#redGradient)" stroke="#EF4444" strokeWidth="3" filter="url(#shadow)"/>
+        <path d="M50 30 C50 30 35 35 35 50 C35 65 50 75 50 75 C50 75 65 65 65 50 C65 35 50 30 50 30 Z" fill="#DC2626"/>
+        <path d="M45 45 L48 50 L55 43" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    ),
+    'social_butterfly': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FED7AA" />
+            <stop offset="100%" stopColor="#FB923C" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#orangeGradient)" stroke="#F97316" strokeWidth="3" filter="url(#shadow)"/>
+        <circle cx="35" cy="45" r="8" fill="#EA580C"/>
+        <circle cx="65" cy="45" r="8" fill="#EA580C"/>
+        <path d="M35 60 Q50 70 65 60" stroke="#DC2626" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      </svg>
+    ),
+  };
+
+  return icons[name] || (
+    <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="45" fill="#9CA3AF" stroke="#6B7280" strokeWidth="3"/>
+      <text x="50" y="58" textAnchor="middle" fontSize="12" fill="#374151" fontWeight="bold" fontFamily="Arial, sans-serif">?</text>
+    </svg>
+  );
+};
+
 // Helper to get participant stats for progress tracking
 async function getParticipantStats(participantId: string) {
   const { data: participant } = await supabaseAdmin
@@ -267,8 +415,8 @@ export default function Achievements() {
                     <div className="p-6">
                       {/* Icon and Status */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className={`text-6xl transition-all duration-300 ${isUnlocked ? 'grayscale-0 drop-shadow-lg' : 'grayscale opacity-40'}`}>
-                          {achievement.icon || '🏆'}
+                        <div className={`transition-all duration-300`}>
+                          <AchievementIcon name={achievement.name} isUnlocked={isUnlocked} />
                         </div>
                         {isUnlocked && (
                           <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
