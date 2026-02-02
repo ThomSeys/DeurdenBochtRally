@@ -89,6 +89,7 @@ self.addEventListener('push', (event) => {
       body: data.body || '',
       tag: data.tag || 'default',
       timestamp: Date.now(),
+      data: data.data || {}, // Include action button data
     };
 
     event.waitUntil(

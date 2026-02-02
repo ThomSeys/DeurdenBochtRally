@@ -56,7 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function DashboardNotificationHistory() {
   const { notifications, total, limit, offset } = useLoaderData<typeof loader>();
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<any | null>(null);
 
   const handlePageChange = (newOffset: number) => {
     const params = new URLSearchParams();
@@ -143,37 +143,11 @@ export default function DashboardNotificationHistory() {
                     </p>
 
                     <button
-                      onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                      onClick={() => setSelectedNotification(notif)}
                       className="w-full px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
                     >
-                      {expandedId === notif.id ? 'Verberg Details' : 'Toon Details'}
+                      Toon Details
                     </button>
-
-                    {expandedId === notif.id && (
-                      <div className="pt-3 border-t space-y-2 text-sm">
-                        <p className="break-words">
-                          <strong>Bericht:</strong> {notif.push_notifications_history?.body}
-                        </p>
-                        {notif.error_message && (
-                          <p className="text-red-600">
-                            <strong>Fout:</strong> {notif.error_message}
-                          </p>
-                        )}
-                        {notif.push_notifications_history?.event_data?.actionUrl && (
-                          <div className="pt-2">
-                            <a
-                              href={notif.push_notifications_history.event_data.actionUrl}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
-                            >
-                              {notif.push_notifications_history.event_data.actionLabel || 'Bekijk Details'}
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                              </svg>
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
@@ -233,51 +207,16 @@ export default function DashboardNotificationHistory() {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <button
-                          onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                          onClick={() => setSelectedNotification(notif)}
                           className="text-primary-600 hover:text-primary-800 font-medium"
                         >
-                          {expandedId === notif.id ? 'Verbergen' : 'Details'}
+                          Details
                         </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-
-              {/* Expanded Details */}
-              {expandedId &&
-                notifications.find((n: any) => n.id === expandedId) && (
-                  <div className="bg-gray-50 px-6 py-4 border-t">
-                    <div className="space-y-2 text-sm">
-                      <p>
-                        <strong>Titel:</strong>{' '}
-                        {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.title}
-                      </p>
-                      <p>
-                        <strong>Bericht:</strong>{' '}
-                        {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.body}
-                      </p>
-                      {notifications.find((n: any) => n.id === expandedId)?.error_message && (
-                        <p className="text-red-600">
-                          <strong>Fout:</strong> {notifications.find((n: any) => n.id === expandedId)?.error_message}
-                        </p>
-                      )}
-                      {notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.event_data && typeof notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.event_data === 'object' && (notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.event_data as any)?.actionUrl && (
-                        <div className="pt-2">
-                          <a
-                            href={(notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.event_data as any)?.actionUrl}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors"
-                          >
-                            {(notifications.find((n: any) => n.id === expandedId)?.push_notifications_history?.event_data as any)?.actionLabel || 'Bekijk Details'}
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
             </div>
 
             {/* Pagination */}
@@ -306,6 +245,113 @@ export default function DashboardNotificationHistory() {
           </>
         )}
       </div>
+
+      {/* Notification Details Modal */}
+      {selectedNotification && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[1100]"
+          onClick={() => setSelectedNotification(null)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between p-6 border-b sticky top-0 bg-white">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {selectedNotification.push_notifications_history?.title || 'Melding'}
+                </h2>
+                <div className="flex items-center flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                    {selectedNotification.push_notifications_history?.event_type || 'custom'}
+                  </span>
+                  {selectedNotification.delivery_status === 'sent' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
+                      <Icon name="check" className="w-3 h-3" />
+                      Bezorgd
+                    </span>
+                  ) : selectedNotification.delivery_status === 'expired' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-semibold">
+                      <Icon name="clock" className="w-3 h-3" />
+                      Verlopen
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">
+                      <Icon name="x" className="w-3 h-3" />
+                      Mislukt
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="ml-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Icon name="x" className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Bericht</h3>
+                <p className="text-gray-900 whitespace-pre-wrap">
+                  {selectedNotification.push_notifications_history?.body}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Ontvangen</h3>
+                <p className="text-gray-900">
+                  {selectedNotification.first_attempt_at
+                    ? new Date(selectedNotification.first_attempt_at).toLocaleDateString('nl-NL', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '-'}
+                </p>
+              </div>
+
+              {selectedNotification.error_message && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-red-700 mb-2">Foutmelding</h3>
+                  <p className="text-red-900 text-sm">{selectedNotification.error_message}</p>
+                </div>
+              )}
+
+              {selectedNotification.push_notifications_history?.event_data?.actionUrl && (
+                <div className="pt-2">
+                  <a
+                    href={selectedNotification.push_notifications_history.event_data.actionUrl}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors w-full justify-center"
+                    onClick={() => setSelectedNotification(null)}
+                  >
+                    {selectedNotification.push_notifications_history.event_data.actionLabel || 'Bekijk Details'}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-2 p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+              >
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

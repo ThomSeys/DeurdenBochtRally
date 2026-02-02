@@ -185,9 +185,23 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
                 <p className="text-gray-700 whitespace-pre-wrap mb-4">
                   {selectedNotification.body}
                 </p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-400 text-sm mb-4">
                   {new Date(selectedNotification.timestamp).toLocaleString('nl-NL')}
                 </p>
+                
+                {/* Action Button */}
+                {selectedNotification.data?.actionUrl && (
+                  <a
+                    href={selectedNotification.data.actionUrl}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors w-full justify-center"
+                    onClick={() => setSelectedNotification(null)}
+                  >
+                    {selectedNotification.data.actionLabel || 'Bekijk Details'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </a>
+                )}
               </div>
 
               {/* Modal Footer */}
