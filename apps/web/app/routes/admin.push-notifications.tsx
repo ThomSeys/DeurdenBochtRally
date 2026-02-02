@@ -234,6 +234,8 @@ export async function action({ request }: ActionFunctionArgs) {
       const title = formData.get('title') as string;
       const body = formData.get('body') as string;
       const eventType = formData.get('eventType') as string;
+      const actionLabel = formData.get('actionLabel') as string;
+      const actionUrl = formData.get('actionUrl') as string;
 
       if (!title || !body) {
         return { error: 'Titel en bericht zijn verplicht' };
@@ -320,6 +322,7 @@ export async function action({ request }: ActionFunctionArgs) {
           title,
           body,
           eventType: eventType || 'custom',
+          eventData: actionLabel && actionUrl ? { actionLabel, actionUrl } : null,
           sentBy: userId,
         }
       );
@@ -814,6 +817,33 @@ export default function AdminPushNotifications() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Actie Knop (optioneel)</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Knop Tekst</label>
+                    <input
+                      type="text"
+                      name="actionLabel"
+                      placeholder="bijv. Bekijk Details, Ga naar Kaart"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
+                    <input
+                      type="url"
+                      name="actionUrl"
+                      placeholder="bijv. /dashboard/live-map, https://..."
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Als ingevuld, verschijnt er een knop in de melding en geschiedenis pagina
+                  </p>
+                </div>
               </div>
 
               <button
