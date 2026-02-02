@@ -48,6 +48,20 @@ export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked
         <text x="50" y="63" textAnchor="middle" fontSize="38" fill="#164E63" fontWeight="bold" fontFamily="Arial, sans-serif">½</text>
       </svg>
     ),
+    'half_way': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="halfwayGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#DBEAFE" />
+            <stop offset="100%" stopColor="#3B82F6" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#halfwayGradient)" stroke="#2563EB" strokeWidth="3" filter="url(#shadow)"/>
+        <path d="M 50 50 L 50 5 A 45 45 0 0 1 95 50 Z" fill="#1D4ED8" opacity="0.7"/>
+        <circle cx="50" cy="50" r="28" fill="none" stroke="#1E40AF" strokeWidth="3" strokeDasharray="4 4"/>
+        <text x="50" y="60" textAnchor="middle" fontSize="32" fill="#1E3A8A" fontWeight="bold" fontFamily="Arial, sans-serif">50%</text>
+      </svg>
+    ),
     'zone_master': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -147,6 +161,37 @@ export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked
         <circle cx="35" cy="45" r="8" fill="#EA580C"/>
         <circle cx="65" cy="45" r="8" fill="#EA580C"/>
         <path d="M35 60 Q50 70 65 60" stroke="#DC2626" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      </svg>
+    ),
+    'explorer': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="explorerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#A7F3D0" />
+            <stop offset="100%" stopColor="#10B981" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#explorerGradient)" stroke="#059669" strokeWidth="3" filter="url(#shadow)"/>
+        <path d="M50 20 L55 35 L70 35 L58 45 L63 60 L50 50 L37 60 L42 45 L30 35 L45 35 Z" fill="#047857" stroke="#065F46" strokeWidth="2"/>
+        <circle cx="50" cy="50" r="8" fill="#FCD34D" stroke="#F59E0B" strokeWidth="2"/>
+        <path d="M48 48 L52 52 M52 48 L48 52" stroke="#B45309" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    'photographer': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="photographerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#E0E7FF" />
+            <stop offset="100%" stopColor="#818CF8" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#photographerGradient)" stroke="#6366F1" strokeWidth="3" filter="url(#shadow)"/>
+        <rect x="30" y="35" width="40" height="30" rx="3" fill="#4B5563" stroke="#374151" strokeWidth="2"/>
+        <circle cx="50" cy="27" r="6" fill="#374151"/>
+        <rect x="33" y="38" width="34" height="22" fill="#D1D5DB"/>
+        <circle cx="50" cy="49" r="10" fill="#6366F1" opacity="0.7"/>
+        <circle cx="50" cy="49" r="6" fill="#4F46E5"/>
+        <path d="M46 49 L48 51 L54 45" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
       </svg>
     ),
   };
