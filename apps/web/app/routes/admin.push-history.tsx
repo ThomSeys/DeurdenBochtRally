@@ -354,6 +354,12 @@ export default function AdminPushHistory() {
                           <span className="font-medium">Mislukt:</span> {notif.failed_count}
                         </p>
                       )}
+                      {(notif.metadata as any)?.expired_count > 0 && (
+                        <p className="text-orange-600 flex items-center gap-1">
+                          <Icon name="clock" className="w-3.5 h-3.5" /> 
+                          <span className="font-medium">Verlopen:</span> {(notif.metadata as any).expired_count}
+                        </p>
+                      )}
                       <p className="text-gray-600">
                         <span className="font-medium">Verzonden:</span> {notif.sent_at && new Date(notif.sent_at).toLocaleDateString('nl-NL', {
                           month: 'short',
@@ -431,6 +437,11 @@ export default function AdminPushHistory() {
                             {(notif.failed_count ?? 0) > 0 && (
                               <p className="flex items-center gap-1 text-red-700">
                                 <Icon name="x" className="w-3.5 h-3.5 text-red-600" /> {notif.failed_count} mislukt
+                              </p>
+                            )}
+                            {(notif.metadata as any)?.expired_count > 0 && (
+                              <p className="flex items-center gap-1 text-orange-700">
+                                <Icon name="clock" className="w-3.5 h-3.5 text-orange-600" /> {(notif.metadata as any).expired_count} verlopen
                               </p>
                             )}
                           </div>

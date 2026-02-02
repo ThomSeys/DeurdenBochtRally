@@ -98,9 +98,16 @@ export async function action({ request }: ActionFunctionArgs) {
             body: 'Personalized leaderboard update sent to each participant with their rank',
             event_type: eventType || 'custom',
             event_data: eventData,
-            target_type: 'broadcast',
+            recipient_count: subscriptions.length,
+            success_count: successful,
+            failed_count: failed,
             sent_by: userId,
             sent_at: new Date().toISOString(),
+            metadata: {
+              target_type: 'broadcast',
+              expired_count: expired,
+              personalized: true,
+            },
           })
           .select('id')
           .single();
@@ -238,10 +245,17 @@ export async function action({ request }: ActionFunctionArgs) {
             body: 'Personalized leaderboard update sent to targeted participants with their rank',
             event_type: eventType || 'custom',
             event_data: eventData,
-            target_type: 'targeted',
-            target_criteria: criteria,
+            recipient_count: filtered.length,
+            success_count: successful,
+            failed_count: failed,
             sent_by: userId,
             sent_at: new Date().toISOString(),
+            metadata: {
+              target_type: 'targeted',
+              target_criteria: criteria,
+              expired_count: expired,
+              personalized: true,
+            },
           })
           .select('id')
           .single();

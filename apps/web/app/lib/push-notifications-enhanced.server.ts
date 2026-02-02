@@ -135,11 +135,13 @@ export async function sendPushNotificationWithHistory(
       body: notification.body,
       event_type: eventType,
       event_data: eventData || null,
-      target_type: targetType,
-      target_criteria: targetCriteria || null,
       recipient_count: subscriptions.length,
-      status: 'sending',
       sent_by: sentBy || null,
+      sent_at: new Date().toISOString(),
+      metadata: {
+        target_type: targetType,
+        target_criteria: targetCriteria || null,
+      },
     })
     .select()
     .single();
@@ -160,14 +162,22 @@ export async function sendPushNotificationWithHistory(
     const failedCount = results.failed;
     const expiredCount = results.expired;
 
+    // Update history with results
+    const { data: existingHistory } = await supabaseAdmin
+      .from('push_notifications_history')
+      .select('metadata')
+      .eq('id', notificationHistoryId)
+      .single();
+
     await supabaseAdmin
       .from('push_notifications_history')
       .update({
         success_count: successCount,
         failed_count: failedCount,
-        expired_count: expiredCount,
-        status: 'completed',
-        completed_at: new Date().toISOString(),
+        metadata: {
+          ...(existingHistory?.metadata || {}),
+          expired_count: expiredCount,
+        },
       })
       .eq('id', notificationHistoryId);
 

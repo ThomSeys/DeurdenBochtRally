@@ -119,7 +119,7 @@ export default function App() {
         scope: '/',
         updateViaCache: 'none' // Always fetch fresh SW
       })
-        .then((registration) => {
+        .then(async (registration) => {
           console.info('[sw] Service worker registered successfully', {
             scope: registration.scope,
             installing: !!registration.installing,
@@ -136,6 +136,28 @@ export default function App() {
           setInterval(() => {
             registration.update().catch(() => {});
           }, 60000);
+
+          // Auto-sync push subscription if it exists and permission is granted
+          if ('PushManager' in window && Notification.permission === 'granted') {
+            try {
+              const existingSubscription = await registration.pushManager.getSubscription();
+              if (existingSubscription) {
+                // Re-register the subscription with the server to ensure it's in the database
+                await fetch('/api/push-subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    action: 'subscribe',
+                    subscription: existingSubscription.toJSON(),
+                  }),
+                }).catch((err) => {
+                  console.warn('[push] Failed to sync subscription:', err);
+                });
+              }
+            } catch (err) {
+              console.warn('[push] Failed to check existing subscription:', err);
+            }
+          }
         })
         .catch((error) => {
           console.error('[sw] Service worker registration failed:', {
