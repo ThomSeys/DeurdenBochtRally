@@ -30,10 +30,10 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     }
 
-    await userLogger.critical('emergency', 'Creating emergency SOS alert', { 
-      latitude, 
+    await userLogger.critical('emergency', `Creating emergency SOS alert ${ 
+      latitude }, ${
       longitude 
-    });
+    }`);
 
     // Insert emergency SOS alert
     const { data: alert, error } = await supabaseAdmin
@@ -59,11 +59,11 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     }
 
-    await userLogger.critical('emergency', 'Emergency SOS alert created successfully', {
-      alertId: alert.id,
-      latitude,
-      longitude
-    });
+    await userLogger.critical('emergency', `Emergency SOS alert created successfully ${ 
+      alert.id }, ${
+      latitude }, ${
+      longitude 
+    }`);
 
     // TODO: Send push notifications to admins
     // TODO: Send SMS to emergency contacts

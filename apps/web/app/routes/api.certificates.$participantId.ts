@@ -5,7 +5,7 @@ import { generateParticipantCertificate } from '~/lib/pdf-generator.server';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
-  const participantId = Number(params.participantId);
+  const participantId = params.participantId;
 
   if (!participantId) {
     throw new Response('Invalid participant ID', { status: 400 });

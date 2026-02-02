@@ -81,10 +81,10 @@ export async function action({ request }: ActionFunctionArgs) {
       .eq('id', participantId)
       .single();
 
-    console.info('[admin.manual-scan] action success', { participantId, zoneId });
+    console.info('[admin.manual-scan] action success', { participantId, rallyZoneId });
 
     return { 
-      success: `Manual scan created for ${participant?.first_name} ${participant?.last_name} - Zone ${zoneId}`,
+      success: `Manual scan created for ${participant?.first_name} ${participant?.last_name} - Zone ${rallyZoneId}`,
       submissionId: data.id
     };
   } catch (error) {

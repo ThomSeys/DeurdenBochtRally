@@ -1,6 +1,6 @@
-import { json, type LoaderFunctionArgs } from 'react-router';
+import { type LoaderFunctionArgs } from 'react-router';
+import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
-import { requireAdmin } from '~/lib/auth.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -9,7 +9,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const participantId = url.searchParams.get('participant_id');
 
   if (!participantId) {
-    return json({ error: 'participant_id is required' }, { status: 400 });
+    return { error: 'participant_id is required', status: 400 };
   }
 
   const { data, error } = await supabaseAdmin
@@ -18,8 +18,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .eq('participant_id', participantId);
 
   if (error) {
-    return json({ error: error.message }, { status: 500 });
+    return { error: error.message, status: 500 };
   }
 
-  return json(data || []);
+  return { data: data || [] };
 }

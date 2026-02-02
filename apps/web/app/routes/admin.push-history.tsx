@@ -247,51 +247,51 @@ export default function AdminPushHistory() {
               <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Message sent successfully! Sent: {result.sent}, Failed: {result.failed}, Expired: {result.expired}
+              Message sent successfully! Sent: {result.sent}, Failed: {result.failed}
             </p>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 sm:gap-4 mb-6 border-b overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setSelectedTab('history')}
-            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 text-sm ${
               selectedTab === 'history'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            History
+            <span className="hidden xs:inline">History</span>
           </button>
           <button
             onClick={() => setSelectedTab('broadcast')}
-            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 text-sm ${
               selectedTab === 'broadcast'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
             </svg>
-            Broadcast
+            <span className="hidden xs:inline">Broadcast</span>
           </button>
           <button
             onClick={() => setSelectedTab('send-targeted')}
-            className={`px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 border-b-2 transition whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 text-sm ${
               selectedTab === 'send-targeted'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
             </svg>
-            Targeted
+            <span className="hidden xs:inline">Targeted</span>
           </button>
         </div>
 
@@ -303,7 +303,7 @@ export default function AdminPushHistory() {
               <select
                 value={eventTypeFilter || ''}
                 onChange={(e) => handleFilterChange(e.target.value)}
-                className="px-4 py-2 border rounded-lg"
+                className="w-full sm:w-auto px-4 py-2 border rounded-lg text-sm"
               >
                 <option value="">All Events</option>
                 {eventTypes?.map((type: string) => (
@@ -314,80 +314,158 @@ export default function AdminPushHistory() {
               </select>
             </div>
 
-            {/* History Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Title</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Results</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Sent At</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {history.map((notif: Database['public']['Tables']['push_notifications_history']['Row']) => (
-                    <tr key={notif.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{notif.title}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+            {/* Empty state */}
+            {history.length === 0 && (
+              <div className="bg-white rounded-lg shadow p-8 text-center">
+                <div className="flex justify-center mb-4">
+                  <Icon name="bell" className="w-16 h-16 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Geen notificaties gevonden</h3>
+                <p className="text-gray-600">Er zijn nog geen push notificaties verzonden, of je filter heeft geen resultaten.</p>
+              </div>
+            )}
+
+            {/* Mobile Card Layout */}
+            <div className="md:hidden space-y-4">
+              {history.map((notif: Database['public']['Tables']['push_notifications_history']['Row']) => (
+                <div key={notif.id} className="bg-white rounded-lg shadow p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 break-words">{notif.title}</h3>
+                      <div className="flex items-center flex-wrap gap-2 mt-2">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium whitespace-nowrap">
                           {notif.event_type}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            notif.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : notif.status === 'failed'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {notif.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="text-xs">
-                          <p className="flex items-center gap-1">
-                            <Icon name="check" className="w-4 h-4 text-green-600" /> {notif.success_count}/{notif.recipient_count}
-                          </p>
-                          {(notif.failed_count ?? 0) > 0 && <p className="text-red-600">❌ {notif.failed_count}</p>}
-                          {(notif.expired_count ?? 0) > 0 && <p className="text-gray-600">⏱️ {notif.expired_count}</p>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {notif.sent_at && new Date(notif.sent_at).toLocaleDateString('nl-NL', {
-                          year: 'numeric',
+                      </div>
+                    </div>
+
+                    <div className="text-xs space-y-1">
+                      <p className="flex items-center gap-1 text-gray-700">
+                        <Icon name="users" className="w-3.5 h-3.5 text-gray-500" /> 
+                        <span className="font-medium">Ontvangers:</span> {notif.recipient_count}
+                      </p>
+                      <p className="flex items-center gap-1">
+                        <Icon name="check" className="w-3.5 h-3.5 text-green-600" /> 
+                        <span className="font-medium">Succesvol:</span> {notif.success_count}
+                      </p>
+                      {(notif.failed_count ?? 0) > 0 && (
+                        <p className="text-red-600 flex items-center gap-1">
+                          <Icon name="x" className="w-3.5 h-3.5" /> 
+                          <span className="font-medium">Mislukt:</span> {notif.failed_count}
+                        </p>
+                      )}
+                      <p className="text-gray-600">
+                        <span className="font-medium">Verzonden:</span> {notif.sent_at && new Date(notif.sent_at).toLocaleDateString('nl-NL', {
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <button
-                          onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
-                          className="text-primary-600 hover:text-primary-800"
-                        >
-                          {expandedId === notif.id ? 'Hide' : 'Details'}
-                        </button>
-                      </td>
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                      className="w-full px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                    >
+                      {expandedId === notif.id ? 'Hide Details' : 'Show Details'}
+                    </button>
+
+                    {expandedId === notif.id && (
+                      <div className="pt-3 border-t space-y-2 text-sm">
+                        <p className="break-words"><strong>Message:</strong> {notif.body}</p>
+                        <p><strong>Target Type:</strong> {notif.event_type}</p>
+                        {notif.metadata && (
+                          <p className="break-all"><strong>Criteria:</strong> {JSON.stringify(notif.metadata)}</p>
+                        )}
+                        {(notif.failed_count ?? 0) > 0 && (
+                          <fetcher.Form method="POST" className="pt-2">
+                            <input type="hidden" name="_action" value="retry-failed" />
+                            <input type="hidden" name="historyId" value={notif.id} />
+                            <button
+                              type="submit"
+                              disabled={isLoading}
+                              className="w-full px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 disabled:opacity-50"
+                            >
+                              🔄 Retry Failed
+                            </button>
+                          </fetcher.Form>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Title</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Results</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Sent At</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {history.map((notif: Database['public']['Tables']['push_notifications_history']['Row']) => (
+                      <tr key={notif.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">{notif.title}</td>
+                        <td className="px-6 py-4 text-sm">
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                            {notif.event_type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="text-xs space-y-1">
+                            <p className="flex items-center gap-1 text-gray-700">
+                              <Icon name="users" className="w-3.5 h-3.5 text-gray-500" /> {notif.recipient_count} ontvangers
+                            </p>
+                            <p className="flex items-center gap-1 text-green-700">
+                              <Icon name="check" className="w-3.5 h-3.5 text-green-600" /> {notif.success_count} succesvol
+                            </p>
+                            {(notif.failed_count ?? 0) > 0 && (
+                              <p className="flex items-center gap-1 text-red-700">
+                                <Icon name="x" className="w-3.5 h-3.5 text-red-600" /> {notif.failed_count} mislukt
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                          {notif.sent_at && new Date(notif.sent_at).toLocaleDateString('nl-NL', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <button
+                            onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                            className="text-primary-600 hover:text-primary-800"
+                          >
+                            {expandedId === notif.id ? 'Hide' : 'Details'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Expanded Details */}
               {expandedId && history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId) && (
                 <div className="bg-gray-50 px-6 py-4 border-t">
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-sm">
                     <p><strong>Message:</strong> {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.body}</p>
-                    <p><strong>Target Type:</strong> {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_type}</p>
-                    {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_criteria && (
-                      <p><strong>Target Criteria:</strong> {JSON.stringify(history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_criteria)}</p>
+                    <p><strong>Target Type:</strong> {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.event_type}</p>
+                    {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.metadata && (
+                      <p><strong>Target Criteria:</strong> {JSON.stringify(history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.metadata)}</p>
                     )}
                   </div>
 
@@ -409,21 +487,21 @@ export default function AdminPushHistory() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-6 flex gap-2 justify-between">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-2 justify-between items-center">
               <button
                 onClick={() => handlePageChange(Math.max(0, (offset ?? 0) - (limit ?? 20)))}
                 disabled={(offset ?? 0) === 0}
-                className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 text-sm font-medium"
               >
                 ← Previous
               </button>
-              <span className="py-2">
+              <span className="text-sm text-gray-600">
                 Page {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} of {Math.ceil(total / (limit ?? 20))}
               </span>
               <button
                 onClick={() => handlePageChange((offset ?? 0) + (limit ?? 20))}
                 disabled={(offset ?? 0) + (limit ?? 20) >= total}
-                className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 text-sm font-medium"
               >
                 Next →
               </button>

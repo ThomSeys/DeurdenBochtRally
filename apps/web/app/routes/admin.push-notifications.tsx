@@ -959,13 +959,13 @@ export default function AdminPushNotifications() {
 
         {/* History Tab */}
         {selectedTab === 'history' && (
-          <div className="bg-white rounded-b-lg shadow p-6">
+          <div className="bg-white rounded-b-lg shadow p-4 sm:p-6">
             {/* Filter */}
             <div className="mb-6 flex gap-2">
               <select
                 value={eventTypeFilter || ''}
                 onChange={(e) => handleFilterChange(e.target.value)}
-                className="px-4 py-2 border rounded-lg bg-white"
+                className="w-full sm:w-auto px-4 py-2 border rounded-lg bg-white text-sm"
               >
                 <option value="">Alle Evenementen</option>
                 {eventTypes?.map((type: string) => (
@@ -976,8 +976,96 @@ export default function AdminPushNotifications() {
               </select>
             </div>
 
-            {/* History Table */}
-            <div className="overflow-hidden rounded-lg border">
+            {/* Mobile Card Layout */}
+            <div className="md:hidden space-y-4">
+              {history.map((notif: Database['public']['Tables']['push_notifications_history']['Row']) => (
+                <div key={notif.id} className="border rounded-lg p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 break-words">{notif.title}</h3>
+                      <div className="flex items-center flex-wrap gap-2 mt-2">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium whitespace-nowrap">
+                          {notif.event_type}
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
+                            notif.success_count === notif.recipient_count
+                              ? 'bg-green-100 text-green-800'
+                              : (notif.failed_count ?? 0) === notif.recipient_count
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {notif.success_count === notif.recipient_count ? 'Voltooid' : (notif.failed_count ?? 0) === notif.recipient_count ? 'Mislukt' : 'In behandeling'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-xs space-y-1">
+                      <p className="flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="font-medium">Succesvol:</span> {notif.success_count}/{notif.recipient_count}
+                      </p>
+                      {(notif.failed_count ?? 0) > 0 && (
+                        <p className="text-red-600 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <span className="font-medium">Mislukt:</span> {notif.failed_count}
+                        </p>
+                      )}
+                      <p className="text-gray-600">
+                        <span className="font-medium">Verzonden:</span> {notif.sent_at &&
+                          new Date(notif.sent_at).toLocaleDateString('nl-NL', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                      className="w-full px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                    >
+                      {expandedId === notif.id ? 'Verberg Details' : 'Toon Details'}
+                    </button>
+
+                    {expandedId === notif.id && (
+                      <div className="pt-3 border-t space-y-2 text-sm">
+                        <p className="break-words"><strong>Bericht:</strong> {notif.body}</p>
+                        <p><strong>Doeltype:</strong> {notif.event_type}</p>
+                        {notif.metadata && typeof notif.metadata === 'object' && 'target_criteria' in notif.metadata && (
+                          <p className="break-all"><strong>Criteria:</strong> {JSON.stringify(notif.metadata.target_criteria)}</p>
+                        )}
+                        {(notif.failed_count ?? 0) > 0 && (
+                          <fetcher.Form method="POST" className="pt-2">
+                            <input type="hidden" name="_action" value="retry-failed" />
+                            <input type="hidden" name="historyId" value={notif.id} />
+                            <button
+                              type="submit"
+                              disabled={isLoading}
+                              className="w-full px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 disabled:opacity-50 font-medium flex items-center justify-center gap-1"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              Mislukte Opnieuw Proberen
+                            </button>
+                          </fetcher.Form>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden md:block overflow-hidden rounded-lg border">
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
@@ -1001,14 +1089,14 @@ export default function AdminPushNotifications() {
                       <td className="px-6 py-4 text-sm">
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
-                            notif.status === 'completed'
+                            notif.success_count === notif.recipient_count
                               ? 'bg-green-100 text-green-800'
-                              : notif.status === 'failed'
+                              : (notif.failed_count ?? 0) === notif.recipient_count
                               ? 'bg-red-100 text-red-800'
                               : 'bg-yellow-100 text-yellow-800'
                           }`}
                         >
-                          {notif.status === 'completed' ? 'Voltooid' : notif.status === 'failed' ? 'Mislukt' : 'In behandeling'}
+                          {notif.success_count === notif.recipient_count ? 'Voltooid' : (notif.failed_count ?? 0) === notif.recipient_count ? 'Mislukt' : 'In behandeling'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
@@ -1027,17 +1115,9 @@ export default function AdminPushNotifications() {
                               {notif.failed_count}
                             </p>
                           )}
-                          {(notif.expired_count ?? 0) > 0 && (
-                            <p className="text-gray-600 flex items-center gap-1">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              {notif.expired_count}
-                            </p>
-                          )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                         {notif.sent_at &&
                           new Date(notif.sent_at).toLocaleDateString('nl-NL', {
                             year: 'numeric',
@@ -1064,20 +1144,24 @@ export default function AdminPushNotifications() {
               {expandedId &&
                 history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId) && (
                   <div className="bg-gray-50 px-6 py-4 border-t">
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-sm">
                       <p>
                         <strong>Bericht:</strong> {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.body}
                       </p>
                       <p>
                         <strong>Doeltype:</strong>{' '}
-                        {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_type}
+                        {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.event_type}
                       </p>
-                      {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_criteria && (
-                        <p>
-                          <strong>Doelcriteria:</strong>{' '}
-                          {JSON.stringify(history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.target_criteria)}
-                        </p>
-                      )}
+                      {(() => {
+                        const notif = history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId);
+                        const metadata = notif?.metadata;
+                        return metadata && typeof metadata === 'object' && 'target_criteria' in metadata && (
+                          <p>
+                            <strong>Doelcriteria:</strong>{' '}
+                            {JSON.stringify(metadata.target_criteria)}
+                          </p>
+                        );
+                      })()}
                     </div>
 
                     {history.find((h: Database['public']['Tables']['push_notifications_history']['Row']) => h.id === expandedId)?.failed_count! > 0 && (
@@ -1101,21 +1185,21 @@ export default function AdminPushNotifications() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-6 flex gap-2 justify-between">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-2 justify-between items-center">
               <button
                 onClick={() => handlePageChange(Math.max(0, (offset ?? 0) - (limit ?? 20)))}
                 disabled={(offset ?? 0) === 0}
-                className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium text-sm"
               >
                 ← Vorige
               </button>
-              <span className="py-2">
+              <span className="text-sm text-gray-600">
                 Pagina {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} van {Math.ceil(total / (limit ?? 20))}
               </span>
               <button
                 onClick={() => handlePageChange((offset ?? 0) + (limit ?? 20))}
                 disabled={(offset ?? 0) + (limit ?? 20) >= total}
-                className="px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 font-medium text-sm"
               >
                 Volgende →
               </button>

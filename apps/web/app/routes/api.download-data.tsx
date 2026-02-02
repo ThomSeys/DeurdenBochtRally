@@ -63,7 +63,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     // Get push notification history
     const { data: pushHistory, error: pushError } = await supabaseAdmin
-      .from('push_notification_history')
+      .from('push_notifications_history')
       .select('*')
       .eq('participant_id', user.id);
 
