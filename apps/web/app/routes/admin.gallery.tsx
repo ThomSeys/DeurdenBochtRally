@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useState, useEffect } from 'react';
 import { useToast } from '~/contexts/ToastContext';
+import { createRequestLogger } from '~/lib/logger.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Foto Beheer - Admin - Deur Den Bocht' }];
