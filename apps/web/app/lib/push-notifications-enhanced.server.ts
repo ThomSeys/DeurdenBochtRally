@@ -153,8 +153,16 @@ export async function sendPushNotificationWithHistory(
 
   const notificationHistoryId = historyRecord?.id;
 
-  // Send notifications
-  const results = await sendBulkPushNotifications(subscriptions, notification);
+  // Send notifications with event data included in the payload
+  const notificationWithData = {
+    ...notification,
+    data: {
+      ...(notification.data || {}),
+      ...(eventData || {}),
+    },
+  };
+  
+  const results = await sendBulkPushNotifications(subscriptions, notificationWithData);
 
   // Update history with results
   if (notificationHistoryId) {
