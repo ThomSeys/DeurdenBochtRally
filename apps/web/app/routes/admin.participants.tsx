@@ -1,11 +1,12 @@
-import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
-import { useLoaderData, Link, Form } from 'react-router';
+import type { LoaderFunctionArgs, MetaFunction, ActionFunctionArgs } from 'react-router';
+import { useLoaderData, Link, Form, useSubmit, redirect } from 'react-router';
 import { useState } from 'react';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { createAuditLogEntry } from '~/lib/audit-log.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -62,9 +63,106 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { participants: participants || [], searchQuery, paymentFilter, checkedInFilter, selectedParticipant: selectedParticipant };
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+  const adminUserId = await requireAdmin(request);
+  const requestLogger = createRequestLogger(request, adminUserId);
+  
+  const formData = await request.formData();
+  const intent = formData.get('intent');
+  const participantId = formData.get('participantId') as string;
+
+  if (intent === 'delete' && participantId) {
+    try {
+      // Get full participant data for audit log
+      const { data: participant } = await supabaseAdmin
+        .from('participants')
+        .select('*')
+        .eq('id', participantId)
+        .single();
+
+      if (!participant) {
+        return { error: 'Deelnemer niet gevonden' };
+      }
+
+      // Prevent deleting admin users
+      if (participant.is_admin) {
+        await requestLogger.warn('admin', 'Attempted to delete admin user', {
+          participantId,
+          participantEmail: participant.email,
+        });
+        return { error: 'Kan geen admin gebruikers verwijderen' };
+      }
+
+      // Create audit log entry BEFORE deletion
+      const clientIp = request.headers.get('cf-connecting-ip') || 
+                       request.headers.get('x-forwarded-for') || 
+                       request.headers.get('x-real-ip');
+      const userAgent = request.headers.get('user-agent');
+
+      await createAuditLogEntry(participant, {
+        eventType: 'admin_deletion',
+        reason: 'Deleted by admin via participant management',
+        deletedBy: adminUserId,
+        ipAddress: clientIp,
+        userAgent: userAgent,
+      });
+
+      // Delete dependent data first
+      await supabaseAdmin.from('participant_achievements').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('rally_zone_checkins').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('ride_stories').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('participant_photos').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('emergency_contacts').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('push_subscriptions').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('riding_buddies').delete().or(`participant_id.eq.${participantId},buddy_id.eq.${participantId}`);
+      await supabaseAdmin.from('certificates').delete().eq('participant_id', participantId);
+      await supabaseAdmin.from('emergency_sos').delete().eq('participant_id', participantId);
+
+      // Delete participant
+      const { error: deleteError } = await supabaseAdmin
+        .from('participants')
+        .delete()
+        .eq('id', participantId);
+
+      if (deleteError) {
+        await requestLogger.error('admin', 'Failed to delete participant', deleteError as Error, {
+          participantId,
+          participantEmail: participant.email,
+        });
+        return { error: 'Fout bij verwijderen deelnemer' };
+      }
+
+      // Delete auth user
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(participantId);
+      } catch (authError) {
+        console.error('[admin.participants] Failed to delete auth user:', authError);
+        // Continue anyway - participant is deleted
+      }
+
+      await requestLogger.warn('admin', 'Participant deleted by admin', {
+        participantId,
+        participantEmail: participant.email,
+        deletedBy: adminUserId,
+      });
+
+      return redirect('/admin/participants?deleted=success');
+    } catch (error) {
+      await requestLogger.error('admin', 'Error deleting participant', error as Error, {
+        participantId,
+      });
+      return { error: 'Onverwachte fout bij verwijderen' };
+    }
+  }
+
+  return { error: 'Ongeldige actie' };
+}
+
 export default function AdminParticipants() {
   const { participants, searchQuery, paymentFilter, checkedInFilter, selectedParticipant: loaderSelectedParticipant } = useLoaderData<typeof loader>();
   const [selectedParticipant, setSelectedParticipant] = useState<any>(loaderSelectedParticipant);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const submit = useSubmit();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -237,12 +335,23 @@ export default function AdminParticipants() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => setSelectedParticipant(participant)}
-                        className="text-primary-600 hover:text-primary-700 font-medium"
-                      >
-                        Details →
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setSelectedParticipant(participant)}
+                          className="text-primary-600 hover:text-primary-700 font-medium"
+                        >
+                          Details →
+                        </button>
+                        {!participant.is_admin && (
+                          <button
+                            onClick={() => setDeleteConfirm(participant.id)}
+                            className="text-red-600 hover:text-red-700 font-medium"
+                            title="Verwijder deelnemer"
+                          >
+                            <Icon name="trash" className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -330,6 +439,68 @@ export default function AdminParticipants() {
                   <Icon name="clock" className="w-4 h-4 inline mr-2" /> Bekijk Tijdlijn
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1200]">
+          <div className="bg-white rounded-sm max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <Icon name="trash" className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Deelnemer Verwijderen</h3>
+                <p className="text-sm text-gray-600">
+                  {participants.find(p => p.id === deleteConfirm)?.first_name}{' '}
+                  {participants.find(p => p.id === deleteConfirm)?.last_name}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
+              <p className="text-sm text-yellow-800 font-medium mb-2">⚠️ Waarschuwing</p>
+              <p className="text-sm text-yellow-700">
+                Dit verwijdert <strong>alle gegevens</strong> van deze deelnemer:
+              </p>
+              <ul className="text-sm text-yellow-700 mt-2 ml-4 list-disc space-y-1">
+                <li>Persoonlijke informatie</li>
+                <li>Rally inzendingen en scores</li>
+                <li>Achievements en certificaten</li>
+                <li>Foto's en verhalen</li>
+                <li>Emergency contacten</li>
+                <li>Riding buddy verbindingen</li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+              <p className="text-xs text-blue-800">
+                <Icon name="info" className="w-4 h-4 inline mr-1" /> Een audit log wordt bewaard voor administratieve doeleinden
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-sm font-medium transition-colors"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={() => {
+                  const formData = new FormData();
+                  formData.append('intent', 'delete');
+                  formData.append('participantId', deleteConfirm);
+                  submit(formData, { method: 'post' });
+                  setDeleteConfirm(null);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-sm font-medium transition-colors"
+              >
+                Ja, Verwijderen
+              </button>
             </div>
           </div>
         </div>

@@ -537,6 +537,75 @@ export type Database = {
           },
         ]
       }
+      participant_audit_log: {
+        Row: {
+          amount_paid: number | null
+          created_at: string
+          deleted_by: string | null
+          edition_year: number | null
+          email: string
+          event_type: string
+          first_name: string
+          formula: string | null
+          id: number
+          ip_address: unknown
+          last_name: string
+          metadata: Json | null
+          participant_id: string
+          payment_date: string | null
+          payment_status: string | null
+          phone: string | null
+          reason: string | null
+          ride_type: string | null
+          stripe_payment_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string
+          deleted_by?: string | null
+          edition_year?: number | null
+          email: string
+          event_type: string
+          first_name: string
+          formula?: string | null
+          id?: number
+          ip_address?: unknown
+          last_name: string
+          metadata?: Json | null
+          participant_id: string
+          payment_date?: string | null
+          payment_status?: string | null
+          phone?: string | null
+          reason?: string | null
+          ride_type?: string | null
+          stripe_payment_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string
+          deleted_by?: string | null
+          edition_year?: number | null
+          email?: string
+          event_type?: string
+          first_name?: string
+          formula?: string | null
+          id?: number
+          ip_address?: unknown
+          last_name?: string
+          metadata?: Json | null
+          participant_id?: string
+          payment_date?: string | null
+          payment_status?: string | null
+          phone?: string | null
+          reason?: string | null
+          ride_type?: string | null
+          stripe_payment_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       participant_photos: {
         Row: {
           caption: string | null
@@ -1665,6 +1734,7 @@ export type Database = {
         Args: { p_participant_id: string }
         Returns: undefined
       }
+      cleanup_old_system_logs: { Args: never; Returns: undefined }
       decrement_photo_likes: { Args: { photo_id: string }; Returns: undefined }
       get_leaderboard: {
         Args: never

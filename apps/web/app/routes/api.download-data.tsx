@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
+import { logDataExport } from '~/lib/audit-log.server';
 
 /**
  * GDPR Compliance: Export user data
@@ -81,6 +82,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
       exported_at: new Date().toISOString(),
       data_export_notice: 'This is your complete personal data as stored in our system, exported in compliance with GDPR regulations.',
     };
+
+    // Log the data export for audit trail
+    try {
+      await logDataExport(
+        participant.id,
+        participant.email,
+        participant.first_name,
+        participant.last_name,
+        request
+      );
+    } catch (auditError) {
+      console.error('[api.download-data] Failed to log data export:', auditError);
+      // Continue with export even if logging fails
+    }
 
     // Return as downloadable JSON file
     const filename = `deur-den-bocht-data-${user.id}-${Date.now()}.json`;

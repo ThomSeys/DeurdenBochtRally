@@ -3,6 +3,7 @@ import { requireUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sendEmail } from '~/lib/email.server';
 import { createRequestLogger } from '~/lib/logger.server';
+import { createAuditLogEntry } from '~/lib/audit-log.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -15,10 +16,10 @@ export async function action({ request }: ActionFunctionArgs) {
   await requestLogger.warn('gdpr', 'Account deletion initiated');
 
   try {
-    // Get participant info for confirmation email
+    // Get full participant info for audit log
     const { data: participant } = await supabaseAdmin
       .from('participants')
-      .select('email, first_name, last_name')
+      .select('*')
       .eq('id', userId)
       .single();
 
@@ -26,6 +27,21 @@ export async function action({ request }: ActionFunctionArgs) {
       await requestLogger.error('gdpr', 'Account deletion failed: participant not found');
       return Response.json({ error: 'Participant not found' }, { status: 404 });
     }
+
+    // Step 0: Create audit log entry BEFORE deletion
+    // This maintains a record for legal/accounting compliance
+    const clientIp = request.headers.get('cf-connecting-ip') || 
+                     request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip');
+    const userAgent = request.headers.get('user-agent');
+
+    await createAuditLogEntry(participant, {
+      eventType: 'account_deleted',
+      reason: 'Self-service GDPR deletion (Art. 17 - Right to be forgotten)',
+      deletedBy: undefined, // undefined = self-deletion
+      ipAddress: clientIp,
+      userAgent: userAgent,
+    });
 
     // Step 1: Delete from dependent tables first (foreign key constraints)
     
@@ -44,6 +60,48 @@ export async function action({ request }: ActionFunctionArgs) {
     // Delete rally submission
     await supabaseAdmin
       .from('rally_submissions')
+      .delete()
+      .eq('participant_id', userId);
+
+    // Delete ride stories
+    await supabaseAdmin
+      .from('ride_stories')
+      .delete()
+      .eq('participant_id', userId);
+
+    // Delete photos
+    await supabaseAdmin
+      .from('participant_photos')
+      .delete()
+      .eq('participant_id', userId);
+
+    // Delete emergency contacts
+    await supabaseAdmin
+      .from('emergency_contacts')
+      .delete()
+      .eq('participant_id', userId);
+
+    // Delete push subscriptions
+    await supabaseAdmin
+      .from('push_subscriptions')
+      .delete()
+      .eq('participant_id', userId);
+
+    // Delete riding buddies (both directions)
+    await supabaseAdmin
+      .from('riding_buddies')
+      .delete()
+      .or(`participant_id.eq.${userId},buddy_id.eq.${userId}`);
+
+    // Delete certificates
+    await supabaseAdmin
+      .from('certificates')
+      .delete()
+      .eq('participant_id', userId);
+
+    // Delete emergency SOS records
+    await supabaseAdmin
+      .from('emergency_sos')
       .delete()
       .eq('participant_id', userId);
 

@@ -4,6 +4,11 @@
  * This logger writes all logs to the Supabase database for centralized monitoring
  * and debugging. Logs are stored in the system_logs table.
  * 
+ * Automatic Cleanup:
+ * - System logs older than 7 days are automatically deleted
+ * - Cleanup runs opportunistically when logs are written (max once per 24h)
+ * - No cron jobs required (free-tier compatible)
+ * 
  * Usage:
  * ```typescript
  * import { logger } from '~/lib/logger.server';
@@ -18,6 +23,10 @@
  */
 
 import { supabaseAdmin } from './supabase.server';
+
+// Track last cleanup time (in-memory, resets on server restart)
+let lastCleanupTime = 0;
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'critical';
 
@@ -171,6 +180,9 @@ class Logger {
         // Fallback to console if database write fails
         console.error('[Logger] Failed to write log to database:', error);
         console.log('[Logger] Original log:', entry);
+      } else {
+        // Opportunistic cleanup: run cleanup once per day
+        this.maybeCleanupOldLogs();
       }
 
       // Also log to console in development
@@ -186,6 +198,51 @@ class Logger {
       // Catch-all fallback to console
       console.error('[Logger] Exception in logger:', err);
       console.log('[Logger] Original log entry:', entry);
+    }
+  }
+
+  /**
+   * Opportunistic cleanup of old logs
+   * Only runs if 24 hours have passed since last cleanup
+   */
+  private maybeCleanupOldLogs(): void {
+    const now = Date.now();
+    
+    // Check if enough time has passed (non-blocking)
+    if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) {
+      return; // Too soon, skip
+    }
+
+    // Update timestamp immediately to prevent concurrent cleanups
+    lastCleanupTime = now;
+
+    // Run cleanup in background (don't await, don't block logging)
+    this.performCleanup().catch((err) => {
+      console.error('[Logger] Background cleanup failed:', err);
+      // Reset timestamp on failure so we retry sooner
+      lastCleanupTime = now - CLEANUP_INTERVAL_MS + (60 * 60 * 1000); // Retry in 1 hour
+    });
+  }
+
+  /**
+   * Actually perform the cleanup
+   */
+  private async performCleanup(): Promise<void> {
+    try {
+      // Call the database function to delete old logs
+      const { data, error } = await supabaseAdmin.rpc('cleanup_old_system_logs');
+
+      if (error) {
+        throw new Error(`Cleanup RPC failed: ${error.message}`);
+      }
+
+      // Log the cleanup result (if any logs were deleted)
+      if (data > 0) {
+        console.log(`[Logger] Cleaned up ${data} old system logs`);
+      }
+    } catch (err) {
+      console.error('[Logger] Cleanup error:', err);
+      throw err;
     }
   }
 

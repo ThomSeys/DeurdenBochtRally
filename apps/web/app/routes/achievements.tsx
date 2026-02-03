@@ -208,7 +208,7 @@ export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked
 async function getParticipantStats(participantId: string) {
   const { data: participant } = await supabaseAdmin
     .from('participants')
-    .select('checked_in, checkin_time')
+    .select('checked_in')
     .eq('id', participantId)
     .single();
 
@@ -243,7 +243,6 @@ async function getParticipantStats(participantId: string) {
     likes_received: likes?.length || 0,
     stories_shared: stories?.length || 0,
     checked_in: participant?.checked_in || false,
-    checkin_time: participant?.checkin_time || null,
   };
 }
 
