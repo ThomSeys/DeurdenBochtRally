@@ -45,7 +45,6 @@ export default function ZoneRouteTips({
   };
 
   const renderRouteTip = (tip: any) => {
-    console.log("🚀 ~ renderRouteTip ~ tip.locations.length:", tip.locations.length);
     return (
       <div className="bg-white border-2 border-accent-500 rounded-lg p-6 shadow-md h-full flex flex-col">
         <div className="flex items-start gap-3 flex-1">
