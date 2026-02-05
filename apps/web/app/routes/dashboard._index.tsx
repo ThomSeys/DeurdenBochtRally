@@ -211,6 +211,7 @@ export default function Dashboard() {
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
   const [pushDebugInfo, setPushDebugInfo] = useState<string>('');
+  const [showChallengesModal, setShowChallengesModal] = useState(false);
 
   // Check if already subscribed to push notifications
   useEffect(() => {
@@ -530,14 +531,8 @@ export default function Dashboard() {
                   <p className="font-bold text-3xl text-green-600">{challengeStats.total_correct}/{challengeStats.total_submitted}</p>
                 </div>
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">Status</p>
-                  {challengeStats.total_submitted === 0 ? (
-                    <p className="text-gray-600 font-medium">Nog geen challenges ingestuurd</p>
-                  ) : (
-                    <p className="text-green-600 font-medium">
-                      {Math.round((challengeStats.total_correct / challengeStats.total_submitted) * 100)}% correct
-                    </p>
-                  )}
+                  <p className="text-gray-600 text-sm mb-1">Nog te beoordelen</p>
+                  <p className="font-bold text-3xl text-accent-500">{completedChallenges.length - challengeStats.total_submitted}</p>
                 </div>
               </div>
               {challengeStats.total_submitted === 0 && (
@@ -545,84 +540,19 @@ export default function Dashboard() {
                   Ontdek challenges op de rally zones en verdien punten! 🎯
                 </p>
               )}
+              {completedChallenges.length > 0 && (
+                <button
+                  onClick={() => setShowChallengesModal(true)}
+                  className="mt-4 w-full px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-sm font-medium transition-colors"
+                >
+                  Bekijk alle {completedChallenges.length} challenges →
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        {/* Completed Challenges List */}
-        {completedChallenges.length > 0 && (
-          <div className="mb-8">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon name="check-circle" className="w-6 h-6 text-green-600" />
-              Mijn Ingestuurde Challenges
-            </h3>
-            <div className="space-y-4">
-              {completedChallenges.map((challenge: any) => (
-                <div 
-                  key={challenge.id}
-                  className={`bg-white rounded-sm shadow p-6 border-l-4 ${
-                    challenge.is_correct ? 'border-l-green-600' : challenge.is_validated ? 'border-l-red-600' : 'border-l-yellow-600'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-lg text-gray-900 mb-2">
-                        {challenge.challenge_details?.title || challenge.route_tips?.title || 'Routetip'}
-                      </h4>
-                      <p className="text-gray-700 mb-3">
-                        <span className="font-medium">Vraag:</span> {challenge.challenge_details?.question || challenge.route_tips?.question || 'Vraag niet beschikbaar'}
-                      </p>
-                      <div className="flex flex-wrap gap-3 text-sm">
-                        <div className="bg-blue-50 px-3 py-1 rounded">
-                          <span className="text-blue-700 font-medium">
-                            📍 {challenge.rally_zones?.name || 'Zone'}
-                          </span>
-                        </div>
-                        <div className={`px-3 py-1 rounded ${
-                          challenge.is_correct 
-                            ? 'bg-green-50 text-green-700'
-                            : challenge.is_validated 
-                              ? challenge.is_correct === false ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-700'
-                              : 'bg-yellow-50 text-yellow-700'
-                        }`}>
-                          <span className="font-medium">
-                            {challenge.is_correct 
-                              ? '✓ Correct' 
-                              : challenge.is_validated 
-                                ? challenge.is_correct === false ? '✗ Incorrect' : '✓ Goedgekeurd'
-                                : '⏳ Wacht op goedkeuring'}
-                          </span>
-                        </div>
-                        {challenge.points_awarded !== null && (
-                          <div className="bg-amber-50 px-3 py-1 rounded">
-                            <span className="text-amber-700 font-bold">
-                              ⭐ {challenge.points_awarded} pts
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                        {(challenge.challenge_details.submittedAnswer && challenge.challenge_details.correctAnswer) && (
-                        <div className="mt-3 text-sm text-gray-600">
-                          Mijn ingestuurde antwoord: <span className="font-medium">{challenge.challenge_details.submittedAnswer}</span>, correcte antwoord: <span className="font-medium">{challenge.challenge_details?.correctAnswer}</span>
-                        </div>
-                        )}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-3">
-                    Ingestuurd op: {new Date(challenge.submitted_at).toLocaleDateString('nl-NL', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Completed Challenges Modal - Removed from main viewport */}
 
         {/* New Feature Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -915,6 +845,107 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* Completed Challenges Modal */}
+      {showChallengesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1100]">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-4">
+              <h3 className="text-lg font-bold">Mijn Ingestuurde Challenges</h3>
+              <button 
+                onClick={() => setShowChallengesModal(false)} 
+                className="text-white hover:text-amber-100 text-2xl font-light"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+              {completedChallenges.map((challenge: any) => (
+                <div 
+                  key={challenge.id}
+                  className={`bg-white rounded-sm shadow p-4 border-l-4 ${
+                    challenge.is_correct ? 'border-l-green-600' : challenge.is_validated ? 'border-l-red-600' : 'border-l-yellow-600'
+                  }`}
+                >
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    {challenge.challenge_details?.title || challenge.route_tips?.title || 'Routetip'}
+                  </h4>
+                  <p className="text-gray-700 text-sm mb-3">
+                    <span className="font-medium">Vraag:</span> {challenge.challenge_details?.question || challenge.route_tips?.question || 'Vraag niet beschikbaar'}
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs mb-3">
+                    <div className="bg-blue-50 px-2 py-1 rounded flex items-center gap-1">
+                      <Icon name="marker" className="w-3 h-3 text-blue-700" />
+                      <span className="text-blue-700 font-medium">{challenge.rally_zones?.name || 'Zone'}</span>
+                    </div>
+                    <div className={`px-2 py-1 rounded flex items-center gap-1 ${
+                      challenge.is_correct 
+                        ? 'bg-green-50 text-green-700'
+                        : challenge.is_validated 
+                          ? challenge.is_correct === false ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-700'
+                          : 'bg-yellow-50 text-yellow-700'
+                    }`}>
+                      {challenge.is_correct ? (
+                        <>
+                          <Icon name="check" className="w-3 h-3" />
+                          <span className="font-medium">Correct</span>
+                        </>
+                      ) : challenge.is_validated ? (
+                        challenge.is_correct === false ? (
+                          <>
+                            <Icon name="x" className="w-3 h-3" />
+                            <span className="font-medium">Incorrect</span>
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="check" className="w-3 h-3" />
+                            <span className="font-medium">Goedgekeurd</span>
+                          </>
+                        )
+                      ) : (
+                        <>
+                          <Icon name="clock" className="w-3 h-3" />
+                          <span className="font-medium">Wacht op goedkeuring</span>
+                        </>
+                      )}
+                    </div>
+                    {challenge.points_awarded !== null && (
+                      <div className="bg-amber-50 px-2 py-1 rounded flex items-center gap-1">
+                        <Icon name="star" className="w-3 h-3 text-amber-700" />
+                        <span className="text-amber-700 font-bold">{challenge.points_awarded} pts</span>
+                      </div>
+                    )}
+                  </div>
+                  {(challenge.challenge_details?.submittedAnswer && challenge.challenge_details?.correctAnswer) && (
+                    <div className="text-xs text-gray-600 mb-2">
+                      Jouw antwoord: <span className="font-medium">{challenge.challenge_details.submittedAnswer}</span>, Correct: <span className="font-medium">{challenge.challenge_details?.correctAnswer}</span>
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500 border-t border-gray-200 pt-2">
+                    Ingestuurd op: {new Date(challenge.submitted_at).toLocaleDateString('nl-NL', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowChallengesModal(false)}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 font-medium transition-colors"
+              >
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

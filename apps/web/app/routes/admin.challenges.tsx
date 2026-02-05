@@ -199,7 +199,7 @@ export default function AdminChallenges() {
         </div>
 
         {/* Submissions Table */}
-        <div className="bg-white rounded-sm shadow overflow-hidden">
+        <div className="bg-white rounded-sm shadow overflow-x-auto">
           {submissions.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <Icon name="inbox" className="w-12 h-12 mx-auto mb-4 opacity-50" />
