@@ -68,10 +68,7 @@ export async function action({ request }: ActionFunctionArgs) {
       });
 
     if (insertError) {
-      await userLogger.error('rally-checkin', 'Database error during check-in', {
-        error: insertError.message,
-        zoneId
-      });
+      await userLogger.error('rally-checkin', 'Database error during check-in', insertError);
       return { error: 'Er is iets misgegaan bij het opslaan' };
     }
 
@@ -93,9 +90,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return { success: true, message: 'Check-in succesvol!' };
   } catch (error: any) {
-    await requestLogger.error('rally-checkin', 'Unexpected error during check-in', {
-      error: error.message
-    });
+    await requestLogger.error('rally-checkin', 'Unexpected error during check-in', error);
     return { error: 'Er is een onverwachte fout opgetreden' };
   }
 }
