@@ -1562,6 +1562,65 @@ export type Database = {
           },
         ]
       }
+      route_challenge_submissions: {
+        Row: {
+          admin_notes: string | null
+          challenge_type: string
+          id: string
+          is_correct: boolean | null
+          is_validated: boolean | null
+          location_key: string
+          participant_id: string
+          photo_url: string | null
+          points_awarded: number | null
+          submitted_at: string | null
+          text_answer: string | null
+          validated_at: string | null
+          validated_by: string | null
+          zone_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          challenge_type: string
+          id?: string
+          is_correct?: boolean | null
+          is_validated?: boolean | null
+          location_key: string
+          participant_id: string
+          photo_url?: string | null
+          points_awarded?: number | null
+          submitted_at?: string | null
+          text_answer?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          zone_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          challenge_type?: string
+          id?: string
+          is_correct?: boolean | null
+          is_validated?: boolean | null
+          location_key?: string
+          participant_id?: string
+          photo_url?: string | null
+          points_awarded?: number | null
+          submitted_at?: string | null
+          text_answer?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_challenge_submissions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_reports: {
         Row: {
           created_at: string | null
@@ -1762,10 +1821,21 @@ export type Database = {
           participant_name: string
         }[]
       }
+      get_participant_challenge_stats: {
+        Args: { p_participant_id: string }
+        Returns: {
+          completion_percentage: number
+          total_correct: number
+          total_points_earned: number
+          total_submitted: number
+          total_validated: number
+        }[]
+      }
       get_participant_report_data: {
         Args: { p_participant_id: number }
         Returns: Json
       }
+      get_pending_challenge_validations: { Args: never; Returns: number }
       get_pending_validations: {
         Args: never
         Returns: {

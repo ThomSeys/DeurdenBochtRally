@@ -199,6 +199,92 @@ export default defineType({
                       rows: 2,
                       description: 'Optionele extra info over dit punt',
                     },
+                    {
+                      name: 'challenge',
+                      title: 'Opdracht',
+                      type: 'object',
+                      description: 'Optionele opdracht die deelnemers op deze locatie kunnen voltooien',
+                      fields: [
+                        {
+                          name: 'type',
+                          title: 'Type Opdracht',
+                          type: 'string',
+                          options: {
+                            list: [
+                              { title: 'Foto Opdracht', value: 'photo' },
+                              { title: 'Tekst Vraag', value: 'text' },
+                              { title: 'Multiple Choice', value: 'multiple_choice' },
+                              { title: 'Getal', value: 'number' },
+                            ],
+                          },
+                          validation: (Rule) => Rule.required(),
+                        },
+                        {
+                          name: 'question',
+                          title: 'Vraag/Instructie',
+                          type: 'text',
+                          rows: 3,
+                          description: 'Bijv: "Wat staat er op de kerk?" of "Maak een foto van het uitzicht"',
+                          validation: (Rule) => Rule.required(),
+                        },
+                        {
+                          name: 'hint',
+                          title: 'Hint',
+                          type: 'text',
+                          rows: 2,
+                          description: 'Optionele hint voor de deelnemer',
+                        },
+                        {
+                          name: 'options',
+                          title: 'Antwoord Opties',
+                          type: 'array',
+                          of: [{ type: 'string' }],
+                          description: 'Voor multiple choice: lijst van mogelijke antwoorden',
+                          hidden: ({ parent }) => parent?.type !== 'multiple_choice',
+                        },
+                        {
+                          name: 'correctAnswer',
+                          title: 'Correct Antwoord',
+                          type: 'string',
+                          description: 'Voor automatische validatie. Laat leeg voor handmatige controle.',
+                        },
+                        {
+                          name: 'points',
+                          title: 'Punten',
+                          type: 'number',
+                          description: 'Aantal punten voor correcte inzending',
+                          initialValue: 5,
+                          validation: (Rule) => Rule.required().min(0),
+                        },
+                        {
+                          name: 'isActive',
+                          title: 'Actief',
+                          type: 'boolean',
+                          description: 'Is deze opdracht momenteel actief?',
+                          initialValue: true,
+                        },
+                      ],
+                      preview: {
+                        select: {
+                          type: 'type',
+                          question: 'question',
+                          points: 'points',
+                        },
+                        prepare(selection) {
+                          const { type, question, points } = selection;
+                          const typeLabel: Record<string, string> = {
+                            photo: '📸',
+                            text: '✍️',
+                            multiple_choice: '☑️',
+                            number: '🔢',
+                          };
+                          return {
+                            title: `${typeLabel[type as string] || '❓'} ${question?.substring(0, 50)}...`,
+                            subtitle: `${points} punten`,
+                          };
+                        },
+                      },
+                    },
                   ],
                   preview: {
                     select: {
@@ -206,11 +292,13 @@ export default defineType({
                       subtitle: 'type',
                       lat: 'coordinates.lat',
                       lng: 'coordinates.lng',
+                      hasChallenge: 'challenge',
                     },
                     prepare(selection) {
-                      const { title, subtitle, lat, lng } = selection;
+                      const { title, subtitle, lat, lng, hasChallenge } = selection;
+                      const challengeIcon = hasChallenge ? ' 🎯' : '';
                       return {
-                        title,
+                        title: `${title}${challengeIcon}`,
                         subtitle: `${subtitle} - ${lat?.toFixed(4)}, ${lng?.toFixed(4)}`,
                       };
                     },

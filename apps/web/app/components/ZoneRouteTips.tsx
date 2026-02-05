@@ -2,23 +2,34 @@ import { useState } from 'react';
 import { Icon } from './Icon';
 import RouteTipsMap from './RouteTipsMap';
 import Carousel from './Carousel';
+import ChallengeModal from './ChallengeModal';
 
 interface ZoneRouteTipsProps {
   routeTips: any[];
   zoneTitle: string;
+  zoneId: string;
   zoneStartLocation: { lat: number; lng: number } | null;
   zoneEndLocation: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
+  completedChallenges?: string[]; // Array of location keys that have been completed
 }
 
 export default function ZoneRouteTips({
   routeTips,
   zoneTitle,
+  zoneId,
   zoneStartLocation,
   zoneEndLocation,
   userLocation,
+  completedChallenges = [],
 }: ZoneRouteTipsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedChallenge, setSelectedChallenge] = useState<{
+    challenge: any;
+    locationName: string;
+    locationKey: string;
+  } | null>(null);
+  
   const hasLocations = routeTips.some((tip: any) => tip.locations && tip.locations.length > 0);
 
   const currentTip = routeTips[currentIndex];
@@ -130,48 +141,136 @@ export default function ZoneRouteTips({
               </div>
             </details>
           )}
+
+          {/* Challenges */}
+          {tip.locations && tip.locations.some((loc: any) => loc.challenge?.isActive !== false) && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon name="target" className="w-5 h-5 text-accent-600" />
+                <h6 className="font-semibold text-gray-900">Opdrachten op deze route</h6>
+              </div>
+              <div className="space-y-2">
+                {tip.locations
+                  .filter((loc: any) => loc.challenge && loc.challenge.isActive !== false)
+                  .map((loc: any, idx: number) => {
+                    const isCompleted = completedChallenges.includes(loc._key);
+                    const getChallengeIcon = (type: string) => {
+                      switch (type) {
+                        case 'photo': return 'camera';
+                        case 'text': return 'message-square';
+                        case 'multiple_choice': return 'list-checks';
+                        case 'number': return 'hash';
+                        default: return 'help-circle';
+                      }
+                    };
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => !isCompleted && setSelectedChallenge({
+                          challenge: loc.challenge,
+                          locationName: loc.name,
+                          locationKey: loc._key,
+                        })}
+                        disabled={isCompleted}
+                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                          isCompleted
+                            ? 'border-green-200 bg-green-50 opacity-60 cursor-not-allowed'
+                            : 'border-accent-200 bg-accent-50 hover:border-accent-400 hover:bg-accent-100 cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Icon 
+                            name={isCompleted ? 'check-circle' : getChallengeIcon(loc.challenge.type)} 
+                            className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                              isCompleted ? 'text-green-600' : 'text-accent-600'
+                            }`} 
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="font-medium text-gray-900">{loc.name}</p>
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                  {loc.challenge.question}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold text-accent-700 whitespace-nowrap">
+                                <Icon name="star" className="w-4 h-4" />
+                                <span>{loc.challenge.points}</span>
+                              </div>
+                            </div>
+                            {isCompleted && (
+                              <p className="text-sm text-green-700 font-medium mt-2">
+                                ✓ Voltooid
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-          <Icon name="map" className="w-5 h-5" />
-          {routeTips.length} Route Opties
-        </h4>
-      </div>
-      
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-        {/* Map showing current route tip */}
-        {hasLocations && (
-          <div className="bg-gray-50 p-4 rounded-lg flex flex-col">
-            <RouteTipsMap 
-              key={currentIndex}
-              routeTips={[currentTip]} 
-              zoneTitle={zoneTitle}
-              zoneStartLocation={zoneStartLocation ?? undefined}
-              zoneEndLocation={zoneEndLocation ?? undefined}
-              userLocation={userLocation ?? undefined}
-              className="h-[400px] lg:h-full lg:flex-1"
-            />
-          </div>
-        )}
-        
-        {/* Carousel with route tips */}
-        <Carousel
-          items={routeTips}
-          renderItem={renderRouteTip}
-          showControls={true}
-          showDots={true}
-          showCounter={true}
-          itemClassName=""
-          currentIndex={currentIndex}
-          onIndexChange={setCurrentIndex}
+    <>
+      {/* Challenge Modal */}
+      {selectedChallenge && (
+        <ChallengeModal
+          challenge={selectedChallenge.challenge}
+          locationName={selectedChallenge.locationName}
+          locationKey={selectedChallenge.locationKey}
+          zoneId={zoneId}
+          onClose={() => setSelectedChallenge(null)}
+          onSuccess={(result) => {
+            console.log('Challenge completed:', result);
+            // Optionally refresh data or show success message
+          }}
         />
+      )}
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+            <Icon name="map" className="w-5 h-5" />
+            {routeTips.length} Route Opties
+          </h4>
+        </div>
+        
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+          {/* Map showing current route tip */}
+          {hasLocations && (
+            <div className="bg-gray-50 p-4 rounded-lg flex flex-col">
+              <RouteTipsMap 
+                key={currentIndex}
+                routeTips={[currentTip]} 
+                zoneTitle={zoneTitle}
+                zoneStartLocation={zoneStartLocation ?? undefined}
+                zoneEndLocation={zoneEndLocation ?? undefined}
+                userLocation={userLocation ?? undefined}
+                className="h-[400px] lg:h-full lg:flex-1"
+              />
+            </div>
+          )}
+          
+          {/* Carousel with route tips */}
+          <Carousel
+            items={routeTips}
+            renderItem={renderRouteTip}
+            showControls={true}
+            showDots={true}
+            showCounter={true}
+            itemClassName=""
+            currentIndex={currentIndex}
+            onIndexChange={setCurrentIndex}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

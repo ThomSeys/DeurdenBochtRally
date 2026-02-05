@@ -139,13 +139,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
         rejoinInstructions,
         color,
         locations[] {
+          _key,
           name,
           coordinates {
             lat,
             lng
           },
           type,
-          description
+          description,
+          challenge {
+            type,
+            question,
+            hint,
+            options,
+            correctAnswer,
+            points,
+            isActive
+          }
         }
       }
     }
@@ -155,6 +165,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Get user's check-ins if logged in
   let userCheckIns: string[] = [];
+  let completedChallenges: string[] = [];
   if (userId) {
     const { data: participant } = await supabaseAdmin
       .from('participants')
@@ -173,14 +184,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
         userCheckIns = [...new Set(checkIns.map(ci => ci.zone_id))];
         console.log('[rally] userCheckIns:', userCheckIns);
       }
+
+      // Get completed challenges
+      const { data: challengeSubmissions } = await supabaseAdmin
+        .from('route_challenge_submissions')
+        .select('location_key')
+        .eq('participant_id', participant.id);
+
+      if (challengeSubmissions) {
+        completedChallenges = challengeSubmissions.map(cs => cs.location_key);
+        console.log('[rally] completedChallenges:', completedChallenges.length);
+      }
     }
   }
 
-  return { userId, user, edition, segments, siteConfig, userCheckIns };
+  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges };
 }
 
 export default function Rally() {
-  const { userId, user, edition, segments, siteConfig, userCheckIns } = useLoaderData<typeof loader>();
+  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
@@ -349,9 +371,11 @@ export default function Rally() {
                         <ZoneRouteTips
                           routeTips={segment.routeTips}
                           zoneTitle={segment.title}
+                          zoneId={segment._id}
                           zoneStartLocation={segment.startLocation}
                           zoneEndLocation={segment.endLocation}
                           userLocation={userLocation}
+                          completedChallenges={completedChallenges || []}
                         />
                       )}
 

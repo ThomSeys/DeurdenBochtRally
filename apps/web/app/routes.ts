@@ -48,6 +48,7 @@ export default [
   route("admin/audit-log", "routes/admin.audit-log.tsx"),
   route("admin/blog", "routes/admin.blog.tsx"),
   route("admin/buddy-stats", "routes/admin.buddy-stats.tsx"),
+  route("admin/challenges", "routes/admin.challenges.tsx"),
   route("admin/check-in", "routes/admin.check-in.tsx"),
   route("admin/emergency-alerts", "routes/admin.emergency-alerts.tsx"),
   route("admin/emergency-contact-dashboard", "routes/admin.emergency-contact-dashboard.tsx"),
@@ -71,6 +72,8 @@ export default [
   route("admin/zone-control", "routes/admin.zone-control.tsx"),
   
   // API
+  route("api/challenges/submit", "routes/api.challenges.submit.ts"),
+  route("api/challenges/validate", "routes/api.challenges.validate.ts"),
   route("api/check-ins", "routes/api.check-ins.tsx"),
   route("api/delete-account", "routes/api.delete-account.tsx"),
   route("api/download-data", "routes/api.download-data.tsx"), // GDPR data export
@@ -86,6 +89,7 @@ export default [
   route("api/rally-zones", "routes/api.rally-zones.tsx"),
   route("api/riding-buddies", "routes/api.riding-buddies.tsx"),
   // route("api/shadow-recalculate", "routes/api.shadow-recalculate.tsx"), // REMOVED - Concept A only
+  route("api/upload-photo", "routes/api.upload-photo.ts"),
   route("api/webhook", "routes/api.webhook.tsx"),
   route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),
   route("api/emergency-sos", "routes/api.emergency-sos.tsx"),

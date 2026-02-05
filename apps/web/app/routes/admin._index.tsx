@@ -429,6 +429,15 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Beheer achievements & criteria</p>
           </Link>
 
+          <Link
+            to="/admin/challenges"
+            className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="target" className="w-6 h-6 text-white mb-2" />
+            <h3 className="font-semibold text-white">Route Challenges</h3>
+            <p className="text-sm text-white mt-1">Valideer challenge submissions</p>
+          </Link>
+
 
           {/* V1: Reports page not implemented
           <Link

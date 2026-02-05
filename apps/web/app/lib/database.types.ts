@@ -1391,6 +1391,72 @@ export type Database = {
           },
         ]
       }
+      route_challenge_submissions: {
+        Row: {
+          admin_notes: string | null
+          challenge_type: string
+          id: string
+          is_correct: boolean | null
+          is_validated: boolean | null
+          location_key: string
+          participant_id: string
+          photo_url: string | null
+          points_awarded: number | null
+          submitted_at: string | null
+          text_answer: string | null
+          validated_at: string | null
+          validated_by: string | null
+          zone_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          challenge_type: string
+          id?: string
+          is_correct?: boolean | null
+          is_validated?: boolean | null
+          location_key: string
+          participant_id: string
+          photo_url?: string | null
+          points_awarded?: number | null
+          submitted_at?: string | null
+          text_answer?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          zone_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          challenge_type?: string
+          id?: string
+          is_correct?: boolean | null
+          is_validated?: boolean | null
+          location_key?: string
+          participant_id?: string
+          photo_url?: string | null
+          points_awarded?: number | null
+          submitted_at?: string | null
+          text_answer?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_challenge_submissions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_challenge_submissions_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_story_comments: {
         Row: {
           content: string
