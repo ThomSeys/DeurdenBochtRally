@@ -3,7 +3,7 @@ import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link, Form } from 'react-router';
 import { useState, useEffect } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { supabase } from '~/lib/supabase.server';
+import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
@@ -61,8 +61,109 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   `);
 
+  const rallyZones = await sanityClient.fetch(`
+    *[_type == "rallyZone"] | order(order asc) {
+      _id,
+      title,
+      character,
+      color,
+      "startLocation": startPoint,
+      "endLocation": endPoint,
+      "is_open": coalesce(is_active, true),
+      emergency_contact,
+      routeTips[] {
+        _id,
+        name,
+        color,
+        locations[] {
+          _key,          _key,          name,
+          coordinates {
+            lat,
+            lng
+          },
+          type,
+          description,
+          challenge {
+            _id,
+            question,
+            hint,
+            type,
+            correctAnswer,
+            points
+          }
+        },
+      }
+    }
+  `);
+
   // Count completed zones (unique zone IDs)
   const completedZones = zoneCheckins ? new Set(zoneCheckins.map(c => c.zone_id)).size : 0;
+
+  // Get challenge stats
+  let challengeStats = {
+    total_points_earned: 0,
+    total_submitted: 0,
+    total_correct: 0,
+  };
+
+  let completedChallenges = [];
+
+  // Get stats for all validated submissions
+  const { data: stats, error: statsError } = await supabaseAdmin
+    .from('route_challenge_submissions')
+    .select('points_awarded, is_correct')
+    .eq('participant_id', user.id)
+    .eq('is_validated', true);
+
+  if (stats && !statsError) {
+    challengeStats = {
+      total_points_earned: stats.reduce((sum, s) => sum + (s.points_awarded || 0), 0),
+      total_submitted: stats.length,
+      total_correct: stats.filter(s => s.is_correct).length,
+    };
+  }
+
+  // Get all challenge submissions with details (show all, not just validated)
+  const { data: submissions, error: submissionsError } = await supabaseAdmin
+    .from('route_challenge_submissions')
+    .select('*')
+    .eq('participant_id', user.id)
+    .order('submitted_at', { ascending: false });
+
+  if (submissions && !submissionsError) {
+    // Use the rallyZones data we already fetched to enrich submissions
+    completedChallenges = (submissions as any[]).map((sub) => {
+      let enrichedSub: any = { ...sub };
+      
+      // Find the zone using zone_id
+      const zone = rallyZones.find((z: any) => z._id === sub.zone_id);
+      if (zone) {
+        enrichedSub.rally_zones = { name: zone.title };
+        
+        // Find the correct location using location_key
+        for (const tip of zone.routeTips || []) {
+          const location = tip.locations?.find((loc: any) => loc._key === sub.location_key);
+          if (location && location.challenge) {
+            enrichedSub.route_tips = { 
+              title: tip.name
+            };
+            enrichedSub.challenge_details = {
+              _id: location.challenge._id,
+              question: location.challenge.question,
+              hint: location.challenge.hint,
+              type: location.challenge.type,
+              points: location.challenge.points,
+              correctAnswer: location.challenge.correctAnswer,
+              submittedAnswer: sub.text_answer
+            };
+            break;
+          }
+        }
+      }
+      
+      return enrichedSub;
+    });
+  }
 
   // V1: No competition/ranking - disabled for story-focused experience
   const isBochtenkoning = false;
@@ -98,13 +199,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     pushNotificationsEnabled,
     onboardingTourEnabled, 
     routePreference: user.route_preference || 'adventure', // Default to adventure
+    challengeStats,
+    completedChallenges,
+    rallyZones
   };
 }
 
 export default function Dashboard() {
-  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, onboardingTourEnabled } = useLoaderData<typeof loader>();
-
-  console.log("🚀 ~ Dashboard ~ routePreference:", routePreference);
+  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, onboardingTourEnabled, challengeStats, completedChallenges, rallyZones } = useLoaderData<typeof loader>();
 
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
@@ -414,9 +516,113 @@ export default function Dashboard() {
                   </Link>
                 </div>
               )}
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 mt-4">
+                <Icon name="award" className="w-6 h-6 text-amber-600" />
+                Journey Punten
+              </h3>
+              <div className="grid sm:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-gray-600 text-sm mb-1">Behaalde Punten</p>
+                  <p className="font-bold text-3xl text-amber-600">{challengeStats.total_points_earned}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 text-sm mb-1">Challenges Goed</p>
+                  <p className="font-bold text-3xl text-green-600">{challengeStats.total_correct}/{challengeStats.total_submitted}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 text-sm mb-1">Status</p>
+                  {challengeStats.total_submitted === 0 ? (
+                    <p className="text-gray-600 font-medium">Nog geen challenges ingestuurd</p>
+                  ) : (
+                    <p className="text-green-600 font-medium">
+                      {Math.round((challengeStats.total_correct / challengeStats.total_submitted) * 100)}% correct
+                    </p>
+                  )}
+                </div>
+              </div>
+              {challengeStats.total_submitted === 0 && (
+                <p className="text-gray-600 text-sm mt-4">
+                  Ontdek challenges op de rally zones en verdien punten! 🎯
+                </p>
+              )}
             </div>
           )}
         </div>
+
+        {/* Completed Challenges List */}
+        {completedChallenges.length > 0 && (
+          <div className="mb-8">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Icon name="check-circle" className="w-6 h-6 text-green-600" />
+              Mijn Ingestuurde Challenges
+            </h3>
+            <div className="space-y-4">
+              {completedChallenges.map((challenge: any) => (
+                <div 
+                  key={challenge.id}
+                  className={`bg-white rounded-sm shadow p-6 border-l-4 ${
+                    challenge.is_correct ? 'border-l-green-600' : challenge.is_validated ? 'border-l-red-600' : 'border-l-yellow-600'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg text-gray-900 mb-2">
+                        {challenge.challenge_details?.title || challenge.route_tips?.title || 'Routetip'}
+                      </h4>
+                      <p className="text-gray-700 mb-3">
+                        <span className="font-medium">Vraag:</span> {challenge.challenge_details?.question || challenge.route_tips?.question || 'Vraag niet beschikbaar'}
+                      </p>
+                      <div className="flex flex-wrap gap-3 text-sm">
+                        <div className="bg-blue-50 px-3 py-1 rounded">
+                          <span className="text-blue-700 font-medium">
+                            📍 {challenge.rally_zones?.name || 'Zone'}
+                          </span>
+                        </div>
+                        <div className={`px-3 py-1 rounded ${
+                          challenge.is_correct 
+                            ? 'bg-green-50 text-green-700'
+                            : challenge.is_validated 
+                              ? challenge.is_correct === false ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-700'
+                              : 'bg-yellow-50 text-yellow-700'
+                        }`}>
+                          <span className="font-medium">
+                            {challenge.is_correct 
+                              ? '✓ Correct' 
+                              : challenge.is_validated 
+                                ? challenge.is_correct === false ? '✗ Incorrect' : '✓ Goedgekeurd'
+                                : '⏳ Wacht op goedkeuring'}
+                          </span>
+                        </div>
+                        {challenge.points_awarded !== null && (
+                          <div className="bg-amber-50 px-3 py-1 rounded">
+                            <span className="text-amber-700 font-bold">
+                              ⭐ {challenge.points_awarded} pts
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                        {(challenge.challenge_details.submittedAnswer && challenge.challenge_details.correctAnswer) && (
+                        <div className="mt-3 text-sm text-gray-600">
+                          Mijn ingestuurde antwoord: <span className="font-medium">{challenge.challenge_details.submittedAnswer}</span>, correcte antwoord: <span className="font-medium">{challenge.challenge_details?.correctAnswer}</span>
+                        </div>
+                        )}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-3">
+                    Ingestuurd op: {new Date(challenge.submitted_at).toLocaleDateString('nl-NL', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* New Feature Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">

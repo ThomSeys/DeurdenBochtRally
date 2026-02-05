@@ -167,13 +167,20 @@ export default function ZoneRouteTips({
                     return (
                       <button
                         key={idx}
-                        onClick={() => !isCompleted && setSelectedChallenge({
-                          challenge: loc.challenge,
-                          locationName: loc.name,
-                          locationKey: loc._key,
-                        })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isCompleted) {
+                            setSelectedChallenge({
+                              challenge: loc.challenge,
+                              locationName: loc.name,
+                              locationKey: loc._key,
+                            });
+                          }
+                        }}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
                         disabled={isCompleted}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                        className={`w-full text-left p-3 rounded-lg border-2 transition-all pointer-events-auto relative z-10 ${
                           isCompleted
                             ? 'border-green-200 bg-green-50 opacity-60 cursor-not-allowed'
                             : 'border-accent-200 bg-accent-50 hover:border-accent-400 hover:bg-accent-100 cursor-pointer'
@@ -268,6 +275,7 @@ export default function ZoneRouteTips({
             itemClassName=""
             currentIndex={currentIndex}
             onIndexChange={setCurrentIndex}
+            disabled={!!selectedChallenge}
           />
         </div>
       </div>

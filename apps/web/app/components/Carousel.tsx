@@ -11,6 +11,7 @@ interface CarouselProps {
   itemClassName?: string;
   onIndexChange?: (index: number) => void;
   currentIndex?: number;
+  disabled?: boolean;
 }
 
 export default function Carousel({
@@ -23,55 +24,77 @@ export default function Carousel({
   itemClassName = '',
   onIndexChange,
   currentIndex: controlledIndex,
+  disabled = false,
 }: CarouselProps) {
   const [internalIndex, setInternalIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const isControlled = controlledIndex !== undefined;
   const currentIndex = isControlled ? controlledIndex : internalIndex;
   
-  const setCurrentIndex = (value: number | ((prev: number) => number)) => {
-    const newIndex = typeof value === 'function' ? value(currentIndex) : value;
+  const setCurrentIndex = (newIndex: number) => {
+    // Clamp index to valid range
+    const clampedIndex = ((newIndex % items.length) + items.length) % items.length;
     if (!isControlled) {
-      setInternalIndex(newIndex);
+      setInternalIndex(clampedIndex);
     }
-    onIndexChange?.(newIndex);
+    onIndexChange?.(clampedIndex);
   };
   
   // Touch/swipe state
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
 
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % items.length);
+  const goToNext = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (isAnimating || disabled) return;
+    setIsAnimating(true);
+    setCurrentIndex((currentIndex + 1) % items.length);
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+  const goToPrevious = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (isAnimating || disabled) return;
+    setIsAnimating(true);
+    setCurrentIndex((currentIndex - 1 + items.length) % items.length);
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
-  const goToSlide = (index: number) => {
+  const goToSlide = (index: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (isAnimating || disabled) return;
+    setIsAnimating(true);
     setCurrentIndex(index);
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
   // Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (disabled) return;
     touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (disabled) return;
     touchEndX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
-    const swipeThreshold = 50; // minimum distance for a swipe
+    if (disabled) return;
+    const swipeThreshold = 200; // minimum distance for a swipe
     const diff = touchStartX.current - touchEndX.current;
 
-    if (Math.abs(diff) > swipeThreshold) {
+    if (Math.abs(diff) > swipeThreshold && !isAnimating) {
       if (diff > 0) {
         // Swiped left - go to next
-        goToNext();
+        setIsAnimating(true);
+        setCurrentIndex((currentIndex + 1) % items.length);
+        setTimeout(() => setIsAnimating(false), 300);
       } else {
         // Swiped right - go to previous
-        goToPrevious();
+        setIsAnimating(true);
+        setCurrentIndex((currentIndex - 1 + items.length) % items.length);
+        setTimeout(() => setIsAnimating(false), 300);
       }
     }
 
@@ -102,10 +125,11 @@ export default function Carousel({
       {items.length > 1 && (
         <div className="flex-shrink-0 mt-4">
           {showControls && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pointer-events-auto">
               <button
-                onClick={goToPrevious}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                onClick={(e) => goToPrevious(e)}
+                disabled={isAnimating || disabled}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 aria-label="Vorige item"
               >
                 <Icon name="chevron-left" className="w-5 h-5" />
@@ -114,16 +138,17 @@ export default function Carousel({
 
               {/* Dots Indicator */}
               {showDots && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 z-20">
                   {items.map((_, idx) => (
                     <button
                       key={idx}
-                      onClick={() => goToSlide(idx)}
-                      className={`h-2 rounded-full transition-all ${
+                      onClick={(e) => goToSlide(idx, e)}
+                      disabled={isAnimating || disabled}
+                      className={`h-2 rounded-full transition-all pointer-events-auto ${
                         idx === currentIndex 
                           ? 'w-8 bg-accent-500' 
                           : 'w-2 bg-gray-300 hover:bg-gray-400'
-                      }`}
+                      } disabled:opacity-50`}
                       aria-label={`Ga naar item ${idx + 1}`}
                     />
                   ))}
@@ -131,8 +156,9 @@ export default function Carousel({
               )}
 
               <button
-                onClick={goToNext}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                onClick={(e) => goToNext(e)}
+                disabled={isAnimating || disabled}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 aria-label="Volgende item"
               >
                 <span className="hidden sm:inline">Volgende</span>
