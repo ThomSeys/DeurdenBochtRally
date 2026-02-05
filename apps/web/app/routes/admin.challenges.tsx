@@ -199,14 +199,15 @@ export default function AdminChallenges() {
         </div>
 
         {/* Submissions Table */}
-        <div className="bg-white rounded-sm shadow overflow-x-auto">
+        <div className="bg-white rounded-sm shadow">
           {submissions.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <Icon name="inbox" className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>Geen inzendingen gevonden</p>
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Deelnemer</th>
@@ -272,6 +273,7 @@ export default function AdminChallenges() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -319,7 +321,7 @@ function ValidationModal({ submission, onClose }: { submission: any; onClose: ()
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1100]">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden flex flex-col max-h-90vh">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4">
           <h3 className="text-lg font-bold">Inzending controleren</h3>
           <button onClick={onClose} className="text-white hover:text-green-100 text-2xl font-light">
@@ -362,7 +364,7 @@ function ValidationModal({ submission, onClose }: { submission: any; onClose: ()
           </div>
         </div>
 
-        <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex gap-2 justify-end">
+        <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex flex-col md:flex-row gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={validating}
@@ -373,21 +375,21 @@ function ValidationModal({ submission, onClose }: { submission: any; onClose: ()
           <button
             onClick={() => handleValidate(false, 0)}
             disabled={validating}
-            className="px-4 py-2 text-white bg-red-600 rounded-sm hover:bg-red-700 font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 font-medium transition-colors disabled:opacity-50"
           >
             Afwijzen
           </button>
           <button
             onClick={() => handleValidate(true, 5)}
             disabled={validating}
-            className="px-4 py-2 text-white bg-blue-600 rounded-sm hover:bg-blue-700 font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-white bg-primary-400 rounded-md hover:bg-primary-500 font-medium transition-colors disabled:opacity-50"
           >
             Goedkeuren (5 pts)
           </button>
           <button
             onClick={() => handleValidate(true, 10)}
             disabled={validating}
-            className="px-4 py-2 text-white bg-green-600 rounded-sm hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-white bg-primary-600 rounded-md hover:bg-primary-700 font-medium transition-colors disabled:opacity-50"
           >
             Goedkeuren (10 pts)
           </button>
