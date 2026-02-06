@@ -141,6 +141,7 @@ export async function action({ request }: ActionFunctionArgs) {
                 submissionId: submission.id,
                 participantId: participant.id,
                 challengeType: challengeType,
+                link: '/admin/challenges?filter=pending',
               },
             },
             {
@@ -155,6 +156,7 @@ export async function action({ request }: ActionFunctionArgs) {
                 participantName: `${participant.first_name} ${participant.last_name}`,
                 challengeType: challengeType,
                 needsValidation: true,
+                link: '/admin/challenges?filter=pending',
               },
             }
           );
