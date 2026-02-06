@@ -170,6 +170,12 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'spotifyPlaylistUrl',
+      title: 'Spotify Playlist Embed URL',
+      type: 'url',
+      description: 'Spotify embed URL (e.g., https://open.spotify.com/embed/playlist/...) for the event soundtrack',
+    }),
+    defineField({
       name: 'edition',
       title: 'Edition',
       type: 'reference',

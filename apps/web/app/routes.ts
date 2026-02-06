@@ -99,4 +99,5 @@ export default [
   route("api/emergency-sos", "routes/api.emergency-sos.tsx"),
   route("api/admin-menu-stats", "routes/api.admin-menu-stats.tsx"),
   route("api/photo-interactions", "routes/api.photo-interactions.tsx"),
+  route("api/weather", "routes/api.weather.ts"),
 ] satisfies RouteConfig;

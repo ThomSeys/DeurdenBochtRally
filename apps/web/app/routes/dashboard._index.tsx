@@ -59,7 +59,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const buddyIds = (buddyLinks || []).map((b: any) => b.buddy_id).filter(Boolean);
 
-  // Fetch GPX route file
+  // Fetch GPX route file and Spotify playlist
   const siteConfig = await sanityClient.fetch(`
     *[_type == "siteConfig"][0] {
       gpxRouteFile {
@@ -73,7 +73,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
           url,
           originalFilename
         }
-      }
+      },
+      spotifyPlaylistUrl
     }
   `);
 
@@ -225,6 +226,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const achievementsEnabled = await isFeatureEnabled('achievements-enabled');
   const profileEditingEnabled = await isFeatureEnabled('profile-editing-enabled');
   const pushNotificationsEnabled = await isFeatureEnabled('push-notifications-enabled');
+  const vibeAreaEnabled = await isFeatureEnabled('vibe-area-enabled');
+  const liveFeedEnabled = await isFeatureEnabled('live-feed-enabled');
+  const teamVibeEnabled = await isFeatureEnabled('team-vibe-enabled');
+  const recapEnabled = await isFeatureEnabled('recap-enabled');
+  const spotifyPlaylistEnabled = await isFeatureEnabled('spotify-playlist-enabled');
+  const weatherEnabled = await isFeatureEnabled('weather-enabled');
 
   return { 
     user, 
@@ -242,6 +249,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     achievementsEnabled,
     profileEditingEnabled, 
     pushNotificationsEnabled,
+    vibeAreaEnabled,
+    liveFeedEnabled,
+    teamVibeEnabled,
+    recapEnabled,
+    spotifyPlaylistEnabled,
+    weatherEnabled,
+    spotifyPlaylistUrl: siteConfig?.spotifyPlaylistUrl || null,
     routePreference: user.route_preference || 'adventure', // Default to adventure
     challengeStats,
     completedChallenges,
@@ -251,7 +265,33 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function Dashboard() {
-  const { user, zoneCheckins, documents, completedZones, eventDate, gpxRouteUrl, gpxRouteFiles, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, challengeStats, completedChallenges, rallyZones, crewStats } = useLoaderData<typeof loader>();
+  const { 
+    user, 
+    zoneCheckins, 
+    documents, 
+    completedZones, 
+    eventDate, 
+    gpxRouteUrl, 
+    gpxRouteFiles, 
+    qrCodeUrl, 
+    routePreference, 
+    rallyZonesEnabled, 
+    pushNotificationsEnabled, 
+    photoGalleryEnabled, 
+    rideStoriesEnabled, 
+    achievementsEnabled, 
+    vibeAreaEnabled, 
+    liveFeedEnabled, 
+    teamVibeEnabled, 
+    recapEnabled,
+    spotifyPlaylistEnabled,
+    weatherEnabled,
+    spotifyPlaylistUrl,
+    challengeStats, 
+    completedChallenges, 
+    rallyZones, 
+    crewStats 
+  } = useLoaderData<typeof loader>();
 
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
@@ -636,10 +676,13 @@ export default function Dashboard() {
           )}
         </div>
 
+        <hr className="mb-8" />
+
         {/* Live sfeer + team vibe + tijdcapsule */}
         {/* Completed Challenges Modal - Removed from main viewport */}
 
         {/* Dashboard Tabs */}
+        {vibeAreaEnabled && (
         <div className="flex gap-3 mb-8 w-full">
           <button
             onClick={() => setMainTab('features')}
@@ -664,9 +707,10 @@ export default function Dashboard() {
             <span>Sfeer</span>
           </button>
         </div>
+        )}
 
         {/* New Feature Cards */}
-        {mainTab === 'features' && (
+        {(!vibeAreaEnabled || mainTab === 'features') && (
           <>
           <div className="mb-6">
             <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Menu</p>
@@ -778,7 +822,7 @@ export default function Dashboard() {
         </div></>
         )}
 
-        {mainTab === 'vibe' && (
+        {vibeAreaEnabled && mainTab === 'vibe' && (
         <div className="mb-10">
           <div className="mb-6">
             <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Sfeer</p>
@@ -786,7 +830,9 @@ export default function Dashboard() {
 
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Live Sfeer Block */}
-            <div className="bg-slate-900 text-white rounded-sm p-5 lg:col-span-2">
+            {liveFeedEnabled && (
+            <div className="lg:col-span-2 flex flex-col gap-6 ">
+              <div className="bg-slate-900 text-white rounded-sm p-5">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-2">
@@ -865,10 +911,57 @@ export default function Dashboard() {
                     <p className="text-sm text-slate-300">Nog geen live activiteit. Geef het event wat minuten!</p>
                   )}
                 </div>
+                </div>
+                
+            {/* Spotify Playlist Block */}
+            {spotifyPlaylistEnabled && spotifyPlaylistUrl && (
+              <div className="relative overflow-hidden rounded-sm border border-[#1DB954]/40 bg-gradient-to-br from-[#0B0F0D] via-[#101812] to-[#0B0F0D] p-5 shadow-[0_10px_40px_rgba(13,18,15,0.35)]">
+                <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[#1DB954]/20 blur-3xl" />
+                <div className="absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-[#1DB954]/10 blur-3xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#B7F3CC]">Event soundtrack</p>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[#1DB954]">Spotify</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mt-1 text-white">Rally vibes</h3>
+                  <p className="text-sm text-[#CDE9D8] mt-2">
+                    De officiele playlist voor onderweg. Rijd mee op de beats.
+                  </p>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-[#1DB954] px-3 py-1 text-xs font-semibold text-black">
+                      <span className="h-2 w-2 rounded-full bg-black/70" />
+                      On repeat
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
+                      <Icon name="music" className="h-3 w-3" />
+                      100% good vibes
+                    </span>
+                  </div>
+                  <div className="mt-4 rounded-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                    <iframe
+                      src={spotifyPlaylistUrl}
+                      width="100%"
+                      height="152"
+                      frameBorder="0"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="lazy"
+                      className="rounded-sm"
+                    />
+                  </div>
+                </div>
               </div>
+            )}
+
+            {/* Weather Block */}
+            {weatherEnabled && (
+              <WeatherWidget rallyZones={rallyZones} />
+            )}
+              </div>
+            )}
 
             <div className='flex flex-col gap-6'>
             {/* Team Vibe Block */}
+            {teamVibeEnabled && (
             <div className="bg-amber-50 rounded-sm border border-amber-200 p-5">
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-700">Team vibe</p>
                 <h3 className="text-xl font-bold text-amber-900 mt-1">Naftgenoten Challenges</h3>
@@ -914,8 +1007,10 @@ export default function Dashboard() {
                   Beheer je Naftgenoten →
                 </Link>
               </div>
+            )}
 
             {/* Tijdcapsule Block */}
+            {recapEnabled && (
             <div className="bg-indigo-50 rounded-sm border border-indigo-200 p-5">
                 <p className="text-xs uppercase tracking-[0.2em] text-indigo-700">Tijdcapsule</p>
                 <h3 className="text-2xl font-bold mt-1 text-indigo-900">Jouw dag in 60s</h3>
@@ -930,6 +1025,8 @@ export default function Dashboard() {
                   <span>→</span>
                 </Link>
               </div>
+            )}
+
               </div>
           </div>
         </div>
@@ -1260,3 +1357,187 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// Weather Widget Component
+function WeatherWidget({ rallyZones }: { rallyZones: any[] }) {
+  const [weatherData, setWeatherData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchWeather() {
+      setIsLoading(true);
+      
+      // Get weather for each zone with a location
+      const weatherPromises = rallyZones
+        .filter(zone => zone.startLocation?.lat && zone.startLocation?.lng)
+        .map(async (zone) => {
+          try {
+            const response = await fetch(
+              `/api/weather?lat=${zone.startLocation.lat}&lon=${zone.startLocation.lng}&location=${encodeURIComponent(zone.title)}`
+            );
+            if (response.ok) {
+              const result = await response.json();
+              // Handle both { data: weatherData } and direct weatherData formats
+              const data = result.data || result;
+              return { zoneId: zone._id, zoneName: zone.title, data };
+            }
+          } catch (error) {
+            console.error(`Failed to fetch weather for ${zone.title}:`, error);
+          }
+          return null;
+        });
+
+      const results = await Promise.all(weatherPromises);
+      setWeatherData(results.filter(Boolean));
+      setIsLoading(false);
+    }
+
+    fetchWeather();
+    
+    // Refresh every 10 minutes
+    const interval = setInterval(fetchWeather, 600000);
+    return () => clearInterval(interval);
+  }, [rallyZones]);
+
+  if (isLoading) {
+    return (
+      <div className="relative overflow-hidden rounded-sm border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-sky-100 p-5 shadow-sm">
+        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-sky-200/40 blur-2xl" />
+        <div className="absolute -left-10 bottom-0 h-20 w-20 rounded-full bg-blue-200/30 blur-2xl" />
+        <div className="relative">
+          <div className="flex items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.2em] text-sky-700">Live weer</p>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-sky-500">Laden...</span>
+          </div>
+          <h3 className="text-2xl font-bold mt-1 text-sky-900">Weer info</h3>
+          <div className="mt-6 flex items-center justify-center text-sky-700">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Icon name="loader" className="w-5 h-5 animate-spin" />
+              Live data ophalen
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentWeather = selectedZone 
+    ? weatherData.find(w => w.zoneId === selectedZone)
+    : weatherData[0];
+
+  if (!currentWeather || !currentWeather.data) {
+    return null;
+  }
+
+  const weather = currentWeather.data;
+  const hasAlerts = weather.alerts && weather.alerts.length > 0;
+
+  return (
+    <div className={`relative overflow-hidden rounded-sm border bg-gradient-to-br from-sky-50 via-white to-sky-100 p-5 shadow-sm ${
+      hasAlerts ? 'border-red-200' : 'border-sky-200'
+    }`}>
+      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-sky-200/40 blur-2xl" />
+      <div className="absolute -left-10 bottom-0 h-20 w-20 rounded-full bg-blue-200/30 blur-2xl" />
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <p className="text-xs uppercase tracking-[0.2em] text-sky-700">Live weer</p>
+          <span className={`text-[10px] uppercase tracking-[0.2em] ${hasAlerts ? 'text-red-500' : 'text-sky-500'}`}>
+            {new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+        <h3 className={`text-2xl font-bold mt-1 ${hasAlerts ? 'text-red-900' : 'text-sky-900'}`}>
+          {currentWeather.zoneName}
+        </h3>
+
+        {/* Zone selector if multiple zones */}
+        {weatherData.length > 1 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {weatherData.map((w) => (
+              <button
+                key={w.zoneId}
+                onClick={() => setSelectedZone(w.zoneId)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                  (selectedZone === w.zoneId || (!selectedZone && w === weatherData[0]))
+                    ? 'bg-sky-700 text-white border-sky-700'
+                    : 'bg-white text-sky-700 border-sky-200 hover:bg-sky-50'
+                }`}
+              >
+                {w.zoneName}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Weather Alerts */}
+        {hasAlerts && (
+          <div className="mt-4 space-y-2">
+            {weather.alerts.map((alert: any, idx: number) => (
+              <div
+                key={idx}
+                className={`flex items-start gap-2 rounded-sm border px-3 py-2 text-sm ${
+                  alert.severity === 'severe'
+                    ? 'border-red-300 bg-red-50 text-red-800'
+                    : alert.severity === 'warning'
+                      ? 'border-orange-300 bg-orange-50 text-orange-800'
+                      : 'border-blue-300 bg-blue-50 text-blue-800'
+                }`}
+              >
+                <Icon name="alert-triangle" className="w-4 h-4 mt-0.5" />
+                <div>
+                  <div className="font-semibold text-xs uppercase tracking-[0.2em]">{alert.event}</div>
+                  <div className="text-xs leading-relaxed">{alert.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Current Weather */}
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="rounded-sm border border-sky-100 bg-white/90 p-4">
+            <div className="flex items-center gap-3">
+              <img
+                src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                alt={weather.description}
+                className="w-14 h-14"
+              />
+              <div>
+                <div className={`text-4xl font-bold leading-none ${hasAlerts ? 'text-red-900' : 'text-sky-900'}`}>
+                  {weather.temp}°
+                </div>
+                <div className={`text-xs capitalize ${hasAlerts ? 'text-red-700' : 'text-sky-700'}`}>
+                  {weather.description}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-sm border border-sky-100 bg-white/90 p-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className={hasAlerts ? 'text-red-600' : 'text-sky-600'}>Gevoelstemperatuur</span>
+              <span className={`font-semibold ${hasAlerts ? 'text-red-900' : 'text-sky-900'}`}>
+                {weather.feels_like}°
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className={hasAlerts ? 'text-red-600' : 'text-sky-600'}>Windsnelheid</span>
+              <span className={`font-semibold ${hasAlerts ? 'text-red-900' : 'text-sky-900'}`}>
+                {weather.wind_speed} km/h
+              </span>
+            </div>
+            {weather.rain_probability > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className={hasAlerts ? 'text-red-600' : 'text-sky-600'}>Kans op regen</span>
+                <span className={`font-semibold ${hasAlerts ? 'text-red-900' : 'text-sky-900'}`}>
+                  {weather.rain_probability}%
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

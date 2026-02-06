@@ -98,4 +98,11 @@ export const FeatureFlagKeys = {
   PUSH_NOTIFICATIONS: 'push-notifications',
   PAPER_ROADBOOK_OPTION: 'paper-roadbook-option',
   PROFILE_EDITING: 'profile-editing',
+  VIBE_AREA_ENABLED: 'vibe-area-enabled',
+  LIVE_FEED_ENABLED: 'live-feed-enabled',
+  TEAM_VIBE_ENABLED: 'team-vibe-enabled',
+  RECAP_ENABLED: 'recap-enabled',
+  SPOTIFY_PLAYLIST_ENABLED: 'spotify-playlist-enabled',
+  WEATHER_ENABLED: 'weather-enabled',
 } as const;
+
