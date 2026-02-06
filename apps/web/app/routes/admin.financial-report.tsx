@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { useState } from 'react';
 import { createRequestLogger } from '~/lib/logger.server';
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export const meta: MetaFunction = () => {
   return [
@@ -75,6 +76,27 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .order('created_at', { ascending: false })
     .limit(20);
 
+  // Get registrations over time for chart
+  const { data: allParticipants } = await supabaseAdmin
+    .from('participants')
+    .select('created_at, payment_status')
+    .order('created_at', { ascending: true });
+
+  // Group by date
+  const registrationsByDate: Record<string, { date: string; registrations: number; paid: number }> = {};
+  allParticipants?.forEach((p: any) => {
+    const date = new Date(p.created_at).toLocaleDateString('nl-BE', { month: 'short', day: 'numeric' });
+    if (!registrationsByDate[date]) {
+      registrationsByDate[date] = { date, registrations: 0, paid: 0 };
+    }
+    registrationsByDate[date].registrations++;
+    if (p.payment_status === 'completed') {
+      registrationsByDate[date].paid++;
+    }
+  });
+
+  const registrationsOverTime = Object.values(registrationsByDate);
+
   return {
     revenueByFormula,
     paymentStatusCounts,
@@ -82,6 +104,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     noShowCount,
     totalParticipants: participants?.length || 0,
     recentTransactions: recentTransactions || [],
+    registrationsOverTime,
   };
 }
 
@@ -107,10 +130,26 @@ export default function AdminFinancialReport() {
     totalRevenue, 
     noShowCount,
     totalParticipants,
-    recentTransactions 
+    recentTransactions,
+    registrationsOverTime
   } = useLoaderData<typeof loader>();
 
   const [showExportModal, setShowExportModal] = useState(false);
+
+  // Chart data
+  const revenueChartData = [
+    { name: 'Met Maaltijden', value: revenueByFormula.with_meals.revenue, count: revenueByFormula.with_meals.count },
+    { name: 'Alleen Ontbijt', value: revenueByFormula.breakfast_only.revenue, count: revenueByFormula.breakfast_only.count },
+  ];
+
+  const paymentStatusChartData = [
+    { name: 'Voltooid', value: paymentStatusCounts.completed, color: '#10b981' },
+    { name: 'In behandeling', value: paymentStatusCounts.pending, color: '#f59e0b' },
+    { name: 'Mislukt', value: paymentStatusCounts.failed, color: '#ef4444' },
+    { name: 'Terugbetaald', value: paymentStatusCounts.refunded, color: '#8b5cf6' },
+  ].filter(item => item.value > 0);
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const exportToCSV = () => {
     // Create CSV content
@@ -242,6 +281,93 @@ export default function AdminFinancialReport() {
             <h3 className="text-sm font-medium text-gray-600">Terugbetaald</h3>
             <p className="text-xs text-gray-500 mt-1">Geannuleerde registraties</p>
           </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Revenue by Formula Chart */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <Icon name="bar-chart" className="w-5 h-5 mr-2 text-blue-600" />
+              Inkomsten per Formule
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={revenueChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number | undefined) => value !== undefined ? [`€${value.toFixed(2)}`, 'Inkomsten'] : ['€0.00', 'Inkomsten']}
+                  labelFormatter={(label) => label}
+                />
+                <Legend />
+                <Bar dataKey="value" fill="#3b82f6" name="Inkomsten (€)" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              {revenueChartData.map((item, index) => (
+                <div key={index} className="text-center p-3 bg-gray-50 rounded">
+                  <p className="text-sm text-gray-600">{item.name}</p>
+                  <p className="text-lg font-bold text-gray-900">€{item.value.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500">{item.count} deelnemers</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payment Status Pie Chart */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <Icon name="pie-chart" className="w-5 h-5 mr-2 text-green-600" />
+              Betaalstatus Verdeling
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={paymentStatusChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => percent !== undefined ? `${name}: ${(percent * 100).toFixed(0)}%` : `${name}: 0%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {paymentStatusChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {paymentStatusChartData.map((item, index) => (
+                <div key={index} className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }}></div>
+                  <span className="text-sm text-gray-700">{item.name}: {item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Registrations Over Time Chart */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <Icon name="trending-up" className="w-5 h-5 mr-2 text-purple-600" />
+            Inschrijvingen Over Tijd
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={registrationsOverTime}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="registrations" stroke="#3b82f6" name="Totaal Inschrijvingen" strokeWidth={2} />
+              <Line type="monotone" dataKey="paid" stroke="#10b981" name="Betaald" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
         {/* Revenue by Formula */}

@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
@@ -68,6 +69,90 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .from('rally_zone_checkins')
     .select('*', { count: 'exact', head: true });
 
+  // Get additional teaser info for dashboard tiles
+  const { count: pendingScansCount } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('*', { count: 'exact', head: true })
+    .eq('requires_manual_validation', true)
+    .is('manually_validated_at', null);
+
+  const { count: fallbackReviewCount } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_fallback', true)
+    .is('is_validated', null);
+
+  const { count: pendingPhotosCount } = await supabaseAdmin
+    .from('participant_photos')
+    .select('*', { count: 'exact', head: true })
+    .or('is_approved.is.null,is_approved.eq.false');
+
+  const { count: pendingStoriesCount } = await supabaseAdmin
+    .from('ride_stories')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'pending');
+
+  // Get unique buddy groups (count distinct buddy_ids)
+  const { data: buddyGroups } = await supabaseAdmin
+    .from('riding_buddies')
+    .select('buddy_id')
+    .not('buddy_id', 'is', null);
+  
+  const activeBuddyGroupsCount = new Set(buddyGroups?.map(b => b.buddy_id) || []).size;
+
+  const { count: totalAchievementsCount } = await supabaseAdmin
+    .from('achievements')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalAlbumsCount } = await supabaseAdmin
+    .from('photo_albums')
+    .select('*', { count: 'exact', head: true });
+
+  // Get total counts for teaser info
+  const { count: totalSOSCount } = await supabaseAdmin
+    .from('emergency_sos')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalChallengesCount } = await supabaseAdmin
+    .from('route_challenge_submissions')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalStoriesCount } = await supabaseAdmin
+    .from('ride_stories')
+    .select('*', { count: 'exact', head: true });
+
+  // Calculate total revenue
+  const { data: payments } = await supabaseAdmin
+    .from('participants')
+    .select('amount_paid')
+    .eq('payment_status', 'completed');
+  
+  const totalRevenue = payments?.reduce((sum, p) => sum + (p.amount_paid || 0), 0) || 0;
+
+  // Get rally zones from Sanity
+  const rallyZones = await sanityClient.fetch(`
+    *[_type == "rallyZone"] | order(order asc) {
+      _id,
+      name,
+      is_open
+    }
+  `);
+
+  const openZonesCount = rallyZones?.filter((z: any) => z.is_open).length || 0;
+  const totalZonesCount = rallyZones?.length || 0;
+
+  // Get event markers from Sanity
+  const eventMarkers = await sanityClient.fetch(`
+    *[_type == "eventMarker"] {
+      _id,
+      name,
+      isActive
+    }
+  `);
+
+  const activeMarkersCount = eventMarkers?.filter((m: any) => m.isActive).length || 0;
+  const totalMarkersCount = eventMarkers?.length || 0;
+
   // Get recent participants
   const { data: recentParticipants } = await supabaseAdmin
     .from('participants')
@@ -115,13 +200,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
       checkedInParticipants: checkedInParticipants || 0,
       totalCheckIns: totalCheckIns || 0,
     },
+    teasers: {
+      pendingScansCount: pendingScansCount || 0,
+      fallbackReviewCount: fallbackReviewCount || 0,
+      pendingPhotosCount: pendingPhotosCount || 0,
+      pendingStoriesCount: pendingStoriesCount || 0,
+      activeBuddyGroupsCount: activeBuddyGroupsCount || 0,
+      totalAchievementsCount: totalAchievementsCount || 0,
+      totalAlbumsCount: totalAlbumsCount || 0,
+      totalSOSCount: totalSOSCount || 0,
+      totalChallengesCount: totalChallengesCount || 0,
+      totalStoriesCount: totalStoriesCount || 0,
+      totalRevenue,
+      openZonesCount,
+      totalZonesCount,
+      activeMarkersCount,
+      totalMarkersCount,
+    },
     recentParticipants: recentParticipants || [],
     topCheckIns: topCheckIns || [],
   };
 }
 
 export default function AdminDashboard() {
-  const { urgent, stats, recentParticipants, topCheckIns } = useLoaderData<typeof loader>();
+  const { urgent, stats, teasers, recentParticipants, topCheckIns } = useLoaderData<typeof loader>();
 
   const hasUrgentMatters = urgent.emergencySOSCount > 0 || urgent.pendingChallengesCount > 0;
 
@@ -160,7 +262,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-red-900 mb-3">⚠️ Directe Aandacht Vereist</h2>
+                <h2 className="text-xl font-bold text-red-900 mb-3">Directe Aandacht Vereist</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {urgent.emergencySOSCount > 0 && (
                     <Link
@@ -168,7 +270,7 @@ export default function AdminDashboard() {
                       className="bg-white border-2 border-red-300 rounded-lg p-4 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-red-700">🚨 Nood SOS</span>
+                        <span className="text-sm font-medium text-red-700">Nood SOS</span>
                         <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
                           {urgent.emergencySOSCount}
                         </span>
@@ -182,7 +284,7 @@ export default function AdminDashboard() {
                       className="bg-white border-2 border-orange-300 rounded-lg p-4 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-orange-700">📋 Route Challenges</span>
+                        <span className="text-sm font-medium text-orange-700">Route Challenges</span>
                         <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
                           {urgent.pendingChallengesCount}
                         </span>
@@ -274,7 +376,9 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {/* Priority Actions - Show with badges if urgent */}
+          {/* ===== ZEER URGENT - VEILIGHEID & DAGOPERATIE ===== */}
+          
+          {/* 1. Nood SOS - Hoogste prioriteit tijdens event */}
           <Link
             to="/admin/emergency-alerts"
             className={`rounded-sm shadow p-6 transition-all relative ${
@@ -292,24 +396,128 @@ export default function AdminDashboard() {
               </span>
             )}
             <Icon name="alert-triangle" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Nood SOS</h3>
-            <p className="text-sm text-white mt-1">
-              {urgent.emergencySOSCount > 0 ? `${urgent.emergencySOSCount} actieve oproepen` : 'Bekijk noodoproepen'}
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Nood SOS</h3>
+              {teasers.totalSOSCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.totalSOSCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">
+              {urgent.emergencySOSCount > 0 ? `${urgent.emergencySOSCount} onbehandeld` : 'Alle meldingen behandeld'}
             </p>
           </Link>
 
+          {/* 2. Check-in - Kern dagoperatie */}
+          <Link
+            to="/admin/check-in"
+            className="bg-gradient-to-r from-lime-600 to-lime-800 hover:from-lime-700 hover:to-lime-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="check" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Check-in</h3>
+              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                {stats.checkedInParticipants}/{stats.totalParticipants}
+              </span>
+            </div>
+            <p className="text-sm text-white/90 mt-1">Scan QR codes</p>
+          </Link>
+
+          {/* 3. Zone Control - Beheer zones tijdens event */}
+          <Link
+            to="/admin/zone-control"
+            className="bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="target" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Zone Control</h3>
+              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                {teasers.openZonesCount}/{teasers.totalZonesCount}
+              </span>
+            </div>
+            <p className="text-sm text-white/90 mt-1">Open/sluit zones</p>
+          </Link>
+
+          {/* 4. Manual Scan - Backup scanning methode */}
+          <Link
+            to="/admin/manual-scan"
+            className="bg-gradient-to-r from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="document" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Manual Scan</h3>
+            <p className="text-sm text-white mt-1">Handmatig scannen</p>
+          </Link>
+
+          {/* 5. Event Dashboard - Real-time monitoring */}
+          <Link
+            to="/admin/event-dashboard"
+            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 rounded-sm shadow p-6 transition-colors"
+          >
+            <Icon name="activity" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Event Dashboard</h3>
+            <p className="text-sm text-white mt-1">Real-time statistieken</p>
+          </Link>
+
+          {/* ===== MODERATIE & VALIDATIE ===== */}
+          
+          {/* 6. Manual Validatie - Scans controleren */}
           <Link
             to="/admin/pending-scans"
-              className={`rounded-sm shadow p-6 transition-all relative ${                'bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900'
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              teasers.pendingScansCount > 0
+                ? 'bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900 ring-2 ring-cyan-400 ring-offset-2'
+                : 'bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900'
             }`}
           >
+            {teasers.pendingScansCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center">
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-cyan-500 text-white text-xs font-bold items-center justify-center">
+                  {teasers.pendingScansCount}
+                </span>
+              </span>
+            )}
             <Icon name="search" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Manual Validatie</h3>
-            <p className="text-sm text-white mt-1">
-              {'Controleer scans'}
-            </p>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Manual Validatie</h3>
+              {teasers.pendingScansCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.pendingScansCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">Controleer scans</p>
           </Link>
 
+          {/* 7. Fallback Review - Verifieer inzendingen */}
+          <Link
+            to="/admin/fallback-review"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              teasers.fallbackReviewCount > 0
+                ? 'bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900 ring-2 ring-slate-400 ring-offset-2'
+                : 'bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900'
+            }`}
+          >
+            {teasers.fallbackReviewCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center">
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-slate-500 text-white text-xs font-bold items-center justify-center">
+                  {teasers.fallbackReviewCount}
+                </span>
+              </span>
+            )}
+            <Icon name="clipboard" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Fallback Review</h3>
+              {teasers.fallbackReviewCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.fallbackReviewCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">Verifieer inzendingen</p>
+          </Link>
+
+          {/* 8. Route Challenges - Pending validatie */}
           <Link
             to="/admin/challenges?filter=pending"
             className={`rounded-sm shadow p-6 transition-all relative ${
@@ -327,97 +535,127 @@ export default function AdminDashboard() {
               </span>
             )}
             <Icon name="check-square" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Route Challenges</h3>
-            <p className="text-sm text-white mt-1">
-              {urgent.pendingChallengesCount > 0 ? `${urgent.pendingChallengesCount} in onderzoek` : 'Bekijk challenges'}
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Route Challenges</h3>
+              {teasers.totalChallengesCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.totalChallengesCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">
+              {urgent.pendingChallengesCount > 0 ? `${urgent.pendingChallengesCount} te valideren` : 'Alle gevalideerd'}
             </p>
           </Link>
 
+          {/* 9. Foto Goedkeuring - Photo review */}
           <Link
-            to="/admin/fallback-review"
-            className={`rounded-sm shadow p-6 transition-all relative ${                'bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900'
+            to="/admin/gallery"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              teasers.pendingPhotosCount > 0
+                ? 'bg-gradient-to-r from-violet-600 to-violet-800 hover:from-violet-700 hover:to-violet-900 ring-2 ring-violet-400 ring-offset-2'
+                : 'bg-gradient-to-r from-violet-600 to-violet-800 hover:from-violet-700 hover:to-violet-900'
             }`}
           >
-            
-            <Icon name="clipboard" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Fallback Review</h3>
-            <p className="text-sm text-white mt-1">
-              {'Verifieer inzendingen'}
+            {teasers.pendingPhotosCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center">
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-violet-500 text-white text-xs font-bold items-center justify-center">
+                  {teasers.pendingPhotosCount}
+                </span>
+              </span>
+            )}
+            <Icon name="camera" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Foto Goedkeuring</h3>
+              {teasers.pendingPhotosCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.pendingPhotosCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">Review & featured</p>
+          </Link>
+
+          {/* 10. Ride Stories - Content moderatie */}
+          <Link
+            to="/admin/blog"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              teasers.pendingStoriesCount > 0
+                ? 'bg-gradient-to-r from-orange-500 to-red-700 hover:from-orange-600 hover:to-red-800 ring-2 ring-orange-400 ring-offset-2'
+                : 'bg-gradient-to-r from-orange-500 to-red-700 hover:from-orange-600 hover:to-red-800'
+            }`}
+          >
+            {teasers.pendingStoriesCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center">
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-orange-500 text-white text-xs font-bold items-center justify-center">
+                  {teasers.pendingStoriesCount}
+                </span>
+              </span>
+            )}
+            <Icon name="book-open" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Ride Stories</h3>
+              {teasers.totalStoriesCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.totalStoriesCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">
+              {teasers.pendingStoriesCount > 0 ? `${teasers.pendingStoriesCount} te modereren` : 'Alle gemodereerd'}
             </p>
           </Link>
 
+          {/* ===== BEHEER & CONTENT ===== */}
+          
+          {/* 11. Event Markers - Map management */}
           <Link
             to="/admin/event-markers"
             className="bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-700 hover:to-teal-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="map" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Event Markers</h3>
-            <p className="text-sm text-white mt-1">Live map events</p>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Event Markers</h3>
+              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                {teasers.activeMarkersCount}/{teasers.totalMarkersCount}
+              </span>
+            </div>
+            <p className="text-sm text-white/90 mt-1">Live map events</p>
           </Link>
 
+          {/* 12. Deelnemers - Participant management */}
           <Link
             to="/admin/participants"
             className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="users" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Deelnemers</h3>
-            <p className="text-sm text-white mt-1">Beheer alle deelnemers</p>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Deelnemers</h3>
+              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                {stats.totalParticipants}
+              </span>
+            </div>
+            <p className="text-sm text-white/90 mt-1">{stats.paidParticipants} betaald • {stats.checkedInParticipants} ingecheckt</p>
           </Link>
 
-          {/* <Link
-            to="/admin/submissions"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="document" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Inzendingen</h3>
-            <p className="text-sm text-white mt-1">Bekijk rally codes</p>
-          </Link> */}
-
+          {/* 13. Event Albums - Photo albums */}
           <Link
-            to="/admin/check-in"
-            className="bg-gradient-to-r from-lime-600 to-lime-800 hover:from-lime-700 hover:to-lime-900 rounded-sm shadow p-6 transition-colors"
+            to="/admin/photo-albums"
+            className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="check" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Check-in</h3>
-            <p className="text-sm text-white mt-1">Scan QR codes</p>
+            <Icon name="folder" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Event Albums</h3>
+              {teasers.totalAlbumsCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.totalAlbumsCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">Albums per rally zone</p>
           </Link>
 
-          <Link
-            to="/admin/zone-control"
-            className="bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="target" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Zone Control</h3>
-            <p className="text-sm text-white mt-1">Open/sluit zones</p>
-          </Link>
-
-          <Link
-            to="/admin/manual-scan"
-            className="bg-gradient-to-r from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="document" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Manual Scan</h3>
-            <p className="text-sm text-white mt-1">Deelnemer inzending handmatig scannen</p>
-          </Link>
-
-          <Link
-            to="/admin/event-dashboard"
-            className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="activity" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Event Dashboard</h3>
-            <p className="text-sm text-white mt-1">Real-time statistieken</p>
-          </Link>
-
-          <Link
-            to="/admin/financial-report"
-            className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:via-green-800 hover:to-green-900 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="dollar-sign" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Financieel Rapport</h3>
-            <p className="text-sm text-white mt-1">Inkomsten & betalingen</p>
-          </Link>
-
+          {/* 14. Emergency Contacts - Noodcontacten & GPS */}
           <Link
             to="/admin/emergency-contact-dashboard"
             className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 rounded-sm shadow p-6 transition-colors"
@@ -427,6 +665,7 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Noodcontacten & GPS</p>
           </Link>
 
+          {/* 15. Event Checklist - Voorbereiding & taken */}
           <Link
             to="/admin/event-checklist"
             className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 rounded-sm shadow p-6 transition-colors"
@@ -436,33 +675,9 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Voorbereiding & taken</p>
           </Link>
 
-          <Link
-            to="/admin/gallery"
-            className="bg-gradient-to-r from-violet-600 to-violet-800 hover:from-violet-700 hover:to-violet-900 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="camera" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Foto Goedkeuring</h3>
-            <p className="text-sm text-white mt-1">Review & featured</p>
-          </Link>
-
-          <Link
-            to="/admin/photo-albums"
-            className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="folder" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Event Albums</h3>
-            <p className="text-sm text-white mt-1">Albums per rally zone</p>
-          </Link>
-
-          <Link
-            to="/admin/blog"
-            className="bg-gradient-to-r from-orange-500 to-red-700 hover:from-orange-600 hover:to-red-800 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="book-open" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Ride Stories</h3>
-            <p className="text-sm text-white mt-1">Modereer verhalen</p>
-          </Link>
-
+          {/* ===== COMMUNICATIE & GAMIFICATION ===== */}
+          
+          {/* 16. Push Notifications - Communicatie */}
           <Link
             to="/admin/push-notifications"
             className="bg-gradient-to-r from-rose-600 to-rose-800 hover:from-rose-700 hover:to-rose-900 rounded-sm shadow p-6 transition-colors"
@@ -472,47 +687,58 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Templates, broadcast & targeted</p>
           </Link>
 
+          {/* 17. Buddy Stats - Naftgenoten */}
           <Link
             to="/admin/buddy-stats"
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="users" className="w-6 h-6 text-white mb-2" />
-            <h3 className="font-semibold text-white">Naftgenoten Statistieken</h3>
-            <p className="text-sm text-white mt-1">Groepsformatie & naftgenoten insights</p>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Naftgenoten</h3>
+              {teasers.activeBuddyGroupsCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.activeBuddyGroupsCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">Groepsformatie & insights</p>
           </Link>
 
+          {/* 18. Achievements - Gamification */}
           <Link
             to="/admin/achievements"
             className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="award" className="w-6 h-6 text-white mb-2" />
-            <h3 className="font-semibold text-white">Achievements</h3>
-            <p className="text-sm text-white mt-1">Beheer achievements & criteria</p>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Achievements</h3>
+              {teasers.totalAchievementsCount > 0 && (
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                  {teasers.totalAchievementsCount}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/90 mt-1">Beheer criteria</p>
           </Link>
 
-
-          {/* V1: Reports page not implemented
+          {/* ===== RAPPORTAGE & SYSTEEM ===== */}
+          
+          {/* 19. Financieel Rapport - Financial reporting */}
           <Link
-            to="/admin/reports"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            to="/admin/financial-report"
+            className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:via-green-800 hover:to-green-900 rounded-sm shadow p-6 transition-colors"
           >
-            <Icon name="file-text" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Rapporten</h3>
-            <p className="text-sm text-white mt-1">Genereer en beheer rapporten</p>
+            <Icon name="dollar-sign" className="w-8 h-8 text-white mb-2" />
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Financieel Rapport</h3>
+              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                €{teasers.totalRevenue.toLocaleString('nl-BE')}
+              </span>
+            </div>
+            <p className="text-sm text-white/90 mt-1">Inkomsten & betalingen</p>
           </Link>
-          */}
 
-          {/* V1: Analytics page not implemented
-          <Link
-            to="/admin/analytics"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="bar-chart" className="w-8 h-8 text-white mb-2" />
-            <h3 className="font-semibold text-white">Analytics</h3>
-            <p className="text-sm text-white mt-1">Statistieken en grafieken</p>
-          </Link>
-          */}
-
+          {/* 20. Settings - Admin gebruikers */}
           <Link
             to="/admin/settings"
             className="bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900 rounded-sm shadow p-6 transition-colors"
@@ -522,6 +748,7 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Admin gebruikers</p>
           </Link>
 
+          {/* 21. System Logs - Debug & monitoring */}
           <Link
             to="/admin/logs"
             className="bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 hover:from-gray-800 hover:via-gray-900 hover:to-black rounded-sm shadow p-6 transition-colors"
@@ -531,13 +758,14 @@ export default function AdminDashboard() {
             <p className="text-sm text-white mt-1">Debug & monitoring</p>
           </Link>
 
+          {/* 22. Nieuwe Editie - Year rollover */}
           <Link
             to="/admin/prepare-edition"
             className="bg-gradient-to-r from-yellow-600 to-orange-700 hover:from-yellow-700 hover:to-orange-800 rounded-sm shadow p-6 transition-colors border-2 border-yellow-400"
           >
             <Icon name="refresh" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Nieuwe Editie</h3>
-            <p className="text-sm text-white mt-1">Maak klaar voor volgend jaar</p>
+            <p className="text-sm text-white mt-1">Volgend jaar voorbereiden</p>
           </Link>
         </div>
 

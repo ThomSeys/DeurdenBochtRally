@@ -95,4 +95,5 @@ export default [
   route("api/webhook", "routes/api.webhook.tsx"),
   route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),
   route("api/emergency-sos", "routes/api.emergency-sos.tsx"),
+  route("api/admin-menu-stats", "routes/api.admin-menu-stats.tsx"),
 ] satisfies RouteConfig;
