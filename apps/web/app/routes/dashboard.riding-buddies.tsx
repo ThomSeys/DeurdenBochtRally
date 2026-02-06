@@ -1,11 +1,12 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Form, useNavigation, useActionData, Link } from 'react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { Lightbox } from '~/components/Lightbox';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useModal } from '~/contexts/ModalContext';
 
@@ -887,12 +888,15 @@ function BuddySubmissionsLightbox({
   const [currentIndex, setCurrentIndex] = useState(0);
   const current = submissions[currentIndex];
   const hasMultiple = submissions.length > 1;
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [tags, setTags] = useState<Array<any>>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!current) {
     return (
       <div className="rounded-lg p-3 sm:p-6 text-white max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <h2 className="text-lg font-semibold">Inzendingen van {buddyName}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -916,127 +920,20 @@ function BuddySubmissionsLightbox({
   const photoId = current.challenge_photo?.id;
   const initialLiked = photoId ? likedPhotoIds.includes(photoId) : false;
 
-  return (
-    <div className="rounded-lg p-3 sm:p-6 text-white max-h-[90vh] overflow-y-auto">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h2 className="text-lg font-semibold">Inzendingen van {buddyName}</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-          aria-label="Sluiten"
-        >
-          <Icon name="x" className="w-5 h-5" />
-        </button>
-      </div>
-
-      {hasMultiple && (
-        <div className="flex items-center justify-center mb-3">
-        </div>
-      )}
-
-      <div className="border-t border-white/10 pt-4">
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <div>
-            <p className="text-sm font-semibold text-white">Zone {current.zone_id} - Punt {current.location_key}</p>
-            <p className="text-xs text-white/60 mt-1">{current.challenge_type === 'photo' ? 'Foto inzending' : 'Tekstantwoord'}</p>
-          </div>
-          <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusClasses}`}>
-            {statusLabel}
-          </span>
-        </div>
-
-        <div className="mt-4">
-          {current.challenge_type === 'photo' ? (
-            current.photo_url ? (
-              <div className="space-y-3">
-                <div className="rounded-lg p-3 sm:p-4 space-y-4">
-                  <div className="relative">
-                    {hasMultiple && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentIndex((prev) => (prev - 1 + submissions.length) % submissions.length)}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-                          aria-label="Vorige"
-                        >
-                          <Icon name="chevron-left" className="w-5 h-5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCurrentIndex((prev) => (prev + 1) % submissions.length)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-                          aria-label="Volgende"
-                        >
-                          <Icon name="chevron-right" className="w-5 h-5" />
-                        </button>
-                      </>
-                    )}
-                    <img
-                      src={current.photo_url}
-                      alt="Inzending foto"
-                      className="w-full max-h-[55vh] sm:max-h-[65vh] object-contain rounded-lg"
-                    />
-                    {photoId && (
-                      <PhotoActions
-                        photoId={photoId}
-                        initialLikeCount={current.challenge_photo?.like_count || 0}
-                        initialLiked={initialLiked}
-                        initialTags={current.challenge_photo?.photo_tags || []}
-                        buddies={buddies.map((b: any) => ({
-                          id: b.buddy_id,
-                          first_name: b.buddy_first_name,
-                          last_name: b.buddy_last_name,
-                        }))}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <span className="text-white/70">Foto inzending (URL niet beschikbaar)</span>
-            )
-          ) : (
-            <div className="bg-white/10 p-4 rounded-lg">
-              <p className="text-white">{current.text_answer || 'Geen antwoord gegeven'}</p>
-            </div>
-          )}
-        </div>
-
-        {current.submitted_at && (
-          <p className="text-xs text-white/60 mt-3">
-            Ingediend op {new Date(current.submitted_at).toLocaleString('nl-NL')}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PhotoActions({
-  photoId,
-  initialLikeCount,
-  initialLiked,
-  initialTags,
-  buddies,
-}: {
-  photoId: string;
-  initialLikeCount: number;
-  initialLiked: boolean;
-  initialTags: Array<{
-    participant_id: string;
-    participant?: { first_name: string; last_name: string };
-  }>;
-  buddies: Array<{ id: string; first_name: string; last_name: string }>;
-}) {
-  const [likeCount, setLikeCount] = useState(initialLikeCount);
-  const [liked, setLiked] = useState(initialLiked);
-  const [tags, setTags] = useState(initialTags || []);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showTagging, setShowTagging] = useState(false);
+  useEffect(() => {
+    if (!photoId) {
+      setLikeCount(0);
+      setLiked(false);
+      setTags([]);
+      return;
+    }
+    setLikeCount(current.challenge_photo?.like_count || 0);
+    setLiked(initialLiked);
+    setTags(current.challenge_photo?.photo_tags || []);
+  }, [photoId, current, initialLiked]);
 
   const handleLike = async () => {
-    if (isSubmitting) return;
+    if (!photoId || isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -1051,16 +948,23 @@ function PhotoActions({
         return;
       }
 
-      const nextLiked = !liked;
-      setLiked(nextLiked);
-      setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+      const result = await response.json().catch(() => null);
+      if (result?.snapshot) {
+        setLikeCount(result.snapshot.like_count ?? likeCount);
+        setTags(result.snapshot.tags ?? tags);
+        setLiked(result.snapshot.liked ?? liked);
+      } else {
+        const nextLiked = !liked;
+        setLiked(nextLiked);
+        setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleTagToggle = async (buddyId: string) => {
-    if (!buddyId || isSubmitting) return;
+    if (!photoId || !buddyId || isSubmitting) return;
     setIsSubmitting(true);
 
     const isTagged = tags.some((tag) => tag.participant_id === buddyId);
@@ -1082,16 +986,23 @@ function PhotoActions({
         return;
       }
 
-      if (isTagged) {
+      const result = await response.json().catch(() => null);
+      if (result?.snapshot) {
+        setLikeCount(result.snapshot.like_count ?? likeCount);
+        setTags(result.snapshot.tags ?? tags);
+        if (typeof result.snapshot.liked === 'boolean') {
+          setLiked(result.snapshot.liked);
+        }
+      } else if (isTagged) {
         setTags((prev) => prev.filter((tag) => tag.participant_id !== buddyId));
       } else {
-        const buddy = buddies.find((b) => b.id === buddyId);
+        const buddy = buddies.find((b: any) => b.buddy_id === buddyId);
         if (buddy) {
           setTags((prev) => [
             ...prev,
             {
-              participant_id: buddy.id,
-              participant: { first_name: buddy.first_name, last_name: buddy.last_name },
+              participant_id: buddy.buddy_id,
+              participant: { first_name: buddy.buddy_first_name, last_name: buddy.buddy_last_name },
             },
           ]);
         }
@@ -1102,75 +1013,92 @@ function PhotoActions({
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      {tags.length > 0 && (
-        <div className="absolute bottom-12 left-2 flex flex-wrap gap-2 max-w-[70%] pointer-events-auto">
-          {tags.map((tag) => (
-            <span
-              key={tag.participant_id}
-              className="bg-black/70 text-white px-2 py-1 rounded-full text-xs"
-            >
-              {tag.participant?.first_name} {tag.participant?.last_name}
-            </span>
-          ))}
+    <div className="rounded-lg p-3 sm:p-6 text-white max-h-[90vh] overflow-y-auto">
+
+      {hasMultiple && (
+        <div className="flex items-center justify-center mb-3">
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleLike}
-        disabled={isSubmitting}
-        className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/70 text-white px-3 py-1.5 rounded-full text-sm font-semibold pointer-events-auto hover:opacity-80 transition-opacity disabled:opacity-50"
-      >
-        <Icon
-          name="heart"
-          className={`w-4 h-4 transition-colors ${
-            liked ? 'fill-red-500 text-red-500' : 'text-white/80'
-          }`}
-        />
-        {likeCount}
-      </button>
+      <div>
+        <div className="mt-4">
+          {current.challenge_type === 'photo' ? (
+            current.photo_url ? (
+              <div className="space-y-3">
+                <Lightbox
+                  imageSrc={current.photo_url}
+                  imageAlt="Inzending foto"
+                  backdrop={false}
+                  onClose={onClose}
+                  wrapperClassName="relative"
+                  contentClassName="relative"
+                  imageClassName="w-full max-h-[55vh] sm:max-h-[65vh] object-contain rounded-lg"
+                  showNav={hasMultiple}
+                  onPrev={() => setCurrentIndex((prev) => (prev - 1 + submissions.length) % submissions.length)}
+                  onNext={() => setCurrentIndex((prev) => (prev + 1) % submissions.length)}
+                  interactions={
+                    photoId
+                      ? {
+                          likeCount,
+                          liked,
+                          onLike: handleLike,
+                          tags,
+                          tagOptions: buddies.map((b: any) => ({
+                            id: b.buddy_id,
+                            first_name: b.buddy_first_name,
+                            last_name: b.buddy_last_name,
+                          })),
+                          onToggleTag: handleTagToggle,
+                          isSubmitting,
+                        }
+                      : undefined
+                  }
+                  footer={
+                    <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-white">
+                      <div className="flex items-center gap-3 mb-4">
+                        {current.participants?.profile_photo_url ? (
+                          <img
+                            src={current.participants.profile_photo_url}
+                            alt={current.participants.first_name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-teal-300"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold">
+                            {(current.participants?.first_name || 'U').charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold">{current.participants?.first_name} {current.participants?.last_name}</p>
+                          <p className="text-sm text-white/70">Deelnemer</p>
+                        </div>
+                      </div>
 
-      <div className="absolute bottom-2 right-2 pointer-events-auto">
-        <button
-          type="button"
-          onClick={() => setShowTagging((prev) => !prev)}
-          className="flex items-center gap-2 bg-black/70 hover:bg-black/80 text-white px-3 py-1.5 rounded-full text-sm font-semibold transition-colors"
-        >
-          <Icon name="user-plus" className="w-4 h-4" />
-          {showTagging ? 'Sluiten' : 'Tag'}
-        </button>
-
-        {showTagging && (
-          <div className="absolute bottom-full right-0 mb-2 w-56 max-h-56 overflow-y-auto bg-black/80 backdrop-blur-md rounded-lg shadow-2xl">
-            <div className="p-2 space-y-2">
-              {buddies.length === 0 ? (
-                <p className="text-white/70 text-sm px-2 py-3 text-center">Geen buddies om te taggen</p>
-              ) : (
-                buddies.map((buddy) => {
-                  const isTagged = tags.some((tag) => tag.participant_id === buddy.id);
-                  return (
-                    <button
-                      key={buddy.id}
-                      type="button"
-                      onClick={() => handleTagToggle(buddy.id)}
-                      disabled={isSubmitting}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
-                        isTagged
-                          ? 'bg-white/10 text-white'
-                          : 'bg-white/5 hover:bg-white/10 text-white'
-                      }`}
-                    >
-                      <Icon name="user" className="w-4 h-4" />
-                      <span>{buddy.first_name} {buddy.last_name}</span>
-                      {isTagged && <Icon name="check" className="w-4 h-4 ml-auto" />}
-                    </button>
-                  );
-                })
-              )}
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-white/80">
+                        <span className="bg-white/10 px-3 py-1 rounded-full">Zone {current.zone_id}</span>
+                        <span>•</span>
+                        <span>
+                          Ingediend op {current.submitted_at && new Date(current.submitted_at).toLocaleDateString('nl-BE', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                />
+              </div>
+            ) : (
+              <span className="text-white/70">Foto inzending (URL niet beschikbaar)</span>
+            )
+          ) : (
+            <div className="bg-white/10 p-4 rounded-lg">
+              <p className="text-white">{current.text_answer || 'Geen antwoord gegeven'}</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

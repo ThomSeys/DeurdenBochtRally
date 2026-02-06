@@ -5,6 +5,7 @@ import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '~/components/Icon';
+import { Lightbox } from '~/components/Lightbox';
 import { createRequestLogger } from '~/lib/logger.server';
 import { compressImage } from '~/lib/image-compression';
 
@@ -27,7 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .from('participant_photos')
     .select(`
       *,
-      participant:participants(first_name, last_name, motorcycle_brand, motorcycle_model),
+      participant:participants(first_name, last_name, motorcycle_brand, motorcycle_model, profile_photo_url),
       photo_tags(participant_id, participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name))
     `);
 
@@ -44,6 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .from('participant_photos')
     .select(`
       *,
+      participant:participants(first_name, last_name, profile_photo_url),
       photo_tags(participant_id, participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name))
     `)
     .eq('participant_id', userId);
@@ -369,7 +371,10 @@ export default function Gallery() {
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
-  const [showTagging, setShowTagging] = useState(false);
+  const [lightboxLikeCount, setLightboxLikeCount] = useState(0);
+  const [lightboxLiked, setLightboxLiked] = useState(false);
+  const [lightboxTags, setLightboxTags] = useState<any[]>([]);
+  const [lightboxSubmitting, setLightboxSubmitting] = useState(false);
   
   // Touch/swipe state for lightbox
   const touchStartX = useRef<number>(0);
@@ -388,6 +393,9 @@ export default function Gallery() {
   const displayPhotos = filter === 'mine' 
     ? myPhotos 
     : photos.filter((p: any) => p.is_approved);
+  const lightboxIndex = lightboxPhoto
+    ? displayPhotos.findIndex((photo: any) => photo.id === lightboxPhoto.id)
+    : -1;
 
   // Update lightbox photo after revalidation to show new tags
   useEffect(() => {
@@ -459,6 +467,131 @@ export default function Gallery() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxPhoto, displayPhotos]);
+
+  const refreshLightboxSnapshot = async (photoId: string) => {
+    const response = await fetch('/api/photo-interactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'snapshot', photoId }),
+    });
+
+    if (!response.ok) return;
+
+    const result = await response.json().catch(() => null);
+    if (result?.snapshot) {
+      setLightboxLikeCount(result.snapshot.like_count ?? 0);
+      setLightboxTags(result.snapshot.tags ?? []);
+      setLightboxLiked(Boolean(result.snapshot.liked));
+      setLightboxPhoto((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              like_count: result.snapshot.like_count ?? prev.like_count,
+              photo_tags: result.snapshot.tags ?? prev.photo_tags,
+            }
+          : prev
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (!lightboxPhoto) return;
+    setLightboxLikeCount(lightboxPhoto.like_count || 0);
+    setLightboxTags(lightboxPhoto.photo_tags || []);
+    refreshLightboxSnapshot(lightboxPhoto.id).catch(() => undefined);
+  }, [lightboxPhoto?.id]);
+
+  const handleLightboxLike = async () => {
+    if (!lightboxPhoto || lightboxSubmitting) return;
+    setLightboxSubmitting(true);
+
+    try {
+      const response = await fetch('/api/photo-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'like', photoId: lightboxPhoto.id }),
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json().catch(() => null);
+      if (result?.snapshot) {
+        setLightboxLikeCount(result.snapshot.like_count ?? lightboxLikeCount);
+        setLightboxTags(result.snapshot.tags ?? lightboxTags);
+        setLightboxLiked(Boolean(result.snapshot.liked));
+        setLightboxPhoto((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                like_count: result.snapshot.like_count ?? prev.like_count,
+                photo_tags: result.snapshot.tags ?? prev.photo_tags,
+              }
+            : prev
+        );
+      } else {
+        const nextLiked = !lightboxLiked;
+        setLightboxLiked(nextLiked);
+        setLightboxLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+      }
+    } finally {
+      setLightboxSubmitting(false);
+    }
+  };
+
+  const handleLightboxTagToggle = async (buddyId: string) => {
+    if (!lightboxPhoto || !buddyId || lightboxSubmitting) return;
+    setLightboxSubmitting(true);
+
+    const isTagged = lightboxTags.some((tag: any) => tag.participant_id === buddyId);
+    const action = isTagged ? 'untag' : 'tag';
+
+    try {
+      const response = await fetch('/api/photo-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          photoId: lightboxPhoto.id,
+          taggedParticipantId: buddyId,
+        }),
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json().catch(() => null);
+      if (result?.snapshot) {
+        setLightboxLikeCount(result.snapshot.like_count ?? lightboxLikeCount);
+        setLightboxTags(result.snapshot.tags ?? lightboxTags);
+        if (typeof result.snapshot.liked === 'boolean') {
+          setLightboxLiked(result.snapshot.liked);
+        }
+        setLightboxPhoto((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                like_count: result.snapshot.like_count ?? prev.like_count,
+                photo_tags: result.snapshot.tags ?? prev.photo_tags,
+              }
+            : prev
+        );
+      } else if (isTagged) {
+        setLightboxTags((prev) => prev.filter((tag: any) => tag.participant_id !== buddyId));
+      } else {
+        const buddy = buddies.find((b: any) => b.buddy_id === buddyId);
+        if (buddy) {
+          setLightboxTags((prev) => [
+            ...prev,
+            {
+              participant_id: buddy.buddy_id,
+              participant: { first_name: buddy.buddy?.first_name, last_name: buddy.buddy?.last_name },
+            },
+          ]);
+        }
+      }
+    } finally {
+      setLightboxSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -767,181 +900,89 @@ export default function Gallery() {
 
         {/* Lightbox */}
         {lightboxPhoto && (
-          <div
-            className="fixed inset-0 bg-black/90 z-[1200] flex items-center justify-center p-4 backdrop-blur-sm"
-            onClick={() => setLightboxPhoto(null)}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setLightboxPhoto(null)}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
-            >
-              <Icon name="x" className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-
-            {/* Previous button */}
-            {displayPhotos.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigateLightbox('prev');
-                }}
-                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
-              >
-                <Icon name="chevron-left" className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-            )}
-
-            {/* Next button */}
-            {displayPhotos.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigateLightbox('next');
-                }}
-                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors z-10"
-              >
-                <Icon name="chevron-right" className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-            )}
-
-            <div 
-              className="max-w-4xl w-full touch-pan-y px-2 sm:px-4" 
-              onClick={(e) => e.stopPropagation()}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              {/* Image with overlays */}
-              <div className="relative mx-auto" style={{ maxWidth: '90vw', maxHeight: '70vh' }}>
-                <img
-                  src={lightboxPhoto.image_url}
-                  alt={lightboxPhoto.caption}
-                  className="max-h-[70vh] max-w-[90vw] h-auto w-auto mx-auto rounded-lg shadow-2xl object-contain"
-                />
-                
-                {/* Tagged People Overlay - Bottom Left */}
-                {lightboxPhoto.photo_tags && lightboxPhoto.photo_tags.length > 0 && (
-                  <div 
-                    className="absolute bottom-2 left-2 sm:left-8 flex flex-col gap-2 max-w-[90%] z-20"
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onTouchMove={(e) => e.stopPropagation()}
-                    onTouchEnd={(e) => e.stopPropagation()}
-                  >
-                    {lightboxPhoto.photo_tags.map((tag: any) => (
-                      <div key={tag.participant_id} className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-full px-2 sm:px-3 py-1.5 sm:py-2">
-                        <Icon name="user" className="w-3 h-3 sm:w-4 sm:h-4 text-white flex-shrink-0" />
-                        <span className="text-white text-xs sm:text-sm font-medium truncate">
-                          {tag.participant?.first_name} {tag.participant?.last_name}
-                        </span>
-                        {lightboxPhoto.participant_id === userId && (
-                          <Form method="post" className="inline" onClick={(e) => e.stopPropagation()}>
-                            <input type="hidden" name="action" value="untag" />
-                            <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
-                            <input type="hidden" name="tagged_participant_id" value={tag.participant_id} />
-                            <button
-                              type="submit"
-                              className="text-white/70 hover:text-white transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Icon name="x" className="w-3 h-3" />
-                            </button>
-                          </Form>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Tag Interface Overlay - Only for photo owner */}
-                {lightboxPhoto.participant_id === userId && (
-                  <div 
-                    className="absolute bottom-2 sm:bottom-4 right-2 sm:right-8 z-20" 
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onTouchMove={(e) => e.stopPropagation()}
-                    onTouchEnd={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowTagging(!showTagging);
-                      }}
-                      className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-3 sm:px-4 py-2 rounded-full font-semibold transition-all shadow-lg text-xs sm:text-sm min-h-[44px]"
-                    >
-                      <Icon name="user-plus" className="w-4 h-4" />
-                      {showTagging ? 'Sluiten' : 'Tag'}
-                    </button>
-
-                    {showTagging && (
-                      <div className="absolute bottom-full right-0 mb-2 w-56 sm:w-64 max-h-56 sm:max-h-64 overflow-y-auto bg-black/90 backdrop-blur-md rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-3 space-y-2">
-                          {buddies.length === 0 ? (
-                            <p className="text-white/70 text-sm px-2 py-4 text-center">Je hebt nog geen naftgenoten om te taggen</p>
-                          ) : (
-                            buddies.map((buddy: any) => {
-                              const isTagged = lightboxPhoto.photo_tags?.some(
-                                (tag: any) => tag.participant_id === buddy.buddy_id
-                              );
-                              return (
-                                <Form method="post" key={buddy.buddy_id} onClick={(e) => e.stopPropagation()}>
-                                  <input type="hidden" name="action" value="tag" />
-                                  <input type="hidden" name="photo_id" value={lightboxPhoto.id} />
-                                  <input type="hidden" name="tagged_participant_id" value={buddy.buddy_id} />
-                                  <button
-                                    type="submit"
-                                    disabled={isTagged}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
-                                      isTagged
-                                        ? 'bg-white/5 text-white/50 cursor-not-allowed'
-                                        : 'bg-white/10 hover:bg-white/20 text-white'
-                                    }`}
-                                  >
-                                    <Icon name="user" className="w-4 h-4" />
-                                    <span>{buddy.buddy?.first_name} {buddy.buddy?.last_name}</span>
-                                    {isTagged && (
-                                      <Icon name="check" className="w-4 h-4 ml-auto" />
-                                    )}
-                                  </button>
-                                </Form>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {lightboxPhoto.caption && (
-                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-                    <p className="text-white text-lg mb-2">{lightboxPhoto.caption}</p>
-                    <div className="flex items-center justify-between text-white/70 text-sm">
-                      <span>{lightboxPhoto.participant?.first_name} {lightboxPhoto.participant?.last_name}</span>
-                      <div className="flex items-center gap-4">
-                        {lightboxPhoto.location && (
-                          <span className="flex items-center gap-1">
-                            <Icon name="marker" className="w-4 h-4" />
-                            {lightboxPhoto.location}
-                          </span>
-                        )}
-                        {displayPhotos.length > 1 && (
-                          <span className="text-xs">
-                            {displayPhotos.findIndex((p: any) => p.id === lightboxPhoto.id) + 1} / {displayPhotos.length}
-                          </span>
-                        )}
-                      </div>
+          <Lightbox
+            imageSrc={lightboxPhoto.image_url}
+            imageAlt={lightboxPhoto.caption || 'Rally foto'}
+            onClose={() => setLightboxPhoto(null)}
+            onPrev={displayPhotos.length > 1 ? () => navigateLightbox('prev') : undefined}
+            onNext={displayPhotos.length > 1 ? () => navigateLightbox('next') : undefined}
+            showNav={displayPhotos.length > 1}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            interactions={
+              lightboxPhoto
+                ? {
+                    likeCount: lightboxLikeCount,
+                    liked: lightboxLiked,
+                    onLike: handleLightboxLike,
+                    tags: lightboxTags,
+                    tagOptions: lightboxPhoto.participant_id === userId
+                      ? buddies.map((buddy: any) => ({
+                          id: buddy.buddy_id,
+                          first_name: buddy.buddy?.first_name,
+                          last_name: buddy.buddy?.last_name,
+                        }))
+                      : undefined,
+                    onToggleTag: lightboxPhoto.participant_id === userId
+                      ? handleLightboxTagToggle
+                      : undefined,
+                    isSubmitting: lightboxSubmitting,
+                  }
+                : undefined
+            }
+            footer={
+              <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-white">
+                <div className="flex items-center gap-3 mb-4">
+                  {lightboxPhoto.participant?.profile_photo_url ? (
+                    <img
+                      src={lightboxPhoto.participant.profile_photo_url}
+                      alt={lightboxPhoto.participant.first_name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-teal-300"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold">
+                      {(lightboxPhoto.participant?.first_name || 'U').charAt(0)}
                     </div>
+                  )}
+                  <div>
+                    <p className="font-semibold">{lightboxPhoto.participant?.first_name} {lightboxPhoto.participant?.last_name}</p>
+                    <p className="text-sm text-white/70">Deelnemer</p>
                   </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 text-sm text-white/80 mb-4">
+                  {lightboxPhoto.location && (
+                    <>
+                      <span className="bg-white/10 px-3 py-1 rounded-full">{lightboxPhoto.location}</span>
+                      <span>•</span>
+                    </>
+                  )}
+                  <span>
+                    Geupload op {lightboxPhoto.uploaded_at && new Date(lightboxPhoto.uploaded_at).toLocaleDateString('nl-BE', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  {displayPhotos.length > 1 && lightboxIndex >= 0 && (
+                    <>
+                      <span>•</span>
+                      <span className="text-xs">
+                        {lightboxIndex + 1} / {displayPhotos.length}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {lightboxPhoto.caption && (
+                  <p className="text-white">{lightboxPhoto.caption}</p>
                 )}
-
-
               </div>
-            </div>
-          </div>
+            }
+          />
         )}
       </div>
     </div>

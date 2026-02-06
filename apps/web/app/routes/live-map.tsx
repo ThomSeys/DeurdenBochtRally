@@ -136,7 +136,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       points_awarded,
       participants (
         first_name,
-        last_name
+        last_name,
+        profile_photo_url
       )
     `)
     .in('participant_id', participantIds);

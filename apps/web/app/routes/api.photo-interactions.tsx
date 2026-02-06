@@ -17,6 +17,37 @@ async function isAcceptedBuddy(userId: string, otherId: string) {
   return Boolean(data);
 }
 
+async function getPhotoSnapshot(photoId: string, userId: string) {
+  const { data: photo, error: photoError } = await supabaseAdmin
+    .from('participant_photos')
+    .select(
+      'id, like_count, photo_tags(participant_id, participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name))'
+    )
+    .eq('id', photoId)
+    .single();
+
+  if (photoError || !photo) {
+    return null;
+  }
+
+  const { data: like, error: likeError } = await supabaseAdmin
+    .from('photo_likes')
+    .select('id')
+    .eq('photo_id', photoId)
+    .eq('participant_id', userId)
+    .single();
+
+  if (likeError && likeError.code !== 'PGRST116') {
+    return null;
+  }
+
+  return {
+    like_count: photo.like_count || 0,
+    tags: photo.photo_tags || [],
+    liked: Boolean(like),
+  };
+}
+
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
   const requestLogger = createRequestLogger(request, userId);
@@ -61,6 +92,11 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: 'Not allowed' }, { status: 403 });
   }
 
+  if (action === 'snapshot') {
+    const snapshot = await getPhotoSnapshot(photoId, userId);
+    return Response.json({ success: true, snapshot });
+  }
+
   if (action === 'like') {
     const { data: existing, error: checkError } = await supabaseAdmin
       .from('photo_likes')
@@ -92,7 +128,8 @@ export async function action({ request }: ActionFunctionArgs) {
           .eq('id', photoId);
       }
 
-      return Response.json({ success: true, liked: false });
+      const snapshot = await getPhotoSnapshot(photoId, userId);
+      return Response.json({ success: true, liked: false, snapshot });
     }
 
     const { error: insertError } = await supabaseAdmin
@@ -111,7 +148,8 @@ export async function action({ request }: ActionFunctionArgs) {
         .eq('id', photoId);
     }
 
-    return Response.json({ success: true, liked: true });
+    const snapshot = await getPhotoSnapshot(photoId, userId);
+    return Response.json({ success: true, liked: true, snapshot });
   }
 
   if (action === 'tag') {
@@ -139,7 +177,8 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ error: 'Failed to tag' }, { status: 500 });
     }
 
-    return Response.json({ success: true });
+    const snapshot = await getPhotoSnapshot(photoId, userId);
+    return Response.json({ success: true, snapshot });
   }
 
   if (action === 'untag') {
@@ -162,7 +201,8 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ error: 'Failed to remove tag' }, { status: 500 });
     }
 
-    return Response.json({ success: true });
+    const snapshot = await getPhotoSnapshot(photoId, userId);
+    return Response.json({ success: true, snapshot });
   }
 
   return Response.json({ error: 'Invalid action' }, { status: 400 });

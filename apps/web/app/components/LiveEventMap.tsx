@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useModal } from '~/contexts/ModalContext';
 import { Icon } from '~/components/Icon';
+import { Lightbox } from '~/components/Lightbox';
 
 interface RallyZone {
   _id: string;
@@ -76,6 +77,7 @@ interface RouteTipSubmission {
   participants?: {
     first_name?: string | null;
     last_name?: string | null;
+    profile_photo_url?: string | null;
   };
   challenge_photo?: {
     id: string;
@@ -161,6 +163,9 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
       const initialTags = submission.challenge_photo?.photo_tags || [];
       const initialLikeCount = submission.challenge_photo?.like_count || 0;
       const initialLiked = likedPhotoIds.includes(photoId);
+      const participantPhoto = submission.participants?.profile_photo_url;
+      const submittedAt = submission.submitted_at;
+      const zoneId = submission.zone_id;
 
       let modalId = "";
       modalId = openModal({
@@ -170,6 +175,10 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
             photoId={photoId}
             photoUrl={photoUrl}
             title={title}
+            participantName={participantName}
+            participantPhoto={participantPhoto ?? undefined}
+            submittedAt={submittedAt ?? undefined}
+            zoneId={zoneId}
             initialLikeCount={initialLikeCount}
             initialLiked={initialLiked}
             initialTags={initialTags}
@@ -894,6 +903,10 @@ function PhotoInteractionModal({
   photoId,
   photoUrl,
   title,
+  participantName,
+  participantPhoto,
+  submittedAt,
+  zoneId,
   initialLikeCount,
   initialLiked,
   initialTags,
@@ -903,6 +916,10 @@ function PhotoInteractionModal({
   photoId: string;
   photoUrl: string;
   title: string;
+  participantName?: string;
+  participantPhoto?: string;
+  submittedAt?: string;
+  zoneId?: string;
   initialLikeCount: number;
   initialLiked: boolean;
   initialTags: RouteTipSubmission['challenge_photo'] extends { photo_tags?: infer T } ? T : any[];
@@ -913,7 +930,6 @@ function PhotoInteractionModal({
   const [liked, setLiked] = useState(initialLiked);
   const [tags, setTags] = useState(initialTags || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showTagging, setShowTagging] = useState(false);
 
   const handleLike = async () => {
     if (isSubmitting) return;
@@ -931,9 +947,16 @@ function PhotoInteractionModal({
         return;
       }
 
-      const nextLiked = !liked;
-      setLiked(nextLiked);
-      setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+      const result = await response.json().catch(() => null);
+      if (result?.snapshot) {
+        setLikeCount(result.snapshot.like_count ?? likeCount);
+        setTags(result.snapshot.tags ?? tags);
+        setLiked(result.snapshot.liked ?? liked);
+      } else {
+        const nextLiked = !liked;
+        setLiked(nextLiked);
+        setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -962,7 +985,14 @@ function PhotoInteractionModal({
         return;
       }
 
-      if (isTagged) {
+      const result = await response.json().catch(() => null);
+      if (result?.snapshot) {
+        setLikeCount(result.snapshot.like_count ?? likeCount);
+        setTags(result.snapshot.tags ?? tags);
+        if (typeof result.snapshot.liked === 'boolean') {
+          setLiked(result.snapshot.liked);
+        }
+      } else if (isTagged) {
         setTags((prev: any[]) => prev.filter((tag) => tag.participant_id !== buddyId));
       } else {
         const buddy = buddies.find((b) => b.id === buddyId);
@@ -982,95 +1012,67 @@ function PhotoInteractionModal({
   };
 
   return (
-    <div className="rounded-lg p-4 sm:p-6">
-      <div className="relative">
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute -top-3 -right-3 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
-            aria-label="Sluiten"
-          >
-            <Icon name="x" className="w-5 h-5" />
-          </button>
-        )}
-        <img
-          src={photoUrl}
-          alt={title}
-          className="max-h-[70vh] max-w-full object-contain w-full rounded-lg"
-        />
-
-        {tags.length > 0 && (
-          <div className="absolute bottom-12 left-2 flex flex-wrap gap-2 max-w-[70%]">
-            {tags.map((tag: any) => (
-              <span
-                key={tag.participant_id}
-                className="bg-black/70 text-white px-2 py-1 rounded-full text-xs"
-              >
-                {tag.participant?.first_name} {tag.participant?.last_name}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={handleLike}
-          disabled={isSubmitting}
-          className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/70 text-white px-3 py-1.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity disabled:opacity-50"
-        >
-          <Icon
-            name="heart"
-            className={`w-4 h-4 transition-colors ${
-              liked ? 'fill-red-500 text-red-500' : 'text-white/80'
-            }`}
-          />
-          {likeCount}
-        </button>
-
-        <div className="absolute bottom-2 right-2">
-          <button
-            type="button"
-            onClick={() => setShowTagging((prev) => !prev)}
-            className="flex items-center gap-2 bg-black/70 hover:bg-black/80 text-white px-3 py-1.5 rounded-full text-sm font-semibold transition-colors"
-          >
-            <Icon name="user-plus" className="w-4 h-4" />
-            {showTagging ? 'Sluiten' : 'Tag'}
-          </button>
-
-          {showTagging && (
-            <div className="absolute bottom-full right-0 mb-2 w-56 max-h-56 overflow-y-auto bg-black/80 backdrop-blur-md rounded-lg shadow-2xl">
-              <div className="p-2 space-y-2">
-                {buddies.length === 0 ? (
-                  <p className="text-white/70 text-sm px-2 py-3 text-center">Geen buddies om te taggen</p>
-                ) : (
-                  buddies.map((buddy) => {
-                    const isTagged = tags.some((tag: any) => tag.participant_id === buddy.id);
-                    return (
-                      <button
-                        key={buddy.id}
-                        type="button"
-                        onClick={() => handleTagToggle(buddy.id)}
-                        disabled={isSubmitting}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
-                          isTagged
-                            ? 'bg-white/10 text-white'
-                            : 'bg-white/5 hover:bg-white/10 text-white'
-                        }`}
-                      >
-                        <Icon name="user" className="w-4 h-4" />
-                        <span>{buddy.first_name} {buddy.last_name}</span>
-                        {isTagged && <Icon name="check" className="w-4 h-4 ml-auto" />}
-                      </button>
-                    );
-                  })
-                )}
+    <Lightbox
+      imageSrc={photoUrl}
+      imageAlt={title}
+      onClose={onClose}
+      backdrop={false}
+      wrapperClassName="relative"
+      contentClassName="relative"
+      imageClassName="max-h-[70vh] max-w-full object-contain w-full rounded-lg"
+      interactions={{
+        likeCount,
+        liked,
+        onLike: handleLike,
+        tags,
+        tagOptions: buddies,
+        onToggleTag: handleTagToggle,
+        isSubmitting,
+      }}
+      footer={
+        <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            {participantPhoto ? (
+              <img
+                src={participantPhoto}
+                alt={participantName}
+                className="w-12 h-12 rounded-full object-cover border-2 border-teal-300"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold">
+                {(participantName || 'U').charAt(0)}
               </div>
+            )}
+            <div>
+              <p className="font-semibold">{participantName}</p>
+              <p className="text-sm text-white/70">Deelnemer</p>
+            </div>
+          </div>
+
+          {(zoneId || submittedAt) && (
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/80">
+              {zoneId && (
+                <>
+                  <span className="bg-white/10 px-3 py-1 rounded-full">Zone {zoneId}</span>
+                  <span>•</span>
+                </>
+              )}
+              {submittedAt && (
+                <span>
+                  Ingediend op {new Date(submittedAt).toLocaleDateString('nl-BE', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              )}
             </div>
           )}
         </div>
-      </div>
-    </div>
+      }
+    />
   );
 }
 
