@@ -16,7 +16,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // Verify participant exists (userId IS the participant id)
     const { data: participant, error: participantError } = await supabaseAdmin
       .from('participants')
-      .select('id')
+      .select('id, first_name, last_name')
       .eq('id', userId)
       .single();
 
@@ -100,6 +100,72 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     console.log('✅ Submission saved:', submission.id);
+
+    // Send push notification to admins if challenge needs manual validation
+    if (!isValidated) {
+      try {
+        const { sendTargetedPushNotification } = await import('~/lib/push-notifications-enhanced.server');
+        
+        // Get all admin participant IDs
+        const { data: admins } = await supabaseAdmin
+          .from('participants')
+          .select('id')
+          .eq('is_admin', true);
+        
+        const adminIds = admins?.map(a => a.id) || [];
+        
+        if (adminIds.length > 0) {
+          console.log('📢 Sending push notification to admins about challenge submission:', { count: adminIds.length });
+          
+          // Get challenge type label
+          const challengeTypeLabels: Record<string, string> = {
+            photo: '📸 Foto Opdracht',
+            text: '📝 Tekst Vraag',
+            multiple_choice: '❓ Multiple Choice',
+            number: '🔢 Getal',
+          };
+          
+          const typeLabel = challengeTypeLabels[challengeType] || challengeType;
+          
+          await sendTargetedPushNotification(
+            { user_ids: adminIds },
+            {
+              title: '📋 Nieuwe Challenge Inzending',
+              body: `${participant.first_name} ${participant.last_name} heeft een ${typeLabel} ingediend`,
+              icon: '/icon-192.png',
+              badge: '/icon-96.png',
+              tag: 'challenge_submission',
+              requireInteraction: false,
+              data: {
+                type: 'challenge_submission',
+                submissionId: submission.id,
+                participantId: participant.id,
+                challengeType: challengeType,
+              },
+            },
+            {
+              title: '📋 Nieuwe Challenge Inzending',
+              body: `${participant.first_name} ${participant.last_name} heeft een ${typeLabel} ingediend`,
+              eventType: 'challenge_submission',
+              targetType: 'targeted',
+              targetCriteria: { user_ids: adminIds },
+              eventData: {
+                submissionId: submission.id,
+                participantId: participant.id,
+                participantName: `${participant.first_name} ${participant.last_name}`,
+                challengeType: challengeType,
+                needsValidation: true,
+              },
+            }
+          );
+        } else {
+          console.log('⚠️ No admin users found to notify');
+        }
+      } catch (notificationError) {
+        console.error('⚠️ Failed to send push notification to admins:', notificationError);
+        // Don't fail the submission if notification fails
+      }
+    }
 
     return Response.json({
       success: true,
