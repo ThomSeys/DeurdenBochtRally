@@ -224,7 +224,7 @@ export default function AdminCheckIn() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-lime-900 via-lime-600 to-lime-400 text-white py-16 overflow-hidden">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="checkSimple" className="w-10 h-10" />

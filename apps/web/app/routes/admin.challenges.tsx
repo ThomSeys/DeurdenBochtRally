@@ -110,13 +110,13 @@ export default function AdminChallenges() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gradient-to-br from-green-900 via-green-600 to-teal-400 text-white py-16 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-orange-900 via-orange-600 to-orange-400 text-white py-16 overflow-hidden">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="target" className="w-10 h-10" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Route Challenges</h1>
-          <p className="text-xl text-green-100">Controleer en valideer challenge inzendingen</p>
+          <p className="text-xl text-orange-100">Controleer en valideer challenge inzendingen</p>
         </div>
       </div>
 

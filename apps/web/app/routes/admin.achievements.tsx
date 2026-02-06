@@ -166,14 +166,21 @@ export default function AdminAchievements() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
+      <div className="relative bg-gradient-to-br from-yellow-600 via-amber-600 to-amber-700 text-white py-16 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+            <Icon name="award" className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">Achievements Beheer</h1>
+          <p className="text-xl text-amber-100">Configureer achievements en criteria</p>
+        </div>
+      </div>
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Achievements Beheer</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Configureer achievements en criteria
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900">Achievements Beheer</h2>
           </div>
           <button
             onClick={() => setShowNewForm(!showNewForm)}

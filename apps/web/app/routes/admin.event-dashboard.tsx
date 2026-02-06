@@ -188,7 +188,7 @@ export default function AdminEventDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-blue-900 via-blue-600 to-blue-400 text-white py-16 overflow-hidden">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>

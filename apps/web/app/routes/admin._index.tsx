@@ -129,13 +129,14 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 via-pink-500 via-orange-500 via-green-500 to-teal-500 text-white py-16 overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="settings" className="w-10 h-10" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-xl text-primary-100">Beheer deelnemers en evenementen</p>
+          <p className="text-xl text-white/90">Beheer deelnemers en evenementen</p>
         </div>
       </div>
 
@@ -269,7 +270,7 @@ export default function AdminDashboard() {
             className={`rounded-sm shadow p-6 transition-all relative ${
               urgent.emergencySOSCount > 0
                 ? 'bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 ring-2 ring-red-400 ring-offset-2'
-                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+                : 'bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800'
             }`}
           >
             {urgent.emergencySOSCount > 0 && (
@@ -289,8 +290,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/pending-scans"
-              className={`rounded-sm shadow p-6 transition-all relative ${
-                'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+              className={`rounded-sm shadow p-6 transition-all relative ${                'bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900'
             }`}
           >
             <Icon name="search" className="w-8 h-8 text-white mb-2" />
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
             className={`rounded-sm shadow p-6 transition-all relative ${
               urgent.pendingChallengesCount > 0
                 ? 'bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900 ring-2 ring-orange-400 ring-offset-2'
-                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+                : 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800'
             }`}
           >
             {urgent.pendingChallengesCount > 0 && (
@@ -325,9 +325,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/fallback-review"
-            className={`rounded-sm shadow p-6 transition-all relative ${
-              
-              'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+            className={`rounded-sm shadow p-6 transition-all relative ${                'bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900'
             }`}
           >
             
@@ -340,7 +338,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/event-markers"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-700 hover:to-teal-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="map" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Event Markers</h3>
@@ -349,7 +347,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/participants"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="users" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Deelnemers</h3>
@@ -367,7 +365,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/check-in"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-lime-600 to-lime-800 hover:from-lime-700 hover:to-lime-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="check" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Check-in</h3>
@@ -376,7 +374,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/zone-control"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="target" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Zone Control</h3>
@@ -385,11 +383,11 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/manual-scan"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="document" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Manual Scan</h3>
-            <p className="text-sm text-white mt-1">Telefoon dood</p>
+            <p className="text-sm text-white mt-1">Deelnemer inzending handmatig scannen</p>
           </Link>
 
           <Link
@@ -430,7 +428,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/gallery"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-violet-600 to-violet-800 hover:from-violet-700 hover:to-violet-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="camera" className="w-8 h-8 text-white mb-2" />
             <h3 className="font-semibold text-white">Foto Goedkeuring</h3>
@@ -457,7 +455,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/push-notifications"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-rose-600 to-rose-800 hover:from-rose-700 hover:to-rose-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="bell" className="w-6 h-6 text-white mb-2" />
             <h3 className="font-semibold text-white">Push Notifications</h3>
@@ -480,15 +478,6 @@ export default function AdminDashboard() {
             <Icon name="award" className="w-6 h-6 text-white mb-2" />
             <h3 className="font-semibold text-white">Achievements</h3>
             <p className="text-sm text-white mt-1">Beheer achievements & criteria</p>
-          </Link>
-
-          <Link
-            to="/admin/challenges"
-            className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-sm shadow p-6 transition-colors"
-          >
-            <Icon name="target" className="w-6 h-6 text-white mb-2" />
-            <h3 className="font-semibold text-white">Route Challenges</h3>
-            <p className="text-sm text-white mt-1">Valideer challenge submissions</p>
           </Link>
 
 
@@ -516,7 +505,7 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/settings"
-            className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50 rounded-sm shadow p-6 transition-colors"
+            className="bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900 rounded-sm shadow p-6 transition-colors"
           >
             <Icon name="settings" className="w-6 h-6 text-white mb-2" />
             <h3 className="font-semibold text-white">Settings</h3>

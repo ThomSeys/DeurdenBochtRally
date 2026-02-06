@@ -161,12 +161,17 @@ export default function AdminBlog() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Ride Stories Moderatie</h1>
-          <p className="text-gray-600">Beheer en modereer verhalen van deelnemers</p>
+      <div className="relative bg-gradient-to-br from-orange-600 via-orange-600 to-red-700 text-white py-16 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+            <Icon name="book-open" className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">Ride Stories Moderatie</h1>
+          <p className="text-xl text-orange-100">Beheer en modereer verhalen van deelnemers</p>
         </div>
-
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filter tabs */}
         <div className="bg-white rounded-sm shadow mb-6">
           <div className="border-b border-gray-200">

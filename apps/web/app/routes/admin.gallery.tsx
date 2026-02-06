@@ -89,13 +89,13 @@ export default function AdminGallery() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50\">
       <Header />
 
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-violet-900 via-violet-600 to-violet-400 text-white py-16 overflow-hidden">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="camera" className="w-10 h-10" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Foto's Beheer</h1>
-          <p className="text-xl text-primary-100">{pendingCount} foto{pendingCount !== 1 ? 's' : ''} wacht{pendingCount === 1 ? '' : 'en'} op goedkeuring</p>
+          <p className="text-xl text-violet-100">{pendingCount} foto{pendingCount !== 1 ? 's' : ''} wacht{pendingCount === 1 ? '' : 'en'} op goedkeuring</p>
         </div>
       </div>
 

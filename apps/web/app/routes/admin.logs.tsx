@@ -134,16 +134,17 @@ export default function AdminLogs() {
   return (
     <>
       <Header />
+      <div className="relative bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 text-white py-16 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+            <Icon name="document-text" className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">System Logs</h1>
+          <p className="text-xl text-gray-200">Debug & monitoring</p>
+        </div>
+      </div>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">System Logs</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              View and filter application logs for debugging and monitoring
-            </p>
-          </div>
-
           {/* Filters */}
           <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
