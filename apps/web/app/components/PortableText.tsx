@@ -1,4 +1,5 @@
 import { PortableText as PortableTextReact } from '@portabletext/react';
+import { Icon } from './Icon';
 
 interface PortableTextProps {
   value: any;
@@ -29,10 +30,10 @@ const components = {
   },
   marks: {
     strong: ({ children }: any) => (
-      <strong className="font-extrabold text-primary-600 text-sm !font-extrabold !text-primary-600">{children}</strong>
+      <strong className="font-extrabold text-primary-600 text-sm md:text-xl !font-extrabold !text-primary-600">{children}</strong>
     ),
     em: ({ children }: any) => (
-      <em className="not-italic font-medium text-primary-600 text-lg !not-italic !font-medium !text-primary-600">{children}</em>
+      <em className="not-italic font-medium text-primary-600 text-sm md:text-xl !not-italic !font-medium !text-primary-600">{children}</em>
     ),
     link: ({ children, value }: any) => (
       <a
@@ -56,12 +57,12 @@ const components = {
   listItem: {
     bullet: ({ children }: any) => (
       <li className="flex items-start group">
-        <span className="text-accent-500 font-black text-2xl mr-4 group-hover:scale-110 transition-transform">✓</span>
-        <span className="text-lg md:text-xl text-gray-800 font-medium">{children}</span>
+        <span className="text-accent-500 font-black text-2xl mr-4 group-hover:scale-110 transition-transform"><Icon name="check" /></span>
+        <span className="text-sm md:text-xl text-gray-800 font-medium">{children}</span>
       </li>
     ),
     number: ({ children }: any) => (
-      <li className="text-lg md:text-xl text-gray-800 font-medium">{children}</li>
+      <li className="text-sm md:text-xl text-gray-800 font-medium">{children}</li>
     ),
   },
 };
