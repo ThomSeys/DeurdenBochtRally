@@ -79,7 +79,7 @@ export function PWAInstallPrompt() {
               </p>
             </div>
           </div>
-          <div className="flex gap-3 flex-shrink-0">
+          <div className="flex flex-col gap-3 flex-shrink-0">
             <button
               onClick={handleInstall}
               className="px-4 py-2 bg-white text-blue-600 font-semibold rounded-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
