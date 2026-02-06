@@ -67,7 +67,7 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
           />
 
           {/* Popover - Responsive positioning */}
-          <div className="fixed sm:absolute sm:top-full sm:right-0 sm:mt-2 left-2 right-2 sm:left-auto sm:right-0 sm:w-96 z-40 w-auto max-w-[calc(80vw-1rem)] bg-white rounded-sm shadow-2xl border border-gray-200 max-h-96 overflow-y-auto">
+          <div className="fixed inset-0 sm:absolute sm:inset-auto sm:top-full sm:right-0 sm:mt-2 sm:w-96 sm:rounded-sm z-40 bg-white sm:shadow-2xl sm:border sm:border-gray-200 max-h-screen sm:max-h-96 overflow-y-auto flex flex-col">
             <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-lg">Notificaties</h3>
