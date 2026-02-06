@@ -311,11 +311,12 @@ export default function ProfileEdit() {
                   <div className="flex items-center gap-3">
                     <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors">
                       <Icon name="upload" className="w-4 h-4" />
-                      <span className="text-sm font-medium">Kies foto</span>
+                      <span className="text-sm font-medium">Kies of maak foto</span>
                       <input
                         type="file"
                         name="photo"
                         accept="image/jpeg,image/jpg,image/png,image/webp"
+                        capture="user"
                         className="sr-only"
                         onChange={(e) => {
                           const form = e.target.form;

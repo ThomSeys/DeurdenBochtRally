@@ -513,12 +513,13 @@ export default function Gallery() {
                 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    📸 Kies je foto
+                    📸 Kies een foto of maak er een
                   </label>
                   <input
                     type="file"
                     name="image"
                     accept="image/jpeg,image/jpg,image/png,image/webp"
+                    capture="environment"
                     required
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700"
                   />

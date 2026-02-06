@@ -267,11 +267,12 @@ export default function ChallengeModal({
                     ) : (
                       <>
                         <p className="text-gray-600 mb-2">
-                          Klik om een foto te selecteren
+                          Klik om een foto te maken of selecteren
                         </p>
                         <input
                           type="file"
                           accept="image/*"
+                          capture="environment"
                           onChange={handleFileChange}
                           className="hidden"
                           id="photo-upload"
