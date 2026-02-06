@@ -23,7 +23,7 @@ const components = {
       </h3>
     ),
     normal: ({ children }: any) => (
-      <p className="text-sm md:text-xl text-gray-700">
+      <p className="text-sm md:text-xl text-gray-700 mb-1">
         {children}
       </p>
     ),
@@ -33,7 +33,7 @@ const components = {
       <strong className="font-extrabold text-primary-600 text-sm md:text-xl !font-extrabold !text-primary-600">{children}</strong>
     ),
     em: ({ children }: any) => (
-      <em className="not-italic font-medium text-primary-600 text-sm md:text-xl !not-italic !font-medium !text-primary-600">{children}</em>
+      <em className="font-medium text-primary-600 text-sm md:text-xl !not-italic !font-medium !text-primary-600">{children}</em>
     ),
     link: ({ children, value }: any) => (
       <a
