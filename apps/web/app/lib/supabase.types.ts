@@ -120,6 +120,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "buddy_group_achievement_members_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       buddy_group_achievements: {
@@ -165,6 +172,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "buddy_group_achievements_primary_participant_id_fkey"
+            columns: ["primary_participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       certificates: {
@@ -199,6 +213,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -301,6 +322,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "emergency_contacts_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       emergency_sos: {
@@ -346,11 +374,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "emergency_sos_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+          {
             foreignKeyName: "emergency_sos_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_sos_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -535,6 +577,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "participant_achievements_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       participant_audit_log: {
@@ -657,6 +706,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "participant_photos_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       participants: {
@@ -764,6 +820,36 @@ export type Database = {
         }
         Relationships: []
       }
+      photo_albums: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_open: boolean | null
+          updated_at: string | null
+          zone_id: string
+          zone_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_open?: boolean | null
+          updated_at?: string | null
+          zone_id: string
+          zone_name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_open?: boolean | null
+          updated_at?: string | null
+          zone_id?: string
+          zone_name?: string
+        }
+        Relationships: []
+      }
       photo_likes: {
         Row: {
           created_at: string | null
@@ -792,11 +878,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "photo_likes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+          {
             foreignKeyName: "photo_likes_photo_id_fkey"
             columns: ["photo_id"]
             isOneToOne: false
             referencedRelation: "participant_photos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["photo_id"]
           },
         ]
       }
@@ -831,6 +931,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "photo_tags_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+          {
             foreignKeyName: "photo_tags_photo_id_fkey"
             columns: ["photo_id"]
             isOneToOne: false
@@ -838,11 +945,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "photo_tags_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["photo_id"]
+          },
+          {
             foreignKeyName: "photo_tags_tagged_by_fkey"
             columns: ["tagged_by"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_tags_tagged_by_fkey"
+            columns: ["tagged_by"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -900,6 +1021,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_delivery_log_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -987,6 +1115,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "push_notifications_history_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       push_recipient_groups: {
@@ -1060,6 +1195,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -1185,6 +1327,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rally_zone_checkins_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -1342,11 +1491,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "report_history_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+          {
             foreignKeyName: "report_history_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
           {
             foreignKeyName: "report_history_scheduled_report_id_fkey"
@@ -1401,6 +1564,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_queue_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -1457,6 +1627,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_stories_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -1515,6 +1692,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ride_story_likes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+          {
             foreignKeyName: "ride_story_likes_story_id_fkey"
             columns: ["story_id"]
             isOneToOne: false
@@ -1554,11 +1738,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "riding_buddies_buddy_id_fkey"
+            columns: ["buddy_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+          {
             foreignKeyName: "riding_buddies_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "riding_buddies_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -1619,6 +1817,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "route_challenge_submissions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       scheduled_reports: {
@@ -1665,6 +1870,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
           },
         ]
       }
@@ -1731,6 +1943,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "system_logs_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
         ]
       }
       zone_closure_log: {
@@ -1783,6 +2002,27 @@ export type Database = {
         }
         Relationships: []
       }
+      public_photo_albums: {
+        Row: {
+          album_description: string | null
+          album_id: string | null
+          caption: string | null
+          image_url: string | null
+          is_open: boolean | null
+          like_count: number | null
+          location_lat: number | null
+          location_lng: number | null
+          participant_id: string | null
+          participant_name: string | null
+          participant_photo: string | null
+          photo_id: string | null
+          thumbnail_url: string | null
+          uploaded_at: string | null
+          zone_id: string | null
+          zone_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_next_run_time: {
@@ -1795,6 +2035,17 @@ export type Database = {
       }
       cleanup_old_system_logs: { Args: never; Returns: undefined }
       decrement_photo_likes: { Args: { photo_id: string }; Returns: undefined }
+      get_album_stats: {
+        Args: { p_zone_id?: string }
+        Returns: {
+          approved_photos: number
+          is_open: boolean
+          pending_photos: number
+          total_photos: number
+          zone_id: string
+          zone_name: string
+        }[]
+      }
       get_leaderboard: {
         Args: never
         Returns: {

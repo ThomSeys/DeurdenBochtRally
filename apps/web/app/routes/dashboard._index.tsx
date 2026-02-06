@@ -570,6 +570,19 @@ export default function Dashboard() {
             </Link>
           )}
 
+          {photoGalleryEnabled && (
+            <Link
+              to="/event-albums"
+              className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+            >
+              <Icon name="folder" className="w-16 h-16 mb-3" />
+              <h3 className="font-bold text-xl mb-2">Event Albums</h3>
+              <p className="text-sm text-indigo-100">
+                Bekijk officiële event foto's georganiseerd per rally zone!
+              </p>
+            </Link>
+          )}
+
           {rideStoriesEnabled && (
             <Link
               to="/dashboard/blog"

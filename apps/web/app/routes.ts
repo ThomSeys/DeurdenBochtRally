@@ -9,6 +9,7 @@ export default [
   route("achievements", "routes/achievements.tsx"),
   // route("certificates/:type", "routes/certificates.$type.tsx"), // REMOVED - Concept A only
   route("cookie-policy", "routes/cookie-policy.tsx"),
+  route("event-albums", "routes/event-albums.tsx"),
   route("gallery", "routes/gallery.tsx"),
   route("live-map", "routes/live-map.tsx"),
   route("login", "routes/login.tsx"),
@@ -64,6 +65,7 @@ export default [
   route("admin/participants/:participantId/submissions", "routes/admin.participants.$participantId.submissions.tsx"),
   route("admin/participants/:participantId/timeline", "routes/admin.participants.$participantId.timeline.tsx"),
   route("admin/pending-scans", "routes/admin.pending-scans.tsx"),
+  route("admin/photo-albums", "routes/admin.photo-albums.tsx"),
   route("admin/prepare-edition", "routes/admin.prepare-edition.tsx"),
   route("admin/push-notifications", "routes/admin.push-notifications.tsx"),
   route("admin/reports", "routes/dashboard.admin.reports.tsx"),
