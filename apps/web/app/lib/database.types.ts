@@ -540,6 +540,7 @@ export type Database = {
       participant_photos: {
         Row: {
           caption: string | null
+          challenge_submission_id: string | null
           id: string
           image_url: string
           is_approved: boolean | null
@@ -554,6 +555,7 @@ export type Database = {
         }
         Insert: {
           caption?: string | null
+          challenge_submission_id?: string | null
           id?: string
           image_url: string
           is_approved?: boolean | null
@@ -568,6 +570,7 @@ export type Database = {
         }
         Update: {
           caption?: string | null
+          challenge_submission_id?: string | null
           id?: string
           image_url?: string
           is_approved?: boolean | null
@@ -586,6 +589,13 @@ export type Database = {
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_photos_challenge_submission_id_fkey"
+            columns: ["challenge_submission_id"]
+            isOneToOne: true
+            referencedRelation: "route_challenge_submissions"
             referencedColumns: ["id"]
           },
         ]

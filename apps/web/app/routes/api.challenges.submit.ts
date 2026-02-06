@@ -101,6 +101,23 @@ export async function action({ request }: ActionFunctionArgs) {
 
     console.log('Submission saved:', submission.id);
 
+    if (challengeType === 'photo' && photoUrl) {
+      const { error: photoLinkError } = await supabaseAdmin
+        .from('participant_photos')
+        .upsert({
+          participant_id: participant.id,
+          image_url: photoUrl,
+          zone_id: zoneId,
+          uploaded_at: submission.submitted_at ?? new Date().toISOString(),
+          is_approved: false,
+          challenge_submission_id: submission.id,
+        }, { onConflict: 'challenge_submission_id' });
+
+      if (photoLinkError) {
+        console.error('[challenge-submit] Failed to link photo to participant_photos', photoLinkError);
+      }
+    }
+
     // Send push notification to admins if challenge needs manual validation
     if (!isValidated) {
       try {

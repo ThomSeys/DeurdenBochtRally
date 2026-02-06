@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useModal } from '~/contexts/ModalContext';
+import { Icon } from '~/components/Icon';
 
 interface RallyZone {
   _id: string;
@@ -24,6 +26,7 @@ interface RallyZone {
     name: string;
     color?: string;
     locations?: Array<{
+      _key?: string;
       name: string;
       coordinates: { lat: number; lng: number };
       type: string;
@@ -58,12 +61,52 @@ interface CheckIn {
   };
 }
 
+interface RouteTipSubmission {
+  id: string;
+  participant_id: string;
+  zone_id: string;
+  location_key: string;
+  challenge_type: string;
+  text_answer: string | null;
+  photo_url: string | null;
+  submitted_at: string | null;
+  is_correct: boolean | null;
+  is_validated: boolean | null;
+  points_awarded: number | null;
+  participants?: {
+    first_name?: string | null;
+    last_name?: string | null;
+  };
+  challenge_photo?: {
+    id: string;
+    like_count: number | null;
+    photo_tags?: Array<{
+      participant_id: string;
+      participant?: {
+        id: string;
+        first_name: string;
+        last_name: string;
+      };
+    }>;
+  } | null;
+}
+
+interface BuddyOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
 interface LiveEventMapProps {
   rallyZones: RallyZone[];
   eventMarkers: EventMarker[];
   emergencyAlerts?: any[];
   gpxRouteUrl?: string;
   checkIns?: CheckIn[];
+  routeTipSubmissions?: RouteTipSubmission[];
+  buddyList?: BuddyOption[];
+  likedPhotoIds?: string[];
+  currentUserId?: string;
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
   showEventMarkers?: boolean;
@@ -71,7 +114,7 @@ interface LiveEventMapProps {
   isAdmin?: boolean;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts = [], gpxRouteUrl, checkIns = [], showCheckIns = true, showZoneRoutes = true, showEventMarkers = true, showEmergencyAlerts = true, isAdmin = false }: LiveEventMapProps) {
+export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts = [], gpxRouteUrl, checkIns = [], routeTipSubmissions = [], buddyList = [], likedPhotoIds = [], currentUserId, showCheckIns = true, showZoneRoutes = true, showEventMarkers = true, showEmergencyAlerts = true, isAdmin = false }: LiveEventMapProps) {
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -81,11 +124,65 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
   const [isClient, setIsClient] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
+  const { openModal, closeModal } = useModal();
 
   // Only run on client side
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const button = target?.closest('[data-photo-id]') as HTMLElement | null;
+      if (!button) return;
+
+      const photoId = button.getAttribute('data-photo-id');
+      if (!photoId) return;
+
+      const submission = routeTipSubmissions.find(
+        (item) => item.challenge_photo?.id === photoId
+      );
+
+      if (!submission || !submission.photo_url) return;
+
+      event.preventDefault();
+
+      const photoUrl = submission.photo_url;
+      const firstName = submission.participants?.first_name || '';
+      const lastName = submission.participants?.last_name || '';
+      const participantName = (firstName || lastName)
+        ? `${firstName} ${lastName}`.trim()
+        : 'Onbekende deelnemer';
+      const title = submission.participant_id === currentUserId ? 'Jij' : participantName;
+      const initialTags = submission.challenge_photo?.photo_tags || [];
+      const initialLikeCount = submission.challenge_photo?.like_count || 0;
+      const initialLiked = likedPhotoIds.includes(photoId);
+
+      let modalId = "";
+      modalId = openModal({
+        variant: "lightbox",
+        content: (
+          <PhotoInteractionModal
+            photoId={photoId}
+            photoUrl={photoUrl}
+            title={title}
+            initialLikeCount={initialLikeCount}
+            initialLiked={initialLiked}
+            initialTags={initialTags}
+            buddies={buddyList}
+            onClose={() => closeModal(modalId)}
+          />
+        ),
+      });
+    };
+
+    container.addEventListener('click', handleClick);
+    return () => container.removeEventListener('click', handleClick);
+  }, [openModal, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId]);
 
   // Get user's location and track it
   useEffect(() => {
@@ -406,6 +503,55 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                       return;
                     }
 
+                    const submissionsForLocation = location._key
+                      ? routeTipSubmissions.filter((submission) => submission.zone_id === zone._id && submission.location_key === location._key)
+                      : [];
+
+                    const submissionsHtml = submissionsForLocation.length > 0
+                      ? `
+                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                          <div style="font-weight: 600; font-size: 12px; color: #374151;">
+                            Inzendingen (${submissionsForLocation.length})
+                          </div>
+                          ${submissionsForLocation
+                            .map((submission) => {
+                              const firstName = submission.participants?.first_name || '';
+                              const lastName = submission.participants?.last_name || '';
+                              const participantName = (firstName || lastName)
+                                ? `${firstName} ${lastName}`.trim()
+                                : 'Onbekende deelnemer';
+                              const displayName = submission.participant_id === currentUserId ? 'Jij' : participantName;
+                              const safeName = escapeHtml(displayName);
+                              const statusLabel = submission.is_validated
+                                ? (submission.is_correct ? 'Correct' : 'Fout')
+                                : 'In onderzoek';
+                              const answerContent = submission.challenge_type === 'photo'
+                                ? 'Foto inzending'
+                                : escapeHtml(submission.text_answer || 'Geen antwoord');
+                              const photoId = submission.challenge_photo?.id;
+                              const photoButton = submission.challenge_type === 'photo' && submission.photo_url && photoId
+                                ? `<div style="margin-top: 6px; display: flex; gap: 6px;">
+                                  <button type="button" data-photo-id="${photoId}" style="background: #111827; color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px;">Open foto</button>
+                                  <button type="button" data-photo-id="${photoId}" style="background: #f3f4f6; color: #111827; padding: 4px 8px; border-radius: 6px; font-size: 11px;">Like/Tag</button>
+                                  </div>`
+                                : '';
+
+                              return `
+                                <div style="margin-top: 6px; padding: 6px; background: #f8fafc; border-radius: 6px;">
+                                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-weight: 600; font-size: 12px; color: #111827;">${safeName}</div>
+                                    <div style="font-size: 10px; color: #6b7280;">${statusLabel}</div>
+                                  </div>
+                                  <div style="font-size: 12px; color: #374151; margin-top: 2px;">${answerContent}</div>
+                                  ${photoButton}
+                                </div>
+                              `;
+                            })
+                            .join('')}
+                        </div>
+                      `
+                      : '<div style="margin-top: 10px; font-size: 12px; color: #6b7280;">Nog geen inzendingen</div>';
+
                     // SVG icons for location types
                     const locationIcon = 
                       location.type === 'highlight' ? 
@@ -444,6 +590,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                             ${typeLabel}
                           </div>
                           ${location.description ? `<div style="margin-top: 8px; font-size: 12px; color: #6b7280;">${location.description}</div>` : ''}
+                          ${submissionsHtml}
                         </div>
                       `);
                   });
@@ -612,7 +759,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
         setMapError('Failed to initialize map');
       }
     });
-  }, [isClient, rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, userLocation, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin]);
+  }, [isClient, rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, userLocation, routeTipSubmissions, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin]);
 
   if (mapError) {
     return (
@@ -732,6 +879,199 @@ function getEventTypeIcon(type: string, color: string): { svg: string; label: st
   };
   
   return iconMap[type] || defaultIcon;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function PhotoInteractionModal({
+  photoId,
+  photoUrl,
+  title,
+  initialLikeCount,
+  initialLiked,
+  initialTags,
+  buddies,
+  onClose,
+}: {
+  photoId: string;
+  photoUrl: string;
+  title: string;
+  initialLikeCount: number;
+  initialLiked: boolean;
+  initialTags: RouteTipSubmission['challenge_photo'] extends { photo_tags?: infer T } ? T : any[];
+  buddies: BuddyOption[];
+  onClose?: () => void;
+}) {
+  const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [liked, setLiked] = useState(initialLiked);
+  const [tags, setTags] = useState(initialTags || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTagging, setShowTagging] = useState(false);
+
+  const handleLike = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/photo-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'like', photoId }),
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      const nextLiked = !liked;
+      setLiked(nextLiked);
+      setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTagToggle = async (buddyId: string) => {
+    if (!buddyId || isSubmitting) return;
+    setIsSubmitting(true);
+
+    const isTagged = tags.some((tag: any) => tag.participant_id === buddyId);
+    const action = isTagged ? 'untag' : 'tag';
+
+    try {
+      const response = await fetch('/api/photo-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          photoId,
+          taggedParticipantId: buddyId,
+        }),
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (isTagged) {
+        setTags((prev: any[]) => prev.filter((tag) => tag.participant_id !== buddyId));
+      } else {
+        const buddy = buddies.find((b) => b.id === buddyId);
+        if (buddy) {
+          setTags((prev: any[]) => [
+            ...prev,
+            {
+              participant_id: buddy.id,
+              participant: { id: buddy.id, first_name: buddy.first_name, last_name: buddy.last_name },
+            },
+          ]);
+        }
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg p-4 sm:p-6">
+      <div className="relative">
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute -top-3 -right-3 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+            aria-label="Sluiten"
+          >
+            <Icon name="x" className="w-5 h-5" />
+          </button>
+        )}
+        <img
+          src={photoUrl}
+          alt={title}
+          className="max-h-[70vh] max-w-full object-contain w-full rounded-lg"
+        />
+
+        {tags.length > 0 && (
+          <div className="absolute bottom-12 left-2 flex flex-wrap gap-2 max-w-[70%]">
+            {tags.map((tag: any) => (
+              <span
+                key={tag.participant_id}
+                className="bg-black/70 text-white px-2 py-1 rounded-full text-xs"
+              >
+                {tag.participant?.first_name} {tag.participant?.last_name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleLike}
+          disabled={isSubmitting}
+          className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/70 text-white px-3 py-1.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity disabled:opacity-50"
+        >
+          <Icon
+            name="heart"
+            className={`w-4 h-4 transition-colors ${
+              liked ? 'fill-red-500 text-red-500' : 'text-white/80'
+            }`}
+          />
+          {likeCount}
+        </button>
+
+        <div className="absolute bottom-2 right-2">
+          <button
+            type="button"
+            onClick={() => setShowTagging((prev) => !prev)}
+            className="flex items-center gap-2 bg-black/70 hover:bg-black/80 text-white px-3 py-1.5 rounded-full text-sm font-semibold transition-colors"
+          >
+            <Icon name="user-plus" className="w-4 h-4" />
+            {showTagging ? 'Sluiten' : 'Tag'}
+          </button>
+
+          {showTagging && (
+            <div className="absolute bottom-full right-0 mb-2 w-56 max-h-56 overflow-y-auto bg-black/80 backdrop-blur-md rounded-lg shadow-2xl">
+              <div className="p-2 space-y-2">
+                {buddies.length === 0 ? (
+                  <p className="text-white/70 text-sm px-2 py-3 text-center">Geen buddies om te taggen</p>
+                ) : (
+                  buddies.map((buddy) => {
+                    const isTagged = tags.some((tag: any) => tag.participant_id === buddy.id);
+                    return (
+                      <button
+                        key={buddy.id}
+                        type="button"
+                        onClick={() => handleTagToggle(buddy.id)}
+                        disabled={isSubmitting}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
+                          isTagged
+                            ? 'bg-white/10 text-white'
+                            : 'bg-white/5 hover:bg-white/10 text-white'
+                        }`}
+                      >
+                        <Icon name="user" className="w-4 h-4" />
+                        <span>{buddy.first_name} {buddy.last_name}</span>
+                        {isTagged && <Icon name="check" className="w-4 h-4 ml-auto" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function getSeverityLabel(severity: string): string {

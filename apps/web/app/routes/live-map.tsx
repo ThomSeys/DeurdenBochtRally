@@ -47,6 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         name,
         color,
         locations[] {
+          _key,
           name,
           coordinates {
             lat,
@@ -96,6 +97,115 @@ export async function loader({ request }: LoaderFunctionArgs) {
       updatedAt
     }
   `);
+
+  // Fetch buddy group challenge submissions for route tip popups
+  const { data: buddyLinks, error: buddyError } = await supabaseAdmin
+    .from('riding_buddies')
+    .select('participant_id, buddy_id')
+    .eq('status', 'accepted')
+    .or(`participant_id.eq.${userId},buddy_id.eq.${userId}`);
+
+  if (buddyError) {
+    console.error('[live-map] Buddy fetch error:', buddyError);
+  }
+
+  const buddyIds = new Set<string>();
+  (buddyLinks || []).forEach((link) => {
+    if (link.participant_id && link.participant_id !== userId) {
+      buddyIds.add(link.participant_id);
+    }
+    if (link.buddy_id && link.buddy_id !== userId) {
+      buddyIds.add(link.buddy_id);
+    }
+  });
+
+  const participantIds = [userId, ...buddyIds];
+  const { data: routeTipSubmissions, error: submissionsError } = await supabaseAdmin
+    .from('route_challenge_submissions')
+    .select(`
+      id,
+      participant_id,
+      zone_id,
+      location_key,
+      challenge_type,
+      text_answer,
+      photo_url,
+      submitted_at,
+      is_correct,
+      is_validated,
+      points_awarded,
+      participants (
+        first_name,
+        last_name
+      )
+    `)
+    .in('participant_id', participantIds);
+
+  if (submissionsError) {
+    console.error('[live-map] Challenge submission fetch error:', submissionsError);
+  }
+
+  // Fetch challenge photos separately with their likes and tags
+  const { data: challengePhotos, error: photosError } = await supabaseAdmin
+    .from('participant_photos')
+    .select(`
+      id,
+      challenge_submission_id,
+      like_count,
+      photo_tags(
+        participant_id,
+        participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name)
+      )
+    `)
+    .in('challenge_submission_id', (routeTipSubmissions || []).map((s: any) => s.id).filter(Boolean));
+
+  if (photosError) {
+    console.error('[live-map] Challenge photos fetch error:', photosError);
+  }
+
+  // Map challenge photos by submission ID for easy lookup
+  const photosBySubmissionId: Record<string, any> = {};
+  (challengePhotos || []).forEach((photo: any) => {
+    if (photo.challenge_submission_id) {
+      photosBySubmissionId[photo.challenge_submission_id] = photo;
+    }
+  });
+
+  // Enrich submissions with challenge photo data
+  const enrichedSubmissions = (routeTipSubmissions || []).map((submission: any) => ({
+    ...submission,
+    challenge_photo: photosBySubmissionId[submission.id] || null,
+  }));
+
+  const photoIds = (challengePhotos || [])
+    .map((photo: any) => photo.id)
+    .filter(Boolean);
+
+  const { data: likedPhotos } = photoIds.length > 0
+    ? await supabaseAdmin
+        .from('photo_likes')
+        .select('photo_id')
+        .eq('participant_id', userId)
+        .in('photo_id', photoIds)
+    : { data: [] };
+
+  const likedPhotoIds = new Set((likedPhotos || []).map((like: any) => like.photo_id));
+
+  const { data: buddyRows, error: buddyRowsError } = await supabaseAdmin
+    .from('participant_buddies')
+    .select('buddy_id, buddy_first_name, buddy_last_name')
+    .eq('participant_id', userId)
+    .eq('status', 'accepted');
+
+  if (buddyRowsError) {
+    console.error('[live-map] Buddy list fetch error:', buddyRowsError);
+  }
+
+  const buddyList = (buddyRows || []).map((buddy) => ({
+    id: buddy.buddy_id,
+    first_name: buddy.buddy_first_name,
+    last_name: buddy.buddy_last_name,
+  }));
 
   // Fetch active emergency SOS alerts (only for admins)
   let emergencyAlerts: any[] = [];
@@ -158,6 +268,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
       emergencyAlerts,
       gpxRouteUrl: siteConfig?.gpxRouteFiles?.[0]?.asset?.url,
       checkIns: checkIns || [],
+      routeTipSubmissions: enrichedSubmissions || [],
+      buddyList,
+      likedPhotoIds: Array.from(likedPhotoIds),
+      currentUserId: userId,
       isAdmin,
       isEventDay,
       siteConfig,
@@ -183,7 +297,7 @@ function LiveMapTourButton() {
 }
 
 export default function LiveMap() {
-  const { rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
+  const { rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -209,12 +323,12 @@ export default function LiveMap() {
     }
   }, []);
 
-  // Auto-refresh every 30 seconds to get new event markers
+  // Auto-refresh every 3 minutes to get new event markers
   useEffect(() => {
     const interval = setInterval(() => {
       revalidator.revalidate();
       setLastUpdate(new Date());
-    }, 60000); // 60 seconds
+    }, 180000); // 3 minutes
 
     return () => clearInterval(interval);
   }, [revalidator]);
@@ -254,6 +368,10 @@ export default function LiveMap() {
           emergencyAlerts={emergencyAlerts}
           gpxRouteUrl={gpxRouteUrl}
           checkIns={checkIns}
+          routeTipSubmissions={routeTipSubmissions}
+          buddyList={buddyList}
+          likedPhotoIds={likedPhotoIds}
+          currentUserId={currentUserId}
           showCheckIns={showCheckIns}
           showZoneRoutes={showZoneRoutes}
           showEventMarkers={showEventMarkers}
@@ -345,7 +463,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -372,6 +490,10 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxR
       emergencyAlerts={emergencyAlerts}
       gpxRouteUrl={gpxRouteUrl}
       checkIns={checkIns}
+      routeTipSubmissions={routeTipSubmissions}
+      buddyList={buddyList}
+      likedPhotoIds={likedPhotoIds}
+      currentUserId={currentUserId}
       showCheckIns={showCheckIns}
       showZoneRoutes={showZoneRoutes}
       showEventMarkers={showEventMarkers}

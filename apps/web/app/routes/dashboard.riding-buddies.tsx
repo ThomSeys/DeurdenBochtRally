@@ -7,6 +7,7 @@ import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { useModal } from '~/contexts/ModalContext';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Naftgenoten - Deur Den Bocht' }];
@@ -94,13 +95,97 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .order('checked_in_at', { ascending: false })
     .limit(10);
 
+  // Get buddy challenge submissions
+  const buddyIds = buddies?.map((b: any) => b.buddy_id) || [];
+  let recentChallengeSubmissions: any[] = [];
+  if (buddyIds.length > 0) {
+    const { data: challengeSubmissions, error: challengeError } = await supabaseAdmin
+      .from('route_challenge_submissions')
+      .select(`
+        id,
+        participant_id,
+        zone_id,
+        location_key,
+        challenge_type,
+        text_answer,
+        photo_url,
+        submitted_at,
+        is_correct,
+        is_validated,
+        points_awarded,
+        participants(
+          first_name,
+          last_name,
+          profile_photo_url
+        )
+      `)
+      .in('participant_id', buddyIds)
+      .order('submitted_at', { ascending: false })
+      .limit(50);
+
+    if (challengeError) {
+      console.error('Error fetching buddy challenge submissions:', challengeError);
+    }
+
+    // Fetch challenge photos separately with their likes and tags
+    const submissionIds = (challengeSubmissions || []).map((s: any) => s.id).filter(Boolean);
+    const { data: challengePhotos, error: photosError } = submissionIds.length > 0
+      ? await supabaseAdmin
+          .from('participant_photos')
+          .select(`
+            id,
+            challenge_submission_id,
+            like_count,
+            photo_tags(
+              participant_id,
+              participant:participants!photo_tags_participant_id_fkey(id, first_name, last_name)
+            )
+          `)
+          .in('challenge_submission_id', submissionIds)
+      : { data: [] };
+
+    if (photosError) {
+      console.error('Error fetching challenge photos:', photosError);
+    }
+
+    // Map challenge photos by submission ID
+    const photosBySubmissionId: Record<string, any> = {};
+    (challengePhotos || []).forEach((photo: any) => {
+      if (photo.challenge_submission_id) {
+        photosBySubmissionId[photo.challenge_submission_id] = photo;
+      }
+    });
+
+    // Enrich submissions with challenge photo data
+    recentChallengeSubmissions = (challengeSubmissions || []).map((submission: any) => ({
+      ...submission,
+      challenge_photo: photosBySubmissionId[submission.id] || null,
+    }));
+  }
+
+  const photoIds = recentChallengeSubmissions
+    .map((submission: any) => submission.challenge_photo?.id)
+    .filter(Boolean);
+
+  const { data: likedPhotos } = photoIds.length > 0
+    ? await supabaseAdmin
+        .from('photo_likes')
+        .select('photo_id')
+        .eq('participant_id', userId)
+        .in('photo_id', photoIds)
+    : { data: [] };
+
+  const likedPhotoIds = (likedPhotos || []).map((like: any) => like.photo_id);
+
   return { 
     user, 
     buddies: buddies || [],
     pendingSent: pendingSent || [],
     pendingReceived: pendingReceived || [],
     achievements: achievements || [],
-    recentCheckIns: recentCheckIns || []
+    recentCheckIns: recentCheckIns || [],
+    recentChallengeSubmissions,
+    likedPhotoIds
   };
 }
 
@@ -166,14 +251,53 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function RidingBuddies() {
-  const { user, buddies, pendingSent, pendingReceived, achievements, recentCheckIns } = useLoaderData<typeof loader>();
+  const { user, buddies, pendingSent, pendingReceived, achievements, recentCheckIns, recentChallengeSubmissions, likedPhotoIds } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { openModal, closeModal } = useModal();
   const [searchEmail, setSearchEmail] = useState('');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [addingBuddy, setAddingBuddy] = useState(false);
+
+  const openPhotoModal = (photoUrl: string, title: string) => {
+    openModal({
+      title,
+      content: (
+        <div className="space-y-4">
+          <img
+            src={photoUrl}
+            alt={title}
+            className="w-full rounded-md object-contain"
+          />
+        </div>
+      ),
+    });
+  };
+
+  const getBuddySubmissions = (buddyId: string) => {
+    return recentChallengeSubmissions.filter((submission: any) => submission.participant_id === buddyId);
+  };
+
+  const openBuddySubmissionsModal = (buddy: any) => {
+    const submissions = getBuddySubmissions(buddy.buddy_id);
+    const buddyName = `${buddy.buddy_first_name} ${buddy.buddy_last_name}`.trim();
+
+    let modalId = "";
+    modalId = openModal({
+      variant: "lightbox",
+      content: (
+        <BuddySubmissionsLightbox
+          buddyName={buddyName || 'buddy'}
+          submissions={submissions}
+          likedPhotoIds={likedPhotoIds}
+          buddies={buddies}
+          onClose={() => closeModal(modalId)}
+        />
+      ),
+    });
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -517,6 +641,7 @@ export default function RidingBuddies() {
           </div>
         )}
 
+
         {/* Add Buddy Section */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -697,6 +822,14 @@ export default function RidingBuddies() {
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => openBuddySubmissionsModal(buddy)}
+                        className="px-4 py-3 sm:py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-center min-h-[44px] flex items-center justify-center"
+                      >
+                        <Icon name="target" className="w-4 h-4 mr-2" />
+                        Inzendingen
+                      </button>
                       <Link
                         to={`/dashboard/buddies/${buddy.buddy_id}`}
                         className="px-4 py-3 sm:py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors text-center min-h-[44px] flex items-center justify-center"
@@ -731,6 +864,311 @@ export default function RidingBuddies() {
         {actionData?.success && (
           <div className="mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
             {actionData.message}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BuddySubmissionsLightbox({
+  buddyName,
+  submissions,
+  likedPhotoIds,
+  buddies,
+  onClose,
+}: {
+  buddyName: string;
+  submissions: Array<any>;
+  likedPhotoIds: string[];
+  buddies: Array<any>;
+  onClose: () => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const current = submissions[currentIndex];
+  const hasMultiple = submissions.length > 1;
+
+  if (!current) {
+    return (
+      <div className="rounded-lg p-3 sm:p-6 text-white max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h2 className="text-lg font-semibold">Inzendingen van {buddyName}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+            aria-label="Sluiten"
+          >
+            <Icon name="x" className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-white/70">Nog geen inzendingen gevonden.</p>
+      </div>
+    );
+  }
+
+  const statusLabel = current.is_validated
+    ? (current.is_correct ? 'Correct' : 'Fout')
+    : 'In onderzoek';
+  const statusClasses = current.is_validated
+    ? (current.is_correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')
+    : 'bg-yellow-100 text-yellow-700';
+  const photoId = current.challenge_photo?.id;
+  const initialLiked = photoId ? likedPhotoIds.includes(photoId) : false;
+
+  return (
+    <div className="rounded-lg p-3 sm:p-6 text-white max-h-[90vh] overflow-y-auto">
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h2 className="text-lg font-semibold">Inzendingen van {buddyName}</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+          aria-label="Sluiten"
+        >
+          <Icon name="x" className="w-5 h-5" />
+        </button>
+      </div>
+
+      {hasMultiple && (
+        <div className="flex items-center justify-center mb-3">
+        </div>
+      )}
+
+      <div className="border-t border-white/10 pt-4">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div>
+            <p className="text-sm font-semibold text-white">Zone {current.zone_id} - Punt {current.location_key}</p>
+            <p className="text-xs text-white/60 mt-1">{current.challenge_type === 'photo' ? 'Foto inzending' : 'Tekstantwoord'}</p>
+          </div>
+          <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusClasses}`}>
+            {statusLabel}
+          </span>
+        </div>
+
+        <div className="mt-4">
+          {current.challenge_type === 'photo' ? (
+            current.photo_url ? (
+              <div className="space-y-3">
+                <div className="rounded-lg p-3 sm:p-4 space-y-4">
+                  <div className="relative">
+                    {hasMultiple && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentIndex((prev) => (prev - 1 + submissions.length) % submissions.length)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+                          aria-label="Vorige"
+                        >
+                          <Icon name="chevron-left" className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentIndex((prev) => (prev + 1) % submissions.length)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+                          aria-label="Volgende"
+                        >
+                          <Icon name="chevron-right" className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+                    <img
+                      src={current.photo_url}
+                      alt="Inzending foto"
+                      className="w-full max-h-[55vh] sm:max-h-[65vh] object-contain rounded-lg"
+                    />
+                    {photoId && (
+                      <PhotoActions
+                        photoId={photoId}
+                        initialLikeCount={current.challenge_photo?.like_count || 0}
+                        initialLiked={initialLiked}
+                        initialTags={current.challenge_photo?.photo_tags || []}
+                        buddies={buddies.map((b: any) => ({
+                          id: b.buddy_id,
+                          first_name: b.buddy_first_name,
+                          last_name: b.buddy_last_name,
+                        }))}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <span className="text-white/70">Foto inzending (URL niet beschikbaar)</span>
+            )
+          ) : (
+            <div className="bg-white/10 p-4 rounded-lg">
+              <p className="text-white">{current.text_answer || 'Geen antwoord gegeven'}</p>
+            </div>
+          )}
+        </div>
+
+        {current.submitted_at && (
+          <p className="text-xs text-white/60 mt-3">
+            Ingediend op {new Date(current.submitted_at).toLocaleString('nl-NL')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PhotoActions({
+  photoId,
+  initialLikeCount,
+  initialLiked,
+  initialTags,
+  buddies,
+}: {
+  photoId: string;
+  initialLikeCount: number;
+  initialLiked: boolean;
+  initialTags: Array<{
+    participant_id: string;
+    participant?: { first_name: string; last_name: string };
+  }>;
+  buddies: Array<{ id: string; first_name: string; last_name: string }>;
+}) {
+  const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [liked, setLiked] = useState(initialLiked);
+  const [tags, setTags] = useState(initialTags || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTagging, setShowTagging] = useState(false);
+
+  const handleLike = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/photo-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'like', photoId }),
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      const nextLiked = !liked;
+      setLiked(nextLiked);
+      setLikeCount((prev) => Math.max(prev + (nextLiked ? 1 : -1), 0));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTagToggle = async (buddyId: string) => {
+    if (!buddyId || isSubmitting) return;
+    setIsSubmitting(true);
+
+    const isTagged = tags.some((tag) => tag.participant_id === buddyId);
+    const action = isTagged ? 'untag' : 'tag';
+
+    try {
+      const response = await fetch('/api/photo-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          photoId,
+          taggedParticipantId: buddyId,
+        }),
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (isTagged) {
+        setTags((prev) => prev.filter((tag) => tag.participant_id !== buddyId));
+      } else {
+        const buddy = buddies.find((b) => b.id === buddyId);
+        if (buddy) {
+          setTags((prev) => [
+            ...prev,
+            {
+              participant_id: buddy.id,
+              participant: { first_name: buddy.first_name, last_name: buddy.last_name },
+            },
+          ]);
+        }
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      {tags.length > 0 && (
+        <div className="absolute bottom-12 left-2 flex flex-wrap gap-2 max-w-[70%] pointer-events-auto">
+          {tags.map((tag) => (
+            <span
+              key={tag.participant_id}
+              className="bg-black/70 text-white px-2 py-1 rounded-full text-xs"
+            >
+              {tag.participant?.first_name} {tag.participant?.last_name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={handleLike}
+        disabled={isSubmitting}
+        className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/70 text-white px-3 py-1.5 rounded-full text-sm font-semibold pointer-events-auto hover:opacity-80 transition-opacity disabled:opacity-50"
+      >
+        <Icon
+          name="heart"
+          className={`w-4 h-4 transition-colors ${
+            liked ? 'fill-red-500 text-red-500' : 'text-white/80'
+          }`}
+        />
+        {likeCount}
+      </button>
+
+      <div className="absolute bottom-2 right-2 pointer-events-auto">
+        <button
+          type="button"
+          onClick={() => setShowTagging((prev) => !prev)}
+          className="flex items-center gap-2 bg-black/70 hover:bg-black/80 text-white px-3 py-1.5 rounded-full text-sm font-semibold transition-colors"
+        >
+          <Icon name="user-plus" className="w-4 h-4" />
+          {showTagging ? 'Sluiten' : 'Tag'}
+        </button>
+
+        {showTagging && (
+          <div className="absolute bottom-full right-0 mb-2 w-56 max-h-56 overflow-y-auto bg-black/80 backdrop-blur-md rounded-lg shadow-2xl">
+            <div className="p-2 space-y-2">
+              {buddies.length === 0 ? (
+                <p className="text-white/70 text-sm px-2 py-3 text-center">Geen buddies om te taggen</p>
+              ) : (
+                buddies.map((buddy) => {
+                  const isTagged = tags.some((tag) => tag.participant_id === buddy.id);
+                  return (
+                    <button
+                      key={buddy.id}
+                      type="button"
+                      onClick={() => handleTagToggle(buddy.id)}
+                      disabled={isSubmitting}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
+                        isTagged
+                          ? 'bg-white/10 text-white'
+                          : 'bg-white/5 hover:bg-white/10 text-white'
+                      }`}
+                    >
+                      <Icon name="user" className="w-4 h-4" />
+                      <span>{buddy.first_name} {buddy.last_name}</span>
+                      {isTagged && <Icon name="check" className="w-4 h-4 ml-auto" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
       </div>

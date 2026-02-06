@@ -4,6 +4,7 @@ export interface ModalConfig {
   id: string;
   title?: string;
   content: ReactNode;
+  variant?: "default" | "lightbox";
   onClose?: () => void;
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
@@ -66,4 +67,8 @@ export function useModal() {
     throw new Error("useModal must be used within a ModalProvider");
   }
   return context;
+}
+
+export function useOptionalModal() {
+  return useContext(ModalContext);
 }

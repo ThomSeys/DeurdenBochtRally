@@ -96,4 +96,5 @@ export default [
   route("api/zone-gpx/:zoneId", "routes/api.zone-gpx.$zoneId.tsx"),
   route("api/emergency-sos", "routes/api.emergency-sos.tsx"),
   route("api/admin-menu-stats", "routes/api.admin-menu-stats.tsx"),
+  route("api/photo-interactions", "routes/api.photo-interactions.tsx"),
 ] satisfies RouteConfig;
