@@ -50,16 +50,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select('*')
     .order('category', { ascending: true });
 
+  // Get accepted buddies for crew + live feed filtering
+  const { data: buddyLinks } = await supabaseAdmin
+    .from('participant_buddies')
+    .select('buddy_id, buddy_first_name, buddy_last_name')
+    .eq('participant_id', user.id)
+    .eq('status', 'accepted');
+
+  const buddyIds = (buddyLinks || []).map((b: any) => b.buddy_id).filter(Boolean);
+
   // Fetch GPX route file
   const siteConfig = await sanityClient.fetch(`
     *[_type == "siteConfig"][0] {
       gpxRouteFile {
         asset-> {
-          url
+          url,
+          originalFilename
+        }
+      },
+      gpxRouteFiles[] {
+        asset-> {
+          url,
+          originalFilename
         }
       }
     }
   `);
+
+  const gpxRouteFiles = (siteConfig?.gpxRouteFiles || []).filter((file: any) => file?.asset?.url);
+  const legacyGpxUrl = siteConfig?.gpxRouteFile?.asset?.url;
+  const gpxRouteUrl = gpxRouteFiles[0]?.asset?.url || legacyGpxUrl;
 
   const rallyZones = await sanityClient.fetch(`
     *[_type == "rallyZone"] | order(order asc) {
@@ -95,6 +115,31 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
   `);
+
+  // Crew goals (user + buddies)
+  const crewParticipantIds = [user.id, ...buddyIds];
+
+  const { data: crewCheckIns } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('zone_id, participant_id')
+    .in('participant_id', crewParticipantIds);
+
+  const { data: crewChallenges } = await supabaseAdmin
+    .from('route_challenge_submissions')
+    .select('id, participant_id')
+    .in('participant_id', crewParticipantIds);
+
+  const crewZones = new Set((crewCheckIns || []).map((item: any) => item.zone_id));
+  const crewStats = {
+    buddyCount: buddyIds.length,
+    zoneCount: crewZones.size,
+    challengeCount: crewChallenges?.length || 0,
+    goals: {
+      zones: 3,
+      challenges: 5,
+      buddies: 2,
+    },
+  };
 
   // Count completed zones (unique zone IDs)
   const completedZones = zoneCheckins ? new Set(zoneCheckins.map(c => c.zone_id)).size : 0;
@@ -188,7 +233,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     completedZones, 
     isBochtenkoning, 
     eventDate,
-    gpxRouteUrl: siteConfig?.gpxRouteFile?.asset?.url,
+    gpxRouteUrl,
+    gpxRouteFiles,
     qrCodeUrl, 
     rallyZonesEnabled,
     photoGalleryEnabled, 
@@ -199,17 +245,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     routePreference: user.route_preference || 'adventure', // Default to adventure
     challengeStats,
     completedChallenges,
-    rallyZones
+    rallyZones,
+    crewStats,
   };
 }
 
 export default function Dashboard() {
-  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, challengeStats, completedChallenges, rallyZones } = useLoaderData<typeof loader>();
+  const { user, zoneCheckins, documents, completedZones, eventDate, gpxRouteUrl, gpxRouteFiles, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, challengeStats, completedChallenges, rallyZones, crewStats } = useLoaderData<typeof loader>();
 
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
   const [pushDebugInfo, setPushDebugInfo] = useState<string>('');
   const [showChallengesModal, setShowChallengesModal] = useState(false);
+  const [mainTab, setMainTab] = useState<'features' | 'vibe'>('features');
+  const [liveFilter, setLiveFilter] = useState<'all' | 'buddies'>('all');
+  const [liveActivity, setLiveActivity] = useState<any[]>([]);
+  const [buddyIds, setBuddyIds] = useState<string[]>([]);
+  const [isLoadingFeed, setIsLoadingFeed] = useState(true);
 
   // Check if already subscribed to push notifications
   useEffect(() => {
@@ -234,12 +286,42 @@ export default function Dashboard() {
     checkSubscription();
   }, []);
 
+  // Fetch live feed and auto-refresh every minute
+  useEffect(() => {
+    const fetchLiveFeed = async () => {
+      try {
+        const response = await fetch('/api/live-feed');
+        if (!response.ok) throw new Error('Failed to fetch live feed');
+        const data = await response.json();
+        setLiveActivity(data.liveActivity || []);
+        setBuddyIds(data.buddyIds || []);
+        setIsLoadingFeed(false);
+      } catch (error) {
+        console.error('[Dashboard] Error fetching live feed:', error);
+        setIsLoadingFeed(false);
+      }
+    };
+
+    // Initial fetch
+    fetchLiveFeed();
+
+    // Set up auto-refresh every minute
+    const interval = setInterval(fetchLiveFeed, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const documentsByCategory = {
     route: documents?.filter((d: any) => d.category === 'route') || [],
     rally_book: documents?.filter((d: any) => d.category === 'rally_book') || [],
     map: documents?.filter((d: any) => d.category === 'map') || [],
     instruction: documents?.filter((d: any) => d.category === 'instruction') || [],
   };
+
+  const buddyIdSet = new Set([user.id, ...(buddyIds || [])]);
+  const filteredLiveActivity = liveFilter === 'buddies'
+    ? (liveActivity || []).filter((item: any) => buddyIdSet.has(item.participant_id))
+    : (liveActivity || []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -431,7 +513,6 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* Registration Status */}
           <div data-tour="profile-section" className="bg-white rounded-sm shadow p-6">
@@ -555,9 +636,41 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* Live sfeer + team vibe + tijdcapsule */}
         {/* Completed Challenges Modal - Removed from main viewport */}
 
+        {/* Dashboard Tabs */}
+        <div className="flex gap-3 mb-8 w-full">
+          <button
+            onClick={() => setMainTab('features')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-sm transition-all ${
+              mainTab === 'features' 
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 transform scale-105' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Icon name="list" className="w-5 h-5" />
+            <span>Menu</span>
+          </button>
+          <button
+            onClick={() => setMainTab('vibe')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-sm transition-all ${
+              mainTab === 'vibe' 
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 transform scale-105' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Icon name="heart" className="w-5 h-5" />
+            <span>Sfeer</span>
+          </button>
+        </div>
+
         {/* New Feature Cards */}
+        {mainTab === 'features' && (
+          <>
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Menu</p>
+          </div>
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {photoGalleryEnabled && (
             <Link
@@ -662,7 +775,165 @@ export default function Dashboard() {
           </Link>
 
           {/* Removed: Certificates - Concept A only */}
+        </div></>
+        )}
+
+        {mainTab === 'vibe' && (
+        <div className="mb-10">
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Sfeer</p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Live Sfeer Block */}
+            <div className="bg-slate-900 text-white rounded-sm p-5 lg:col-span-2">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Live sfeer</p>
+                      {!isLoadingFeed && (
+                        <div className="flex items-center gap-1.5 bg-green-500/20 px-2 py-0.5 rounded-full">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                          <span className="text-[10px] font-medium text-green-300 uppercase tracking-wide">Live</span>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold">Bochten Feed</h3>
+                    <p className="text-slate-200 text-sm mt-1">De laatste vibes van de route, live binnenrollend.</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300 text-xs">
+                    <span>{filteredLiveActivity.length} items</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white/10 p-1 rounded-sm w-fit mb-4">
+                  <button
+                    onClick={() => setLiveFilter('all')}
+                    className={`px-3 py-1.5 text-sm font-semibold rounded-sm transition-colors ${
+                      liveFilter === 'all' ? 'bg-white text-slate-900' : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Alles
+                  </button>
+                  <button
+                    onClick={() => setLiveFilter('buddies')}
+                    className={`px-3 py-1.5 text-sm font-semibold rounded-sm transition-colors ${
+                      liveFilter === 'buddies' ? 'bg-white text-slate-900' : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Naftgenoten
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {isLoadingFeed ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    </div>
+                  ) : filteredLiveActivity.length > 0 ? (
+                    filteredLiveActivity.slice(0, 8).map((item: any) => (
+                      <div key={item.id} className="flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-sm p-3">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                          <Icon
+                            name={item.type === 'checkin' ? 'map-pin' : item.type === 'challenge' ? 'target' : 'camera'}
+                            className="w-5 h-5"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">
+                            {(item.participant?.first_name || 'Deelnemer')} {(item.participant?.last_name || '')}
+                          </p>
+                          <p className="text-xs text-slate-200">
+                            {item.type === 'checkin' && `Checkte in bij ${item.zoneName}`}
+                            {item.type === 'challenge' && `Diende een ${item.challengeType || 'challenge'} in bij ${item.zoneName}`}
+                            {item.type === 'photo' && `Uploadde een foto bij ${item.zoneName}`}
+                          </p>
+                        </div>
+                        {item.photoUrl && (
+                          <img
+                            src={item.photoUrl}
+                            alt="Challenge foto"
+                            className="w-12 h-12 rounded-sm object-cover border border-white/20"
+                          />
+                        )}
+                        <div className="text-xs text-slate-300 whitespace-nowrap">
+                          {new Date(item.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-300">Nog geen live activiteit. Geef het event wat minuten!</p>
+                  )}
+                </div>
+              </div>
+
+            <div className='flex flex-col gap-6'>
+            {/* Team Vibe Block */}
+            <div className="bg-amber-50 rounded-sm border border-amber-200 p-5">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-700">Team vibe</p>
+                <h3 className="text-xl font-bold text-amber-900 mt-1">Naftgenoten Challenges</h3>
+                <p className="text-sm text-amber-800 mt-2">Samen rijden, samen scoren. Kleine doelen, grote sfeer.</p>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-amber-900 font-semibold">Buddies</span>
+                    <span className="text-amber-800">{crewStats.buddyCount}/{crewStats.goals.buddies}</span>
+                  </div>
+                  <div className="w-full h-2 bg-amber-200 rounded-sm overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500"
+                      style={{ width: `${Math.min((crewStats.buddyCount / crewStats.goals.buddies) * 100, 100)}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-amber-900 font-semibold">Zones samen</span>
+                    <span className="text-amber-800">{crewStats.zoneCount}/{crewStats.goals.zones}</span>
+                  </div>
+                  <div className="w-full h-2 bg-amber-200 rounded-sm overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500"
+                      style={{ width: `${Math.min((crewStats.zoneCount / crewStats.goals.zones) * 100, 100)}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-amber-900 font-semibold">Crew challenges</span>
+                    <span className="text-amber-800">{crewStats.challengeCount}/{crewStats.goals.challenges}</span>
+                  </div>
+                  <div className="w-full h-2 bg-amber-200 rounded-sm overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500"
+                      style={{ width: `${Math.min((crewStats.challengeCount / crewStats.goals.challenges) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <Link
+                  to="/dashboard/riding-buddies"
+                  className="mt-4 inline-flex items-center text-amber-900 font-semibold text-sm"
+                >
+                  Beheer je Naftgenoten →
+                </Link>
+              </div>
+
+            {/* Tijdcapsule Block */}
+            <div className="bg-indigo-50 rounded-sm border border-indigo-200 p-5">
+                <p className="text-xs uppercase tracking-[0.2em] text-indigo-700">Tijdcapsule</p>
+                <h3 className="text-2xl font-bold mt-1 text-indigo-900">Jouw dag in 60s</h3>
+                <p className="text-sm text-indigo-800 mt-2">
+                  Een persoonlijke recap met je hoogtepunten, check-ins en crew vibes.
+                </p>
+                <Link
+                  to="/dashboard/recap"
+                  className="mt-4 inline-flex items-center gap-2 bg-white text-indigo-700 hover:bg-white/90 px-4 py-2 rounded-sm font-semibold transition-colors"
+                >
+                  Bekijk mijn recap
+                  <span>→</span>
+                </Link>
+              </div>
+              </div>
+          </div>
         </div>
+        )}
 
         {/* V1: Progress & Stats Cards disabled (competition-related)
         <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -739,20 +1010,40 @@ export default function Dashboard() {
               GPX Routes
             </h3>
             <ul className="space-y-2">
-              {gpxRouteUrl && (
-                <li>
-                  <a
-                    href={gpxRouteUrl}
-                    download="deur-den-bocht-route.gpx"
-                    className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 rounded-sm transition-colors border border-primary-200"
-                  >
-                    <div>
-                      <div className="font-medium text-primary-900">Official Rally Route</div>
-                      <div className="text-sm text-primary-700">Complete GPX file for navigation</div>
-                    </div>
-                    <span className="text-primary-600">↓</span>
-                  </a>
-                </li>
+              {gpxRouteFiles?.length > 0 ? (
+                gpxRouteFiles.map((file: any) => (
+                  <li key={file.asset?.url}>
+                    <a
+                      href={file.asset.url}
+                      download={file.asset?.originalFilename || true}
+                      className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 rounded-sm transition-colors border border-primary-200"
+                    >
+                      <div>
+                        <div className="font-medium text-primary-900">
+                          {file.asset?.originalFilename || 'Official Rally Route'}
+                        </div>
+                        <div className="text-sm text-primary-700">Complete GPX file for navigation</div>
+                      </div>
+                      <span className="text-primary-600">↓</span>
+                    </a>
+                  </li>
+                ))
+              ) : (
+                gpxRouteUrl && (
+                  <li>
+                    <a
+                      href={gpxRouteUrl}
+                      download="deur-den-bocht-route.gpx"
+                      className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 rounded-sm transition-colors border border-primary-200"
+                    >
+                      <div>
+                        <div className="font-medium text-primary-900">Official Rally Route</div>
+                        <div className="text-sm text-primary-700">Complete GPX file for navigation</div>
+                      </div>
+                      <span className="text-primary-600">↓</span>
+                    </a>
+                  </li>
+                )
               )}
             </ul>
             {!gpxRouteUrl && documentsByCategory.route.length === 0 && (

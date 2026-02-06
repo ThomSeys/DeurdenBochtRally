@@ -37,6 +37,7 @@ export default [
   route("dashboard/emergency-contacts", "routes/dashboard.emergency-contacts.tsx"),
   route("dashboard/riding-buddies", "routes/dashboard.riding-buddies.tsx"),
   route("dashboard/buddies/:buddyId", "routes/dashboard.buddies.$buddyId.tsx"),
+  route("dashboard/recap", "routes/dashboard.recap.tsx"),
   
   // Zones
   
@@ -82,6 +83,7 @@ export default [
   route("api/event-markers", "routes/api.event-markers.tsx"),
   route("api/events/submit", "routes/api.events.submit.tsx"),
   route("api/gpx-route", "routes/api.gpx-route.tsx"),
+  route("api/live-feed", "routes/api.live-feed.ts"),
   route("api/prepare-edition", "routes/api.prepare-edition.tsx"),
   route("api/process-reports", "routes/api.process-reports.ts"),
   route("api/push-send", "routes/api.push-send.tsx"),
