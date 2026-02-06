@@ -31,6 +31,22 @@ const tourSteps: TourStep[] = [
   },
   {
     page: '/dashboard',
+    element: '[data-tour="pwa-install"]',
+    title: 'Installeer de App',
+    description: 'Je kunt deze app op je smartphone installeren! Dat geeft je snellere toegang en offline ondersteuning. Klik op "Installeer" als je het nu wilt doen.',
+    side: 'bottom',
+    align: 'start',
+  },
+  {
+    page: '/dashboard',
+    element: '[data-tour="notifications"]',
+    title: 'Schakel Meldingen In',
+    description: 'Krijg notificaties over rally updates, zone check-ins, en buddy activiteiten. Super handig om alles lopende te houden!',
+    side: 'bottom',
+    align: 'start',
+  },
+  {
+    page: '/dashboard',
     element: '[data-tour="profile-section"]',
     title: 'Jouw Profiel',
     description: 'Hier zie je je persoonlijke informatie en rally statistieken.',

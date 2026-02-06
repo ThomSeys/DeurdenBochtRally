@@ -7,7 +7,7 @@
 
 ## 📅 EVENT DATA
 
-### Officiële Event Details (uit Sanity CMS)
+### Officiële Event Details
 
 **Basis Informatie:**
 
@@ -121,23 +121,43 @@ Deelnemers hebben toegang tot een persoonlijk dashboard waar ze:
 Kies je voor de Adventure Track? Dan heb je toegang tot het volledige gamification systeem. Kies je voor de Classic Route? Dan focus je op de rit en houdt het dashboard simpel.
 
 Alles werkt als Progressive Web App!
+**📱 App Installatie - Direct op Je Smartphone** 🚀
 
+Op het dashboard zie je automatisch een banner om de app te installeren op je smartphone - 1-klik en klaar! Dit geeft je:
+
+- **Snellere toegang:** De app opent direct zonder browser
+- **Offline support:** Werkt ook zonder internet (bepaalde functionaliteiten)
+- **Betere performance:** De app draait sneller dan via browser
+- **Notificaties:** Krijgt meldingen direct op je telefoon voor live updates
+
+Eenmaal weggeklikt, verschijnt de banner niet meer automatisch. Maar je kunt deze altijd opnieuw activeren via een knop in je instellingen - dus je bent nooit vastgeketend.
 **� Rondleiding - Stap voor Stap Uitleg** 🤖
 
 Nieuwe deelnemers krijgen een volledige interactieve rondleiding door de app! De tour gaat over **meerdere pagina's heen** en toont precies waar je op moet klikken:
 
-**Master Tour (volledige rondleiding):**
-- Start op het dashboard met een welkomstbericht
+**Master Tour (volledige rondleiding - 21 stappen):**
+
+- Start op het dashboard met welkomstbericht
+- Toont PWA installatie (1-klik installeren op smartphone!) 🚀
+- Toont meldingen (push notifications activeren voor live updates)
 - Laat je profiel, QR code, en rally zone overzicht zien
-- Navigeert naar de Rally pagina en toont hoe je segmenten verkenkt en route tips bekijkt
-- Gaat naar een Zone detail pagina en laat zien hoe je incheckt
-- Eindigt op de Live Kaart en laat zien hoe je event markers toevoegt
-- Terug naar dashboard voor het afsluitende bericht
+- Navigeert naar Rally pagina en toont segmenten & route tips
+- Gaat naar Naftgenoten (Riding Buddies) pagina voor groepsrijen
+- Eindigt op Live Kaart voor real-time zone tracking & event markers
+- Toont fotogalerij, ride stories, achievements, profiel, noodcontacten, checklist
+- Terug naar dashboard voor afsluitend bericht
+
+**Extra features in tour:**
+
+- **PWA Install:** 1-klik installeren op je smartphone. Kan je altijd later weer activeren via een knop (eenmaal weggeklikt, verschijnt het niet automatisch meer)
+- **Meldingen:** Krijg notificaties over zones, buddies en events. Kan je ook later inschakelen
 
 **Pagina-specifieke tours:**
-- Ben je al op Rally/Zone/Live Map? Klik "Rondleiding" voor een korte tour alleen op die pagina
+
+- Ben je al op Rally/Buddies/Live Map? Klik "Rondleiding" voor een korte tour alleen op die pagina
 
 **Hoe het werkt:**
+
 - De tour verschijnt automatisch voor nieuwe deelnemers
 - Klik op "Volgende" om naar de volgende stap te gaan (inclusief navigatie naar andere pagina's)
 - Klik "Vorige" om terug te gaan

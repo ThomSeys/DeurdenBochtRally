@@ -9,6 +9,7 @@ import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import { PWAInstallPrompt } from '~/components/PWAInstallPrompt';
 import { createRequestLogger } from '~/lib/logger.server';
 
 declare global {
@@ -245,16 +246,22 @@ export default function Dashboard() {
       <Header />
 
       <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
-            <Icon name="home" className="w-10 h-10" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+                <Icon name="home" className="w-10 h-10" />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-2">Welkom, {user.first_name}!</h1>
+              <p className="text-xl text-primary-100">Klaar voor een dag vol bochten en avontuur?</p>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">Welkom, {user.first_name}!</h1>
-          <p className="text-xl text-primary-100">Klaar voor een dag vol bochten en avontuur?</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
 
         {/* Push Notifications Setup Banner - Only show if not subscribed */}
         {pushNotificationsEnabled && !isNotificationSubscribed && (
