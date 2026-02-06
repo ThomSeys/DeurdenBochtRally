@@ -1495,7 +1495,7 @@ function WeatherWidget({ rallyZones }: { rallyZones: any[] }) {
         )}
 
         {/* Current Weather */}
-        <div className="mt-4 grid grid-cols-2 gap-4">
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-sm border border-sky-100 bg-white/90 p-4">
             <div className="flex items-center gap-3">
               <img
