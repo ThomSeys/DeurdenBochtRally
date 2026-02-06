@@ -391,6 +391,7 @@ export default function Rally() {
                             zoneEndLocation={segment.endLocation}
                             userLocation={userLocation}
                             completedChallenges={completedChallenges || []}
+                            isZoneCheckedIn={checkedInSet.has(segment._id)}
                           />
                         </div>
                       )}

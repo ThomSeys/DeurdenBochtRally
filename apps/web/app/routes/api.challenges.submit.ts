@@ -47,6 +47,23 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ error: 'Invalid challenge type' }, { status: 400 });
     }
 
+    // Require check-in for this zone before submitting
+    const { data: checkIns, error: checkInsError } = await supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('id')
+      .eq('participant_id', participant.id)
+      .eq('zone_id', zoneId)
+      .limit(1);
+
+    if (checkInsError) {
+      console.error('Check-in lookup failed:', checkInsError);
+      return Response.json({ error: 'Failed to verify check-in status' }, { status: 500 });
+    }
+
+    if (!checkIns || checkIns.length === 0) {
+      return Response.json({ error: 'Je moet eerst inchecken in deze zone om een challenge in te dienen' }, { status: 403 });
+    }
+
     // Check if already submitted
     const { data: existing } = await supabaseAdmin
       .from('route_challenge_submissions')

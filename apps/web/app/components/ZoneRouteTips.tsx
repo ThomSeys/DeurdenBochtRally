@@ -12,6 +12,7 @@ interface ZoneRouteTipsProps {
   zoneEndLocation: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   completedChallenges?: string[]; // Array of location keys that have been completed
+  isZoneCheckedIn?: boolean;
 }
 
 export default function ZoneRouteTips({
@@ -22,6 +23,7 @@ export default function ZoneRouteTips({
   zoneEndLocation,
   userLocation,
   completedChallenges = [],
+  isZoneCheckedIn = false,
 }: ZoneRouteTipsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChallenge, setSelectedChallenge] = useState<{
@@ -155,6 +157,7 @@ export default function ZoneRouteTips({
                     .filter((loc: any) => loc.challenge && loc.challenge.isActive !== false)
                     .map((loc: any, idx: number) => {
                       const isCompleted = completedChallenges.includes(loc._key);
+                      const isLocked = !isZoneCheckedIn;
                       const getChallengeIcon = (type: string) => {
                         switch (type) {
                           case 'photo': return 'camera';
@@ -170,7 +173,7 @@ export default function ZoneRouteTips({
                           key={idx}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!isCompleted) {
+                            if (!isCompleted && !isLocked) {
                               setSelectedChallenge({
                                 challenge: loc.challenge,
                                 locationName: loc.name,
@@ -180,9 +183,9 @@ export default function ZoneRouteTips({
                           }}
                           onTouchStart={(e) => e.stopPropagation()}
                           onTouchEnd={(e) => e.stopPropagation()}
-                          disabled={isCompleted}
+                          disabled={isCompleted || isLocked}
                           className={`w-full text-left p-3 rounded-lg border-2 transition-all pointer-events-auto relative z-10 ${
-                            isCompleted
+                            isCompleted || isLocked
                               ? 'border-green-200 bg-green-50 opacity-60 cursor-not-allowed'
                               : 'border-accent-200 bg-accent-50 hover:border-accent-400 hover:bg-accent-100 cursor-pointer'
                           }`}
@@ -210,6 +213,11 @@ export default function ZoneRouteTips({
                               {isCompleted && (
                                 <p className="text-sm text-green-700 font-medium mt-2">
                                   ✓ Voltooid
+                                </p>
+                              )}
+                              {!isCompleted && isLocked && (
+                                <p className="text-sm text-yellow-800 font-medium mt-2">
+                                  Check eerst in om te starten
                                 </p>
                               )}
                             </div>

@@ -19,28 +19,151 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   await requestLogger.info('page-view', 'Admin dashboard loaded');
   
-  // Get urgent counts (Concept B: check-ins don't need verification)
-  const { count: checkInsCount, error: checkInsError } = await supabaseAdmin
-    .from('rally_zone_checkins')
-    .select('*', { count: 'exact', head: true });
+  const [
+    checkInsCountResult,
+    pendingChallengesCountResult,
+    emergencySOSCountResult,
+    recentSOSResult,
+    totalParticipantsResult,
+    paidParticipantsResult,
+    checkedInParticipantsResult,
+    totalCheckInsResult,
+    pendingScansResult,
+    fallbackReviewResult,
+    pendingPhotosResult,
+    pendingStoriesResult,
+    buddyGroupsResult,
+    totalAchievementsResult,
+    totalAlbumsResult,
+    totalSOSResult,
+    totalChallengesResult,
+    totalStoriesResult,
+    paymentsResult,
+    rallyZonesResult,
+    eventMarkersResult,
+    recentParticipantsResult,
+    checkInCountsResult,
+  ] = await Promise.all([
+    supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('route_challenge_submissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_validated', false),
+    supabaseAdmin
+      .from('emergency_sos')
+      .select('*', { count: 'exact', head: true })
+      .neq('status', 'resolved'),
+    supabaseAdmin
+      .from('emergency_sos')
+      .select('*, participants!emergency_sos_participant_id_fkey(first_name, last_name)')
+      .neq('status', 'resolved')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('payment_status', 'completed'),
+    supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('checked_in', true),
+    supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('*', { count: 'exact', head: true })
+      .eq('requires_manual_validation', true)
+      .is('manually_validated_at', null),
+    supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_fallback', true)
+      .is('is_validated', null),
+    supabaseAdmin
+      .from('participant_photos')
+      .select('*', { count: 'exact', head: true })
+      .or('is_approved.is.null,is_approved.eq.false'),
+    supabaseAdmin
+      .from('ride_stories')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabaseAdmin
+      .from('riding_buddies')
+      .select('buddy_id')
+      .not('buddy_id', 'is', null),
+    supabaseAdmin
+      .from('achievements')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('photo_albums')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('emergency_sos')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('route_challenge_submissions')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('ride_stories')
+      .select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('participants')
+      .select('amount_paid')
+      .eq('payment_status', 'completed'),
+    sanityClient.fetch(`
+      *[_type == "rallyZone"] | order(order asc) {
+        _id,
+        name,
+        is_open
+      }
+    `),
+    sanityClient.fetch(`
+      *[_type == "eventMarker"] {
+        _id,
+        name,
+        isActive
+      }
+    `),
+    supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, email, created_at, payment_status, checked_in')
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('participant_id, participants(first_name, last_name, motorcycle_brand, motorcycle_model)')
+      .eq('action', 'CHECKIN'),
+  ]);
 
-  const { count: pendingChallengesCount, error: challengesCountError } = await supabaseAdmin
-    .from('route_challenge_submissions')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_validated', false);
-
-  const { count: emergencySOSCount, error: sosCountError } = await supabaseAdmin
-    .from('emergency_sos')
-    .select('*', { count: 'exact', head: true })
-    .neq('status', 'resolved');
-
-  // Get recent SOS alerts
-  const { data: recentSOS, error: sosError } = await supabaseAdmin
-    .from('emergency_sos')
-    .select('*, participants!emergency_sos_participant_id_fkey(first_name, last_name)')
-    .neq('status', 'resolved')
-    .order('created_at', { ascending: false })
-    .limit(5);
+  const { count: checkInsCount, error: checkInsError } = checkInsCountResult;
+  const { count: pendingChallengesCount, error: challengesCountError } = pendingChallengesCountResult;
+  const { count: emergencySOSCount, error: sosCountError } = emergencySOSCountResult;
+  const { data: recentSOS, error: sosError } = recentSOSResult;
+  const { count: totalParticipants } = totalParticipantsResult;
+  const { count: paidParticipants } = paidParticipantsResult;
+  const { count: checkedInParticipants } = checkedInParticipantsResult;
+  const { count: totalCheckIns } = totalCheckInsResult;
+  const { count: pendingScansCount } = pendingScansResult;
+  const { count: fallbackReviewCount } = fallbackReviewResult;
+  const { count: pendingPhotosCount } = pendingPhotosResult;
+  const { count: pendingStoriesCount } = pendingStoriesResult;
+  const { data: buddyGroups } = buddyGroupsResult;
+  const { count: totalAchievementsCount } = totalAchievementsResult;
+  const { count: totalAlbumsCount } = totalAlbumsResult;
+  const { count: totalSOSCount } = totalSOSResult;
+  const { count: totalChallengesCount } = totalChallengesResult;
+  const { count: totalStoriesCount } = totalStoriesResult;
+  const { data: payments } = paymentsResult;
+  const rallyZones = rallyZonesResult as any[];
+  const eventMarkers = eventMarkersResult as any[];
+  const { data: recentParticipants } = recentParticipantsResult;
+  const { data: checkInCounts } = checkInCountsResult;
 
   console.log('[admin dashboard] Urgent counts:', {
     emergencySOSCount,
@@ -50,121 +173,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     errors: { sosCountError, sosError, challengesCountError }
   });
 
-  // Get statistics
-  const { count: totalParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: paidParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('*', { count: 'exact', head: true })
-    .eq('payment_status', 'completed');
-
-  const { count: checkedInParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('*', { count: 'exact', head: true })
-    .eq('checked_in', true);
-
-  const { count: totalCheckIns } = await supabaseAdmin
-    .from('rally_zone_checkins')
-    .select('*', { count: 'exact', head: true });
-
-  // Get additional teaser info for dashboard tiles
-  const { count: pendingScansCount } = await supabaseAdmin
-    .from('rally_zone_checkins')
-    .select('*', { count: 'exact', head: true })
-    .eq('requires_manual_validation', true)
-    .is('manually_validated_at', null);
-
-  const { count: fallbackReviewCount } = await supabaseAdmin
-    .from('rally_zone_checkins')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_fallback', true)
-    .is('is_validated', null);
-
-  const { count: pendingPhotosCount } = await supabaseAdmin
-    .from('participant_photos')
-    .select('*', { count: 'exact', head: true })
-    .or('is_approved.is.null,is_approved.eq.false');
-
-  const { count: pendingStoriesCount } = await supabaseAdmin
-    .from('ride_stories')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending');
-
-  // Get unique buddy groups (count distinct buddy_ids)
-  const { data: buddyGroups } = await supabaseAdmin
-    .from('riding_buddies')
-    .select('buddy_id')
-    .not('buddy_id', 'is', null);
-  
   const activeBuddyGroupsCount = new Set(buddyGroups?.map(b => b.buddy_id) || []).size;
 
-  const { count: totalAchievementsCount } = await supabaseAdmin
-    .from('achievements')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: totalAlbumsCount } = await supabaseAdmin
-    .from('photo_albums')
-    .select('*', { count: 'exact', head: true });
-
-  // Get total counts for teaser info
-  const { count: totalSOSCount } = await supabaseAdmin
-    .from('emergency_sos')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: totalChallengesCount } = await supabaseAdmin
-    .from('route_challenge_submissions')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: totalStoriesCount } = await supabaseAdmin
-    .from('ride_stories')
-    .select('*', { count: 'exact', head: true });
-
-  // Calculate total revenue
-  const { data: payments } = await supabaseAdmin
-    .from('participants')
-    .select('amount_paid')
-    .eq('payment_status', 'completed');
-  
   const totalRevenue = payments?.reduce((sum, p) => sum + (p.amount_paid || 0), 0) || 0;
-
-  // Get rally zones from Sanity
-  const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
-      _id,
-      name,
-      is_open
-    }
-  `);
 
   const openZonesCount = rallyZones?.filter((z: any) => z.is_open).length || 0;
   const totalZonesCount = rallyZones?.length || 0;
 
-  // Get event markers from Sanity
-  const eventMarkers = await sanityClient.fetch(`
-    *[_type == "eventMarker"] {
-      _id,
-      name,
-      isActive
-    }
-  `);
-
   const activeMarkersCount = eventMarkers?.filter((m: any) => m.isActive).length || 0;
   const totalMarkersCount = eventMarkers?.length || 0;
-
-  // Get recent participants
-  const { data: recentParticipants } = await supabaseAdmin
-    .from('participants')
-    .select('id, first_name, last_name, email, created_at, payment_status, checked_in')
-    .order('created_at', { ascending: false })
-    .limit(10);
-
-  // Get top participants by check-in count (Concept B: simple presence tracking)
-  const { data: checkInCounts } = await supabaseAdmin
-    .from('rally_zone_checkins')
-    .select('participant_id, participants(first_name, last_name, motorcycle_brand, motorcycle_model)')
-    .eq('action', 'CHECKIN');
 
   // Count check-ins per participant
   const participantCheckIns = new Map();
