@@ -699,7 +699,7 @@ export default function Dashboard() {
             onClick={() => setMainTab('vibe')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-sm transition-all ${
               mainTab === 'vibe' 
-                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 transform' 
+                ? 'bg-gradient-to-r from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/30 transform' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
@@ -1057,10 +1057,10 @@ export default function Dashboard() {
           </Link>
           */}
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Link
             to="/dashboard/privacy"
-            className="bg-gradient-to-br from-gray-600 to-gray-800 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
+            className="bg-gradient-to-br md:col-span-1 from-gray-600 to-gray-800 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="shield" className="w-16 h-16 mb-3" />
             <h3 className="font-bold text-xl mb-2">Privacy & Gegevens</h3>
@@ -1068,10 +1068,6 @@ export default function Dashboard() {
               Beheer je gegevens, download je data of verwijder je account (GDPR)
             </p>
           </Link>
-        </div>
-
-        {/* Documents Section */}
-        <div data-tour="documents" className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Live Map - ONLY visible on event day or for admins */}
           {(user.is_admin || new Date().toISOString().split('T')[0] === eventDate) && (
             <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-sm shadow-lg p-6 text-white md:col-span-2">
@@ -1099,6 +1095,11 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Documents Section */}
+        <div data-tour="documents" className="grid md:grid-cols-2 gap-6 mb-8">
+          
 
           {/* Routes */}
           <div className="bg-white rounded-sm shadow p-6">
