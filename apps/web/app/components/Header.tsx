@@ -4,7 +4,7 @@ import { NotificationBell } from './NotificationBell';
 import { Icon } from '~/components/Icon';
 import { EmergencySOSButton } from './EmergencySOSButton';
 import { useFeatureFlags } from '~/contexts/FeatureFlagsContext';
-import { startOnboardingTour } from './OnboardingTour';
+import { startMasterTour } from './MasterTour';
 
 type AdminMenuStats = {
   urgent: {
@@ -439,7 +439,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium w-full text-left"
                       onClick={() => {
                         setUserMenuOpen(false);
-                        setTimeout(() => startOnboardingTour(), 300);
+                        startMasterTour();
                       }}
                     >
                       <Icon name="info" className="w-5 h-5" />
@@ -596,7 +596,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                           className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium w-full text-left"
                           onClick={() => {
                             setMobileMenuOpen(false);
-                            setTimeout(() => startOnboardingTour(), 300);
+                            startMasterTour();
                           }}
                         >
                           <Icon name="info" className="w-5 h-5" />

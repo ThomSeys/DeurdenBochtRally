@@ -55,203 +55,256 @@
 
 ---
 
-## 📊 DATA OVERZICHT
+## 📊 HOE HET EVENT WERKT
 
-### Data uit Sanity CMS (Content Management)
+### Voor Deelnemers - De Volledige Ervaring
 
-**Rally Zones (4 stuks):**
+**🏁 Vooraf - Registratie**
+
+Deelnemers registreren online en kiezen hun formule:
+
+- **€30 All-in:** Ontbijt, lunch én diner inbegrepen
+- **€20 Ontbijt only:** Alleen ontbijt, lunch & diner zelf regelen
+
+Na betaling krijgen ze automatisch:
+
+- Persoonlijke QR code (via email)
+- Link naar PDF roadbook met routes
+- Toegang tot hun persoonlijk dashboard
+- Optie: papieren roadbook aanvragen
+
+**🎯 Kies Je Eigen Avontuur**
+
+Deelnemers hebben 2 opties:
+
+**Optie 1 - Adventure Track (aanbevolen):**
+Het event heeft geen vaste route - ontdek 4 rally zones in je eigen tempo:
 
 1. **Vlaamse Ardennen** - Heuvels met panoramische uitzichten
-2. **Condroz** - Historische rally route  
-3. **Ardennen - Ourthe Vallei** - Rivierroutes door prachtige valleien
+2. **Condroz** - Historische rally route
+3. **Ardennen - Ourthe Vallei** - Prachtige riviervalleien
 4. **Hoge Venen** - Bossen en natuurgebieden
 
-**Pricing Tiers:**
+Per zone krijgen deelnemers meerdere route tips (off-road, panoramisch, technisch) zodat iedereen zijn eigen avontuur kan samenstellen.
 
-- **Met alle maaltijden (All-in):** €30 (ontbijt + lunch + diner)
-- **Alleen ontbijt:** €20
+**Met deze optie krijg je:**
 
-**Route Tips per Zone:**
+- Check-ins per zone
+- Route challenges voor extra punten
+- Achievements & badges
+- Leaderboard ranking (optioneel)
+- Buddy tracking
+- Maximale vrijheid & gamification
 
-- Route types: Off-road, Technisch, Panoramisch, Snelweg, Binnendoor, Gemengd
-- Moeilijkheidsgraden: Easy, Medium, Hard
-- Per route: naam, beschrijving, afstand, karakter, warnings, roadbook link
-- **Route Challenges:** Foto's, tekst, multiple choice opdrachten met punten
+**Optie 2 - Classic Route (volg de GPX):**
+Liever gewoon één mooie route volgen? Geen probleem! Download de volledige GPX track en rijd van ochtend tot avond.
 
-**Content in CMS:**
+**Met deze optie krijg je:**
 
-- Homepage, About, Rally pagina's
-- Evenement beschrijvingen & schedule
-- FAQ items & sponsor info
-- Ride Stories & Event Stories
-- Feature cards
+- Één complete GPX route (klaar om te volgen)
+- Garantie van een prachtige rit door alle mooiste plekken
+- Minder interactie/gamification
+- Wel toegang tot foto's delen & ride stories
 
-### Data uit Supabase (Database & Backend)
+Je mist de challenges, achievements en zone check-ins, maar je hebt wel een fantastische dag op de motor voor de boeg!
 
-**Participants (Deelnemers):**
+**📱 Het Dashboard - Alles in Één App**
 
-- ✅ Persoonlijke info: naam, email, telefoon, bio
-- ✅ Motor info: merk, model, kenteken
-- ✅ Registratie: formule, ride type, route voorkeur
-- ✅ Payment: bedrag, status, Stripe ID
-- ✅ Event status: QR code, check-in status, GPS locatie
-- ✅ Profiel: foto, locatie delen, leaderboard opt-in
-- ✅ Admin rechten & early access
-- ✅ Stats: achievement punten, status
+Deelnemers hebben toegang tot een persoonlijk dashboard waar ze:
 
-**Rally Systeem:**
+- **Adventure Track:** Zones inchecken met QR code, voortgang bijhouden, challenges doen
+- **Beide opties:** Foto's delen, andere deelnemers taggen, ride stories schrijven
+- **Beide opties:** Buddies toevoegen om samen te rijden
+- **Adventure Track:** Achievements verzamelen (badges), live leaderboard bekijken
+- **Beide opties:** GPX routes downloaden
 
-- ✅ Rally Zone Check-ins met GPS locatie
-- ✅ Kilometerstand tracking
-- ✅ Timestamps per zone
-- ✅ Notes mogelijkheid
+Kies je voor de Adventure Track? Dan heb je toegang tot het volledige gamification systeem. Kies je voor de Classic Route? Dan focus je op de rit en houdt het dashboard simpel.
 
-**Achievements & Gamification:**
+Alles werkt als Progressive Web App!
 
-- ✅ 10+ Achievement types (First Check-in, Zone Master, Early Bird, etc.)
-- ✅ Punten systeem (alle 4 zones = +30 bonus)
-- ✅ Criteria tracking (zones, tijd, foto's, stories, likes)
-- ✅ Buddy achievements (groep badges)
-- ✅ Leaderboard (optioneel zichtbaar)
+**� Rondleiding - Stap voor Stap Uitleg** 🤖
 
-**Social Features:**
+Nieuwe deelnemers krijgen een volledige interactieve rondleiding door de app! De tour gaat over **meerdere pagina's heen** en toont precies waar je op moet klikken:
 
-- ✅ Riding Buddies systeem
-- ✅ Buddy notificaties bij check-ins
-- ✅ Ride Stories schrijven & delen
-- ✅ Foto upload met likes
-- ✅ Comments op stories
-- ✅ Featured content
+**Master Tour (volledige rondleiding):**
+- Start op het dashboard met een welkomstbericht
+- Laat je profiel, QR code, en rally zone overzicht zien
+- Navigeert naar de Rally pagina en toont hoe je segmenten verkenkt en route tips bekijkt
+- Gaat naar een Zone detail pagina en laat zien hoe je incheckt
+- Eindigt op de Live Kaart en laat zien hoe je event markers toevoegt
+- Terug naar dashboard voor het afsluitende bericht
 
-**Route Challenges:**
+**Pagina-specifieke tours:**
+- Ben je al op Rally/Zone/Live Map? Klik "Rondleiding" voor een korte tour alleen op die pagina
 
-- ✅ Challenge submissions per locatie
-- ✅ Foto opdrachten
-- ✅ Automatische + handmatige validatie
-- ✅ Punten systeem
+**Hoe het werkt:**
+- De tour verschijnt automatisch voor nieuwe deelnemers
+- Klik op "Volgende" om naar de volgende stap te gaan (inclusief navigatie naar andere pagina's)
+- Klik "Vorige" om terug te gaan
+- Via het help-icoon in de header kan je de volledige tour opnieuw starten
 
-**Tech Features:**
+**�🎮 Route Challenges - Extra Uitdaging**
 
-- ✅ Push notificaties (web push)
-- ✅ Emergency SOS button + tracking
-- ✅ PWA (Progressive Web App) - offline support
-- ✅ GPS tracking (optioneel)
-- ✅ Documents: GPX routes, PDF roadbooks
-- ✅ QR code generatie
-- ✅ Stripe payments integratie
-- ✅ Email confirmaties (automatisch)
-- ✅ Certificaten generatie
+Bij specifieke locaties kunnen deelnemers challenges doen:
 
-**Admin Tools:**
+- **Foto opdrachten:** "Maak een foto van dit uitzicht"
+- **Trivia vragen:** Multiple choice over de route/regio
+- **Lokale kennis:** "Welk monument zie je hier?"
 
-- ✅ Admin dashboard
-- ✅ Participant overview
-- ✅ Challenge validatie
-- ✅ Push notification sender
-- ✅ Reporting & analytics
-- ✅ Content moderation (photos/stories)
+Multiple choice wordt instant gevalideerd, foto's worden later door ons team beoordeeld.
+
+**Beloning:** Wie in **elke zone** minimaal 1 challenge afrondt, krijgt gratis drinken tijdens de avond!
+
+**👥 Samen Rijden - Buddy Systeem**
+
+Deelnemers kunnen "Naftgenoten" toevoegen:
+
+- Zie wanneer je buddies inchecken bij zones
+- Get notificaties: "Je buddy is aangekomen in Condroz!"
+- Unlock groep achievements (badges voor samen rijden)
+- Deel foto's en tag je buddies
+
+Perfect voor mensen die samen rijden maar af en toe uit het oog verliezen.
+
+**📸 Photo Albums - Herinneringen Delen**
+
+Elk van de 4 zones heeft een eigen foto album:
+
+- Upload max 5 foto's per zone
+- Tag mede-rijders in je foto's (zij krijgen notificatie)
+- Like foto's van anderen
+- Beste foto's komen in featured gallery
+
+Wij openen albums zone per zone tijdens het event, zodat niet alle foto's tegelijk binnen stromen.
+
+**🏆 Achievements & Gamification**
+
+Het systeem kent 10+ badges die automatisch unlocked:
+
+- **First Check-in:** Eerste zone bereikt
+- **Early Bird:** Voor 9u vertrokken
+- **Zone Master:** Alle 4 zones afgerond
+- **Photographer:** 10 foto's geüpload
+- **Storyteller:** Ride story geschreven
+- **Social Butterfly:** 5+ buddies toegevoegd
+- En meer...
+
+Punten verdienen door zones, challenges, foto's en stories. Leaderboard is optioneel (deelnemers kiezen zelf of ze zichtbaar zijn).
+
+**🚨 Safety First**
+
+Als er iets mis gaat:
+
+- **SOS knop** in de app (stuurt direct GPS locatie naar ons)
+- Noodcontacten kunnen vooraf ingesteld worden
+- Locatie delen optioneel (buddies/familie kunnen meekijken)
+- Noodtelefoon altijd bereikbaar
+
+**📖 Na Het Event**
+
+Deelnemers krijgen:
+
+- Persoonlijk achievement certificaat
+- Overzicht van hun stats (zones, afstand, achievements)
+- Toegang tot alle foto's en stories
+- Herinneringen aan hun rally ervaring
 
 ---
 
-## ✨ FEATURES DIE HET EVENT BIJZONDER MAKEN
+### Voor Medewerkers - Wat Moeten wij Doen?
 
-### 🎯 Voor Deelnemers
+**🛠️ Voorbereiding (Weken Voor Event)**
 
-**1. Persoonlijke Rally Ervaring**
+*Content Beheren (via gebruiksvriendelijke CMS):*
 
-- QR code check-in systeem
-- Realtime voortgang tracking
-- Keuze uit 4 rally zones (geen vaste route)
-- Meerdere route tips per zone (off-road, panoramisch, technisch)
-- Eigen tempo, eigen keuzes
+- Rally zones updaten (beschrijvingen, routes)
+- Route challenges opstellen (foto opdrachten, trivia)
+- Route tips toevoegen per zone (off-road, technisch, panoramisch)
+- FAQ, schedule en homepage content up-to-date houden
+- Event checklist doorlopen
 
-**2. Gamification**
+*Geen code nodig - alles via visuele editor!*
 
-- Achievement badges (10+ types)
-- Puntensysteem per zone (+30 bonus voor alle 4)
-- Leaderboard (optioneel zichtbaar)
-- Route challenges (foto's, trivia, opdrachten)
-- Automatische validatie & punten
+**📋 Ochtend - Check-in (06:30-08:00)**
 
-**3. Social & Community**
+2-3 teamleden aan check-in tafel:
 
-- **Riding Buddies:** Voeg mede-rijders toe
-- **Buddy achievements:** Groep badges voor samen rijden
-- **Notificaties:** Weet wanneer buddy's inchecken
-- **Stories & Foto's:** Deel je ervaring
-- **Like & comment systeem**
-- **Featured content** op homepage
+- QR codes scannen met tablet/telefoon (app doet de rest)
+- Roadbooks & goodiebags uitdelen
+- Vragen beantwoorden
+- Briefing geven (07:30 - 10 minuten)
 
-**4. Live Dashboard**
+**🏍️ Tijdens Rally (08:00-17:00) - Team Rijdt Mee!**
 
-- Persoonlijk profiel met motor info
-- GPS routes downloaden
-- Check-in status per zone
-- Achievement progressie
-- Buddy lijst & activiteiten
+Teamleden verdelen rollen tijdens het rijden:
 
-**5. Safety Features**
+*Nood Coördinator:*
 
-- Emergency SOS knop (GPS locatie)
-- Emergency contacten opslaan
-- Noodtelefoon altijd bereikbaar
-- Real-time locatie delen (optioneel)
+- Noodtelefoon bereikbaar (handsfree)
+- Dashboard checken bij stops (SOS meldingen?)
+- Hulp coördineren indien nodig
 
-**6. Route Challenges**
+*Route Shepherd:*
 
-- Opdrachten bij specifieke locaties
-- Foto challenges ("Maak foto van uitzicht")
-- Multiple choice vragen (trivia)
-- Tekst antwoorden (landmark namen)
-- Direct feedback + punten
-- Beloning: gratis drinken in de avond bij het afronden van minimaal 1 challenge per rally zone
-- Rule: gratis drinken geldt enkel als in elke rally zone minstens 1 challenge is afgerond
+- Rijdt voorop, verkent route
+- Checkt of zones bereikbaar zijn
+- Waarschuwt team bij problemen
 
-**7. Professional Experience**
+*Group Support:*
 
-- Automatische QR code bij registratie
-- Stripe betalingen (meerdere methoden)
-- Email confirmaties
-- PDF roadbook met kaarten
-- Achievement sticker na event
+- Rijdt flexibel tussen deelnemers
+- Helpt waar nodig
 
-### 🎨 Voor Organisatie
+*Content Maker:*
 
-**8. Admin Dashboard**
+- Foto's & video's voor social media
+- Verhalen verzamelen
 
-- Real-time overzicht alle deelnemers
-- Check-in status monitoring
-- Challenge validatie interface
-- Push notificaties versturen
-- Buddy & groep statistieken
-- Report generation
+**👀 Moderatie - Wanneer Tijd Is (Lunch/Avond)**
 
-**9. Content Management (Sanity Studio)**
+Kort beoordelen in dashboard:
 
-- Rally zones beheren zonder code
-- Route tips & challenges toevoegen/aanpassen
-- Pricing, schedule, FAQ's updaten
-- Stories modereren
-- Featured content selecteren
-- Volledig flexible
+- **Foto challenges:** Goedkeuren/afwijzen met één click
+- **Foto uploads:** Review en select featured content
+- **Stories:** Check indien nodig (optioneel)
+- **Photo albums:** Open/sluit per zone
 
-**10. Automation**
+Multiple choice challenges valideren zichzelf automatisch!
 
-- Email confirmaties bij registratie
-- QR code generatie automatisch
-- Payment webhooks (Stripe)
-- Achievement unlock triggers
-- Buddy notificaties (database triggers)
-- Report scheduling
+**📊 Admin Dashboard - Alles in Overzicht**
 
-**11. Analytics & Insights**
+Dashboard toont realtime:
 
-- Participant stats & engagement
-- Check-in patterns
-- Achievement completion rates
-- Popular routes & zones
-- Photo & story engagement
-- Buddy connections overview
+- SOS alerts (rood als actief)
+- Hoeveel mensen ingecheckt
+- Welke zones open/gesloten zijn
+- Pending items (badges met cijfers)
+- Check-in patronen
+- Financiële status
+
+Click door om acties te nemen - simpel en snel.
+
+**🤖 Wat Doet Het Systeem Zelf?**
+
+Automatisch zonder jullie:
+
+- Registraties & betalingen
+- QR codes versturen
+- Emails sturen
+- Check-ins registreren
+- Achievements unlocken
+- Buddy notificaties ("Je buddy is aangekomen!")
+- Punten berekenen
+- Leaderboard updaten
+- Multiple choice valideren
+- Certificaten genereren
+
+**Jullie focussen op:**
+
+- Check-in ochtend (belangrijk!)
+- Rijden & genieten
+- SOS monitoring (safety first)
+- Foto/challenge review (als tijd is)
 
 ---
 
@@ -515,12 +568,12 @@
    - Nood (bereikbaar)
    - Content (documenteert)
 
-3. **Tech werkt autonoom**
-   - Check-ins via app (zelf)
+3. **Systeem draait vanzelf**
+   - Check-ins via app (deelnemers doen zelf)
    - Achievements unlock automatisch
    - Leaderboard update automatisch
    - Buddy notificaties automatisch
-   - QR codes werken zonder server support
+   - QR codes werken zonder jullie hulp
 
 4. **Minder cruciale momenten**
    - Check-in ochtend: genoeg tijd (1.5u)
@@ -534,15 +587,15 @@
 
 ### HOGE RISICO'S
 
-**1. Tech storing tijdens event**
+**1. Systeem storing tijdens event**
 
-- ❌ **Risico:** App crash, geen support mogelijk
+- ❌ **Risico:** App/website werkt niet, geen ondersteuning mogelijk
 - ✅ **Mitigatie:**
-  - 2 weken voor event: stress testing
-  - 1 week voor event: freeze code (geen updates!)
+  - 2 weken voor event: Alles uitgebreid testen
+  - 1 week voor event: Geen wijzigingen meer!
   - Backup: Paper lijst met alle deelnemers + zones
-  - WhatsApp group voor deelnemers waar info nog kan verspreid worden
-  - Remote tech support standby (niet ter plaatse, wel bereikbaar)
+  - WhatsApp groep voor deelnemers (info delen)
+  - Developer op afstand bereikbaar (indien nodig)
 
 **2. Noodsituatie tijdens rijden**
 
@@ -551,8 +604,8 @@
   - Nood Coordinator heeft handsfree systeem
   - Backup: 2e persoon ook noodtelefoon (Persoon 3)
   - Duidelijke escalatie: Team → Hulpdiensten
-  - SOS app werkt met GPS locatie (team ziet waar)
-  - Noodsituatie meldingen zijn voornamelijk voor organisatorische redenen. We kunnen bekijken om pechverhelping als sponsoring te verkrijgen, maar in principe is dat niet onze must. Wat we kunnen doen is behelpen & ondersteunen, maar niet oplossen.
+  - SOS knop stuurt GPS locatie (team ziet waar deelnemer is)
+  - Let op: Noodsituaties zijn voor organisatie + coördinatie, niet voor pechhulp. We kunnen eventueel pechhulp als sponsor zoeken, maar dat is geen kerntaak. We helpen coördineren, niet technisch oplossen.
 
 **3. Teamlid ziek op eventdag**
 
@@ -561,7 +614,7 @@
   - Week voor event: Alle teamleden healthy blijven (prioriteit!)
   - Backup optie: 1-2 reservepersonen briefen (vrienden/familie?)
   - Bij 4 personen: Scrap Content Creator (niet kritisch)
-  - Bij 3 personen: Serieus probleem, overweeg uitstel
+  - Bij 3 personen: Serieus probleem, bijkomend persoon moet aangesproken worden
 
 **4. Lange dag = Moeheid**
 
@@ -589,9 +642,9 @@
 - ❌ **Risico:** Meerdere deelnemers tegelijk hulp nodig
 - ✅ **Mitigatie:**
   - Duidelijke instructies in roadbook
-  - FAQ in app/dashboard
+  - Veel info in de app/op website
   - Deelnemers kunnen elkaar helpen (community!)
-  - Niet alle problemen hoeven team involvement
+  - Niet voor elk probleem is team nodig
 
 **7. Weer**
 
@@ -627,11 +680,11 @@
 
 ### KRITISCH ✅
 
-1. **Tech moet 100% stabiel zijn**
-   - Geen updates week voor event
-   - Server load testing
-   - Backup systemen
-   - Paper backup lijst
+1. **Systeem moet betrouwbaar zijn**
+   - Geen wijzigingen week voor event
+   - Alles vooraf testen
+   - Backup plannen klaar
+   - Paper lijst als noodoplossing
 
 2. **Uitbundige voorbereiding**
    - Minimum 2 proefritten (KRITISCH!)
@@ -639,20 +692,20 @@
    - Challenges getest
    - Locaties bezocht
 
-3. **Team conditie & health**
+3. **Team conditie & gezondheid**
    - 17 uur dag = fysiek zwaar
    - Goede nachtrust voor event
-   - Fit zijn (kan je hele dag rijden?)
+   - Fit genoeg om hele dag te rijden?
    - Backup personen briefen
 
 4. **Duidelijke communicatie**
    - Team weet exact wie wat doet
-   - Noodprotocol gedrild
+   - Noodprotocol doorgenomen
    - Deelnemers weten wat te verwachten
    - Roadbook is duidelijk
 
 5. **Backup plannen overal**
-   - Tech faalt: Paper lijst
+   - Systeem faalt: Paper lijst
    - Teamlid ziek: Reserve persoon
    - Slecht weer: Alternatieve routes
    - Noodsituatie: Escalatie plan
@@ -814,18 +867,18 @@
 
 **Dit event is bijzonder omdat:**
 
-- ✨ Team rijdt mee (authentiek)
-- ✨ Geen competitie, wel gamification
-- ✨ Tech-enabled maar niet tech-dependent
-- ✨ Community building centraal
-- ✨ Professioneel zonder corporate gevoel
-- ✨ Vrijheid binnen structuur
-- ✨ Content blijft leven na event
+- ✨ Team rijdt mee (authentiek, samen beleven)
+- ✨ Geen competitie, wel gamification (leuk zonder stress)
+- ✨ Systeem ondersteunt, maar mensen centraal
+- ✨ Community building is het doel
+- ✨ Professioneel maar toegankelijk
+- ✨ Vrijheid binnen structuur (eigen routes kiezen)
+- ✨ Herinneringen blijven leven na event
 
 ### Grootste Succesfactoren
 
 1. **Proefritten** - Ken de route uit je hoofd
-2. **Tech stabiliteit** - Test, test, test
+2. **Systeem betrouwbaarheid** - Test alles vooraf
 3. **Team gezondheid** - 17u is een marathon
 4. **Backup persoon** - Bij ziekte/nood
 5. **Sponsoring strategie** - Ontbijt + goodiebags gesponsord krijgen
@@ -833,7 +886,7 @@
 
 ### Grootste Risico's
 
-1. 🔴 Tech storing tijdens event (HIGH)
+1. 🔴 Systeem storing tijdens event (HIGH)
 2. 🟡 Teamlid ziek op eventdag (MEDIUM)
 3. 🟡 Meerdere noodsituaties tegelijk (MEDIUM)
 4. 🟢 Sponsoring niet rondkrijgen (LAAG - maar zelfs zonder blijft event winstgevend)
@@ -847,20 +900,20 @@
 
 - [ ] All 5 teamleden confirmed & committed
 - [ ] Minimum 2 proefritten gedaan (met challenges getest)
-- [ ] Tech volledig getest (load test, crash test, offline test)
+- [ ] App/website volledig getest (alles werkt?)
 - [ ] Kernsponsors bevestigd (ontbijt + goodiebags minimaal)
 - [ ] Locaties geboekt & confirmed
 - [ ] Verzekeringen geregeld
 - [ ] Backup persoon gebrieft
-- [ ] Noodprotocol gedrilled met team
+- [ ] Noodprotocol doorgenomen met team
 - [ ] Roadbook compleet & geprint
-- [ ] 1 week voor event: Code freeze actief
+- [ ] 1 week voor event: Geen wijzigingen meer!
 
 ### 🛑 NO-GO als
 
 - [ ] Minder dan 4 teamleden beschikbaar
 - [ ] Geen proefrit gedaan
-- [ ] Tech niet stabiel (crashes, bugs)
+- [ ] App/website niet stabiel (crashes, errors)
 - [ ] Geen enkele sponsor (zeer onwaarschijnlijk - budget blijft zelfs dan positief)
 - [ ] Event verzekering niet OK
 - [ ] Team niet fit/voorbereid
@@ -874,7 +927,7 @@
 
 - ✅ 50 deelnemers = perfect voor eerste editie
 - ✅ Budget sluit zelfs zonder sponsoring (maar sponsoring maakt het véél beter)
-- ✅ Tech stack professioneel & feature-rijk
+- ✅ Systeem draait grotendeels vanzelf - jullie kunnen meerijden!
 - ✅ Team rijdt mee = authentieke ervaring
 - ✅ Risico's beheersbaar met goede voorbereiding
 

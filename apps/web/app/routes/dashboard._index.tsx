@@ -9,7 +9,6 @@ import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
-import { OnboardingTour, startOnboardingTour } from '~/components/OnboardingTour';
 import { createRequestLogger } from '~/lib/logger.server';
 
 declare global {
@@ -180,7 +179,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const achievementsEnabled = await isFeatureEnabled('achievements-enabled');
   const profileEditingEnabled = await isFeatureEnabled('profile-editing-enabled');
   const pushNotificationsEnabled = await isFeatureEnabled('push-notifications-enabled');
-  const onboardingTourEnabled = await isFeatureEnabled('onboarding-tour-enabled');
 
   return { 
     user, 
@@ -197,7 +195,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     achievementsEnabled,
     profileEditingEnabled, 
     pushNotificationsEnabled,
-    onboardingTourEnabled, 
     routePreference: user.route_preference || 'adventure', // Default to adventure
     challengeStats,
     completedChallenges,
@@ -206,7 +203,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function Dashboard() {
-  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, onboardingTourEnabled, challengeStats, completedChallenges, rallyZones } = useLoaderData<typeof loader>();
+  const { user, zoneCheckins, documents, completedZones, isBochtenkoning, eventDate, gpxRouteUrl, qrCodeUrl, routePreference, rallyZonesEnabled, pushNotificationsEnabled, photoGalleryEnabled, rideStoriesEnabled, achievementsEnabled, challengeStats, completedChallenges, rallyZones } = useLoaderData<typeof loader>();
 
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
@@ -245,7 +242,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {onboardingTourEnabled && <OnboardingTour />}
       <Header />
 
       <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
@@ -600,6 +596,7 @@ export default function Dashboard() {
           {achievementsEnabled && (
             <Link
               to="/achievements"
+              data-tour="achievements"
               className="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
             >
               <Icon name="trophy" className="w-16 h-16 mb-3" />
@@ -612,6 +609,7 @@ export default function Dashboard() {
 
           <Link
             to="/dashboard/profile-edit"
+            data-tour="my-profile"
             className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="user" className="w-16 h-16 mb-3" />
@@ -623,6 +621,7 @@ export default function Dashboard() {
 
           <Link
             to="/dashboard/emergency-contacts"
+            data-tour="emergency-contacts"
             className="bg-gradient-to-br from-red-500 to-red-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="phone" className="w-16 h-16 mb-3" />
@@ -634,6 +633,7 @@ export default function Dashboard() {
 
           <Link
             to="/dashboard/checklist"
+            data-tour="my-checklist"
             className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-sm shadow-lg p-6 text-white hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             <Icon name="check-square" className="w-16 h-16 mb-3" />

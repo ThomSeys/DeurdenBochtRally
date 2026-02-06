@@ -13,6 +13,7 @@ import { getUserId, getUser } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
+import { useMasterTour } from '~/components/MasterTour';
 
 export const meta: MetaFunction = () => {
   return [
@@ -196,6 +197,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges };
 }
 
+function RallyTourButton() {
+  const { startPageTour } = useMasterTour();
+  return (
+    <button
+      onClick={() => startPageTour('/rally')}
+      className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg text-white font-semibold transition-all"
+    >
+      <Icon name="help-circle" className="w-5 h-5" />
+      <span>Rondleiding</span>
+    </button>
+  );
+}
+
 export default function Rally() {
   const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
@@ -253,11 +267,12 @@ export default function Rally() {
           <p className="text-xl max-w-3xl mx-auto">
             8 adventure segmenten om je rit onvergetelijk te maken
           </p>
+          <RallyTourButton />
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-16 bg-gray-50">
+      <section data-tour="rally-how-it-works" className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
             Hoe werkt het?
@@ -271,7 +286,7 @@ export default function Rally() {
               <h3 className="font-bold text-lg mb-2">2. Download & Rijd</h3>
               <p className="text-gray-700">Download de GPX en geniet van prachtige wegen, bochten en landschappen</p>
             </div>
-            <div className="bg-white p-6 rounded-sm shadow">
+            <div data-tour="rally-checkin-info" className="bg-white p-6 rounded-sm shadow">
               <h3 className="font-bold text-lg mb-2">3. Check In (Optioneel)</h3>
               <p className="text-gray-700">Scan QR codes bij zones om je reis te tracken - geen verplichting, gewoon voor de fun!</p>
             </div>
@@ -289,7 +304,7 @@ export default function Rally() {
 
       {/* Rally Route Segments */}
       {segments && segments.length > 0 && (
-        <section className="py-20">
+        <section data-tour="rally-segments" className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
               De Rally Route - {segments.length} Segmenten
@@ -367,20 +382,23 @@ export default function Rally() {
                       
                       {/* Route Tips */}
                       {segment.routeTips && segment.routeTips.length > 0 && (
-                        <ZoneRouteTips
-                          routeTips={segment.routeTips}
-                          zoneTitle={segment.title}
-                          zoneId={segment._id}
-                          zoneStartLocation={segment.startLocation}
-                          zoneEndLocation={segment.endLocation}
-                          userLocation={userLocation}
-                          completedChallenges={completedChallenges || []}
-                        />
+                        <div data-tour="rally-tips">
+                          <ZoneRouteTips
+                            routeTips={segment.routeTips}
+                            zoneTitle={segment.title}
+                            zoneId={segment._id}
+                            zoneStartLocation={segment.startLocation}
+                            zoneEndLocation={segment.endLocation}
+                            userLocation={userLocation}
+                            completedChallenges={completedChallenges || []}
+                          />
+                        </div>
                       )}
 
                       {/* Check-in Button */}
                       {userId && !checkedInSet.has(segment._id) && (
                         <button
+                          data-tour="rally-checkin-button"
                           onClick={() => setCheckInModalZone(segment)}
                           className="w-full mt-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-4 rounded-sm font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                         >

@@ -260,3 +260,189 @@ export function startOnboardingTour() {
 export function resetOnboardingTour() {
   localStorage.removeItem(TOUR_STORAGE_KEY);
 }
+
+/** Start de Rally pagina tour - Zones, check-ins, en route tips */
+export function startRallyTour() {
+  const driverObj = driver({
+    showProgress: true,
+    showButtons: ['next', 'previous', 'close'],
+    popoverClass: 'ddb-tour-popover',
+    nextBtnText: 'Volgende',
+    prevBtnText: 'Vorige',
+    doneBtnText: 'Klaar!',
+    progressText: '{{current}} van {{total}}',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: 'Rally Route Rondleiding',
+          description: 'Laat me je uitleggen hoe je rally zones kunt verkennen, inchecken en route tips kunt bekijken.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="rally-how-it-works"]',
+        popover: {
+          title: 'Hoe werkt het?',
+          description: 'Hier zie je een overzicht van hoe de rally werkt: kies je avontuur, download routes, check in bij zones, doe challenges en deel je verhaal.',
+          side: 'top',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="rally-checkin-info"]',
+        popover: {
+          title: 'Check-in Uitleg',
+          description: 'Check-ins zijn optioneel! Je kunt QR codes scannen bij zones om je reis te tracken, maar het is geen verplichting.',
+          side: 'top',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="rally-segments"]',
+        popover: {
+          title: 'Rally Segmenten',
+          description: 'Hier zie je alle beschikbare rally zones. Elk segment heeft zijn eigen karakter, route tips en challenges.',
+          side: 'top',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="rally-tips"]',
+        popover: {
+          title: 'Route Tips',
+          description: 'Elk segment heeft route tips die je interessante plaatsen tonen. Klik op de kaart om tips te bekijken met beschrijvingen en foto\'s.',
+          side: 'top',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="rally-checkin-button"]',
+        popover: {
+          title: 'Check In Button',
+          description: 'Klik hier om in te checken bij een zone. Dit opent een QR scanner of handmatige check-in optie.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: 'body',
+        popover: {
+          title: 'Klaar voor de Rally!',
+          description: 'Je weet nu hoe je zones kunt verkennen en inchecken. Veel plezier onderweg!',
+          side: 'top',
+          align: 'center',
+        },
+      },
+    ],
+  });
+
+  driverObj.drive();
+}
+
+/** Start de Zone detail pagina tour - Check-in proces en locatie info */
+export function startZoneTour() {
+  const driverObj = driver({
+    showProgress: true,
+    showButtons: ['next', 'previous', 'close'],
+    popoverClass: 'ddb-tour-popover',
+    nextBtnText: 'Volgende',
+    prevBtnText: 'Vorige',
+    doneBtnText: 'Klaar!',
+    progressText: '{{current}} van {{total}}',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: 'Zone Detail Rondleiding',
+          description: 'Laat me je uitleggen hoe je kunt inchecken bij deze rally zone.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="zone-locations"]',
+        popover: {
+          title: 'Check-in & Check-out Locaties',
+          description: 'Hier zie je waar je moet inchecken (start) en uitchecken (eind). Elke locatie heeft een duidelijke beschrijving.',
+          side: 'top',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="zone-checkin-form"]',
+        popover: {
+          title: 'Check-in Formulier',
+          description: 'Dit is waar je incheckt bij de zone. Normaal scan je een QR code op locatie, maar je kunt ook handmatig inchecken.',
+          side: 'top',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="zone-checkin-button"]',
+        popover: {
+          title: 'Check In Knop',
+          description: 'Klik op deze knop om je check-in te bevestigen. Je locatie wordt automatisch opgeslagen als bewijs.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: 'body',
+        popover: {
+          title: 'Klaar!',
+          description: 'Je weet nu hoe je incheckt bij een zone. Na check-in krijg je toegang tot challenges en verdien je punten!',
+          side: 'top',
+          align: 'center',
+        },
+      },
+    ],
+  });
+
+  driverObj.drive();
+}
+
+/** Start de Live Map pagina tour - Event markers toevoegen */
+export function startLiveMapTour() {
+  const driverObj = driver({
+    showProgress: true,
+    showButtons: ['next', 'previous', 'close'],
+    popoverClass: 'ddb-tour-popover',
+    nextBtnText: 'Volgende',
+    prevBtnText: 'Vorige',
+    doneBtnText: 'Klaar!',
+    progressText: '{{current}} van {{total}}',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: 'Live Kaart Rondleiding',
+          description: 'Laat me je uitleggen hoe je de live kaart gebruikt en event markers kunt toevoegen.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="event-marker-button"]',
+        popover: {
+          title: 'Event Marker Toevoegen',
+          description: 'Klik op deze knop om een event marker toe te voegen. Dit kan bijvoorbeeld een waarschuwing zijn voor een wegafzetting, ongeluk, overstroming of andere situatie die andere deelnemers moeten weten.',
+          side: 'left',
+          align: 'center',
+        },
+      },
+      {
+        element: 'body',
+        popover: {
+          title: 'Help Anderen!',
+          description: 'Door event markers te delen help je andere deelnemers op de hoogte te blijven van situaties onderweg. Bedankt!',
+          side: 'top',
+          align: 'center',
+        },
+      },
+    ],
+  });
+
+  driverObj.drive();
+}

@@ -18,6 +18,7 @@ import { getSiteConfig } from "~/lib/sanity.server";
 import CookieBanner from "~/components/CookieBanner";
 import RallySubmissionFAB from "~/components/RallySubmissionFAB";
 import { EmergencySOSButton } from "~/components/EmergencySOSButton";
+import { MasterTourDisplay } from "~/components/MasterTour";
 import { AuthProvider } from "~/contexts/AuthContext";
 import { ToastProvider } from "~/contexts/ToastContext";
 import { ToastContainer } from "~/components/ToastContainer";
@@ -175,6 +176,7 @@ export default function App() {
     <AuthProvider>
       <FeatureFlagsProvider flags={data?.featureFlags || {}}>
         <EmergencySOSWrapper user={data?.user} />
+        <MasterTourDisplay />
         <ToastProvider>
           <ModalProvider>
             <AppStateProvider>

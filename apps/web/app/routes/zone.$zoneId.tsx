@@ -267,7 +267,7 @@ export default function ZonePage() {
               </h1>
               <p className="text-gray-600 italic">{zone.character}</p>
             </div>
-            <div className="text-right">
+            <div className="text-right flex flex-col gap-2">
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${difficultyColor}`}>
                 {zone.difficulty === 'easy' ? 'Makkelijk' : 
                  zone.difficulty === 'moderate' ? 'Gemiddeld' : 
@@ -288,7 +288,7 @@ export default function ZonePage() {
           )}
 
           {/* Location Info */}
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div data-tour="zone-locations" className="grid md:grid-cols-2 gap-4 mt-4">
             <div className="bg-gray-50 p-4 rounded">
               <h3 className="font-semibold text-gray-900 mb-2">Check-in Locatie</h3>
               <p className="text-gray-700">{zone.start_location?.name}</p>
@@ -333,7 +333,7 @@ export default function ZonePage() {
 
         {/* Check-in/Checkout Form */}
         {user && zone.is_active && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div data-tour="zone-checkin-form" className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               {suggestedAction === 'CHECKIN' ? 'Check In' : 'Check Out'}
             </h2>
@@ -361,6 +361,7 @@ export default function ZonePage() {
               )}
 
               <button
+                data-tour="zone-checkin-button"
                 type="submit"
                 disabled={isSubmitting}
                 className={`w-full py-4 px-6 rounded-lg font-bold text-white text-lg transition-all ${

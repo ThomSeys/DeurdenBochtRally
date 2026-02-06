@@ -10,6 +10,7 @@ import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
 import { MARKER_COLORS } from '~/lib/constants';
+import { useMasterTour } from '~/components/MasterTour';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
@@ -168,6 +169,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 }
 
+function LiveMapTourButton() {
+  const { startPageTour } = useMasterTour();
+  return (
+    <button
+      onClick={() => startPageTour('/live-map')}
+      className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg text-white font-semibold transition-all whitespace-nowrap"
+    >
+      <Icon name="help-circle" className="w-5 h-5" />
+      <span>Rondleiding</span>
+    </button>
+  );
+}
+
 export default function LiveMap() {
   const { rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
@@ -227,6 +241,7 @@ export default function LiveMap() {
                 )}
               </p>
             </div>
+            <LiveMapTourButton />
           </div>
         </div>
       </div>

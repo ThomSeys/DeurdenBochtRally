@@ -590,6 +590,7 @@ export default function RidingBuddies() {
                         type="button"
                         onClick={handleAddBuddy}
                         disabled={addingBuddy}
+                        data-tour="add-buddy-button"
                         className="w-full px-4 py-3 sm:py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 min-h-[44px]"
                       >
                         {addingBuddy ? 'Versturen...' : 'Verzoek Versturen'}
