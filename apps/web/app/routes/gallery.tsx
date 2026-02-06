@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { compressImage } from '~/lib/image-compression';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Fotogalerij - Deur Den Bocht' }];
@@ -513,19 +514,33 @@ export default function Gallery() {
                 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    📸 Kies een foto of maak er een
+                    📸 Kies je foto
                   </label>
                   <input
                     type="file"
                     name="image"
                     accept="image/jpeg,image/jpg,image/png,image/webp"
-                    capture="environment"
                     required
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700"
+                    onChange={async (e) => {
+                      const originalFile = e.target.files?.[0];
+                      if (originalFile && originalFile.size > 5 * 1024 * 1024) {
+                        try {
+                          const compressedFile = await compressImage(originalFile);
+                          const dataTransfer = new DataTransfer();
+                          dataTransfer.items.add(compressedFile);
+                          e.target.files = dataTransfer.files;
+                        } catch (error) {
+                          console.error('Compression error:', error);
+                          alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
+                          e.target.value = '';
+                        }
+                      }
+                    }}
                   />
                   <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
                     <Icon name="info" className="w-4 h-4" />
-                    JPG, PNG of WebP - Max 5MB
+                    JPG, PNG of WebP - Grote foto's worden automatisch verkleind
                   </p>
                 </div>
 

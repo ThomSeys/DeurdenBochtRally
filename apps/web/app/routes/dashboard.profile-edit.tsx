@@ -8,6 +8,7 @@ import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { getActiveEdition } from '~/lib/sanity.server';
 import { createRequestLogger } from '~/lib/logger.server';
+import { compressImage } from '~/lib/image-compression';
 
 export const meta: MetaFunction = () => {
   return [
@@ -302,7 +303,7 @@ export default function ProfileEdit() {
                   Upload een profielfoto om je profiel persoonlijker te maken. Deze foto wordt getoond bij je naftgenoten en in de achievements.
                 </p>
                 <p className="text-xs text-gray-500 mb-4">
-                  Toegestane formaten: JPG, PNG, WebP. Maximaal 5MB.
+                  Toegestane formaten: JPG, PNG, WebP. Grote foto's worden automatisch verkleind.
                 </p>
 
                 <Form method="post" encType="multipart/form-data" className="space-y-3">
@@ -311,17 +312,39 @@ export default function ProfileEdit() {
                   <div className="flex items-center gap-3">
                     <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors">
                       <Icon name="upload" className="w-4 h-4" />
-                      <span className="text-sm font-medium">Kies of maak foto</span>
+                      <span className="text-sm font-medium">Kies foto</span>
                       <input
                         type="file"
                         name="photo"
                         accept="image/jpeg,image/jpg,image/png,image/webp"
-                        capture="user"
                         className="sr-only"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const form = e.target.form;
-                          if (form && e.target.files?.[0]) {
-                            // Auto-submit form when file is selected
+                          const originalFile = e.target.files?.[0];
+                          if (form && originalFile) {
+                            // Compress if needed
+                            try {
+                              if (originalFile.size > 5 * 1024 * 1024) {
+                                // Show loading state
+                                const submitBtn = form.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                  submitBtn.textContent = 'Comprimeren...';
+                               }
+                                
+                                const compressedFile = await compressImage(originalFile);
+                                
+                                // Create new DataTransfer to replace file
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(compressedFile);
+                                e.target.files = dataTransfer.files;
+                              }
+                            } catch (error) {
+                              console.error('Compression error:', error);
+                              alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
+                              return;
+                            }
+                            
+                            // Auto-submit form when file is ready
                             form.requestSubmit();
                           }
                         }}

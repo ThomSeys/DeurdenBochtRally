@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Icon } from './Icon';
 import { useFetcher } from 'react-router';
+import { compressImage } from '~/lib/image-compression';
 
 interface ChallengeModalProps {
   challenge: {
@@ -36,18 +37,27 @@ export default function ChallengeModal({
   const isSubmitting = fetcher.state === 'submitting';
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const originalFile = e.target.files?.[0];
+    if (!originalFile) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!originalFile.type.startsWith('image/')) {
       alert('Selecteer een geldig afbeeldingsbestand');
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Afbeelding moet kleiner zijn dan 5MB');
+    // Compress image if needed
+    let file = originalFile;
+    try {
+      if (originalFile.size > 5 * 1024 * 1024) {
+        setUploadingPhoto(true);
+        file = await compressImage(originalFile);
+        setUploadingPhoto(false);
+      }
+    } catch (error) {
+      console.error('Compression error:', error);
+      alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
+      setUploadingPhoto(false);
       return;
     }
 
@@ -267,12 +277,11 @@ export default function ChallengeModal({
                     ) : (
                       <>
                         <p className="text-gray-600 mb-2">
-                          Klik om een foto te maken of selecteren
+                          Klik om een foto te selecteren
                         </p>
                         <input
                           type="file"
                           accept="image/*"
-                          capture="environment"
                           onChange={handleFileChange}
                           className="hidden"
                           id="photo-upload"
