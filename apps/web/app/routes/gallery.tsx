@@ -516,28 +516,72 @@ export default function Gallery() {
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     📸 Kies je foto
                   </label>
-                  <input
-                    type="file"
-                    name="image"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700"
-                    onChange={async (e) => {
-                      const originalFile = e.target.files?.[0];
-                      if (originalFile && originalFile.size > 5 * 1024 * 1024) {
-                        try {
-                          const compressedFile = await compressImage(originalFile);
-                          const dataTransfer = new DataTransfer();
-                          dataTransfer.items.add(compressedFile);
-                          e.target.files = dataTransfer.files;
-                        } catch (error) {
-                          console.error('Compression error:', error);
-                          alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
-                          e.target.value = '';
+                  <div className="flex gap-2">
+                    {/* Camera Input */}
+                    <input
+                      type="file"
+                      name="image"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      capture="environment"
+                      required
+                      className="hidden"
+                      id="gallery-camera-input"
+                      onChange={async (e) => {
+                        const originalFile = e.target.files?.[0];
+                        if (originalFile && originalFile.size > 5 * 1024 * 1024) {
+                          try {
+                            const compressedFile = await compressImage(originalFile);
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+                            e.target.files = dataTransfer.files;
+                          } catch (error) {
+                            console.error('Compression error:', error);
+                            alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
+                            e.target.value = '';
+                          }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                    <label
+                      htmlFor="gallery-camera-input"
+                      className="flex-1 px-4 py-3 border-2 border-blue-600 rounded-xl bg-blue-600 text-white font-semibold cursor-pointer hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Icon name="camera" className="w-5 h-5" />
+                      Camera
+                    </label>
+
+                    {/* Album Input */}
+                    <input
+                      type="file"
+                      name="image"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      required
+                      className="hidden"
+                      id="gallery-album-input"
+                      onChange={async (e) => {
+                        const originalFile = e.target.files?.[0];
+                        if (originalFile && originalFile.size > 5 * 1024 * 1024) {
+                          try {
+                            const compressedFile = await compressImage(originalFile);
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+                            e.target.files = dataTransfer.files;
+                          } catch (error) {
+                            console.error('Compression error:', error);
+                            alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
+                            e.target.value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="gallery-album-input"
+                      className="flex-1 px-4 py-3 border-2 border-primary-600 rounded-xl bg-primary-600 text-white font-semibold cursor-pointer hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Icon name="image" className="w-5 h-5" />
+                      Album
+                    </label>
+                  </div>
                   <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
                     <Icon name="info" className="w-4 h-4" />
                     JPG, PNG of WebP - Grote foto's worden automatisch verkleind

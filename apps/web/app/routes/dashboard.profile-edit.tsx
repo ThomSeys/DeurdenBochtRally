@@ -309,10 +309,54 @@ export default function ProfileEdit() {
                 <Form method="post" encType="multipart/form-data" className="space-y-3">
                   <input type="hidden" name="intent" value="upload-photo" />
                   
-                  <div className="flex items-center gap-3">
-                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors">
-                      <Icon name="upload" className="w-4 h-4" />
-                      <span className="text-sm font-medium">Kies foto</span>
+                  <div className="flex gap-2">
+                    {/* Camera Upload */}
+                    <label className="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-sm hover:bg-blue-700 transition-colors">
+                      <Icon name="camera" className="w-4 h-4" />
+                      <span className="text-sm font-medium">Camera</span>
+                      <input
+                        type="file"
+                        name="photo"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        capture="environment"
+                        className="sr-only"
+                        onChange={async (e) => {
+                          const form = e.target.form;
+                          const originalFile = e.target.files?.[0];
+                          if (form && originalFile) {
+                            // Compress if needed
+                            try {
+                              if (originalFile.size > 5 * 1024 * 1024) {
+                                // Show loading state
+                                const submitBtn = form.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                  submitBtn.textContent = 'Comprimeren...';
+                               }
+                                
+                                const compressedFile = await compressImage(originalFile);
+                                
+                                // Create new DataTransfer to replace file
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(compressedFile);
+                                e.target.files = dataTransfer.files;
+                              }
+                            } catch (error) {
+                              console.error('Compression error:', error);
+                              alert('Fout bij verwerken van afbeelding. Probeer een kleinere foto.');
+                              return;
+                            }
+                            
+                            // Auto-submit form when file is ready
+                            form.requestSubmit();
+                          }
+                        }}
+                      />
+                    </label>
+
+                    {/* Album Upload */}
+                    <label className="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors">
+                      <Icon name="image" className="w-4 h-4" />
+                      <span className="text-sm font-medium">Album</span>
                       <input
                         type="file"
                         name="photo"

@@ -276,23 +276,45 @@ export default function ChallengeModal({
                       <p className="text-gray-600">Foto uploaden...</p>
                     ) : (
                       <>
-                        <p className="text-gray-600 mb-2">
-                          Klik om een foto te selecteren
+                        <p className="text-gray-600 mb-4">
+                          Kies hoe je een foto wilt selecteren
                         </p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="hidden"
-                          id="photo-upload"
-                          disabled={isSubmitting}
-                        />
-                        <label
-                          htmlFor="photo-upload"
-                          className="inline-block bg-primary-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-primary-700 transition-colors"
-                        >
-                          Selecteer foto
-                        </label>
+                        <div className="flex gap-3">
+                          {/* Camera input */}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="photo-upload-camera"
+                            disabled={isSubmitting}
+                          />
+                          <label
+                            htmlFor="photo-upload-camera"
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer hover:from-blue-700 hover:to-blue-800 transition-colors inline-flex items-center justify-center gap-2 font-semibold"
+                          >
+                            <Icon name="camera" className="w-5 h-5" />
+                            Camera
+                          </label>
+                          
+                          {/* Album input */}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="photo-upload-album"
+                            disabled={isSubmitting}
+                          />
+                          <label
+                            htmlFor="photo-upload-album"
+                            className="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-2 rounded-lg cursor-pointer hover:from-primary-700 hover:to-primary-800 transition-colors inline-flex items-center justify-center gap-2 font-semibold"
+                          >
+                            <Icon name="image" className="w-5 h-5" />
+                            Album
+                          </label>
+                        </div>
                       </>
                     )}
                   </div>
