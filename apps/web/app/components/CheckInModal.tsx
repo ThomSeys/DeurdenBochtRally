@@ -13,18 +13,14 @@ interface CheckInModalProps {
     startLocation?: {
       name?: string;
       description?: string;
-      coordinates?: {
         lat: number;
         lng: number;
-      };
     };
     start_location?: {
       name?: string;
       landmark_description?: string;
-      coordinates?: {
-        lat: number;
-        lng: number;
-      };
+      lat: number;
+      lng: number;
     };
   };
   actionData?: {
@@ -92,7 +88,7 @@ export default function CheckInModal({
   // Handle different coordinate structures:
   // 1. startLocation.coordinates.lat/lng (zone detail page)
   // 2. startLocation.lat/lng (rally page - direct coordinates)
-  const coordinates = locationInfo?.coordinates || 
+  const coordinates = 
     (locationInfo?.lat && locationInfo?.lng ? { lat: locationInfo.lat, lng: locationInfo.lng } : null);
 
   // Calculate distance and check if user is nearby (within 500m)
