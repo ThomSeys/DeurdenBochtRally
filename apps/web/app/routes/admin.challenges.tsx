@@ -21,30 +21,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const filter = url.searchParams.get('filter') || 'all';
   const type = url.searchParams.get('type') || 'all';
 
-  let query = supabaseAdmin
+  // Simply get ALL submissions first without filters
+  const { data: allSubmissions, error: allError } = await supabaseAdmin
     .from('route_challenge_submissions')
     .select(`
       *,
-      participants!inner(id, first_name, last_name, email, motorcycle_brand)
+      participants(id, first_name, last_name, email, motorcycle_brand)
     `)
     .order('submitted_at', { ascending: false });
 
+  if (allError) {
+    await requestLogger.error('admin', 'Failed to fetch submissions', allError as Error);
+    console.error('Supabase error:', allError);
+  }
+
+  console.log('All submissions fetched:', allSubmissions?.length || 0);
+
+  // Now apply filters to the fetched data
+  let submissions = allSubmissions || [];
+  
   if (filter === 'pending') {
-    query = query.eq('is_validated', false);
+    submissions = submissions.filter(s => !s.is_validated);
   } else if (filter === 'validated') {
-    query = query.eq('is_validated', true);
+    submissions = submissions.filter(s => s.is_validated);
   }
 
   if (type !== 'all') {
-    query = query.eq('challenge_type', type);
+    submissions = submissions.filter(s => s.challenge_type === type);
   }
 
-  const { data: submissions, error } = await query;
-
-  if (error) {
-    await requestLogger.error('admin', 'Failed to fetch submissions', error as Error);
-  }
-
+  // Get stats for ALL submissions (not filtered)
   const { data: stats } = await supabaseAdmin
     .from('route_challenge_submissions')
     .select('id, is_validated, is_correct, challenge_type, points_awarded');
@@ -61,9 +67,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await requestLogger.info('admin', 'Submissions loaded', {
     total: statsData.total,
     pending: statsData.pending,
+    fetched: submissions.length,
   });
 
-  return { submissions: submissions || [], stats: statsData, filter, type };
+  return { submissions, stats: statsData, filter, type };
 }
 
 export default function AdminChallenges() {
@@ -163,7 +170,7 @@ export default function AdminChallenges() {
               </label>
               <select 
                 name="filter" 
-                defaultValue={filter}
+                defaultValue={filter === 'all' ? 'all' : filter}
                 className="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white text-gray-900"
               >
                 <option value="all">Alles</option>

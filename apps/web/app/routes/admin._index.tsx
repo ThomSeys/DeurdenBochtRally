@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                   )}
                   {urgent.pendingChallengesCount > 0 && (
                     <Link
-                      to="/admin/challenges?filter=pending"
+                      to="/admin/challenges"
                       className="bg-white border-2 border-orange-300 rounded-lg p-4 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -519,7 +519,7 @@ export default function AdminDashboard() {
 
           {/* 8. Route Challenges - Pending validatie */}
           <Link
-            to="/admin/challenges?filter=pending"
+            to="/admin/challenges"
             className={`rounded-sm shadow p-6 transition-all relative ${
               urgent.pendingChallengesCount > 0
                 ? 'bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900 ring-2 ring-orange-400 ring-offset-2'
