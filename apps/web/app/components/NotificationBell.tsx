@@ -174,8 +174,8 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
             className="fixed inset-0 bg-black/50 z-40"
             onClick={() => setSelectedNotification(null)}
           />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-96 overflow-y-auto">
+          <div className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 flex items-center justify-center sm:p-4 p-0">
+            <div className="bg-white sm:rounded-lg shadow-2xl max-w-md w-full sm:max-h-96 h-screen sm:h-auto overflow-y-auto flex flex-col">
               {/* Modal Header */}
               <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b flex justify-between items-start gap-4">
                 <h2 className="font-bold text-lg pr-4">{selectedNotification.title}</h2>
@@ -190,7 +190,7 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
               </div>
 
               {/* Modal Content */}
-              <div className="p-6">
+              <div className="p-6 flex-1">
                 {selectedNotification.data?.eventType && (() => {
                   const typeDisplay = getEventTypeDisplay(selectedNotification.data.eventType);
                   return (
