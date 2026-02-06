@@ -23,24 +23,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .from('rally_zone_checkins')
     .select('*', { count: 'exact', head: true });
 
+  const { count: pendingChallengesCount, error: challengesCountError } = await supabaseAdmin
+    .from('route_challenge_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_validated', false);
 
   const { count: emergencySOSCount, error: sosCountError } = await supabaseAdmin
     .from('emergency_sos')
     .select('*', { count: 'exact', head: true })
-    .eq('status', 'active');
+    .neq('status', 'resolved');
 
   // Get recent SOS alerts
   const { data: recentSOS, error: sosError } = await supabaseAdmin
     .from('emergency_sos')
     .select('*, participants!emergency_sos_participant_id_fkey(first_name, last_name)')
+    .neq('status', 'resolved')
     .order('created_at', { ascending: false })
     .limit(5);
 
   console.log('[admin dashboard] Urgent counts:', {
     emergencySOSCount,
+    pendingChallengesCount,
     recentSOSCount: recentSOS?.length || 0,
     recentSOSDetails: recentSOS,
-    errors: { sosCountError, sosError }
+    errors: { sosCountError, sosError, challengesCountError }
   });
 
   // Get statistics
@@ -100,6 +106,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     urgent: {
       checkInsCount: checkInsCount || 0,
       emergencySOSCount: emergencySOSCount || 0,
+      pendingChallengesCount: pendingChallengesCount || 0,
       recentSOS: recentSOS || [],
     },
     stats: {
@@ -116,7 +123,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function AdminDashboard() {
   const { urgent, stats, recentParticipants, topCheckIns } = useLoaderData<typeof loader>();
 
-  const hasUrgentMatters = urgent.emergencySOSCount > 0;
+  const hasUrgentMatters = urgent.emergencySOSCount > 0 || urgent.pendingChallengesCount > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -166,6 +173,20 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-600 group-hover:text-gray-900">Actieve noodoproepen</p>
+                    </Link>
+                  )}
+                  {urgent.pendingChallengesCount > 0 && (
+                    <Link
+                      to="/admin/challenges?filter=pending"
+                      className="bg-white border-2 border-orange-300 rounded-lg p-4 hover:shadow-md transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-orange-700">📋 Route Challenges</span>
+                        <span className="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                          {urgent.pendingChallengesCount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 group-hover:text-gray-900">Wachten op goedkeuring</p>
                     </Link>
                   )}
                 </div>
@@ -276,6 +297,29 @@ export default function AdminDashboard() {
             <h3 className="font-semibold text-white">Manual Validatie</h3>
             <p className="text-sm text-white mt-1">
               {'Controleer scans'}
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/challenges?filter=pending"
+            className={`rounded-sm shadow p-6 transition-all relative ${
+              urgent.pendingChallengesCount > 0
+                ? 'bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900 ring-2 ring-orange-400 ring-offset-2'
+                : 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 hover:bg-gray-50'
+            }`}
+          >
+            {urgent.pendingChallengesCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-8 w-8 bg-orange-500 text-white text-xs font-bold items-center justify-center">
+                  {urgent.pendingChallengesCount}
+                </span>
+              </span>
+            )}
+            <Icon name="check-square" className="w-8 h-8 text-white mb-2" />
+            <h3 className="font-semibold text-white">Route Challenges</h3>
+            <p className="text-sm text-white mt-1">
+              {urgent.pendingChallengesCount > 0 ? `${urgent.pendingChallengesCount} in onderzoek` : 'Bekijk challenges'}
             </p>
           </Link>
 
