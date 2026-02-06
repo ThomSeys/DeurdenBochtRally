@@ -260,6 +260,16 @@ export default function AdminDashboard() {
               <Icon name="check" className="w-10 h-10 text-blue-600" />
             </div>
           </div>
+
+          <div className="bg-white rounded-sm shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Totaal aantal submissions</p>
+                <p className="text-3xl font-bold text-blue-600 mt-2">{stats.totalCheckIns}</p>
+              </div>
+              <Icon name="check" className="w-10 h-10 text-blue-600" />
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
