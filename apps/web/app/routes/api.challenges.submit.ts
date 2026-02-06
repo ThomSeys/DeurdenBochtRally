@@ -7,11 +7,11 @@ export async function action({ request }: ActionFunctionArgs) {
     // Check authentication
     const userId = await getUserId(request);
     if (!userId) {
-      console.log('❌ No userId in session');
+      console.log('No userId in session');
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('✅ UserId from session:', userId);
+    console.log('UserId from session:', userId);
 
     // Verify participant exists (userId IS the participant id)
     const { data: participant, error: participantError } = await supabaseAdmin
@@ -21,11 +21,11 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (participantError || !participant) {
-      console.error('❌ Participant not found:', participantError);
+      console.error('Participant not found:', participantError);
       return Response.json({ error: 'Participant not found' }, { status: 404 });
     }
 
-    console.log('✅ Found participant:', participant.id);
+    console.log('Found participant:', participant.id);
 
     // Parse request
     const formData = await request.formData();
@@ -76,7 +76,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     // Insert submission
-    console.log('💾 Inserting submission:', { participant_id: participant.id, zone_id: zoneId, location_key: locationKey });
+    console.log('Inserting submission:', { participant_id: participant.id, zone_id: zoneId, location_key: locationKey });
     
     const { data: submission, error: insertError } = await supabaseAdmin
       .from('route_challenge_submissions')
@@ -95,11 +95,11 @@ export async function action({ request }: ActionFunctionArgs) {
       .single();
 
     if (insertError) {
-      console.error('❌ Insert failed:', insertError);
+      console.error('Insert failed:', insertError);
       return Response.json({ error: 'Failed to submit challenge', details: insertError.message }, { status: 500 });
     }
 
-    console.log('✅ Submission saved:', submission.id);
+    console.log('Submission saved:', submission.id);
 
     // Send push notification to admins if challenge needs manual validation
     if (!isValidated) {
@@ -115,14 +115,14 @@ export async function action({ request }: ActionFunctionArgs) {
         const adminIds = admins?.map(a => a.id) || [];
         
         if (adminIds.length > 0) {
-          console.log('📢 Sending push notification to admins about challenge submission:', { count: adminIds.length });
+          console.log('Sending push notification to admins about challenge submission:', { count: adminIds.length });
           
           // Get challenge type label
           const challengeTypeLabels: Record<string, string> = {
-            photo: '📸 Foto Opdracht',
-            text: '📝 Tekst Vraag',
-            multiple_choice: '❓ Multiple Choice',
-            number: '🔢 Getal',
+            photo: 'Foto Opdracht',
+            text: 'Tekst Vraag',
+            multiple_choice: 'Multiple Choice',
+            number: 'Getal',
           };
           
           const typeLabel = challengeTypeLabels[challengeType] || challengeType;
@@ -130,7 +130,7 @@ export async function action({ request }: ActionFunctionArgs) {
           await sendTargetedPushNotification(
             { user_ids: adminIds },
             {
-              title: '📋 Nieuwe Challenge Inzending',
+              title: 'Nieuwe Challenge Inzending',
               body: `${participant.first_name} ${participant.last_name} heeft een ${typeLabel} ingediend`,
               icon: '/icon-192.png',
               badge: '/icon-96.png',
@@ -145,7 +145,7 @@ export async function action({ request }: ActionFunctionArgs) {
               },
             },
             {
-              title: '📋 Nieuwe Challenge Inzending',
+              title: 'Nieuwe Challenge Inzending',
               body: `${participant.first_name} ${participant.last_name} heeft een ${typeLabel} ingediend`,
               eventType: 'challenge_submission',
               targetType: 'targeted',
@@ -161,10 +161,10 @@ export async function action({ request }: ActionFunctionArgs) {
             }
           );
         } else {
-          console.log('⚠️ No admin users found to notify');
+          console.log('No admin users found to notify');
         }
       } catch (notificationError) {
-        console.error('⚠️ Failed to send push notification to admins:', notificationError);
+        console.error('Failed to send push notification to admins:', notificationError);
         // Don't fail the submission if notification fails
       }
     }

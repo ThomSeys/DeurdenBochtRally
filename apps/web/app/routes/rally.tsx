@@ -276,7 +276,11 @@ export default function Rally() {
               <p className="text-gray-700">Scan QR codes bij zones om je reis te tracken - geen verplichting, gewoon voor de fun!</p>
             </div>
             <div className="bg-white p-6 rounded-sm shadow">
-              <h3 className="font-bold text-lg mb-2">4. Deel Je Verhaal</h3>
+              <h3 className="font-bold text-lg mb-2">4. Doe de challenges (Optioneel)</h3>
+              <p className="text-gray-700">Voltooi uitdagingen om punten te verdienen - Samen maken we er wat legendarisch van!</p>
+            </div>
+            <div className="bg-white p-6 rounded-sm shadow">
+              <h3 className="font-bold text-lg mb-2">5. Deel Je Verhaal</h3>
               <p className="text-gray-700">Upload foto's en deel je beleving met de community - dát maakt jou een echte bocht-held!</p>
             </div>
           </div>
