@@ -645,7 +645,7 @@ export default function Dashboard() {
             onClick={() => setMainTab('features')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-sm transition-all ${
               mainTab === 'features' 
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 transform scale-105' 
+                ? 'bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg shadow-blue-500/30 transform' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
@@ -656,7 +656,7 @@ export default function Dashboard() {
             onClick={() => setMainTab('vibe')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-sm transition-all ${
               mainTab === 'vibe' 
-                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 transform scale-105' 
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 transform' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
