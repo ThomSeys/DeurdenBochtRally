@@ -42,15 +42,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   await requestLogger.info('page-view', 'Homepage loaded');
   
-  const edition = await getActiveEdition();
-  const siteConfig = await getSiteConfig();
-  const stats = edition ? await getStats(edition._id) : [];
-  const pricing = edition ? await getPricingTiers(edition._id) : [];
-  const sponsors = edition ? await getSponsors(edition._id) : [];
-  const pageContent = edition ? await getPageContent('homepage', edition._id) : [];
-  const rallyFeatures = edition ? await getFeatureCards(edition._id, 'rally-features') : [];
+  // Fetch edition and config in parallel
+  const [edition, siteConfig] = await Promise.all([
+    getActiveEdition(),
+    getSiteConfig(),
+  ]);
 
-  return {  userId, edition, siteConfig, stats, pricing, sponsors, pageContent, rallyFeatures };
+  // Fetch edition-dependent data in parallel
+  const editionId = edition._id;
+  const [stats, pricing, sponsors, pageContent, rallyFeatures] = await Promise.all([
+    getStats(editionId),
+    getPricingTiers(editionId),
+    getSponsors(editionId),
+    getPageContent('homepage', editionId),
+    getFeatureCards(editionId, 'rally-features'),
+  ]);
+
+  return { userId, edition, siteConfig, stats, pricing, sponsors, pageContent, rallyFeatures };
 }
 
 export default function Index() {

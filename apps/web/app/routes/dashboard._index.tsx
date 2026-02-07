@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
 import { useLoaderData, Link, Form } from 'react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
@@ -219,19 +219,35 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Generate QR code URL on server to avoid hydration mismatch
   const checkInUrl = `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}/check-in/${user.id}`;
   const qrCodeUrl = `/api/qrcode?text=${encodeURIComponent(checkInUrl)}`;
-// Get feature flags
-  const rallyZonesEnabled = await isFeatureEnabled('rally-zones-enabled');
-  const photoGalleryEnabled = await isFeatureEnabled('photo-gallery-enabled');
-  const rideStoriesEnabled = await isFeatureEnabled('ride-stories-enabled');
-  const achievementsEnabled = await isFeatureEnabled('achievements-enabled');
-  const profileEditingEnabled = await isFeatureEnabled('profile-editing-enabled');
-  const pushNotificationsEnabled = await isFeatureEnabled('push-notifications-enabled');
-  const vibeAreaEnabled = await isFeatureEnabled('vibe-area-enabled');
-  const liveFeedEnabled = await isFeatureEnabled('live-feed-enabled');
-  const teamVibeEnabled = await isFeatureEnabled('team-vibe-enabled');
-  const recapEnabled = await isFeatureEnabled('recap-enabled');
-  const spotifyPlaylistEnabled = await isFeatureEnabled('spotify-playlist-enabled');
-  const weatherEnabled = await isFeatureEnabled('weather-enabled');
+  
+  // Get feature flags in parallel
+  const [
+    rallyZonesEnabled,
+    photoGalleryEnabled,
+    rideStoriesEnabled,
+    achievementsEnabled,
+    profileEditingEnabled,
+    pushNotificationsEnabled,
+    vibeAreaEnabled,
+    liveFeedEnabled,
+    teamVibeEnabled,
+    recapEnabled,
+    spotifyPlaylistEnabled,
+    weatherEnabled,
+  ] = await Promise.all([
+    isFeatureEnabled('rally-zones-enabled'),
+    isFeatureEnabled('photo-gallery-enabled'),
+    isFeatureEnabled('ride-stories-enabled'),
+    isFeatureEnabled('achievements-enabled'),
+    isFeatureEnabled('profile-editing-enabled'),
+    isFeatureEnabled('push-notifications-enabled'),
+    isFeatureEnabled('vibe-area-enabled'),
+    isFeatureEnabled('live-feed-enabled'),
+    isFeatureEnabled('team-vibe-enabled'),
+    isFeatureEnabled('recap-enabled'),
+    isFeatureEnabled('spotify-playlist-enabled'),
+    isFeatureEnabled('weather-enabled'),
+  ]);
 
   return { 
     user, 
@@ -302,6 +318,8 @@ export default function Dashboard() {
   const [liveActivity, setLiveActivity] = useState<any[]>([]);
   const [buddyIds, setBuddyIds] = useState<string[]>([]);
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
+  const [displayedFeedItems, setDisplayedFeedItems] = useState(10);
+  const feedContainerRef = useRef<HTMLDivElement>(null);
 
   // Check if already subscribed to push notifications
   useEffect(() => {
@@ -345,8 +363,8 @@ export default function Dashboard() {
     // Initial fetch
     fetchLiveFeed();
 
-    // Set up auto-refresh every minute
-    const interval = setInterval(fetchLiveFeed, 60000);
+    // Set up auto-refresh every 5 minutes
+    const interval = setInterval(fetchLiveFeed, 300000);
 
     return () => clearInterval(interval);
   }, []);
@@ -871,13 +889,13 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto" ref={feedContainerRef}>
                   {isLoadingFeed ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                     </div>
                   ) : filteredLiveActivity.length > 0 ? (
-                    filteredLiveActivity.slice(0, 8).map((item: any) => (
+                    filteredLiveActivity.slice(0, displayedFeedItems).map((item: any) => (
                       <div key={item.id} className="flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-sm p-3">
                         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                           <Icon
@@ -909,6 +927,19 @@ export default function Dashboard() {
                     ))
                   ) : (
                     <p className="text-sm text-slate-300">Nog geen live activiteit. Geef het event wat minuten!</p>
+                  )}
+                  {filteredLiveActivity.length > displayedFeedItems && (
+                    <button
+                      onClick={() => {
+                        setDisplayedFeedItems(prev => prev + 10);
+                        setTimeout(() => {
+                          feedContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }, 100);
+                      }}
+                      className="w-full mt-4 py-2 px-4 bg-white/10 hover:bg-white/20 text-white rounded-sm text-sm font-semibold transition-colors"
+                    >
+                      Lees meer ({filteredLiveActivity.length - displayedFeedItems} meer)
+                    </button>
                   )}
                 </div>
                 </div>

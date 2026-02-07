@@ -1,15 +1,18 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { Form, useActionData, useSearchParams, Link } from 'react-router';
+import { Form, useActionData, useSearchParams, Link, useLoaderData } from 'react-router';
 import React from 'react';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import { createUserSession, getUserId } from '~/lib/session.server';
 import { createRequestLogger } from '~/lib/logger.server';
+import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
+import CSRFInput from '~/components/CSRFInput';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const userId = await getUserId(request);
   if (userId) return redirect('/dashboard');
-  return { };
+  const csrfToken = await getCSRFToken(request);
+  return { csrfToken };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -17,6 +20,16 @@ export async function action({ request }: ActionFunctionArgs) {
   await requestLogger.info('auth', 'Login attempt initiated');
 
   try {
+    // Verify CSRF token first
+    const isValidToken = await verifyCSRFToken(request);
+    if (!isValidToken) {
+      await requestLogger.warn('auth', 'Login failed: invalid CSRF token');
+      return { 
+        error: 'Invalid form submission. Please try again.',
+        status: 403
+      };
+    }
+
     const formData = await request.formData();
     const email = formData.get('email');
     const password = formData.get('password');
@@ -82,6 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Login() {
+  const { csrfToken } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = React.useState(false);
@@ -103,6 +117,7 @@ export default function Login() {
         )}
 
         <Form method="post" className="space-y-6">
+          <CSRFInput token={csrfToken} />
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Email

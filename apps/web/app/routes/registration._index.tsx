@@ -11,6 +11,8 @@ import { createCheckoutSession } from '~/lib/stripe.server';
 import { generateQRCode, generateAndSaveQRCode } from '~/lib/qrcode.server';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import { createRequestLogger } from '~/lib/logger.server';
+import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
+import CSRFInput from '~/components/CSRFInput';
 
 // List of available icon names in the Icon component
 const availableIcons = [
@@ -46,11 +48,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/');
   }
 
-  const pricing = await getPricingTiers(edition._id);
-  const siteConfig = await getSiteConfig();
-  const paperRoadbookEnabled = await isFeatureEnabled('paper-roadbook-option');
+  // Fetch remaining data in parallel
+  const [pricing, siteConfig, paperRoadbookEnabled, csrfToken] = await Promise.all([
+    getPricingTiers(edition._id),
+    getSiteConfig(),
+    isFeatureEnabled('paper-roadbook-option'),
+    getCSRFToken(request),
+  ]);
 
-  return {  edition, pricing, siteConfig, paperRoadbookEnabled };
+  return { edition, pricing, siteConfig, paperRoadbookEnabled, csrfToken };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -60,6 +66,16 @@ export async function action({ request }: ActionFunctionArgs) {
   await requestLogger.info('registration', 'Registration attempt initiated');
 
   try {
+    // Verify CSRF token first
+    const isValidToken = await verifyCSRFToken(request);
+    if (!isValidToken) {
+      await requestLogger.warn('registration', 'Registration failed: invalid CSRF token');
+      return {
+        error: 'Invalid form submission. Please try again.',
+        status: 403
+      };
+    }
+
     const formData = await request.formData();
     
     const firstName = formData.get('firstName');
@@ -139,7 +155,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const participantId = authData.user.id;
     const qrCodeUrl = `${new URL(request.url).origin}/check-in/${participantId}`;
     
-    // Get pricing from Sanity
+    // Get pricing from Sanity in parallel
     const edition = await getActiveEdition();
     const pricing = await getPricingTiers(edition._id);
     const selectedTier = pricing.find((tier: any) => 
@@ -253,7 +269,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Registration() {
-  const { edition, pricing, siteConfig, paperRoadbookEnabled } = useLoaderData<typeof loader>();
+  const { csrfToken, edition, pricing, siteConfig, paperRoadbookEnabled } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [selectedFormula, setSelectedFormula] = useState<string>('with_meals');
 
@@ -281,6 +297,7 @@ export default function Registration() {
             )}
 
             <Form method="post" className="space-y-6">
+              <CSRFInput token={csrfToken} />
               {/* Personal Info */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Persoonlijke gegevens</h2>

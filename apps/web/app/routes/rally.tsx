@@ -14,6 +14,7 @@ import { Icon } from '~/components/Icon';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useMasterTour } from '~/components/MasterTour';
+import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -26,6 +27,13 @@ export async function action({ request }: ActionFunctionArgs) {
   const requestLogger = createRequestLogger(request);
 
   try {
+    // Verify CSRF token first
+    const isValidToken = await verifyCSRFToken(request);
+    if (!isValidToken) {
+      await requestLogger.warn('rally-checkin', 'Check-in failed: invalid CSRF token');
+      return { error: 'Invalid form submission. Please try again.', status: 403 };
+    }
+
     const user = await getUser(request);
     if (!user) {
       await requestLogger.warn('rally-checkin', 'Check-in failed: user not authenticated');
@@ -102,9 +110,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   await requestLogger.info('page-view', 'Rally page loaded');
   
-  const user = await getUser(request);
-  const edition = await getActiveEdition();
-  const siteConfig = await getSiteConfig();
+  // Fetch user, edition, and config in parallel
+  const [user, edition, siteConfig] = await Promise.all([
+    getUser(request),
+    getActiveEdition(),
+    getSiteConfig(),
+  ]);
   
   // Get Event Segments (Concept B)
   // Admins can see all zones, non-admins only see active zones
@@ -194,7 +205,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   }
 
-  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges };
+  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request) };
 }
 
 function RallyTourButton() {
@@ -211,12 +222,14 @@ function RallyTourButton() {
 }
 
 export default function Rally() {
-  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges } = useLoaderData<typeof loader>();
+  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [checkInModalZone, setCheckInModalZone] = useState<any>(null);
+  const [zoneWeatherData, setZoneWeatherData] = useState<Record<string, any>>({});
+  const [selectedWeatherZone, setSelectedWeatherZone] = useState<any>(null);
   const checkedInSet = new Set(userCheckIns);
   const isSubmitting = navigation.state === 'submitting';
 
@@ -243,6 +256,51 @@ export default function Rally() {
       setCheckInModalZone(null);
     }
   }, [actionData]);
+
+  // Fetch weather data for each segment
+  useEffect(() => {
+    const fetchZoneWeather = async () => {
+      const weatherData: Record<string, any> = {};
+      
+      for (const segment of segments) {
+        // Try to get coordinates from startLocation, fallback to first routeTip location
+        let lat: number | undefined;
+        let lng: number | undefined;
+        
+        if (segment.startLocation?.coordinates) {
+          lat = segment.startLocation.coordinates.lat;
+          lng = segment.startLocation.coordinates.lng;
+        } else if (segment.routeTips?.[0]?.locations?.[0]?.coordinates) {
+          lat = segment.routeTips[0].locations[0].coordinates.lat;
+          lng = segment.routeTips[0].locations[0].coordinates.lng;
+        }
+        
+        if (lat && lng) {
+          try {
+            const response = await fetch(
+              `/api/weather?lat=${lat}&lon=${lng}&location=${encodeURIComponent(segment.title)}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              if (data.data) {
+                weatherData[segment._id] = data.data;
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to fetch weather for ${segment.title}:`, error);
+          }
+        } else {
+          console.warn(`No coordinates found for segment ${segment.title}`);
+        }
+      }
+      
+      setZoneWeatherData(weatherData);
+    };
+
+    if (segments.length > 0) {
+      fetchZoneWeather();
+    }
+  }, [segments]);
 
   const toggleMap = (segmentId: string) => {
     setVisibleMaps(prev => {
@@ -361,7 +419,7 @@ export default function Rally() {
                           </div>
                           <p className="text-gray-600 text-sm ml-8">{segment.location}</p>
                         </div>
-                        <div className="text-right ml-4">
+                        <div className="text-right ml-4 flex flex-col gap-3">
                           <div className="inline-block bg-gray-50 px-4 py-2 rounded-lg">
                             <span className="text-sm text-gray-600">Afstand</span>
                             <div className="text-xl font-bold text-primary-600">
@@ -371,6 +429,22 @@ export default function Rally() {
                               }
                             </div>
                           </div>
+                          {zoneWeatherData[segment._id] && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setSelectedWeatherZone({ ...zoneWeatherData[segment._id], zoneName: segment.title });
+                              }}
+                              className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg transition-colors border border-sky-200"
+                            >
+                              <img
+                                src={`https://openweathermap.org/img/wn/${zoneWeatherData[segment._id].icon}@2x.png`}
+                                alt="weather"
+                                className="w-6 h-6"
+                              />
+                              <span className="text-sm font-semibold text-sky-900">{zoneWeatherData[segment._id].temp}°</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </summary>
@@ -442,7 +516,74 @@ export default function Rally() {
           zone={checkInModalZone}
           actionData={actionData}
           isSubmitting={isSubmitting}
+          csrfToken={csrfToken}
         />
+      )}
+
+      {/* Weather Detail Modal */}
+      {selectedWeatherZone && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1100]">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[90vh] overflow-auto">
+            <div className="bg-gradient-to-br from-sky-50 to-sky-100 p-6 border-b border-sky-200">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-sky-600 font-semibold">Weerinfo</p>
+                  <h3 className="text-2xl font-bold text-sky-900 mt-1">{selectedWeatherZone.zoneName}</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedWeatherZone(null)}
+                  className="text-sky-600 hover:text-sky-900 text-2xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Current Weather */}
+              <div className="flex items-center gap-4 bg-sky-50 p-4 rounded-lg">
+                <img
+                  src={`https://openweathermap.org/img/wn/${selectedWeatherZone.icon}@2x.png`}
+                  alt={selectedWeatherZone.description}
+                  className="w-16 h-16"
+                />
+                <div>
+                  <div className="text-4xl font-bold text-sky-900">{selectedWeatherZone.temp}°</div>
+                  <p className="text-sm text-sky-700 capitalize">{selectedWeatherZone.description}</p>
+                </div>
+              </div>
+
+              {/* Weather Details */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">Gevoelstemperatuur</span>
+                  <span className="font-semibold text-gray-900">{selectedWeatherZone.feels_like}°</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">Windsnelheid</span>
+                  <span className="font-semibold text-gray-900">{selectedWeatherZone.wind_speed} km/h</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">Luchtvochtigheid</span>
+                  <span className="font-semibold text-gray-900">{selectedWeatherZone.humidity}%</span>
+                </div>
+                {selectedWeatherZone.rain_probability > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">Kans op regen</span>
+                    <span className="font-semibold text-gray-900">{selectedWeatherZone.rain_probability}%</span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setSelectedWeatherZone(null)}
+                className="w-full mt-4 py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* CTA */}

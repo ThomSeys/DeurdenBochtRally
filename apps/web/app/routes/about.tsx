@@ -22,24 +22,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   await requestLogger.info('page-view', 'About page loaded');
   
-  const edition = await getActiveEdition();
-  const siteConfig = await getSiteConfig();
-  const schedule = edition ? await getScheduleItems(edition._id) : [];
-  const benefits = edition ? await getBenefitItems(edition._id) : [];
-  const faq = edition ? await getFAQItems(edition._id) : [];
-  
-  // Fetch event stories
-  const stories = edition ? await sanityClient.fetch(
-    `*[_type == "eventStory" && references($editionId)] | order(order asc) {
-      _id,
-      title,
-      subtitle,
-      content,
-      highlights,
-      "imageUrl": image.asset->url
-    }`,
-    { editionId: edition._id }
-  ) : [];
+  // Fetch edition and config in parallel
+  const [edition, siteConfig] = await Promise.all([
+    getActiveEdition(),
+    getSiteConfig(),
+  ]);
+
+  // Fetch edition-dependent data in parallel
+  const editionId = edition._id;
+  const [schedule, benefits, faq, stories] = await Promise.all([
+    getScheduleItems(editionId),
+    getBenefitItems(editionId),
+    getFAQItems(editionId),
+    sanityClient.fetch(
+      `*[_type == "eventStory" && references($editionId)] | order(order asc) {
+        _id,
+        title,
+        subtitle,
+        content,
+        highlights,
+        "imageUrl": image.asset->url
+      }`,
+      { editionId }
+    ),
+  ]);
 
   return { userId, edition, siteConfig, schedule, benefits, faq, stories };
 }

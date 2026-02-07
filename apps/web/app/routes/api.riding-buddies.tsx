@@ -3,8 +3,10 @@ import { data } from 'react-router';
 import { createRequestLogger } from '~/lib/logger.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { requireUserId } = await import('~/lib/session.server');
-  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  const [{ requireUserId }, { supabaseAdmin }] = await Promise.all([
+    import('~/lib/session.server'),
+    import('~/lib/supabase.server'),
+  ]);
   
   const userId = await requireUserId(request);
   const requestLogger = createRequestLogger(request, userId);
@@ -52,8 +54,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { requireUserId } = await import('~/lib/session.server');
-  const { supabaseAdmin } = await import('~/lib/supabase.server');
+  const [{ requireUserId }, { supabaseAdmin }] = await Promise.all([
+    import('~/lib/session.server'),
+    import('~/lib/supabase.server'),
+  ]);
   
   const userId = await requireUserId(request);
   const requestLogger = createRequestLogger(request, userId);

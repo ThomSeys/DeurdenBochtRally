@@ -18,9 +18,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   await requestLogger.info('page-view', 'Registration success page loaded');
   
-  // Import server-only modules inside the loader to avoid bundling them in client code
-  const { supabaseAdmin } = await import('~/lib/supabase.server');
-  const { stripe } = await import('~/lib/stripe.server');
+  // Import server-only modules in parallel
+  const [{ supabaseAdmin }, { stripe }] = await Promise.all([
+    import('~/lib/supabase.server'),
+    import('~/lib/stripe.server'),
+  ]);
   
   const url = new URL(request.url);
   const sessionId = url.searchParams.get('session_id');

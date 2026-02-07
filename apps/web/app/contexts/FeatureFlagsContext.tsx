@@ -15,6 +15,11 @@ export interface FeatureFlags {
   'achievements-enabled': boolean;
   'riding-tours-enabled': boolean;
   'onboarding-tour-enabled': boolean;
+  'bulk-checkin-enabled': boolean;
+  'buddy-playlists-enabled': boolean;
+  'auto-video-recap-enabled': boolean;
+  'year-over-year-stats-enabled': boolean;
+  'private-zone-journal-enabled': boolean;
 }
 
 interface FeatureFlagsContextType {
@@ -41,6 +46,11 @@ export function FeatureFlagsProvider({ children, flags }: FeatureFlagsProviderPr
     'leaderboard-enabled': false,
     'profile-editing-enabled': false,
     'paper-roadbook-option': false,
+    'bulk-checkin-enabled': false,
+    'buddy-playlists-enabled': false,
+    'auto-video-recap-enabled': false,
+    'year-over-year-stats-enabled': false,
+    'private-zone-journal-enabled': false,
     'admin-dashboard-enabled': false,
     'emergency-sos-enabled': false,
     'achievements-enabled': false,

@@ -9,6 +9,7 @@ import { Icon } from '~/components/Icon';
 import { getActiveEdition } from '~/lib/sanity.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { compressImage } from '~/lib/image-compression';
+import { stripEXIFAndOptimize } from '~/lib/image-exif.server';
 
 export const meta: MetaFunction = () => {
   return [
@@ -77,7 +78,20 @@ export async function action({ request }: ActionFunctionArgs) {
 
       // Convert File to ArrayBuffer
       const arrayBuffer = await photo.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
+      let buffer = Buffer.from(arrayBuffer);
+
+      // Strip EXIF data and optimize image
+      try {
+        const { buffer: processedBuffer } = await stripEXIFAndOptimize(buffer, photo.type, {
+          maxWidth: 2048,
+          maxHeight: 2048,
+          quality: 85,
+        });
+        buffer = processedBuffer;
+      } catch (error) {
+        console.error('EXIF stripping failed, continuing with original:', error);
+        // Continue with original buffer if processing fails
+      }
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabaseAdmin.storage

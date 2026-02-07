@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from 'react-router';
 import { getUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { stripEXIFAndOptimize } from '~/lib/image-exif.server';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic'];
@@ -48,7 +49,20 @@ export async function action({ request }: ActionFunctionArgs) {
 
     // Convert file to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    let buffer = Buffer.from(arrayBuffer);
+
+    // Strip EXIF data and optimize image
+    try {
+      const { buffer: processedBuffer } = await stripEXIFAndOptimize(buffer, file.type, {
+        maxWidth: 2048,
+        maxHeight: 2048,
+        quality: 80,
+      });
+      buffer = processedBuffer;
+    } catch (error) {
+      console.error('EXIF stripping failed, continuing with original:', error);
+      // Continue with original buffer if processing fails
+    }
 
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage

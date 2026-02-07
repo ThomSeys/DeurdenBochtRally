@@ -3,9 +3,11 @@ import type { Database } from '~/lib/database.types';
 import { createRequestLogger } from '~/lib/logger.server';
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { supabaseAdmin } = await import('~/lib/supabase.server');
-  const { requireAdmin, requireUserId } = await import('~/lib/session.server');
-  const { sendPushNotificationWithHistory, sendTargetedPushNotification } = await import('~/lib/push-notifications-enhanced.server');
+  const [{ supabaseAdmin }, { requireAdmin, requireUserId }, { sendPushNotificationWithHistory, sendTargetedPushNotification }] = await Promise.all([
+    import('~/lib/supabase.server'),
+    import('~/lib/session.server'),
+    import('~/lib/push-notifications-enhanced.server'),
+  ]);
   
   await requireAdmin(request);
   const userId = await requireUserId(request);

@@ -8,6 +8,9 @@ import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
 import { createRequestLogger } from '~/lib/logger.server';
 import { compressImage } from '~/lib/image-compression';
+import { stripEXIFAndOptimize } from '~/lib/image-exif.server';
+import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
+import CSRFInput from '~/components/CSRFInput';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Fotogalerij - Deur Den Bocht' }];
@@ -81,13 +84,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
     participant, 
     photos: photos || [], 
     myPhotos: myPhotos || [],
-    buddies: buddiesList
+    buddies: buddiesList,
+    csrfToken: await getCSRFToken(request)
   };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
   const requestLogger = createRequestLogger(request, userId);
+  
+  // Verify CSRF token first
+  const isValidToken = await verifyCSRFToken(request);
+  if (!isValidToken) {
+    await requestLogger.warn('gallery', 'Action failed: invalid CSRF token');
+    return { error: 'Invalid form submission. Please try again.', status: 403 };
+  }
+
   const formData = await request.formData();
   const action = formData.get('action');
 
@@ -304,7 +316,20 @@ export async function action({ request }: ActionFunctionArgs) {
 
       // Convert File to ArrayBuffer for upload
       const arrayBuffer = await file.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
+      let buffer = Buffer.from(arrayBuffer);
+
+      // Strip EXIF data and optimize image
+      try {
+        const { buffer: processedBuffer } = await stripEXIFAndOptimize(buffer, file.type, {
+          maxWidth: 2048,
+          maxHeight: 2048,
+          quality: 80,
+        });
+        buffer = processedBuffer;
+      } catch (error) {
+        console.error('EXIF stripping failed, continuing with original:', error);
+        // Continue with original buffer if processing fails
+      }
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
@@ -365,7 +390,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Gallery() {
-  const { photos, myPhotos, userId, buddies } = useLoaderData<typeof loader>();
+  const { photos, myPhotos, userId, buddies, csrfToken } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const revalidator = useRevalidator();
   const [showUpload, setShowUpload] = useState(false);
@@ -643,6 +668,7 @@ export default function Gallery() {
                 <h2 className="text-2xl font-bold text-gray-900">Deel Je Rallyfoto</h2>
               </div>
               <Form method="post" encType="multipart/form-data" className="space-y-6">
+                <CSRFInput token={csrfToken} />
                 <input type="hidden" name="action" value="upload" />
                 
                 <div>

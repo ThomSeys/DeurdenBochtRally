@@ -1,5 +1,6 @@
 import { Form } from 'react-router';
 import { Icon } from '~/components/Icon';
+import CSRFInput from '~/components/CSRFInput';
 import MapView from '~/components/MapView';
 import { useEffect, useState } from 'react';
 
@@ -31,6 +32,7 @@ interface CheckInModalProps {
   isSubmitting: boolean;
   action?: 'CHECKIN' | 'CHECKOUT';
   qrCode?: string;
+  csrfToken: string;
 }
 
 export default function CheckInModal({
@@ -41,6 +43,7 @@ export default function CheckInModal({
   isSubmitting,
   action = 'CHECKIN',
   qrCode,
+  csrfToken,
 }: CheckInModalProps) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -210,6 +213,7 @@ export default function CheckInModal({
 
           {/* Check-in Form */}
           <Form method="post">
+            <CSRFInput token={csrfToken} />
             {zone._id && <input type="hidden" name="zoneId" value={zone._id} />}
             {action && <input type="hidden" name="action" value={action} />}
             {qrCode && <input type="hidden" name="qrCode" value={qrCode} />}
