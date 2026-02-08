@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
-import { requireUserId, getUser } from '~/lib/session.server';
+import { requireUserId } from '~/lib/session.server';
 
 interface AlbumPhoto {
   photo_id: string | null;
