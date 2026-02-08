@@ -25,17 +25,17 @@
 
 *"De dag start rustig. Haal je startpakket op - compleet met routeboek, goodiebag en je persoonlijke rallynummer. Voel de spanning stijgen terwijl motoren binnenkomen en de parking volloopt met gelijkgestemde rijders. Dit is het moment om die eerste connecties te maken, bikes te checken en je mentaal klaar te maken voor de rit die komt."*
 
-#### **06:30-08:00 - Ontbijt & Koffie**
+#### **06:30-07:15 - Ontbijt & Koffie**
 
 *"Vers gebrouwen koffie, warme croissants en die unieke pre-ride energie. Het ontbijtbuffet is meer dan voeding - het is waar de verhalen beginnen. Motorrijders verzamelen, plannen worden gedeeld, routes vergeleken. Sommigen gaan voor een quick espresso shot, anderen nemen de tijd voor een volledig ontbijt. De keuze is aan jou, maar de vibe is universeel: anticipatie gemengd met koffiegeur."*
 
-#### **07:30 - Briefing: Kort & Krachtig**
+#### **07:15 - Briefing: Kort & Krachtig**
 
 *"Geen lange speeches. We weten dat je wilt rijden. In exact 10 minuten krijg je de essentiële info: rally zones, noodhulp protocol, best practices voor groepsritten, en wat te doen als je een mooie omweg vindt (spoiler: volg je gevoel). We coveren veiligheid zonder te preken, want respect voor de weg zit al in je DNA als je hier staat. Daarna: motoren starten."*
 
-#### **08:00 - Rally Start - Het Begint**
+#### **07:20 - Rally Start - Het Begint**
 
-*"08:00 uur. Motoren warmlopen, laatste gear checks, helm op. Het geluid van tientallen bikes die tot leven komen vult de lucht. De spanning is tastbaar. Geen startpistool, geen countdown - gewoon rollen wanneer jij klaar bent. Sommigen schieten direct weg, anderen nemen het relaxed. Er is geen 'te laat', alleen jouw moment. **Het organisatieteam? Ook op de motor. We rijden mee.** Dit is geen evenement dat we organiseren, het is een dag die we samen beleven."*
+*"07:20 uur. Motoren warmlopen, laatste gear checks, helm op. Het geluid van tientallen bikes die tot leven komen vult de lucht. De spanning is tastbaar. Geen startpistool, geen countdown - gewoon rollen wanneer jij klaar bent. Sommigen schieten direct weg, anderen nemen het relaxed. Er is geen 'te laat', alleen jouw moment. **Het organisatieteam? Ook op de motor. We rijden mee.** Dit is geen evenement dat we organiseren, het is een dag die we samen beleven."*
 
 #### **11:30-14:30 - Lunch in de Ardennen**
 
@@ -78,14 +78,14 @@ Na betaling krijgen ze automatisch:
 Deelnemers hebben 2 opties:
 
 **Optie 1 - Adventure Track (aanbevolen):**
-Het event heeft geen vaste route - ontdek 4 rally zones in je eigen tempo:
+Het event heeft geen volledig vaste route - ontdek 4 rally zones in je eigen tempo:
 
 1. **Vlaamse Ardennen** - Heuvels met panoramische uitzichten
-2. **Condroz** - Historische rally route
+2. **Condroz** - Historische rally omgeving
 3. **Ardennen - Ourthe Vallei** - Prachtige riviervalleien
 4. **Hoge Venen** - Bossen en natuurgebieden
 
-Per zone krijgen deelnemers meerdere route tips (off-road, panoramisch, technisch) zodat iedereen zijn eigen avontuur kan samenstellen.
+Per zone krijgen deelnemers meerdere route tips (panoramisch, technisch, vlot) zodat iedereen zijn eigen avontuur kan samenstellen.
 
 **Met deze optie krijg je:**
 

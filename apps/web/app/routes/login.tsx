@@ -99,6 +99,7 @@ export default function Login() {
   const actionData = useActionData<typeof action>();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = React.useState(false);
+  const resetSuccess = searchParams.get('reset') === 'success';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
@@ -113,6 +114,12 @@ export default function Login() {
         {actionData?.error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {actionData.error}
+          </div>
+        )}
+
+        {resetSuccess && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+            Je wachtwoord is bijgewerkt. Je kan nu inloggen.
           </div>
         )}
 
@@ -155,6 +162,12 @@ export default function Login() {
                 {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
+          </div>
+
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
+              Wachtwoord vergeten?
+            </Link>
           </div>
 
           <button
