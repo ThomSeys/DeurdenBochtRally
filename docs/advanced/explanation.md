@@ -1,4 +1,4 @@
-# 🏍 DEUR DEN BOCHT – DEN BOCHTENKONING RALLY 
+# 🏍 DEUR DEN BOCHT RALLY 
 ### *“Altijd via de omweg.”* 
 Een unieke **500+ km motordag** door België, Noord-Frankrijk en de Ardennen. Je rijdt op eigen tempo over een zorgvuldig uitgestippelde bochtenroute en eindigt samen op het hoogste punt van België: **Baraque de Fraiture**. Geen race. Geen groepsdruk. Wel vrijheid, avontuur en een echte rally voor wie dat wil. 
 
@@ -12,7 +12,7 @@ Deur den Bocht – The 500** is een **all-day challenge ride**:
 - Iedereen rijdt dezelfde prachtige **bochten-GPX**
 - Onderweg kan je **optioneel deelnemen aan Rally Zones**
 
-Aan het einde van de dag kronen we: > 🏆 **DEN BOCHTENKONING** 
+Aan het einde van de dag kronen we: > 🏆 **DEUR DEN BOCHT CHAMPION** 
 
 --- 
 
@@ -61,8 +61,8 @@ Tussen **11:30 en 14:30** in de Ardennen. Polsbandje → vast gerecht + drankje.
 
 --- 
 
-## 🏆 21:00 – Den Bochtenkoning 
-De rallykaarten worden nagekeken, de punten geteld, en we kronen: > **DEN BOCHTENKONING van Deur den Bocht** 
+## 🏆 21:00 – Deur den Bocht Champion 
+De rallykaarten worden nagekeken, de punten geteld, en we kronen: > **DEUR DEN BOCHT CHAMPION** 
 
 --- 
 
@@ -227,7 +227,7 @@ Geen snelheid. Geen GPS-pijlen. Gewoon avontuur.
 - Fotoalbum
 
 De winnaar krijgt: 
-- 🏆 Den Bochtenkoning-trofee
+- 🏆 Deur den Bocht Champion Trophy
 - Speciale sticker
 - Wall of Fame
 

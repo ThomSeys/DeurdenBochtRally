@@ -114,9 +114,30 @@ interface LiveEventMapProps {
   showEventMarkers?: boolean;
   showEmergencyAlerts?: boolean;
   isAdmin?: boolean;
+  allowPublicCheckIns?: boolean;
+  enableUserLocation?: boolean;
+  focusLocation?: { lat: number; lng: number } | null;
 }
 
-export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts = [], gpxRouteUrl, checkIns = [], routeTipSubmissions = [], buddyList = [], likedPhotoIds = [], currentUserId, showCheckIns = true, showZoneRoutes = true, showEventMarkers = true, showEmergencyAlerts = true, isAdmin = false }: LiveEventMapProps) {
+export default function LiveEventMap({
+  rallyZones,
+  eventMarkers,
+  emergencyAlerts = [],
+  gpxRouteUrl,
+  checkIns = [],
+  routeTipSubmissions = [],
+  buddyList = [],
+  likedPhotoIds = [],
+  currentUserId,
+  showCheckIns = true,
+  showZoneRoutes = true,
+  showEventMarkers = true,
+  showEmergencyAlerts = true,
+  isAdmin = false,
+  allowPublicCheckIns = false,
+  enableUserLocation = true,
+  focusLocation = null,
+}: LiveEventMapProps) {
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -195,7 +216,7 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
 
   // Get user's location and track it
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !enableUserLocation) return;
 
     if ('geolocation' in navigator) {
       // Get initial position
@@ -241,10 +262,13 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
       try {
         // Initialize map only once
         if (!mapRef.current && mapContainerRef.current) {
-          // Default center (Belgium, Aalter area)
+          // Use focusLocation if available, otherwise default center (Belgium, Aalter area)
           const defaultCenter: [number, number] = [51.0967, 3.4400];
+          const center: [number, number] = focusLocation 
+            ? [focusLocation.lat, focusLocation.lng] 
+            : defaultCenter;
           
-          mapRef.current = L.default.map(mapContainerRef.current).setView(defaultCenter, 12);
+          mapRef.current = L.default.map(mapContainerRef.current).setView(center, 13);
 
           // Add light gray map tiles (CartoDB Voyager - balanced theme)
           L.default.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -290,8 +314,10 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
                 opacity: 0.7,
               }).addTo(mapRef.current);
 
-              // Fit map to route bounds
-              mapRef.current.fitBounds(gpxLayerRef.current.getBounds(), { padding: [50, 50] });
+              // Fit map to route bounds only if no focus location is set
+              if (!focusLocation) {
+                mapRef.current.fitBounds(gpxLayerRef.current.getBounds(), { padding: [50, 50] });
+              }
             }
           } catch (error) {
             console.error('Error loading GPX route:', error);
@@ -318,8 +344,8 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
         zoneRoutesRef.current = [];
 
 
-        // Add check-in markers (only for admins)
-        if (showCheckIns && isAdmin) {
+        // Add check-in markers (admins or explicitly allowed public view)
+        if (showCheckIns && (isAdmin || allowPublicCheckIns)) {
           checkIns.forEach((checkIn) => {
           if (checkIn.location_lat && checkIn.location_lng) {
             // Zone check-in marker
@@ -769,6 +795,11 @@ export default function LiveEventMap({ rallyZones, eventMarkers, emergencyAlerts
       }
     });
   }, [isClient, rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, userLocation, routeTipSubmissions, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin]);
+
+  useEffect(() => {
+    if (!isClient || !mapRef.current || !focusLocation) return;
+    mapRef.current.setView([focusLocation.lat, focusLocation.lng], 12);
+  }, [isClient, focusLocation?.lat, focusLocation?.lng]);
 
   if (mapError) {
     return (

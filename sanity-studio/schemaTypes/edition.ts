@@ -15,7 +15,7 @@ export default defineType({
       name: 'name',
       title: 'Edition Name',
       type: 'string',
-      description: 'E.g., "Den Bochtenkoning Rally 2026"',
+      description: 'E.g., "Deur den Bocht Rally 2026"',
       validation: (Rule) => Rule.required(),
     }),
     defineField({

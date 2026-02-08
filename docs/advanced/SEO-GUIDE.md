@@ -69,7 +69,7 @@ Automatically includes all main routes:
    - **Purpose**: Main title tag for search engines
    - **Character Limit**: 60 characters
    - **Tip**: Include main keyword and year
-   - **Example**: "Den Bochtenkoning Rally 2026 | Motordag Aalter"
+   - **Example**: "Deur den Bocht Rally 2026 | Motordag Aalter"
 
    #### SEO Description
    - **Purpose**: Meta description shown in search results
@@ -177,12 +177,12 @@ Automatically includes all main routes:
 - Make it unique and descriptive
 
 **Good Examples:**
-- ✅ "Den Bochtenkoning Rally 2026 | Motordag Aalter"
+- ✅ "Deur den Bocht Rally 2026 | Motordag Aalter"
 - ✅ "Motordag 2026 | 500km België & Ardennen | Deur Den Bocht"
 
 **Bad Examples:**
 - ❌ "Home | Deur Den Bocht" (too generic)
-- ❌ "Den Bochtenkoning Rally 2026 - Een unieke motorervaring..." (too long)
+- ❌ "Deur den Bocht Rally 2026 - Een unieke motorervaring..." (too long)
 
 ### Meta Descriptions
 - Summarize page content

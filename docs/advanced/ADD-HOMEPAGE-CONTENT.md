@@ -32,7 +32,7 @@ Go to "Page Content" in Sanity Studio and create the following 6 new documents:
 - **Page**: Homepage
 - **Section**: `points-card`
 - **Title**: `Punten verdienen`
-- **Content**: `Elke zone = 15 punten. Alle 8 = +20 bonus. Wie het best scoort wordt "Den Bochtenkoning"!`
+- **Content**: `Elke zone = 15 punten. Alle 8 = +20 bonus. Wie het best scoort wordt "Deur den Bocht Champion"!`
 - **Order**: 6
 - **Edition**: Link to active edition
 

@@ -160,7 +160,7 @@ Wij cureerden. Maanden getest. Elke kilometer zit erin.
 
 Download de GPX en rij. Simpel. Effectief.
 
-En natuurlijk - afwijken mag altijd. Dit is Bochtenkoning.`,
+En natuurlijk - afwijken mag altijd. Dit is Deur den Bocht.`,
 
   '7fe30809-a156-4859-9070-2ccba466348e': `Adventure is voor rijders die onderweg beslissen.
 
@@ -268,7 +268,7 @@ Elk beeld draagt bij aan onze **collectieve uitstraling**.
 
 ### Maak Het Vindbaar
 
-Gebruik **#Bochtenkoning2026**
+Gebruik **#DeurDenBocht2026**
 Tag @deurdenbocht
 
 Zo delen we jouw momenten en bouwen we samen aan het verhaal.

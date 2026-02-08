@@ -151,7 +151,7 @@ Stores GPX files, maps, and instructions.
 | No highways used | +10 |
 | Rode in rain | +5 |
 
-**Minimum requirement:** 4 zones to qualify for "Den Bochtenkoning"
+**Minimum requirement:** 4 zones to qualify for "Deur den Bocht Champion"
 
 ## 🚀 Deployment
 

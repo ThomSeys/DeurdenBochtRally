@@ -212,7 +212,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // V1: No competition/ranking - disabled for story-focused experience
-  const isBochtenkoning = false;
+  const isCompetitionMode = false;
 
   const eventDate = process.env.EVENT_DATE || '2026-08-08';
   
@@ -254,7 +254,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     zoneCheckins, 
     documents, 
     completedZones, 
-    isBochtenkoning, 
+    isCompetitionMode, 
     eventDate,
     gpxRouteUrl,
     gpxRouteFiles,

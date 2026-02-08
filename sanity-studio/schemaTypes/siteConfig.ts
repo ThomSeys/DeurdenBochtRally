@@ -9,7 +9,7 @@ export default defineType({
       name: 'eventName',
       title: 'Event Name',
       type: 'string',
-      initialValue: 'Den Bochtenkoning Rally 2026',
+      initialValue: 'Deur den Bocht Rally 2026',
     }),
     defineField({
       name: 'eventDate',

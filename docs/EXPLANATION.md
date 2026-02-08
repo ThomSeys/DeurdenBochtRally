@@ -1,4 +1,4 @@
-# 👑 BOCHTENKONING RALLY  
+# 👑 DEUR DEN BOCHT RALLY  
 
 ## Het Bochtenboek – Rally Concept & Zones  
 
@@ -9,9 +9,9 @@
 
 ---
 
-## 1. Wat is Bochtenkoning?
+## 1. Wat is Deur den Bocht Rally?
 
-Bochtenkoning is een avontuurlijke motorrally van 500+ kilometer, gereden op eigen tempo, zonder tijdsklassement en zonder groepsdruk.
+Deur den Bocht Rally is een avontuurlijke motorrally van 500+ kilometer, gereden op eigen tempo, zonder tijdsklassement en zonder groepsdruk.
 
 Iedere deelnemer:
 
@@ -29,7 +29,7 @@ Wie ze negeert, rijdt een prachtige rit — maar wint niet.
 
 ## 2. Filosofie
 
-Bochtenkoning is gebouwd rond één principe:
+Deur den Bocht Rally is gebouwd rond één principe:
 
 > **Avontuur ontstaat wanneer je afwijkt.**
 
@@ -456,7 +456,7 @@ Altijd transparant gecommuniceerd.
 
 ## SLOT
 
-Bochtenkoning is geen rit.
+Deur den Bocht Rally is geen rit.
 Het is een ontwerp.
 
 Vrijheid binnen structuur.  

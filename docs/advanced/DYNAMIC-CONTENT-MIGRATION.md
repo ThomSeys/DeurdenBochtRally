@@ -90,7 +90,7 @@ Create these schedule items:
    - Icon: "🏁"
    - Color: "green"
 
-4. **Den Bochtenkoning**
+4. **Deur den Bocht Champion**
    - Time: "21:00"
    - Icon: "🏆"
    - Color: "yellow"
@@ -103,7 +103,7 @@ Create these schedule items:
 - Bochtenboek met alle rally zones
 
 **Category: winner**
-- Den Bochtenkoning-trofee
+- Deur den Bocht Champion Trophy
 - Speciale winnaar sticker
 - Plaats op de Wall of Fame
 

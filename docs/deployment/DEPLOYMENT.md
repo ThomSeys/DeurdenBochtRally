@@ -210,7 +210,7 @@ INSERT INTO documents (title, file_url, file_type, category) VALUES
 ### After Event
 - [ ] Export participant data
 - [ ] Calculate final leaderboard
-- [ ] Announce Den Bochtenkoning
+- [ ] Announce Deur den Bocht
 - [ ] Send thank you emails
 - [ ] Archive event data
 

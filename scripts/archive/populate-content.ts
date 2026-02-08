@@ -58,8 +58,8 @@ const scheduleItems = [
   },
   {
     time: '21:00',
-    title: 'Den Bochtenkoning',
-    description: 'De rallykaarten worden nagekeken, de punten geteld, en we kronen DEN BOCHTENKONING van Deur den Bocht.',
+    title: 'Deur den Bocht Champion',
+    description: 'De rallykaarten worden nagekeken, de punten geteld, en we kronen de DEUR DEN BOCHT CHAMPION van het jaar.',
     icon: '🏆',
     color: 'yellow',
     details: [],
@@ -98,8 +98,8 @@ const benefitItems = [
     order: 4,
   },
   {
-    title: 'Den Bochtenkoning-trofee',
-    description: 'Den Bochtenkoning-trofee',
+    title: 'Deur den Bocht Champion Trophy',
+    description: 'Deur den Bocht Champion Trophy',
     icon: '🏆',
     category: 'winner',
     order: 1,
@@ -220,7 +220,7 @@ const pageContent = [
       {
         _type: 'block',
         children: [
-          { _type: 'span', text: 'Onderweg kan je 8 optionele Rally Zones rijden: korte lusjes met een unieke uitdaging. Verzamel codes, verdien punten, en maak kans op de titel "Den Bochtenkoning"!' }
+          { _type: 'span', text: 'Onderweg kan je 8 optionele Rally Zones rijden: korte lusjes met een unieke uitdaging. Verzamel codes, verdien punten, en maak kans op de titel "Deur den Bocht Champion"!' }
         ],
         markDefs: [],
         style: 'normal',

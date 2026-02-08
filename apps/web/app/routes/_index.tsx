@@ -150,7 +150,7 @@ export default function Index() {
               </h1>
             ) : (
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-6 tracking-tight gradient-text break-words">
-                Den<br /> BOCHTENKONING<br />RALLY
+                Deur<br /> DEN BOCHT<br />RALLY
               </h1>
             )}
             

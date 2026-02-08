@@ -14,7 +14,7 @@ async function completeSetup() {
     _type: 'edition',
     _id: 'edition-2026',
     year: 2026,
-    name: 'Bochtenkoning Rally 2026',
+    name: 'Deur den Bocht Rally 2026',
     slug: { current: '2026' },
     isActive: true,
     eventDate: '2026-08-08',
@@ -31,7 +31,7 @@ async function completeSetup() {
   const siteConfig = await sanityClient.createOrReplace({
     _type: 'siteConfig',
     _id: 'siteConfig',
-    eventName: 'Bochtenkoning Rally 2026',
+    eventName: 'Deur den Bocht Rally 2026',
     eventDate: '2026-08-08',
     eventLocation: 'Start: Café Den Belami | Finish: Baraque de Fraiture',
     startLocation: { lat: 51.0935, lng: 3.4417 },
@@ -39,9 +39,9 @@ async function completeSetup() {
     contactEmail: 'info@deur-den-bocht.be',
     contactWhatsapp: '+32 470 12 34 56',
     contactLocation: 'Café Den Belami, Oost-Vlaanderen',
-    socialFacebook: 'https://facebook.com/bochtenkoning',
-    socialInstagram: 'https://instagram.com/bochtenkoning',
-    seoTitle: 'Bochtenkoning Rally 2026 - Motorrit door de Ardennen',
+    socialFacebook: 'https://facebook.com/deurdenbochtmotorrit',
+    socialInstagram: 'https://instagram.com/deurdenbochtmotorrit',
+    seoTitle: 'Deur den Bocht Rally 2026 - Motorrit door de Ardennen',
     seoDescription: 'Community-gerichte motorrit van 350-450km door de mooiste wegen van België. Keuze tussen Adventure Track met rally zones of Complete Route cruise mode.',
     noIndex: false,
     noFollow: false,
@@ -118,16 +118,16 @@ async function completeSetup() {
   const pricingTiers = [
     {
       name: 'Met maaltijden',
-      price: 25,
+      price: 45,
       icon: '🍽️',
-      features: ['Ontbijt', 'Avondmaal', 'Rally Book', 'GPX Route', 'Finisher Certificate'],
+      features: ['Ontbijt', 'Lunch', 'Avondmaal', 'Rally Book', 'GPX Route', 'Finisher Certificate'],
       highlighted: true,
       order: 0,
       edition: { _type: 'reference', _ref: edition._id },
     },
     {
       name: 'Alleen ontbijt',
-      price: 20,
+      price: 25,
       icon: '☕',
       features: ['Ontbijt', 'Rally Book', 'GPX Route', 'Finisher Certificate'],
       highlighted: false,
@@ -225,7 +225,7 @@ async function completeSetup() {
   console.log('❓ Creating FAQ Items...');
   const faqItems = [
     {
-      question: 'Wat is de Bochtenkoning Rally?',
+      question: 'Wat is de Deur den Bocht Rally?',
       answer: 'Een community-gerichte motorrit van 350-450km door de mooiste wegen van België. Het is geen race of competitie, maar een viering van het motorrijden en de gemeenschap. Start in Café Den Belami, finish bij Baraque de Fraiture (hoogste punt van België).',
       category: 'general',
       icon: '🏍️',
@@ -398,7 +398,7 @@ async function completeSetup() {
     {
       page: 'homepage',
       section: 'hero',
-      title: 'Bochtenkoning Rally 2026',
+      title: 'Deur den Bocht Rally 2026',
       order: 0,
       edition: { _type: 'reference', _ref: 'edition-2026' },
       content: [
@@ -411,13 +411,13 @@ async function completeSetup() {
     {
       page: 'homepage',
       section: 'intro',
-      title: 'Wat is de Bochtenkoning Rally?',
+      title: 'Wat is de Deur den Bocht Rally?',
       order: 1,
       edition: { _type: 'reference', _ref: 'edition-2026' },
       content: [
         {
           _type: 'block',
-          children: [{ _type: 'span', text: 'De Bochtenkoning Rally is een community-gerichte motorrit rally door de mooiste wegen van België, met focus op vrijheid, avontuur en verhalen delen. Het is geen race of competitie, maar een viering van het motorrijden en de gemeenschap eromheen.' }],
+          children: [{ _type: 'span', text: 'De Deur den Bocht Rally is een community-gerichte motorrit rally door de mooiste wegen van België, met focus op vrijheid, avontuur en verhalen delen. Het is geen race of competitie, maar een viering van het motorrijden en de gemeenschap eromheen.' }],
         },
         {
           _type: 'block',
@@ -519,13 +519,13 @@ async function completeSetup() {
     {
       page: 'about',
       section: 'intro',
-      title: 'Over Bochtenkoning Rally',
+      title: 'Over Deur den Bocht Rally',
       order: 0,
       edition: { _type: 'reference', _ref: 'edition-2026' },
       content: [
         {
           _type: 'block',
-          children: [{ _type: 'span', text: 'De Bochtenkoning Rally is geboren uit de overtuiging dat motorrijden draait om gemeenschap, vrijheid en de pure vreugde van de rit - niet om competitie of het verzamelen van punten.' }],
+          children: [{ _type: 'span', text: 'De Deur den Bocht Rally is geboren uit de overtuiging dat motorrijden draait om gemeenschap, vrijheid en de pure vreugde van de rit - niet om competitie of het verzamelen van punten.' }],
         },
         {
           _type: 'block',
@@ -593,7 +593,7 @@ async function completeSetup() {
       content: [
         {
           _type: 'block',
-          children: [{ _type: 'span', text: 'De Bochtenkoning Rally wordt georganiseerd door VZW Deur Den Bocht, een groep gepassioneerde motorrijders die geloven in veilig, vrij en gemeenschapsgericht rijden.' }],
+          children: [{ _type: 'span', text: 'De Deur den Bocht Rally wordt georganiseerd door VZW Deur Den Bocht, een groep gepassioneerde motorrijders die geloven in veilig, vrij en gemeenschapsgericht rijden.' }],
         },
         {
           _type: 'block',
@@ -642,7 +642,7 @@ async function completeSetup() {
   await sanityClient.createOrReplace({
     _type: 'eventStory',
     _id: 'eventStory-2026',
-    title: 'Bochtenkoning Rally 2026 - Het Verhaal',
+      title: 'Deur den Bocht Rally 2026 - Het Verhaal',
     content: [
       {
         _type: 'block',
@@ -654,7 +654,7 @@ async function completeSetup() {
         children: [
           {
             _type: 'span',
-            text: 'De Bochtenkoning Rally 2026 is geen traditionele rally. Het is een shift van competition naar community, van tijdsdruk naar vrijheid, van punten verzamelen naar verhalen delen.',
+            text: 'De Deur den Bocht Rally 2026 is geen traditionele rally. Het is een shift van competition naar community, van tijdsdruk naar vrijheid, van punten verzamelen naar verhalen delen.',
           },
         ],
       },
@@ -750,7 +750,7 @@ async function completeSetup() {
         children: [
           {
             _type: 'span',
-            text: 'We eren niet de snelsten of degenen met de meeste zones. We eren de mooiste foto\'s, de beste verhalen, degenen die de spirit van de rally belichamen. Want dat is wat Bochtenkoning Rally is: niet wie, maar hoe.',
+            text: 'We eren niet de snelsten of degenen met de meeste zones. We eren de mooiste foto\'s, de beste verhalen, degenen die de spirit van de rally belichamen. Want dat is wat Deur den Bocht Rally is: niet wie, maar hoe.',
           },
         ],
       },

@@ -572,7 +572,7 @@ export default function ProfileEdit() {
                     className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
                   <label htmlFor="allowLocationSharing" className="ml-3 text-sm text-gray-700">
-                    Sta locatie delen toe (voor live kaart)
+                    Toon mij op de publieke volgerpagina (laatste check-in locatie + status)
                   </label>
                 </div>
 

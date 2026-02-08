@@ -252,7 +252,36 @@ export default function ReportsPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Print Participants List */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-red-100 rounded-full p-3">
+                <Icon name="clipboard" className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Deelnemerslijst</h2>
+                <p className="text-sm text-gray-600">Print lijst met noodcontacten</p>
+              </div>
+            </div>
+
+            <a
+              href="/dashboard/admin/print-participants"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-center"
+            >
+              <Icon name="clipboard" className="w-5 h-5" />
+              Open Printweergave
+            </a>
+
+            <div className="mt-4 p-3 bg-red-50 rounded-lg">
+              <p className="text-sm text-red-800">
+                <strong>Bevat:</strong> Alle deelnemers, contactinfo, motor details, noodcontacten
+              </p>
+            </div>
+          </div>
+
           {/* Generate Individual Reports */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center gap-3 mb-4">

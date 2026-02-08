@@ -131,7 +131,7 @@ export default defineType({
       name: 'eventName',
       title: 'Event Name',
       type: 'string',
-      initialValue: 'Den Bochtenkoning Rally 2026',
+      initialValue: 'Deur den Bocht Rally 2026',
     }),
     defineField({
       name: 'eventDate',
@@ -345,7 +345,7 @@ sanity deploy
 3. Voeg content toe:
 
 ### Site Config (1x)
-- Event Name: "Den Bochtenkoning Rally 2026"
+- Event Name: "Deur den Bocht Rally 2026"
 - Event Date: 16-05-2026
 - Etc...
 
@@ -356,7 +356,7 @@ sanity deploy
 - Stat 4: label="Snelweg KM", value="0", icon="🚫", order=3
 
 ### Pricing Tiers (2x)
-- Tier 1: name="Met maaltijden", price=20, features=["Ontbijt", "Lunch", "Avondmaal"], highlighted=true
+- Tier 1: name="Met maaltijden", price=45, features=["Ontbijt", "Lunch", "Avondmaal"], highlighted=true
 - Tier 2: name="Alleen ontbijt", price=10, features=["Ontbijt included"]
 
 ### Sponsors (8x)

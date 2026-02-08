@@ -28,7 +28,7 @@ async function updateSeoSettings() {
       .set({
         noIndex: true,
         noFollow: true,
-        seoTitle: config.eventName || 'Den Bochtenkoning Rally 2026',
+        seoTitle: config.eventName || 'Deur den Bocht Rally 2026',
         seoDescription: 'Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. Geen race, geen tijdsdruk. Gewoon pure vrijheid op twee wielen. Start & Finish: café Belami, Aalter.'
       })
       .commit();

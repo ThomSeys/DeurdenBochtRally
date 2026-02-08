@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function ClientOnly({ children }: { children: React.ReactNode }) {
+export default function ClientOnly({ children, className }: { children: React.ReactNode; className?: string }) {
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -11,5 +11,5 @@ export default function ClientOnly({ children }: { children: React.ReactNode }) 
     return null;
   }
 
-  return <div suppressHydrationWarning>{children}</div>;
+  return <div className={className} suppressHydrationWarning>{children}</div>;
 }

@@ -17,7 +17,7 @@ async function setupEditions() {
     const edition2026 = await client.create({
       _type: 'edition',
       year: 2026,
-      name: 'Den Bochtenkoning Rally 2026',
+      name: 'Deur den Bocht Rally 2026',
       slug: {
         _type: 'slug',
         current: '2026',
@@ -63,7 +63,7 @@ async function setupEditions() {
 
     console.log('\n✨ Edition setup complete!\n');
     console.log('📝 Summary:');
-    console.log('  - Created "Den Bochtenkoning Rally 2026" edition');
+    console.log('  - Created "Deur den Bocht Rally 2026" edition');
     console.log('  - Linked all existing content to 2026 edition');
     console.log('  - 2026 edition set as ACTIVE\n');
     console.log('💡 To create a new edition for 2027:');

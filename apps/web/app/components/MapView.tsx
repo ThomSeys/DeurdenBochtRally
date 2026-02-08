@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 interface MapViewProps {
-  startPoint?: { lat: number; lng: number };
-  endPoint?: { lat: number; lng: number };
+  startPoint?: { lat: number; lng: number; name?: string };
+  endPoint?: { lat: number; lng: number; name?: string };
+  markers?: Array<{ lat: number; lng: number; name: string; color?: string; icon?: string }>;
   className?: string;
 }
 
-export default function MapView({ startPoint, endPoint, className = '' }: MapViewProps) {
+export default function MapView({ startPoint, endPoint, markers = [], className = '' }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -101,8 +102,25 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
       if (endPoint) {
         L.default.marker([endPoint.lat, endPoint.lng], { icon: endIcon })
           .addTo(mapRef.current)
-          .bindPopup('<strong>Eind punt</strong><br/>Voeg hier terug op de hoofdroute');
+          .bindPopup(`<strong>${endPoint.name || 'Eind punt'}</strong><br/>Voeg hier terug op de hoofdroute`);
       }
+
+      // Add custom markers
+      if (markers && markers.length > 0) {
+        markers.forEach((marker) => {
+          const customIcon = L.default.divIcon({
+            html: `<div style="background-color: ${marker.color || '#3b82f6'}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 12px;">${marker.icon || '📍'}</div>`,
+            className: '',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
+
+          L.default.marker([marker.lat, marker.lng], { icon: customIcon })
+            .addTo(mapRef.current)
+            .bindPopup(`<strong>${marker.name}</strong>`);
+        });
+      }
+
       // Add user location marker if available
       if (userLocation) {
         if (userMarkerRef.current) {
@@ -121,8 +139,8 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
           .bindPopup('<strong>Je locatie</strong>');
       }
 
-      // Draw a line between start and end (only if endPoint exists)
-      if (endPoint) {
+      // Draw a line between start and end (only if endPoint exists and no custom markers)
+      if (endPoint && (!markers || markers.length === 0)) {
         L.default.polyline(
           [
             [startPoint.lat, startPoint.lng],
@@ -137,14 +155,18 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
         ).addTo(mapRef.current);
       }
 
-      // Fit bounds to show both markers
-      const bounds = endPoint
-        ? L.default.latLngBounds([
-            [startPoint.lat, startPoint.lng],
-            [endPoint.lat, endPoint.lng],
-          ])
-        : L.default.latLngBounds([[startPoint.lat, startPoint.lng]]);
-      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+      // Fit bounds to show all markers
+      const allPoints: Array<[number, number]> = [];
+      if (startPoint) allPoints.push([startPoint.lat, startPoint.lng]);
+      if (endPoint) allPoints.push([endPoint.lat, endPoint.lng]);
+      if (markers) {
+        markers.forEach(m => allPoints.push([m.lat, m.lng]));
+      }
+
+      if (allPoints.length > 0) {
+        const bounds = L.default.latLngBounds(allPoints);
+        mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+      }
     });
 
     return () => {
@@ -155,7 +177,7 @@ export default function MapView({ startPoint, endPoint, className = '' }: MapVie
         userMarkerRef.current = null;
       }
     };
-  }, [isClient, startPoint, endPoint, userLocation]);
+  }, [isClient, startPoint, endPoint, userLocation, markers]);
 
   if (!isClient) {
     return (

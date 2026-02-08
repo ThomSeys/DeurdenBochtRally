@@ -221,8 +221,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const edition = await getActiveEdition();
     const pricing = await getPricingTiers(edition._id);
     const selectedTier = pricing.find((tier: any) => 
-      (formula === 'with_meals' && tier.price === 30) || 
-      (formula === 'breakfast_only' && tier.price === 20)
+      (formula === 'with_meals' && tier.price === 45) || 
+      (formula === 'breakfast_only' && tier.price === 25)
     );
     
     if (!selectedTier) {
@@ -544,7 +544,7 @@ export default function Registration() {
                       <label
                         key={tier._id}
                         className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
-                          selectedFormula === (tier.price === 30 ? 'with_meals' : 'breakfast_only')
+                          selectedFormula === (tier.price === 45 ? 'with_meals' : 'breakfast_only')
                             ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
                             : 'border-gray-300'
                         }`}
@@ -552,10 +552,10 @@ export default function Registration() {
                         <input
                           type="radio"
                           name="formula"
-                          value={tier.price === 30 ? 'with_meals' : 'breakfast_only'}
+                          value={tier.price === 45 ? 'with_meals' : 'breakfast_only'}
                           className="sr-only"
                           onChange={(e) => setSelectedFormula(e.target.value)}
-                          checked={selectedFormula === (tier.price === 30 ? 'with_meals' : 'breakfast_only')}
+                          checked={selectedFormula === (tier.price === 45 ? 'with_meals' : 'breakfast_only')}
                         />
                         <div className="flex flex-1 flex-col">
                           <div className="flex items-center justify-between">

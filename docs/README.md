@@ -18,7 +18,7 @@ A comprehensive web application for managing the **Deur Den Bocht** motorcycle r
 - 📝 **Online Registration** - Complete signup with Stripe payment integration
 - 🔐 **Authentication** - Secure login with QR code verification  
 - 📱 **Participant Dashboard** - Access to GPX routes, maps, and documents
-- 🏆 **Rally System** - Submit codes, track points, compete for "Den Bochtenkoning"
+- 🏆 **Rally System** - Submit codes, track points, compete for community recognition
 
 ## ✨ Key Features
 

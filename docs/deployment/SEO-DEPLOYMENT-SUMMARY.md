@@ -65,7 +65,7 @@ The token doesn't have write permissions, so you need to manually enable protect
    - Click **"Publish"**
 
 4. **Add SEO Content** (Optional but recommended)
-   - SEO Title: "Den Bochtenkoning Rally 2026 | Motordag Aalter"
+   - SEO Title: "Deur den Bocht Rally 2026 | Motordag Aalter"
    - SEO Description: "Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. Geen race, geen tijdsdruk. 16 mei 2026. Start & Finish: café Belami, Aalter."
    - SEO Share Image: Upload a 1200x630px image
 

@@ -91,7 +91,7 @@ async function main() {
         children: [
           {
             _type: 'span',
-            text: 'Elke zone = 15 punten. Alle 8 = +20 bonus. Wie het best scoort wordt "Den Bochtenkoning"!',
+            text: 'Elke zone = 15 punten. Alle 8 = +20 bonus. Wie het best scoort wordt "Deur den Bocht Champion"!',
             marks: [],
           },
         ],

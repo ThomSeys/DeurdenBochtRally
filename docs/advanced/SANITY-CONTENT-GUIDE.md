@@ -18,7 +18,7 @@ Content is organized by:
 ### 1. Hero Section
 - **Page**: `homepage`
 - **Section**: `hero`
-- **Title**: Main headline (e.g., "DEN BOCHTENKONING\nRALLY 2026")
+- **Title**: Main headline (e.g., "DEUR DEN BOCHT\nRALLY 2026")
 - **Content**: Not used (date comes from edition)
 
 ### 2. CTA Section
@@ -46,7 +46,7 @@ Deur den Bocht – The 500 is een **all-day challenge ride** waar je 500+ kilome
 - Iedereen rijdt dezelfde prachtige **bochten-GPX**
 - Onderweg kan je **optioneel deelnemen aan 8 Rally Zones**
 
-Aan het einde van de dag kronen we: **🏆 DEN BOCHTENKONING**
+Aan het einde van de dag kronen we: **🏆 DEUR DEN BOCHT CHAMPION**
 ```
 
 ### 4. Rally Info Section
