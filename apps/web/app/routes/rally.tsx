@@ -9,17 +9,33 @@ import RouteTipsMap from '~/components/RouteTipsMap';
 import ZoneRouteTips from '~/components/ZoneRouteTips';
 import CheckInModal from '~/components/CheckInModal';
 import { getActiveEdition, getSiteConfig, sanityClient } from '~/lib/sanity.server';
-import { getUserId, getUser } from '~/lib/session.server';
+import { requireUserId, getUser } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useMasterTour } from '~/components/MasterTour';
 import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const siteConfig = data?.siteConfig;
+  const seoImage = siteConfig?.seoImage?.asset?.url;
+  const rallyTitle = `Rally Route - ${siteConfig?.eventName || 'Deur Den Bocht'}`;
+  const rallyDescription = `Ontdek de spektakulaire rally route van ${siteConfig?.eventName || 'Deur Den Bocht'}, check in op rally zones en volg je vrienden live.`;
+  
   return [
-    { title: 'Rally Route - Deur Den Bocht' },
-    { name: 'description', content: 'Ontdek de rally route van Deur Den Bocht' },
+    { title: rallyTitle },
+    { name: 'description', content: rallyDescription },
+    // Open Graph tags for social media sharing
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: rallyTitle },
+    { property: 'og:description', content: rallyDescription },
+    ...(seoImage ? [{ property: 'og:image', content: seoImage }] : []),
+    { property: 'og:url', content: 'https://deurdenbochtmotorrit.be/rally' },
+    // Twitter Card tags
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: rallyTitle },
+    { name: 'twitter:description', content: rallyDescription },
+    ...(seoImage ? [{ name: 'twitter:image', content: seoImage }] : []),
   ];
 };
 
@@ -105,7 +121,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const userId = await getUserId(request);
+  // Require authentication to access rally page
+  const userId = await requireUserId(request);
   const requestLogger = createRequestLogger(request, userId);
   
   await requestLogger.info('page-view', 'Rally page loaded');

@@ -32,10 +32,27 @@ function getValidIconName(icon: string | null | undefined): string | null {
   return availableIcons.includes(icon) ? icon : null;
 }
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const siteConfig = data?.siteConfig;
+  const seoImage = siteConfig?.seoImage?.asset?.url;
+  const seoTitle = siteConfig?.seoTitle || 'Deur Den Bocht - Motorrit Rally 2026';
+  const registrationTitle = `Inschrijven voor ${siteConfig?.eventName || 'Deur Den Bocht'}`;
+  const registrationDescription = `Schrijf je in voor de spectaculaire motorrit rally - ${siteConfig?.eventTagline || 'Een unieke motordag door België'}`;
+  
   return [
-    { title: 'Inschrijven - Deur Den Bocht' },
-    { name: 'description', content: 'Schrijf je in voor Deur Den Bocht' },
+    { title: registrationTitle },
+    { name: 'description', content: registrationDescription },
+    // Open Graph tags for social media sharing
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: registrationTitle },
+    { property: 'og:description', content: registrationDescription },
+    ...(seoImage ? [{ property: 'og:image', content: seoImage }] : []),
+    { property: 'og:url', content: 'https://deurdenbochtmotorrit.be/registration' },
+    // Twitter Card tags
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: registrationTitle },
+    { name: 'twitter:description', content: registrationDescription },
+    ...(seoImage ? [{ name: 'twitter:image', content: seoImage }] : []),
   ];
 };
 
@@ -48,6 +65,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/');
   }
 
+  const { supabaseAdmin } = await import('~/lib/supabase.server');
+
   // Fetch remaining data in parallel
   const [pricing, siteConfig, paperRoadbookEnabled, csrfToken] = await Promise.all([
     getPricingTiers(edition._id),
@@ -56,7 +75,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
     getCSRFToken(request),
   ]);
 
-  return { edition, pricing, siteConfig, paperRoadbookEnabled, csrfToken };
+  // Count current registrations (excluding admins)
+  let registeredCount = 0;
+  let spotsRemaining = null;
+  let spotsPercentage = null;
+
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+
+    if (!error && count !== null) {
+      registeredCount = count;
+      
+      if (siteConfig?.maxRegistrations) {
+        spotsRemaining = Math.max(0, siteConfig.maxRegistrations - registeredCount);
+        spotsPercentage = Math.round((registeredCount / siteConfig.maxRegistrations) * 100);
+      }
+    }
+  } catch (error) {
+    console.error('[registration] Error counting registrations:', error);
+  }
+
+  return { edition, pricing, siteConfig, paperRoadbookEnabled, csrfToken, registeredCount, spotsRemaining, spotsPercentage };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -124,6 +165,26 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     // Ride type is always 'free' - no guided rides offered
+
+    // Check if max registrations limit is reached (excluding admins)
+    const siteConfig = await getSiteConfig();
+    if (siteConfig?.maxRegistrations) {
+      const { count, error: countError } = await supabaseAdmin
+        .from('participants')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'participant'); // Only count regular participants, not admins
+
+      if (!countError && count !== null && count >= siteConfig.maxRegistrations) {
+        await requestLogger.warn('registration', 'Registration failed: max registrations reached', {
+          currentCount: count,
+          maxRegistrations: siteConfig.maxRegistrations
+        });
+        return {
+          error: `Inschrijvingen zijn helaas vol. Maximum aantal deelnemers (${siteConfig.maxRegistrations}) is bereikt.`,
+          status: 429
+        };
+      }
+    }
 
     const { data: existing } = await supabaseAdmin
       .from('participants')
@@ -269,7 +330,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Registration() {
-  const { csrfToken, edition, pricing, siteConfig, paperRoadbookEnabled } = useLoaderData<typeof loader>();
+  const { csrfToken, edition, pricing, siteConfig, paperRoadbookEnabled, registeredCount, spotsRemaining, spotsPercentage } = useLoaderData<typeof loader>();
+
   const actionData = useActionData<typeof action>();
   const [selectedFormula, setSelectedFormula] = useState<string>('with_meals');
 
@@ -278,12 +340,64 @@ export default function Registration() {
     window.location.href = actionData.checkoutUrl;
   }
 
+  const isFull = spotsRemaining === 0;
+  const isAlmostFull = spotsRemaining !== null && spotsRemaining <= siteConfig?.maxRegistrations * 0.1; // Less than 10% spots remaining
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <div className="flex-grow bg-gray-50 py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Registration Capacity Banner */}
+          {siteConfig?.maxRegistrations && spotsRemaining !== null && (
+            <div className={`mb-6 p-4 rounded-sm border-l-4 ${
+              isFull 
+                ? 'bg-red-50 border-red-500 text-red-900' 
+                : isAlmostFull 
+                ? 'bg-yellow-50 border-yellow-500 text-yellow-900'
+                : 'bg-blue-50 border-blue-500 text-blue-900'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">
+                    {isFull 
+                      ? 'Inschrijvingen vol'
+                      : isAlmostFull
+                      ? 'Weinig plekken beschikbaar'
+                      : 'Plekken beschikbaar'
+                    }
+                  </p>
+                  <p className="text-sm mt-1">
+                    {isFull 
+                      ? `Helaas zijn alle ${siteConfig.maxRegistrations} plekken bezet.`
+                      : `${spotsRemaining} van ${siteConfig.maxRegistrations} plekken beschikbaar`
+                    }
+                  </p>
+                </div>
+                <div className="text-right flex flex-col items-center gap-2">
+                  <svg className="w-16 h-16" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" opacity="0.2" />
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="45" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="8" 
+                      strokeDasharray={`${(spotsPercentage! * 282.7) / 100} 282.7`}
+                      strokeLinecap="round"
+                      style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+                    />
+                    <text x="50" y="55" textAnchor="middle" fontSize="24" fontWeight="bold" fill="currentColor">
+                      {spotsPercentage}%
+                    </text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-sm shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Inschrijven</h1>
             <p className="text-gray-600 mb-8">

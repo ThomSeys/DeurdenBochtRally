@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Form, useActionData, useNavigation } from 'react-router';
 import { useState, useEffect } from 'react';
-import { getUser } from '~/lib/session.server';
+import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
@@ -142,6 +142,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 }
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request);
   const user = await getUser(request);
   const { zoneId } = params;
 

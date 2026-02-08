@@ -132,6 +132,13 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'maxRegistrations',
+      title: 'Maximum Registrations',
+      type: 'number',
+      description: 'Maximum number of participants allowed to register (admins are not counted)',
+      validation: (Rule) => Rule.min(1),
+    }),
+    defineField({
       name: 'noIndex',
       title: 'No Index',
       type: 'boolean',

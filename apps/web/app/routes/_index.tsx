@@ -30,9 +30,25 @@ function getValidIconName(icon: string | null | undefined): string | null {
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const siteConfig = data?.siteConfig;
+  const seoImage = siteConfig?.seoImage?.asset?.url;
+  const seoTitle = siteConfig?.seoTitle || 'Deur Den Bocht - Motorrit Rally 2026';
+  const seoDescription = siteConfig?.seoDescription || 'Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. Ontdek prachtige routes en deel je verhalen.';
+  
   return [
-    { title: data?.siteConfig?.seoTitle || 'Deur Den Bocht - Motorrit Rally 2026' },
-    { name: 'description', content: data?.siteConfig?.seoDescription || 'Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. Ontdek prachtige routes en deel je verhalen.' },
+    { title: seoTitle },
+    { name: 'description', content: seoDescription },
+    // Open Graph tags for social media sharing
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: seoTitle },
+    { property: 'og:description', content: seoDescription },
+    ...(seoImage ? [{ property: 'og:image', content: seoImage }] : []),
+    { property: 'og:url', content: 'https://deurdenbochtmotorrit.be' },
+    // Twitter Card tags
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: seoTitle },
+    { name: 'twitter:description', content: seoDescription },
+    ...(seoImage ? [{ name: 'twitter:image', content: seoImage }] : []),
   ];
 };
 

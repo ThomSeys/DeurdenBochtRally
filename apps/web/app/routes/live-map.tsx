@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { type LoaderFunctionArgs } from 'react-router';
+import { type LoaderFunctionArgs, type MetaFunction } from 'react-router';
 import { useLoaderData, useRevalidator, redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { sanityClient, getActiveEdition } from '~/lib/sanity.server';
+import { sanityClient, getActiveEdition, getSiteConfig } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
@@ -11,6 +11,29 @@ import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
 import { MARKER_COLORS } from '~/lib/constants';
 import { useMasterTour } from '~/components/MasterTour';
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const siteConfig = data?.siteConfig;
+  const seoImage = siteConfig?.seoImage?.asset?.url;
+  const liveMapTitle = `Live Map - ${siteConfig?.eventName || 'Deur Den Bocht'}`;
+  const liveMapDescription = `Volg alle deelnemers live op de kaart tijdens het ${siteConfig?.eventName || 'Deur Den Bocht'} rally event.`;
+  
+  return [
+    { title: liveMapTitle },
+    { name: 'description', content: liveMapDescription },
+    // Open Graph tags for social media sharing
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: liveMapTitle },
+    { property: 'og:description', content: liveMapDescription },
+    ...(seoImage ? [{ property: 'og:image', content: seoImage }] : []),
+    { property: 'og:url', content: 'https://deurdenbochtmotorrit.be/live-map' },
+    // Twitter Card tags
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: liveMapTitle },
+    { name: 'twitter:description', content: liveMapDescription },
+    ...(seoImage ? [{ name: 'twitter:image', content: seoImage }] : []),
+  ];
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {

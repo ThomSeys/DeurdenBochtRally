@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
-import { getUser } from '~/lib/session.server';
+import { requireUserId, getUser } from '~/lib/session.server';
 
 interface AlbumPhoto {
   photo_id: string | null;
@@ -30,8 +30,7 @@ interface Album {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await getUser(request);
-  const userId = user?.id || null;
+  const userId = await requireUserId(request);
 
   // Get open albums
   const { data: openAlbums, error: albumsError } = await supabaseAdmin

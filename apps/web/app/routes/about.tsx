@@ -9,10 +9,26 @@ import { getUserId } from '~/lib/session.server';
 import PortableText from '~/components/PortableText';
 import { createRequestLogger } from '~/lib/logger.server';
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const siteConfig = data?.siteConfig;
+  const seoImage = siteConfig?.seoImage?.asset?.url;
+  const aboutTitle = `Over - ${siteConfig?.eventName || 'Deur Den Bocht'}`;
+  const aboutDescription = `Leer alles over het ${siteConfig?.eventName || 'Deur Den Bocht'} rally event, het programma, de route en veel meer.`;
+  
   return [
-    { title: 'Over het event - Deur Den Bocht' },
-    { name: 'description', content: 'Alles wat je moet weten over het Deur Den Bocht rally event' },
+    { title: aboutTitle },
+    { name: 'description', content: aboutDescription },
+    // Open Graph tags for social media sharing
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: aboutTitle },
+    { property: 'og:description', content: aboutDescription },
+    ...(seoImage ? [{ property: 'og:image', content: seoImage }] : []),
+    { property: 'og:url', content: 'https://deurdenbochtmotorrit.be/about' },
+    // Twitter Card tags
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: aboutTitle },
+    { name: 'twitter:description', content: aboutDescription },
+    ...(seoImage ? [{ name: 'twitter:image', content: seoImage }] : []),
   ];
 };
 

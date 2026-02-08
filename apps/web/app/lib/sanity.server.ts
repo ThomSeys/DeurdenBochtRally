@@ -83,6 +83,7 @@ export async function getSiteConfig() {
           url
         }
       },
+      maxRegistrations,
       noIndex,
       noFollow
     }`
