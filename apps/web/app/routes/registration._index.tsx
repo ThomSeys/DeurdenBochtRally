@@ -84,6 +84,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { count, error } = await supabaseAdmin
       .from('participants')
       .select('*', { count: 'exact', head: true })
+      .filter('is_admin', 'eq', false); // Only count non-admin participants
 
     if (!error && count !== null) {
       registeredCount = count;

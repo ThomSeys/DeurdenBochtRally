@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { type LoaderFunctionArgs, type MetaFunction } from 'react-router';
 import { useLoaderData, useRevalidator, redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
-import { sanityClient, getActiveEdition, getSiteConfig } from '~/lib/sanity.server';
+import { sanityClient, getActiveEdition } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
