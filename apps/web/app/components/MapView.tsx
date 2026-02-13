@@ -5,9 +5,10 @@ interface MapViewProps {
   endPoint?: { lat: number; lng: number; name?: string };
   markers?: Array<{ lat: number; lng: number; name: string; color?: string; icon?: string }>;
   className?: string;
+  skipGpxUrl?: string | null;
 }
 
-export default function MapView({ startPoint, endPoint, markers = [], className = '' }: MapViewProps) {
+export default function MapView({ startPoint, endPoint, markers = [], className = '', skipGpxUrl = null }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -155,6 +156,39 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
         ).addTo(mapRef.current);
       }
 
+      // If a skip GPX is provided, load and render it as a dashed gray polyline
+      if (skipGpxUrl) {
+        try {
+          fetch(skipGpxUrl)
+            .then((res) => res.text())
+            .then((gpxText) => {
+              const parser = new DOMParser();
+              const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
+              const trackPoints: [number, number][] = [];
+              const trkpts = gpxDoc.querySelectorAll('trkpt');
+              trkpts.forEach((pt) => {
+                const lat = parseFloat(pt.getAttribute('lat') || '0');
+                const lon = parseFloat(pt.getAttribute('lon') || '0');
+                if (lat && lon) trackPoints.push([lat, lon]);
+              });
+              if (trackPoints.length > 0 && mapRef.current) {
+                const skipPolyline = L.default.polyline(trackPoints, {
+                  color: '#6b7280',
+                  weight: 3,
+                  opacity: 0.8,
+                  dashArray: '8,6',
+                }).addTo(mapRef.current);
+                try {
+                  mapRef.current.fitBounds(skipPolyline.getBounds(), { padding: [50, 50] });
+                } catch (e) {}
+              }
+            })
+            .catch((err) => console.error('Failed to load skip GPX:', err));
+        } catch (err) {
+          console.error('Error loading skip GPX:', err);
+        }
+      }
+
       // Fit bounds to show all markers
       const allPoints: Array<[number, number]> = [];
       if (startPoint) allPoints.push([startPoint.lat, startPoint.lng]);
@@ -177,7 +211,7 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
         userMarkerRef.current = null;
       }
     };
-  }, [isClient, startPoint, endPoint, userLocation, markers]);
+  }, [isClient, startPoint, endPoint, userLocation, markers, skipGpxUrl]);
 
   if (!isClient) {
     return (

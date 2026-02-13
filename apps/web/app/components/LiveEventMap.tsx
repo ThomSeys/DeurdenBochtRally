@@ -23,6 +23,13 @@ interface RallyZone {
       url: string;
     };
   };
+  skipRoute?: {
+    instructions?: string;
+    estimatedDistance?: number;
+    startPoint?: { lat?: number; lng?: number };
+    endPoint?: { lat?: number; lng?: number };
+    gpxFile?: { asset?: { url?: string } } | null;
+  };
   routeTips?: Array<{
     name: string;
     color?: string;

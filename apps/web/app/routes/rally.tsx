@@ -149,6 +149,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
       is_active,
       "startLocation": startPoint,
       "endLocation": endPoint,
+      skipRoute {
+        instructions,
+        estimatedDistance,
+        startPoint { lat, lng },
+        endPoint { lat, lng },
+        gpxFile { asset-> { url } }
+      },
       routeTips[] {
         name,
         description,

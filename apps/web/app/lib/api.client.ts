@@ -16,6 +16,13 @@ export interface RallyZone {
   endLocation: any;
   is_open: boolean;
   gpxRoute: { asset: { url: string } } | null;
+  skipRoute?: {
+    instructions?: string;
+    estimatedDistance?: number;
+    startPoint?: { lat?: number; lng?: number };
+    endPoint?: { lat?: number; lng?: number };
+    gpxFile?: { asset?: { url?: string } } | null;
+  } | null;
 }
 
 export async function fetchRallyZones() {

@@ -23,6 +23,12 @@ interface CheckInModalProps {
       lat: number;
       lng: number;
     };
+    skipRoute?: {
+      instructions?: string;
+      gpxFile?: { asset?: { url?: string } };
+      startPoint?: { lat?: number; lng?: number };
+      endPoint?: { lat?: number; lng?: number };
+    };
   };
   actionData?: {
     error?: string;
@@ -142,6 +148,7 @@ export default function CheckInModal({
             <div className="mb-6">
               <MapView 
                 startPoint={coordinates}
+                skipGpxUrl={zone.skipRoute?.gpxFile?.asset?.url ?? null}
                 className="h-[280px] rounded-sm border-2 border-primary-300 shadow-lg overflow-hidden"
               />
               <a
