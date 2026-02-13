@@ -281,7 +281,10 @@ export default function CheckInModal({
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !userLocation}
+                // Require geolocation and proximity to location when coordinates are known
+                disabled={
+                  isSubmitting || !userLocation || (coordinates ? !isNearby : false)
+                }
                 className={`flex-1 px-5 py-4 ${
                   action === 'CHECKIN'
                     ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700'
