@@ -55,8 +55,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const user = await getUser(request);
   
   // Import server-only module inside the loader
-  const { getCSRFToken } = await import("~/lib/csrf.server");
+  const { getCSRFToken, commitCSRFToken } = await import("~/lib/csrf.server");
   const csrfToken = await getCSRFToken(request);
+  // Ensure the session (cookie) is committed so POSTs can verify the token
+  const setCookie = await commitCSRFToken(request);
   
   // Get feature flags from Sanity
   const featureFlags = await getFeatureFlags();
@@ -65,12 +67,19 @@ export async function loader({ request }: Route.LoaderArgs) {
   const siteConfig = await getSiteConfig();
   const eventDate = siteConfig?.eventDate || '2026-05-16';
   
-  return { 
-    user,
-    csrfToken,
-    featureFlags,
-    eventDate,
-  };
+  return Response.json(
+    {
+      user,
+      csrfToken,
+      featureFlags,
+      eventDate,
+    },
+    {
+      headers: {
+        'Set-Cookie': setCookie,
+      },
+    }
+  );
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

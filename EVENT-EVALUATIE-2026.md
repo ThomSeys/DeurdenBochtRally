@@ -594,21 +594,32 @@ Dit evenement is:
 
 ## 🚨 VEILIGHEID & RISICOBEHEER
 
-### Noodprotocol
+---
 
-**Voor het event:**
+## 🛠️ Technische Storing - Opvangplan
 
-- Noodcontacten per deelnemer in app opgeslagen
-- EHBO kit klaar (VZW voorziet basale EHBO)
-- Gastheer/gastvrouw contact info voor startlocatie, lunchspot, finish
+Bij een technische storing (app, dashboard, QR codes):
 
-**Dag zelf:**
+- 2 weken vooraf: App en systemen uitgebreid testen, geen wijzigingen meer.
+- Papieren backup: Print een lijst van alle deelnemers, zones, noodcontacten en roadbooks.
+- WhatsApp-groep: Duidelijke communicatiekanalen voor updates en instructies.
+- Procedure: Bij storing direct overschakelen op papieren check-in en handmatige zone-registratie.
+- Teambriefing: Iedereen weet vooraf wat te doen bij app-storing.
 
-- Nood Coördinator: Centralepunt voor hulpvragen, telefoonnummer gepubliceerd
-- Backup telefoons: Zeker dat bereikbaarheid gewaarborgd
-- Route Shepherd: Rijdt voorop, checkt voor waarschuwingen (files, ongelukken, weersomstandigheden)
-- Sweeper: Rijdt achter, houdt contacten, biedt assistentie bij pech
-- Check-in system: Als iemand laatste check-in > 2 uur geleden = proactief benaderen
+## 🩹 EHBO & Noodprotocol
+
+- EHBO-kit aanwezig op start, lunch en finishlocatie.
+- Aangewezen EHBO-verantwoordelijke: Duidelijk wie de kit beheert.
+- Noodprotocol: Procedure bij ongeval (SOS-knop, noodnummer, escalatie naar 112).
+- Noodcontacten: Up-to-date in app én papieren backup.
+- Teamtraining: Korte briefing vooraf over noodprocedure.
+
+## 🛏️ Overnachting - Verantwoordelijkheid
+
+Overnachting is volledig verantwoordelijkheid van de deelnemer.
+VZW Deur Den Bocht geeft enkel tips, geen boeking, betaling of aansprakelijkheid.
+
+---
 
 ### Aansprakelijkheid & Verzekering
 
