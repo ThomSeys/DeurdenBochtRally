@@ -81,7 +81,7 @@ export default function Carousel({
 
   const handleTouchEnd = () => {
     if (disabled) return;
-    const swipeThreshold = 200; // minimum distance for a swipe
+    const swipeThreshold = 100; // minimum distance for a swipe
     const diff = touchStartX.current - touchEndX.current;
 
     if (Math.abs(diff) > swipeThreshold && !isAnimating) {
