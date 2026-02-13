@@ -61,6 +61,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const zoneId = formData.get('zoneId') as string;
     const latitude = formData.get('latitude') as string;
     const longitude = formData.get('longitude') as string;
+    
 
     if (!zoneId) {
       await userLogger.warn('rally-checkin', 'Check-in failed: missing zone ID');
@@ -82,15 +83,39 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     }
 
-    // Create check-in
-    const { error: insertError } = await supabaseAdmin
-      .from('rally_zone_checkins')
-      .insert({
-        participant_id: user.id,
-        zone_id: zoneId,
-        location_lat: latitude ? parseFloat(latitude) : null,
-        location_lng: longitude ? parseFloat(longitude) : null,
-      });
+    // Respect user's choice to use the skip route if submitted in the form
+    const useSkipRoute = (formData.get('useSkipRoute') as string) === '1';
+
+    // Create check-in (include used_skip_route flag if the column exists)
+    const insertPayload: any = {
+      participant_id: user.id,
+      zone_id: zoneId,
+      location_lat: latitude ? parseFloat(latitude) : null,
+      location_lng: longitude ? parseFloat(longitude) : null,
+    };
+
+    if (useSkipRoute) insertPayload.took_skip_route = true;
+
+    let insertError = null;
+    try {
+      const res = await supabaseAdmin.from('rally_zone_checkins').insert(insertPayload);
+      insertError = (res as any).error || null;
+    } catch (e: any) {
+      insertError = e;
+    }
+
+    // If PostgREST reports the used_skip_route column is missing, retry without it
+    if (insertError && (insertError.code === 'PGRST204' || (insertError.message && String(insertError.message).includes("used_skip_route")))) {
+      await userLogger.warn('rally-checkin', 'used_skip_route column missing; retrying insert without it', { zoneId });
+      const payloadWithoutFlag = { ...insertPayload };
+      delete payloadWithoutFlag.used_skip_route;
+      try {
+        const res2 = await supabaseAdmin.from('rally_zone_checkins').insert(payloadWithoutFlag);
+        insertError = (res2 as any).error || null;
+      } catch (e: any) {
+        insertError = e;
+      }
+    }
 
     if (insertError) {
       await userLogger.error('rally-checkin', 'Database error during check-in', insertError);
@@ -113,7 +138,7 @@ export async function action({ request }: ActionFunctionArgs) {
       console.error('Failed to trigger achievement check:', error);
     }
 
-    return { success: true, message: 'Check-in succesvol!' };
+    return { success: true, message: 'Check-in succesvol!', usedSkipRoute: useSkipRoute, zoneId };
   } catch (error: any) {
     await requestLogger.error('rally-checkin', 'Unexpected error during check-in', error);
     return { error: 'Er is een onverwachte fout opgetreden' };
@@ -254,7 +279,14 @@ export default function Rally() {
   const [checkInModalZone, setCheckInModalZone] = useState<any>(null);
   const [zoneWeatherData, setZoneWeatherData] = useState<Record<string, any>>({});
   const [selectedWeatherZone, setSelectedWeatherZone] = useState<any>(null);
-  const checkedInSet = new Set(userCheckIns);
+  const [localCheckedIn, setLocalCheckedIn] = useState<Set<string>>(new Set(userCheckIns || []));
+  const [skipUsedMap, setSkipUsedMap] = useState<Record<string, boolean>>({});
+  const checkedInSet = localCheckedIn;
+
+  // Keep localCheckedIn in sync when loader updates
+  useEffect(() => {
+    setLocalCheckedIn(new Set(userCheckIns || []));
+  }, [userCheckIns]);
   const isSubmitting = navigation.state === 'submitting';
 
   // Get user's current location
@@ -278,6 +310,19 @@ export default function Rally() {
   useEffect(() => {
     if (actionData?.success) {
       setCheckInModalZone(null);
+      // Optimistically add this zone to the local checked-in set so UI updates immediately
+      if (actionData.zoneId) {
+        setLocalCheckedIn((prev) => {
+          const next = new Set(prev);
+          next.add(actionData.zoneId);
+          return next;
+        });
+      }
+
+      // Record whether the user used the skip route for this zone
+      if (actionData.usedSkipRoute && actionData.zoneId) {
+        setSkipUsedMap((prev) => ({ ...prev, [actionData.zoneId]: true }));
+      }
     }
   }, [actionData]);
 
@@ -478,19 +523,45 @@ export default function Rally() {
                         <p className="text-gray-700 mb-6 mt-4">{segment.description}</p>
                       )}
                       
-                      {/* Route Tips */}
+                      {/* Route Tips or Hazepad download if user used skip route */}
                       {segment.routeTips && segment.routeTips.length > 0 && (
                         <div data-tour="rally-tips">
-                          <ZoneRouteTips
-                            routeTips={segment.routeTips}
-                            zoneTitle={segment.title}
-                            zoneId={segment._id}
-                            zoneStartLocation={segment.startLocation}
-                            zoneEndLocation={segment.endLocation}
-                            userLocation={userLocation}
-                            completedChallenges={completedChallenges || []}
-                            isZoneCheckedIn={checkedInSet.has(segment._id)}
-                          />
+                          {skipUsedMap[segment._id] === true && segment.skipRoute?.gpxFile?.asset?.url ? (
+                            (() => {
+                              const gpxUrl = segment.skipRoute.gpxFile.asset.url;
+                              const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
+                              return (
+                                <div className="mb-4 p-4 rounded-sm border border-dashed border-primary-200 bg-primary-50 flex items-center justify-between">
+                                  <div>
+                                    <h5 className="font-semibold text-primary-900">Hazepad geselecteerd</h5>
+                                    <p className="text-sm text-gray-700">Je hebt gekozen voor het hazepad — routetips en challenges zijn uitgeschakeld voor deze zone.</p>
+                                  </div>
+                                  <a
+                                    href={gpxUrl}
+                                    download={gpxFilename}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded"
+                                  >
+                                    <Icon name="download" className="w-4 h-4" />
+                                    Download GPX
+                                  </a>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <ZoneRouteTips
+                              routeTips={segment.routeTips}
+                              zoneTitle={segment.title}
+                              zoneId={segment._id}
+                              zoneStartLocation={segment.startLocation}
+                              zoneEndLocation={segment.endLocation}
+                              userLocation={userLocation}
+                              completedChallenges={completedChallenges || []}
+                              isZoneCheckedIn={checkedInSet.has(segment._id)}
+                              zoneSkipUsed={skipUsedMap[segment._id] === true}
+                            />
+                          )}
                         </div>
                       )}
 

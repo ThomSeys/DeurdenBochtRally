@@ -99,6 +99,7 @@ RETURNS void AS $$
 DECLARE
   buddy_ids UUID[];
   zone_count INTEGER;
+  total_zones INTEGER := 0;
 BEGIN
   -- Get all buddy IDs for this participant
   SELECT ARRAY_AGG(DISTINCT buddy_id) INTO buddy_ids
@@ -158,8 +159,14 @@ BEGIN
   END IF;
   
   -- Check "all zones together"
-  -- Assuming total zones is stored or calculated
-  IF zone_count >= (SELECT COUNT(*) FROM rally_zones WHERE active = true) THEN
+  -- Compute total zones defensively
+  IF to_regclass('public.rally_zones') IS NOT NULL THEN
+    SELECT COUNT(*) INTO total_zones FROM rally_zones WHERE active = true;
+  ELSE
+    total_zones := 0;
+  END IF;
+
+  IF zone_count >= total_zones THEN
     INSERT INTO buddy_group_achievements (achievement_id, primary_participant_id, progress_value, is_unlocked)
     SELECT ba.id, p_participant_id, zone_count, true
     FROM buddy_achievements ba
@@ -196,7 +203,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to check achievements after check-in
+-- Trigger wrapper that calls the checker with NEW.participant_id
 CREATE OR REPLACE FUNCTION trigger_check_buddy_achievements()
 RETURNS TRIGGER AS $$
 BEGIN

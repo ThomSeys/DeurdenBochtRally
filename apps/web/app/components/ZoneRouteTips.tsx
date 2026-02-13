@@ -13,6 +13,7 @@ interface ZoneRouteTipsProps {
   userLocation?: { lat: number; lng: number } | null;
   completedChallenges?: string[]; // Array of location keys that have been completed
   isZoneCheckedIn?: boolean;
+  zoneSkipUsed?: boolean;
 }
 
 export default function ZoneRouteTips({
@@ -24,6 +25,7 @@ export default function ZoneRouteTips({
   userLocation,
   completedChallenges = [],
   isZoneCheckedIn = false,
+  zoneSkipUsed = false,
 }: ZoneRouteTipsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChallenge, setSelectedChallenge] = useState<{
@@ -152,12 +154,18 @@ export default function ZoneRouteTips({
                   <Icon name="target" className="w-5 h-5 text-accent-600" />
                   <h6 className="font-semibold text-gray-900">Opdrachten op deze route</h6>
                 </div>
+                {zoneSkipUsed && (
+                  <div className="mb-3 p-3 rounded bg-yellow-50 border border-yellow-200 text-yellow-800">
+                    Je hebt gekozen voor het hazepad voor deze zone — je kunt geen routetips of challenges indienen.
+                  </div>
+                )}
                 <div className="space-y-2">
                   {tip.locations
                     .filter((loc: any) => loc.challenge && loc.challenge.isActive !== false)
                     .map((loc: any, idx: number) => {
                       const isCompleted = completedChallenges.includes(loc._key);
                       const isLocked = !isZoneCheckedIn;
+                      const isDisabledBySkip = zoneSkipUsed === true;
                       const getChallengeIcon = (type: string) => {
                         switch (type) {
                           case 'photo': return 'camera';
@@ -183,9 +191,9 @@ export default function ZoneRouteTips({
                           }}
                           onTouchStart={(e) => e.stopPropagation()}
                           onTouchEnd={(e) => e.stopPropagation()}
-                          disabled={isCompleted || isLocked}
+                          disabled={isCompleted || isLocked || isDisabledBySkip}
                           className={`w-full text-left p-3 rounded-lg border-2 transition-all pointer-events-auto relative z-10 ${
-                            isCompleted || isLocked
+                            isCompleted || isLocked || isDisabledBySkip
                               ? 'border-green-200 bg-green-50 opacity-60 cursor-not-allowed'
                               : 'border-accent-200 bg-accent-50 hover:border-accent-400 hover:bg-accent-100 cursor-pointer'
                           }`}
@@ -218,6 +226,11 @@ export default function ZoneRouteTips({
                               {!isCompleted && isLocked && (
                                 <p className="text-sm text-yellow-800 font-medium mt-2">
                                   Check eerst in om te starten
+                                </p>
+                              )}
+                              {!isCompleted && isDisabledBySkip && (
+                                <p className="text-sm text-red-800 font-medium mt-2">
+                                  Niet mogelijk: je koos het hazepad voor deze zone
                                 </p>
                               )}
                             </div>

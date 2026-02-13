@@ -11,8 +11,12 @@ DECLARE
   notification_title TEXT;
   notification_body TEXT;
 BEGIN
-  -- Get zone name
-  SELECT name INTO zone_name FROM rally_zones WHERE id = NEW.zone_id;
+  -- Get zone name (only if table exists)
+  IF to_regclass('public.rally_zones') IS NOT NULL THEN
+    SELECT name INTO zone_name FROM rally_zones WHERE id = NEW.zone_id;
+  ELSE
+    zone_name := NULL;
+  END IF;
   
   -- Get participant name
   SELECT first_name || ' ' || last_name INTO participant_name 
@@ -77,8 +81,12 @@ DECLARE
 BEGIN
   -- Only notify if checked_out_at was just set
   IF OLD.checked_out_at IS NULL AND NEW.checked_out_at IS NOT NULL THEN
-    -- Get zone name
-    SELECT name INTO zone_name FROM rally_zones WHERE id = NEW.zone_id;
+    -- Get zone name (only if table exists)
+    IF to_regclass('public.rally_zones') IS NOT NULL THEN
+      SELECT name INTO zone_name FROM rally_zones WHERE id = NEW.zone_id;
+    ELSE
+      zone_name := NULL;
+    END IF;
     
     -- Get participant name
     SELECT first_name || ' ' || last_name INTO participant_name 

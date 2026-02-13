@@ -106,6 +106,10 @@ export default function CheckInModal({
     : null;
   const isNearby = distance !== null && distance <= 0.5;
 
+  // GPX url & filename for hazepad
+  const gpxUrl = zone.skipRoute?.gpxFile?.asset?.url ?? null;
+  const gpxFilename = gpxUrl ? decodeURIComponent((gpxUrl.split('/').pop() as string) || 'route.gpx') : null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1100] p-4 backdrop-blur-sm">
       <div className="bg-white rounded-sm shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -231,6 +235,42 @@ export default function CheckInModal({
               </>
             )}
 
+            {/* Hazepad option */}
+            {zone.skipRoute && (
+              <div className="mb-4 p-4 bg-gray-50 rounded-sm border border-gray-200">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    name="useSkipRoute"
+                    value="1"
+                    className="mt-1"
+                  />
+                  <div>
+                    <div className="font-semibold">Gebruik hazepad (skip route)</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Kies dit als je het hazepad wilt gebruiken — je kunt dan geen routetips of challenges
+                      indienen voor deze zone. {zone.skipRoute.instructions ? zone.skipRoute.instructions : ''}
+                    </div>
+                    {gpxUrl && (
+                      <div className="mt-3 flex items-center gap-3">
+                        <div className="text-xs text-gray-700">GPX bestand: <span className="font-medium text-gray-800">{gpxFilename}</span></div>
+                        <a
+                          href={gpxUrl}
+                          download={gpxFilename ?? undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Download ${gpxFilename}`}
+                          className="ml-2 inline-flex items-center justify-center w-9 h-9 rounded bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-200"
+                        >
+                          <Icon name="download" className="w-4 h-4" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </label>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
                 type="button"
@@ -241,7 +281,7 @@ export default function CheckInModal({
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !userLocation || (action === 'CHECKIN' && !isNearby)}
+                disabled={isSubmitting || !userLocation}
                 className={`flex-1 px-5 py-4 ${
                   action === 'CHECKIN'
                     ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700'
@@ -268,12 +308,8 @@ export default function CheckInModal({
               <Icon name="loader" className="w-4 h-4 animate-spin" />
               Locatie wordt opgehaald...
             </p>
-          ) : action === 'CHECKIN' && !isNearby && (
-            <p className="text-sm text-yellow-700 mt-4 text-center font-semibold flex items-center justify-center gap-2">
-              <Icon name="alert-circle" className="w-4 h-4" />
-              Je moet binnen 500m van de locatie zijn om in te checken
-            </p>
-          )}
+          ) : null
+          }
         </div>
       </div>
     </div>
