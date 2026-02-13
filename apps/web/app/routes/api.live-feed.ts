@@ -34,16 +34,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
       supabaseAdmin
         .from('rally_zone_checkins')
         .select('id, participant_id, zone_id, checked_in_at, participants(first_name, last_name, profile_photo_url)')
+        .neq('participant_id', userId)
         .order('checked_in_at', { ascending: false })
         .limit(20),
       supabaseAdmin
         .from('route_challenge_submissions')
         .select('id, participant_id, zone_id, submitted_at, challenge_type, participants(first_name, last_name, profile_photo_url)')
+        .neq('participant_id', userId)
         .order('submitted_at', { ascending: false })
         .limit(20),
       supabaseAdmin
         .from('participant_photos')
         .select('id, participant_id, image_url, uploaded_at, zone_id, participants(first_name, last_name, profile_photo_url)')
+        .neq('participant_id', userId)
         .order('uploaded_at', { ascending: false })
         .limit(20)
     ]);
@@ -82,7 +85,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     return Response.json({
       liveActivity,
-      buddyIds: [userId, ...buddyIds],
+      buddyIds: [...buddyIds],
     });
   } catch (error) {
     console.error('[api.live-feed] Error:', error);
