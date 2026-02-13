@@ -140,8 +140,9 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
           .bindPopup('<strong>Je locatie</strong>');
       }
 
-      // Draw a line between start and end (only if endPoint exists and no custom markers)
-      if (endPoint && (!markers || markers.length === 0)) {
+      // Draw a line between start and end (only if endPoint exists, no custom markers
+      // and no skip GPX is provided — when a skip GPX exists we prefer rendering that)
+      if (endPoint && (!markers || markers.length === 0) && !skipGpxUrl) {
         L.default.polyline(
           [
             [startPoint.lat, startPoint.lng],

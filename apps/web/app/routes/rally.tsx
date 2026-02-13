@@ -229,16 +229,28 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .eq('id', userId)
       .single();
 
-    if (participant) {
+      if (participant) {
       const { data: checkIns } = await supabaseAdmin
         .from('rally_zone_checkins')
-        .select('zone_id')
+        .select('*')
         .eq('participant_id', participant.id);
 
       if (checkIns) {
         // Get unique zone IDs that the user has checked into
-        userCheckIns = [...new Set(checkIns.map(ci => ci.zone_id))];
+        userCheckIns = [...new Set(checkIns.map((ci: any) => ci.zone_id))];
         console.log('[rally] userCheckIns:', userCheckIns);
+
+        // Build map of which zones were checked-in with a skip-route flag
+        const skipMap: Record<string, boolean> = {};
+        checkIns.forEach((ci: any) => {
+          const zone = ci.zone_id;
+          const used = !!(ci.took_skip_route || ci.used_skip_route || ci.tookSkipRoute || ci.usedSkipRoute);
+          if (zone) skipMap[zone] = skipMap[zone] || used;
+        });
+
+        // Attach to the return payload via a variable we'll include below
+        (globalThis as any).__rally_skip_map = skipMap;
+        console.log('[rally] skipMap:', skipMap);
       }
 
       // Get completed challenges
@@ -254,7 +266,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   }
 
-  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request) };
+  // Read skip map attached above (defensive fallback)
+  const loaderSkipMap = (globalThis as any).__rally_skip_map || {};
+
+  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request), skipUsedZones: loaderSkipMap };
 }
 
 function RallyTourButton() {
@@ -271,7 +286,7 @@ function RallyTourButton() {
 }
 
 export default function Rally() {
-  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken } = useLoaderData<typeof loader>();
+  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
@@ -280,13 +295,20 @@ export default function Rally() {
   const [zoneWeatherData, setZoneWeatherData] = useState<Record<string, any>>({});
   const [selectedWeatherZone, setSelectedWeatherZone] = useState<any>(null);
   const [localCheckedIn, setLocalCheckedIn] = useState<Set<string>>(new Set(userCheckIns || []));
-  const [skipUsedMap, setSkipUsedMap] = useState<Record<string, boolean>>({});
+  const [skipUsedMap, setSkipUsedMap] = useState<Record<string, boolean>>(skipUsedZones || {});
   const checkedInSet = localCheckedIn;
 
   // Keep localCheckedIn in sync when loader updates
   useEffect(() => {
     setLocalCheckedIn(new Set(userCheckIns || []));
   }, [userCheckIns]);
+
+  // Initialize skipUsedMap from loader-provided values (persisted choices)
+  useEffect(() => {
+    if (skipUsedZones && Object.keys(skipUsedZones).length > 0) {
+      setSkipUsedMap(skipUsedZones);
+    }
+  }, [skipUsedZones]);
   const isSubmitting = navigation.state === 'submitting';
 
   // Get user's current location
@@ -530,23 +552,47 @@ export default function Rally() {
                             (() => {
                               const gpxUrl = segment.skipRoute.gpxFile.asset.url;
                               const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
+                              // Try to derive sensible start/end points for MapView fallbacks
+                              const skipStart = segment.skipRoute?.startPoint?.lat
+                                ? { lat: segment.skipRoute.startPoint.lat, lng: segment.skipRoute.startPoint.lng, name: `${segment.title} start` }
+                                : segment.startLocation?.coordinates
+                                ? { lat: segment.startLocation.coordinates.lat, lng: segment.startLocation.coordinates.lng }
+                                : undefined;
+                              const skipEnd = segment.skipRoute?.endPoint?.lat
+                                ? { lat: segment.skipRoute.endPoint.lat, lng: segment.skipRoute.endPoint.lng, name: `${segment.title} einde` }
+                                : segment.endLocation?.coordinates
+                                ? { lat: segment.endLocation.coordinates.lat, lng: segment.endLocation.coordinates.lng }
+                                : undefined;
+
                               return (
-                                <div className="mb-4 p-4 rounded-sm border border-dashed border-primary-200 bg-primary-50 flex items-center justify-between">
-                                  <div>
-                                    <h5 className="font-semibold text-primary-900">Hazepad geselecteerd</h5>
-                                    <p className="text-sm text-gray-700">Je hebt gekozen voor het hazepad — routetips en challenges zijn uitgeschakeld voor deze zone.</p>
+                                <>
+                                  <div className="mb-4 p-4 rounded-sm border border-dashed border-primary-200 bg-primary-50 flex items-center justify-between">
+                                    <div>
+                                      <h5 className="font-semibold text-primary-900">Hazepad geselecteerd</h5>
+                                      <p className="text-sm text-gray-700">Je hebt gekozen voor het hazepad — routetips en challenges zijn uitgeschakeld voor deze zone.</p>
+                                    </div>
+                                    <a
+                                      href={gpxUrl}
+                                      download={gpxFilename}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded"
+                                    >
+                                      <Icon name="download" className="w-4 h-4" />
+                                      Download GPX
+                                    </a>
                                   </div>
-                                  <a
-                                    href={gpxUrl}
-                                    download={gpxFilename}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded"
-                                  >
-                                    <Icon name="download" className="w-4 h-4" />
-                                    Download GPX
-                                  </a>
-                                </div>
+
+                                  {/* Inline map showing the skip GPX and user's location */}
+                                  <div className="mt-4 rounded-sm overflow-hidden border border-gray-100">
+                                    <MapView
+                                      startPoint={skipStart}
+                                      endPoint={skipEnd}
+                                      skipGpxUrl={gpxUrl}
+                                      className="w-full h-64"
+                                    />
+                                  </div>
+                                </>
                               );
                             })()
                           ) : (
@@ -581,7 +627,7 @@ export default function Rally() {
                         <div className="mt-4 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-400 p-4 rounded-sm shadow-sm">
                           <p className="text-teal-900 font-bold flex items-center gap-2">
                             <Icon name="check-circle" className="w-5 h-5" />
-                            Je hebt deze zone al bezocht!
+                            Je bent in deze zone al ingecheckt!
                           </p>
                         </div>
                       )}
