@@ -262,6 +262,69 @@ export async function loader({ request }: LoaderFunctionArgs) {
     console.log("🚨 ~ loader ~ emergencyAlerts:", emergencyAlerts, 'count:', alerts?.length, 'error:', alertsError);
   }
 
+  // Fetch recent live locations (last 10 minutes) for admin map view
+  let liveLocations: any[] = [];
+  if (isAdmin) {
+    try {
+      const cutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: llData, error: llError } = await supabaseAdmin
+        .from('live_locations')
+        .select(`
+          id,
+          participant_id,
+          latitude,
+          longitude,
+          recorded_at,
+          participants!live_locations_participant_id_fkey (
+            id,
+            first_name,
+            last_name,
+            profile_photo_url
+          )
+        `)
+        .gt('recorded_at', cutoff)
+        .order('recorded_at', { ascending: false });
+
+      if (llError) {
+        console.error('[live-map] live_locations fetch error:', llError);
+      } else {
+        // llData is ordered by recorded_at desc; pick the first (most recent) record per participant
+        if (Array.isArray(llData) && llData.length > 0) {
+          // llData is ordered by recorded_at desc; pick the first (most recent) record per participant
+          const dedup: Record<string, any> = {};
+          for (const row of llData) {
+            const r: any = row;
+            const pid = r.participant_id ?? r.participant?.id ?? r.participants?.id;
+            if (!pid) continue;
+            if (!dedup[pid] || new Date(dedup[pid].recorded_at) < new Date(r.recorded_at)) dedup[pid] = r;
+          }
+
+          // Normalize participant name fields from several possible shapes so UI always has firstname/lastname
+          const normalized = Object.values(dedup).map((r: any) => {
+            const p = r.participant || r.participants || {};
+            const first = p.first_name || p.first || p.given_name || r.first_name || r.participant_first_name || (p.name ? p.name.split(' ')[0] : null) || null;
+            const last = p.last_name || p.last || p.family_name || r.last_name || r.participant_last_name || (p.name ? p.name.split(' ').slice(1).join(' ') : null) || null;
+            return {
+              ...r,
+              participant: {
+                id: p.id ?? r.participant_id ?? null,
+                first_name: first,
+                last_name: last,
+                profile_photo_url: p.profile_photo_url || p.photo_url || p.avatar_url || r.profile_photo_url || null,
+              },
+            };
+          });
+
+          liveLocations = normalized;
+        } else {
+          liveLocations = [];
+        }
+      }
+    } catch (err) {
+      console.error('[live-map] live_locations fetch exception:', err);
+    }
+  }
+
   // Fetch GPX route file
   const siteConfig = await sanityClient.fetch(`
     *[_type == "siteConfig"][0] {
@@ -286,10 +349,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
       isEventDay,
     });
 
+    // Debug: show sample of liveLocations so we can verify participant name normalization
+    // eslint-disable-next-line no-console
+    console.info('[live-map] liveLocations sample:', (liveLocations || []).slice(0, 5));
+
     return {
       rallyZones,
       eventMarkers,
       emergencyAlerts,
+      liveLocations,
       gpxRouteUrl: siteConfig?.gpxRouteFiles?.[0]?.asset?.url,
       checkIns: checkIns || [],
       routeTipSubmissions: enrichedSubmissions || [],
@@ -321,7 +389,7 @@ function LiveMapTourButton() {
 }
 
 export default function LiveMap() {
-  const { rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
+  const { rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, liveLocations, currentUserId, isAdmin, isEventDay, siteConfig, edition } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -395,6 +463,7 @@ export default function LiveMap() {
           routeTipSubmissions={routeTipSubmissions}
           buddyList={buddyList}
           likedPhotoIds={likedPhotoIds}
+          liveLocations={liveLocations}
           currentUserId={currentUserId}
           showCheckIns={showCheckIns}
           showZoneRoutes={showZoneRoutes}
@@ -487,7 +556,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin, liveLocations }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -517,6 +586,7 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxR
       routeTipSubmissions={routeTipSubmissions}
       buddyList={buddyList}
       likedPhotoIds={likedPhotoIds}
+      liveLocations={liveLocations}
       currentUserId={currentUserId}
       showCheckIns={showCheckIns}
       showZoneRoutes={showZoneRoutes}

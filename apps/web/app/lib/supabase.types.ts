@@ -607,6 +607,55 @@ export type Database = {
         }
         Relationships: []
       }
+      live_locations: {
+        Row: {
+          created_at: string
+          id: number
+          latitude: number
+          longitude: number
+          participant_id: string
+          recorded_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          latitude: number
+          longitude: number
+          participant_id: string
+          recorded_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          latitude?: number
+          longitude?: number
+          participant_id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_locations_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_locations_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_locations_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+        ]
+      }
       manual_score_adjustments: {
         Row: {
           adjusted_by: string
@@ -852,6 +901,7 @@ export type Database = {
           is_admin: boolean | null
           last_name: string
           license_plate: string
+          live_tracking_consent: boolean
           motorcycle_brand: string
           motorcycle_model: string
           paper_roadbook: boolean | null
@@ -888,6 +938,7 @@ export type Database = {
           is_admin?: boolean | null
           last_name: string
           license_plate: string
+          live_tracking_consent?: boolean
           motorcycle_brand: string
           motorcycle_model: string
           paper_roadbook?: boolean | null
@@ -924,6 +975,7 @@ export type Database = {
           is_admin?: boolean | null
           last_name?: string
           license_plate?: string
+          live_tracking_consent?: boolean
           motorcycle_brand?: string
           motorcycle_model?: string
           paper_roadbook?: boolean | null

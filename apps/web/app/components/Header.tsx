@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { NotificationBell } from './NotificationBell';
 import { Icon } from '~/components/Icon';
 import { EmergencySOSButton } from './EmergencySOSButton';
+import LiveTrackingToggle from './LiveTrackingToggle';
 import { useFeatureFlags } from '~/contexts/FeatureFlagsContext';
 import { startMasterTour } from './MasterTour';
 
@@ -307,16 +308,19 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
             </Link>
             {user ? (
               <>
-                <NotificationBell isTransparent={isTransparent} />
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
-                >
-                  <span>{user.first_name}</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-4">
+                  <LiveTrackingToggle userId={user.id} isTransparent={isTransparent} />
+                  <NotificationBell isTransparent={isTransparent} />
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
+                  >
+                    <span>{user.first_name}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
               </>
             ) : (
               <>
@@ -555,6 +559,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                         </Link>
                       )}
                       {showLiveMap && (
+                        <>
                         <Link
                           to="/live-map"
                           className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -563,6 +568,12 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                           <Icon name="map" className="w-5 h-5" />
                           <span>Live Kaart</span>
                         </Link>
+                        <>{user && (
+                          <div className="px-4 py-3">
+                            <LiveTrackingToggle userId={user.id} isTransparent={false} />
+                          </div>
+                        )}</>
+                        </>
                       )}
                       <Link
                         to="/dashboard"

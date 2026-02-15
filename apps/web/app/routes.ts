@@ -85,6 +85,8 @@ export default [
   route("api/events/submit", "routes/api.events.submit.tsx"),
   route("api/gpx-route", "routes/api.gpx-route.tsx"),
   route("api/live-feed", "routes/api.live-feed.ts"),
+  route("api/live-location", "routes/api.live-location.ts"),
+  route("api/live-locations", "routes/api.live-locations.ts"),
   route("api/prepare-edition", "routes/api.prepare-edition.tsx"),
   route("api/process-reports", "routes/api.process-reports.ts"),
   route("api/push-send", "routes/api.push-send.tsx"),
@@ -101,4 +103,5 @@ export default [
   route("api/admin-menu-stats", "routes/api.admin-menu-stats.tsx"),
   route("api/photo-interactions", "routes/api.photo-interactions.tsx"),
   route("api/weather", "routes/api.weather.ts"),
+  route("api/user/live-tracking-consent", "routes/api.user.live-tracking-consent.ts"),
 ] satisfies RouteConfig;

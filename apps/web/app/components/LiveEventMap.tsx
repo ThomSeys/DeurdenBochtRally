@@ -115,6 +115,7 @@ interface LiveEventMapProps {
   routeTipSubmissions?: RouteTipSubmission[];
   buddyList?: BuddyOption[];
   likedPhotoIds?: string[];
+  liveLocations?: any[];
   currentUserId?: string;
   showCheckIns?: boolean;
   showZoneRoutes?: boolean;
@@ -135,6 +136,7 @@ export default function LiveEventMap({
   routeTipSubmissions = [],
   buddyList = [],
   likedPhotoIds = [],
+  liveLocations = [],
   currentUserId,
   showCheckIns = true,
   showZoneRoutes = true,
@@ -151,6 +153,7 @@ export default function LiveEventMap({
   const userMarkerRef = useRef<any>(null);
   const gpxLayerRef = useRef<any>(null);
   const zoneRoutesRef = useRef<any[]>([]);
+  const liveMarkersRef = useRef<Record<string, any>>({});
   const [isClient, setIsClient] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -332,11 +335,13 @@ export default function LiveEventMap({
           }
         }
 
-        // Clear existing markers and zone routes (except main route and user marker)
+        // Clear existing markers and zone routes (except main route, user marker and live-tracking markers)
         mapRef.current.eachLayer((layer: any) => {
           if (
             layer instanceof L.default.Marker &&
-            layer !== userMarkerRef.current
+            layer !== userMarkerRef.current &&
+            // skip markers created for live-tracking (they have _isLiveMarker flag)
+            !(layer as any)?._isLiveMarker
           ) {
             mapRef.current?.removeLayer(layer);
           }
@@ -807,6 +812,103 @@ export default function LiveEventMap({
     if (!isClient || !mapRef.current || !focusLocation) return;
     mapRef.current.setView([focusLocation.lat, focusLocation.lng], 12);
   }, [isClient, focusLocation?.lat, focusLocation?.lng]);
+
+  // Update markers when loader-provided `liveLocations` changes (admins only)
+  useEffect(() => {
+    if (!isClient || !isAdmin) return;
+
+    let mounted = true;
+
+    (async () => {
+      try {
+        const locations = liveLocations || [];
+
+        const L = (await import('leaflet')).default;
+        if (!mapRef.current || !mounted) return;
+
+        const activeIds = new Set<string>();
+
+        locations.forEach((loc: any) => {
+          const pid = loc.participant_id || loc.participant?.id;
+          const lat = loc.latitude ?? loc.lat ?? loc.location?.lat;
+          const lng = loc.longitude ?? loc.lng ?? loc.location?.lng;
+          if (!pid || !lat || !lng) return;
+          activeIds.add(pid);
+
+          const existing = liveMarkersRef.current[pid];
+
+          const recordedAt = loc.recorded_at ? new Date(loc.recorded_at) : null;
+          const formattedDate = recordedAt
+            ? recordedAt.toLocaleString('nl-BE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : '';
+
+          const participant = loc.participant || loc.participants || {};
+          const photoUrl = participant.profile_photo_url || participant.photo_url || participant.avatar_url || null;
+          const displayName = (participant.first_name || participant.last_name) ? `${participant.first_name || ''} ${participant.last_name || ''}`.trim() : 'Onbekende deelnemer';
+
+          const photoHtml = photoUrl
+            ? `<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;margin-right:8px;flex-shrink:0;"><img src=\"${String(photoUrl).replace(/\"/g,'%22')}\" alt=\"${escapeHtml(displayName)}\" style=\"width:100%;height:100%;object-fit:cover;display:block;\"/></div>`
+            : '';
+
+          const popupHtml = `
+            <div style="min-width:220px; display:flex; gap:8px; align-items:flex-start;">
+              ${photoHtml}
+              <div style="flex:1">
+                <strong style="display:block; font-size:14px; margin-bottom:4px;">${escapeHtml(displayName)}</strong>
+                <div style="font-size:13px; color:#374151; margin-bottom:6px;">Live locatie</div>
+                <div style="font-size:12px; color:#6b7280;">${escapeHtml(formattedDate)}</div>
+              </div>
+            </div>
+          `;
+
+          if (existing) {
+            try { existing.setLatLng([lat, lng]); existing.getPopup().setContent(popupHtml); } catch (e) {}
+          } else {
+            const l: any = loc;
+            const participant = l.participant || l.participants || {};
+            const photo = participant.profile_photo_url || participant.profile_photo || null;
+            const first = (participant.first_name || '').trim();
+            const last = (participant.last_name || '').trim();
+            const initials = ((first.charAt(0) || '') + (last.charAt(0) || '')).toUpperCase() || 'U';
+
+            let iconHtml = '';
+            if (photo) {
+              const safeUrl = String(photo).replace(/"/g, '%22');
+              iconHtml = `<div style="width:34px;height:34px;border-radius:50%;overflow:hidden;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><img src=\"${safeUrl}\" alt=\"${escapeHtml(first + ' ' + last)}\" style=\"width:100%;height:100%;object-fit:cover;display:block;\"/></div>`;
+            } else {
+              // static color; could be hashed per participant for variety
+              const bg = '#2563eb';
+              iconHtml = `<div style="background:${bg};width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:14px;">${escapeHtml(initials)}</div>`;
+            }
+
+            const personIcon = L.divIcon({
+              html: iconHtml,
+              className: '',
+              iconSize: [34, 34],
+              iconAnchor: [17, 17],
+            });
+
+            const displayName = (first || last) ? `${first} ${last}`.trim() : 'Onbekende deelnemer';
+            const marker = L.marker([lat, lng], { icon: personIcon }).addTo(mapRef.current).bindPopup(popupHtml);
+            try { (marker as any)._isLiveMarker = true; } catch (e) {}
+            liveMarkersRef.current[pid] = marker;
+          }
+        });
+
+        // Remove markers for participants no longer present
+        Object.keys(liveMarkersRef.current).forEach((pid) => {
+          if (!activeIds.has(pid)) {
+            try { mapRef.current.removeLayer(liveMarkersRef.current[pid]); } catch (e) {}
+            delete liveMarkersRef.current[pid];
+          }
+        });
+      } catch (err) {
+        console.warn('[live-map] failed to update live locations', err);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [isClient, isAdmin, liveLocations]);
 
   if (mapError) {
     return (
