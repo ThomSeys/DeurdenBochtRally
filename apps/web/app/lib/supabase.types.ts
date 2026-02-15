@@ -117,6 +117,13 @@ export type Database = {
             foreignKeyName: "buddy_group_achievement_members_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_group_achievement_members_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -169,12 +176,71 @@ export type Database = {
             foreignKeyName: "buddy_group_achievements_primary_participant_id_fkey"
             columns: ["primary_participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_group_achievements_primary_participant_id_fkey"
+            columns: ["primary_participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "buddy_group_achievements_primary_participant_id_fkey"
             columns: ["primary_participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+        ]
+      }
+      buddy_group_playlists: {
+        Row: {
+          buddy_group_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          spotify_playlist_id: string | null
+          spotify_playlist_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          buddy_group_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          spotify_playlist_id?: string | null
+          spotify_playlist_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          buddy_group_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          spotify_playlist_id?: string | null
+          spotify_playlist_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_group_playlists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_group_playlists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_group_playlists_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "public_photo_albums"
             referencedColumns: ["participant_id"]
@@ -207,6 +273,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "certificates_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "certificates_participant_id_fkey"
             columns: ["participant_id"]
@@ -319,6 +392,13 @@ export type Database = {
             foreignKeyName: "emergency_contacts_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_contacts_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -370,6 +450,13 @@ export type Database = {
             foreignKeyName: "emergency_sos_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_sos_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -379,6 +466,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_photo_albums"
             referencedColumns: ["participant_id"]
+          },
+          {
+            foreignKeyName: "emergency_sos_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "emergency_sos_resolved_by_fkey"
@@ -574,6 +668,13 @@ export type Database = {
             foreignKeyName: "participant_achievements_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_achievements_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -703,6 +804,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "participant_photos_challenge_submission_id_fkey"
+            columns: ["challenge_submission_id"]
+            isOneToOne: false
+            referencedRelation: "route_challenge_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_photos_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "participant_photos_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
@@ -716,13 +831,6 @@ export type Database = {
             referencedRelation: "public_photo_albums"
             referencedColumns: ["participant_id"]
           },
-          {
-            foreignKeyName: "participant_photos_challenge_submission_id_fkey"
-            columns: ["challenge_submission_id"]
-            isOneToOne: true
-            referencedRelation: "route_challenge_submissions"
-            referencedColumns: ["id"]
-          },
         ]
       }
       participants: {
@@ -734,6 +842,7 @@ export type Database = {
           checked_in: boolean | null
           checked_in_at: string | null
           created_at: string | null
+          edition_year: number | null
           email: string
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -755,6 +864,7 @@ export type Database = {
           ride_type: string
           route_preference: string | null
           show_on_leaderboard: boolean | null
+          skip_route_count: number
           start_location: Json | null
           status: string | null
           stripe_payment_id: string | null
@@ -768,6 +878,7 @@ export type Database = {
           checked_in?: boolean | null
           checked_in_at?: string | null
           created_at?: string | null
+          edition_year?: number | null
           email: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -789,6 +900,7 @@ export type Database = {
           ride_type: string
           route_preference?: string | null
           show_on_leaderboard?: boolean | null
+          skip_route_count?: number
           start_location?: Json | null
           status?: string | null
           stripe_payment_id?: string | null
@@ -802,6 +914,7 @@ export type Database = {
           checked_in?: boolean | null
           checked_in_at?: string | null
           created_at?: string | null
+          edition_year?: number | null
           email?: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -823,6 +936,7 @@ export type Database = {
           ride_type?: string
           route_preference?: string | null
           show_on_leaderboard?: boolean | null
+          skip_route_count?: number
           start_location?: Json | null
           status?: string | null
           stripe_payment_id?: string | null
@@ -884,6 +998,13 @@ export type Database = {
             foreignKeyName: "photo_likes_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_likes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -937,6 +1058,13 @@ export type Database = {
             foreignKeyName: "photo_tags_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_tags_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -960,6 +1088,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_photo_albums"
             referencedColumns: ["photo_id"]
+          },
+          {
+            foreignKeyName: "photo_tags_tagged_by_fkey"
+            columns: ["tagged_by"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "photo_tags_tagged_by_fkey"
@@ -1023,6 +1158,13 @@ export type Database = {
             columns: ["notification_history_id"]
             isOneToOne: false
             referencedRelation: "push_notifications_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_delivery_log_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
             referencedColumns: ["id"]
           },
           {
@@ -1122,6 +1264,13 @@ export type Database = {
             foreignKeyName: "push_notifications_history_sent_by_fkey"
             columns: ["sent_by"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_notifications_history_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -1199,6 +1348,13 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "push_subscriptions_participant_id_fkey"
             columns: ["participant_id"]
@@ -1308,6 +1464,7 @@ export type Database = {
           notes: string | null
           odometer_reading: number | null
           participant_id: string
+          took_skip_route: boolean | null
           zone_id: string
         }
         Insert: {
@@ -1318,6 +1475,7 @@ export type Database = {
           notes?: string | null
           odometer_reading?: number | null
           participant_id: string
+          took_skip_route?: boolean | null
           zone_id: string
         }
         Update: {
@@ -1328,9 +1486,17 @@ export type Database = {
           notes?: string | null
           odometer_reading?: number | null
           participant_id?: string
+          took_skip_route?: boolean | null
           zone_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rally_zone_checkins_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rally_zone_checkins_participant_id_fkey"
             columns: ["participant_id"]
@@ -1497,6 +1663,13 @@ export type Database = {
             foreignKeyName: "report_history_generated_by_fkey"
             columns: ["generated_by"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_history_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -1506,6 +1679,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_photo_albums"
             referencedColumns: ["participant_id"]
+          },
+          {
+            foreignKeyName: "report_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "report_history_participant_id_fkey"
@@ -1568,6 +1748,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "report_queue_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "report_queue_requested_by_fkey"
             columns: ["requested_by"]
@@ -1635,6 +1822,13 @@ export type Database = {
             foreignKeyName: "ride_stories_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_stories_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -1698,6 +1892,13 @@ export type Database = {
             foreignKeyName: "ride_story_likes_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_story_likes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -1744,6 +1945,13 @@ export type Database = {
             foreignKeyName: "riding_buddies_buddy_id_fkey"
             columns: ["buddy_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "riding_buddies_buddy_id_fkey"
+            columns: ["buddy_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -1753,6 +1961,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_photo_albums"
             referencedColumns: ["participant_id"]
+          },
+          {
+            foreignKeyName: "riding_buddies_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "riding_buddies_participant_id_fkey"
@@ -1824,6 +2039,13 @@ export type Database = {
             foreignKeyName: "route_challenge_submissions_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_challenge_submissions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
@@ -1874,6 +2096,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "scheduled_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scheduled_reports_created_by_fkey"
             columns: ["created_by"]
@@ -1950,11 +2179,82 @@ export type Database = {
             foreignKeyName: "system_logs_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_logs_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "system_logs_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "public_photo_albums"
+            referencedColumns: ["participant_id"]
+          },
+        ]
+      }
+      video_recaps: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          edition_year: number
+          id: string
+          metadata: Json | null
+          participant_id: string
+          status: string
+          thumbnail_url: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          edition_year: number
+          id?: string
+          metadata?: Json | null
+          participant_id: string
+          status?: string
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          edition_year?: number
+          id?: string
+          metadata?: Json | null
+          participant_id?: string
+          status?: string
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_recaps_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participant_year_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_recaps_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_recaps_participant_id_fkey"
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "public_photo_albums"
@@ -2012,6 +2312,21 @@ export type Database = {
         }
         Relationships: []
       }
+      participant_year_stats: {
+        Row: {
+          challenges_completed: number | null
+          edition_year: number | null
+          first_checkin: string | null
+          first_name: string | null
+          id: string | null
+          last_checkin: string | null
+          last_name: string | null
+          photos_uploaded: number | null
+          total_points: number | null
+          zones_completed: number | null
+        }
+        Relationships: []
+      }
       public_photo_albums: {
         Row: {
           album_description: string | null
@@ -2055,6 +2370,10 @@ export type Database = {
           zone_id: string
           zone_name: string
         }[]
+      }
+      get_buddy_group_id: {
+        Args: { p_participant_id: string }
+        Returns: string
       }
       get_leaderboard: {
         Args: never
@@ -2127,6 +2446,15 @@ export type Database = {
           pending_count: number
           rider_id: string
           rider_name: string
+        }[]
+      }
+      get_year_over_year_improvement: {
+        Args: { p_current_year: number; p_id: string }
+        Returns: {
+          current_value: number
+          improvement_percent: number
+          metric: string
+          previous_value: number
         }[]
       }
       increment_photo_likes: { Args: { photo_id: string }; Returns: undefined }

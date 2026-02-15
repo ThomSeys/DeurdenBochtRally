@@ -142,11 +142,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (totalZones <= 2 && photosCount <= 2) {
     candidates.push({ key: 'rechte_lijn', name: 'De Rechte Lijn', emoji: '➡️' });
   }
-
   // Priority order for single badge selection
   const priority = ['discoverer', 'adventurer', 'doorzetter', 'genieter', 'rechte_lijn'];
+  // Promote hazepad badge slightly lower than adventurer
+  const priorityWithHazepads = ['discoverer', 'adventurer', 'hurry_hare', 'doorzetter', 'genieter', 'rechte_lijn'];
   let bestBadge: { key: string; name: string; emoji: string } | null = null;
-  for (const key of priority) {
+  for (const key of priorityWithHazepads) {
     const found = candidates.find(c => c.key === key);
     if (found) { bestBadge = found; break; }
   }
@@ -155,6 +156,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
     zoneName: zoneNameById.get(ci.zone_id) || 'Zone',
     timestamp: ci.checked_in_at,
   }));
+
+  // Hazepaden: derive from zone check-ins (authoritative source)
+  const { data: hazepadSubs } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('zone_id, took_skip_route')
+    .eq('participant_id', user.id)
+    .eq('took_skip_route', true);
+
+  const hazepadsSelected = hazepadSubs ? new Set(hazepadSubs.map((s: any) => s.zone_id).filter(Boolean)).size : 0;
+  const hazepadZoneNames = (hazepadSubs || [])
+    .map((s: any) => zoneNameById.get(s.zone_id) || null)
+    .filter(Boolean) as string[];
+
+
+
+  // Badge for choosing multiple hazepads (skip-route choices)
+  if (hazepadsSelected >= 3) {
+    candidates.push({ key: 'hurry_hare', name: 'Hurry Hare', emoji: '🐇' });
+  }
+
 
     return {
       user,
@@ -165,11 +186,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
       timeline,
       photos: photos || [],
       bestBadge,
+      hazepadsSelected,
+      hazepadZoneNames,
     };
 }
 
 export default function DashboardRecap() {
-  const { user, totalZones, totalChallenges, totalPoints, correctChallenges, timeline, photos, bestBadge } = useLoaderData<typeof loader>();
+  const { user, totalZones, totalChallenges, totalPoints, correctChallenges, timeline, photos, bestBadge, hazepadsSelected, hazepadZoneNames } = useLoaderData<typeof loader>();
   const [shareStatus, setShareStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   // Get random quote for display
@@ -227,7 +250,7 @@ export default function DashboardRecap() {
       const layoutBadgeSize = 130;
       if (bestBadge) {
         const badgeSize = layoutBadgeSize;
-        const badgesY = quoteY + 40; // more space under the quote
+        const badgesY = quoteY + 80; // more space under the quote (extra top spacing for badge)
         const badgeX = (1080 - badgeSize) / 2;
 
         // Subtle shadow for depth
@@ -277,43 +300,74 @@ export default function DashboardRecap() {
         }
       }
 
-      // Stats cards in 2x2 grid (2 per row)
+      // Stats cards in grid
       // Reserve extra vertical space if a badge was drawn so stats won't overlap
-      const statsStartY = quoteY + 100 + (bestBadge ? (layoutBadgeSize + 80) : 0);
+      const statsStartY = quoteY + 100 + (bestBadge ? (layoutBadgeSize + 120) : 0);
       const cardWidth = 360;
       const cardHeight = 160;
       const cardGapX = 40;
       const cardGapY = 30;
       const gridStartX = (1080 - (cardWidth * 2 + cardGapX)) / 2;
       
-      const stats = [
-        { label: 'Zones bezocht', value: totalZones.toString(), row: 0, col: 0 },
-        { label: 'Challenges gedaan', value: totalChallenges.toString(), row: 0, col: 1 },
-        { label: 'Punten gescoord', value: totalPoints.toString(), row: 1, col: 0 },
-        { label: 'Correcte challenges', value: correctChallenges.toString(), row: 1, col: 1 },
-      ];
+          const hazepadsToDraw = (typeof (window as any).__RECAP_HAZEPADS_COUNT__ !== 'undefined')
+            ? (window as any).__RECAP_HAZEPADS_COUNT__
+            : (typeof hazepadsSelected !== 'undefined' ? hazepadsSelected : 0);
 
-      stats.forEach(stat => {
-        const x = gridStartX + stat.col * (cardWidth + cardGapX);
-        const y = statsStartY + stat.row * (cardHeight + cardGapY);
-        
-        // Card background
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.fillRect(x, y, cardWidth, cardHeight);
+          const stats = [
+            { label: 'Zones bezocht', value: totalZones.toString() },
+            { label: 'Challenges gedaan', value: totalChallenges.toString() },
+            { label: 'Punten gescoord', value: totalPoints.toString() },
+            { label: 'Correcte challenges', value: correctChallenges.toString() },
+            { label: 'Hazepaden gekozen', value: hazepadsToDraw.toString() },
+          ];
 
-        // Value
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 72px system-ui, -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(stat.value, x + cardWidth / 2, y + 75);
+          // Dynamic grid layout for stats (2 columns)
+          const cols = 2;
+          const rows = Math.ceil(stats.length / cols);
 
-        // Label
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = '28px system-ui, -apple-system, sans-serif';
-        ctx.fillText(stat.label, x + cardWidth / 2, y + 115);
-      });
+          stats.forEach((stat, idx) => {
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+            const x = gridStartX + col * (cardWidth + cardGapX);
+            const y = statsStartY + row * (cardHeight + cardGapY);
 
-      const photosStartY = statsStartY + (cardHeight * 2) + cardGapY + 80;
+            // Card background with rounded corners and subtle gradient
+            const radius = 12;
+            ctx.save();
+            const grad = ctx.createLinearGradient(x, y, x, y + cardHeight);
+            grad.addColorStop(0, 'rgba(255,255,255,0.18)');
+            grad.addColorStop(1, 'rgba(255,255,255,0.08)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + cardWidth - radius, y);
+            ctx.quadraticCurveTo(x + cardWidth, y, x + cardWidth, y + radius);
+            ctx.lineTo(x + cardWidth, y + cardHeight - radius);
+            ctx.quadraticCurveTo(x + cardWidth, y + cardHeight, x + cardWidth - radius, y + cardHeight);
+            ctx.lineTo(x + radius, y + cardHeight);
+            ctx.quadraticCurveTo(x, y + cardHeight, x, y + cardHeight - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+
+            // Value
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 72px system-ui, -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(stat.value, x + cardWidth / 2, y + 75);
+
+            // Label
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = '28px system-ui, -apple-system, sans-serif';
+            ctx.fillText(stat.label, x + cardWidth / 2, y + 115);
+          });
+
+      const photosStartY = statsStartY + (cardHeight * rows) + cardGapY + 80;
 
       // Load and draw photos (max 6 photos in 3x2 grid)
       if (photos.length > 0) {
@@ -381,6 +435,8 @@ export default function DashboardRecap() {
       const footerStartY = photos.length > 0 
         ? photosStartY + (Math.ceil(Math.min(photos.length, 6) / 3) * 220) + 60
         : photosStartY + 60;
+
+      // (Hazepads are now integrated into the stats grid above)
 
       // Footer
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
@@ -484,6 +540,10 @@ export default function DashboardRecap() {
           <div className="bg-white rounded-sm shadow p-6">
             <p className="text-sm text-gray-500">Correcte challenges</p>
             <p className="text-3xl font-bold text-pink-600 mt-2">{correctChallenges}</p>
+          </div>
+          <div className="bg-white rounded-sm shadow p-6">
+            <p className="text-sm text-gray-500">Hazepaden gekozen</p>
+            <p className="text-3xl font-bold text-teal-600 mt-2">{hazepadsSelected}</p>
           </div>
         </div>
 

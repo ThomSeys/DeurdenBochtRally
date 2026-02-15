@@ -15,12 +15,12 @@ interface Achievement {
   category: string;
   points: number;
   criteria: {
-    type: 'zones' | 'photos' | 'likes' | 'stories' | 'checkin_time' | 'combo';
+    type: 'zones' | 'photos' | 'likes' | 'stories' | 'checkin_time' | 'combo' | 'hazepads';
     value?: number;
     time_before?: string; // HH:MM format
     time_after?: string;  // HH:MM format
     conditions?: Array<{
-      type: 'zones' | 'photos' | 'likes' | 'stories';
+      type: 'zones' | 'photos' | 'likes' | 'stories' | 'hazepads';
       value: number;
     }>;
   } | null;
@@ -46,12 +46,19 @@ async function getParticipantStats(participantId: string) {
     .eq('participant_id', participantId)
     .eq('is_approved', true);
 
+  const { data: hazepadSubs } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('zone_id, took_skip_route')
+    .eq('participant_id', participantId)
+    .eq('took_skip_route', true);
+
   return {
     zonesCompleted: checkins?.length || 0,
     photosUploaded: photos?.length || 0,
     totalLikes: photos?.reduce((sum, p) => sum + (p.like_count || 0), 0) || 0,
     storiesPublished: stories?.length || 0,
     checkins: checkins || [],
+    hazepadsSelected: hazepadSubs ? new Set(hazepadSubs.map((s: any) => s.zone_id).filter(Boolean)).size : 0,
   };
 }
 
@@ -72,8 +79,25 @@ async function checkAchievementCriteria(
   const stats = await getParticipantStats(participantId);
   const { criteria } = achievement;
 
+  // Normalize criteria type to support a few possible variants from DB
+  const rawType = (criteria.type || '') as string;
+  const lowerType = rawType.toString().toLowerCase();
+  const normType = ((): string => {
+    if (lowerType === 'hurry_hare' || lowerType === 'hurryhare' || lowerType.includes('hare')) return 'hazepads';
+    return lowerType;
+  })();
+
+  // Debug log to aid diagnosis when criteria involve hazepads
+  if (normType === 'hazepads') {
+    console.info('[achievements] evaluating hazepads', {
+      achievement: achievement.name,
+      required: criteria.value,
+      hazepadsSelected: (stats as any).hazepadsSelected,
+    });
+  }
+
   // Check based on criteria type
-  switch (criteria.type) {
+  switch (normType) {
     case 'zones':
       return stats.zonesCompleted >= (criteria.value || 0);
     
@@ -85,13 +109,16 @@ async function checkAchievementCriteria(
     
     case 'stories':
       return stats.storiesPublished >= (criteria.value || 0);
+
+    case 'hazepads':
+      return (stats as any).hazepadsSelected >= (criteria.value || 0);
     
     case 'checkin_time':
       // Check if any check-in was within time window
       if (!stats.checkins.length) return false;
       
       return stats.checkins.some(checkin => {
-        const checkinDate = new Date(checkin.checked_in_at);
+        const checkinDate = new Date(checkin.checked_in_at ?? "");
         const hour = checkinDate.getHours();
         const minute = checkinDate.getMinutes();
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
@@ -108,9 +135,12 @@ async function checkAchievementCriteria(
     case 'combo':
       // Multiple conditions must all be met
       if (!criteria.conditions || criteria.conditions.length === 0) return false;
-      
+      // Use hazepads count from stats if present
+      const hazepadsCount = (stats as any).hazepadsSelected || 0;
       return criteria.conditions.every(condition => {
-        switch (condition.type) {
+        const cTypeRaw = (condition.type || '').toString().toLowerCase();
+        const cType = (cTypeRaw === 'hurry_hare' || cTypeRaw === 'hurryhare' || cTypeRaw.includes('hare')) ? 'hazepads' : cTypeRaw;
+        switch (cType) {
           case 'zones':
             return stats.zonesCompleted >= condition.value;
           case 'photos':
@@ -119,6 +149,8 @@ async function checkAchievementCriteria(
             return stats.totalLikes >= condition.value;
           case 'stories':
             return stats.storiesPublished >= condition.value;
+          case 'hazepads':
+            return hazepadsCount >= condition.value;
           default:
             return false;
         }

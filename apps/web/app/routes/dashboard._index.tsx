@@ -44,6 +44,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select('*')
     .eq('participant_id', user.id);
 
+  // Get rally zone submissions for this participant and derive hazepad zones from submissions
+  // (use submissions as the source of truth for which zones were used)
+  const { data: zoneSubmissions } = await supabase
+    .from('rally_zone_checkins')
+    .select('zone_id, took_skip_route')
+    .eq('participant_id', user.id);
+
+  const hazepadZoneIds = new Set<string>();
+  if (zoneSubmissions && Array.isArray(zoneSubmissions)) {
+    for (const s of zoneSubmissions) {
+      // Optionally only include valid submissions
+      if (s?.took_skip_route) hazepadZoneIds.add(s.zone_id);
+    }
+  }
+
   // Get documents
   const { data: documents } = await supabase
     .from('documents')
@@ -251,7 +266,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   return { 
     user, 
-    zoneCheckins, 
+    zoneCheckins,
+    hazepadZones: zoneCheckins,
+    hazepadCount: hazepadZoneIds?.size,
     documents, 
     completedZones, 
     isCompetitionMode, 
@@ -284,6 +301,8 @@ export default function Dashboard() {
   const { 
     user, 
     zoneCheckins, 
+    hazepadZones,
+    hazepadCount,
     documents, 
     completedZones, 
     eventDate, 
@@ -308,7 +327,6 @@ export default function Dashboard() {
     rallyZones, 
     crewStats 
   } = useLoaderData<typeof loader>();
-
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
   const [pushDebugInfo, setPushDebugInfo] = useState<string>('');
@@ -529,7 +547,7 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                 <Link
-                  to="/dashboard/rally-submission"
+                  to="/rally"
                   className="text-center whitespace-nowrap bg-white text-primary-600 hover:bg-primary-50 px-6 md:px-8 py-3 md:py-4 rounded-sm font-bold text-base md:text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
                   <Icon name="map" className="w-5 h-5" />
@@ -677,6 +695,19 @@ export default function Dashboard() {
                   <p className="font-bold text-3xl text-accent-500">{completedChallenges.length - challengeStats.total_submitted}</p>
                 </div>
               </div>
+
+              {/* Hazepad (skip-route) summary */}
+              {hazepadCount > 0 && (
+                  <div className="mt-3 bg-accent-500/10 border-l-4 border-accent-500 p-3 rounded">
+                    <div className="text-sm text-primary-500 flex items-center gap-3">
+                      <span className="font-semibold">Hazepaden gekozen:</span>
+                      <span className="text-white bg-primary-600 px-2 py-0.5 rounded">{hazepadCount || 0}</span>
+                    </div>
+                    {hazepadCount > 0 && hazepadZones && hazepadZones.length > 0 && (
+                      <p className="text-sm text-primary-500 mt-2">Gekozen zones: {hazepadZones.map((z: any) => z.zone_id).join(', ')}</p>
+                    )}
+                  </div>
+              )}
               {challengeStats.total_submitted === 0 && (
                 <p className="text-gray-600 text-sm mt-4">
                   Ontdek challenges op de rally zones en verdien punten! 🎯
@@ -1048,6 +1079,12 @@ export default function Dashboard() {
                 <p className="text-sm text-indigo-800 mt-2">
                   Een persoonlijke recap met je hoogtepunten, check-ins en crew vibes.
                 </p>
+                {hazepadCount > 0 && (
+                  <div className="mt-3 inline-flex items-center gap-3">
+                    <span className="text-sm text-indigo-700 font-medium">Hazepaden gekozen:</span>
+                    <span className="text-indigo-900 bg-indigo-100 px-2 py-0.5 rounded">{hazepadCount}</span>
+                  </div>
+                )}
                 <Link
                   to="/dashboard/recap"
                   className="mt-4 inline-flex items-center gap-2 bg-white text-indigo-700 hover:bg-white/90 px-4 py-2 rounded-sm font-semibold transition-colors"

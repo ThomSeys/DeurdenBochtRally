@@ -9,9 +9,9 @@ export default function RallySubmissionFAB() {
   const [showFAB, setShowFAB] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Don't show FAB on the rally submission page itself
-  const isOnRallySubmissionPage = matches.some(m => m.pathname === '/dashboard/rally-submission');
-  const isOnRallyPage = matches.some(m => m.pathname === '/live-map');
+  // Treat the rally page as the submission target — hide FAB when already on /rally
+  const isOnRallyPage = matches.some(m => m.pathname === '/rally');
+  const isOnLiveMap = matches.some(m => m.pathname === '/live-map');
 
   useEffect(() => {
     // Small delay before showing FAB
@@ -33,8 +33,8 @@ export default function RallySubmissionFAB() {
     return null;
   }
 
-  // Don't show FAB on the rally submission page itself
-  if (isOnRallySubmissionPage) {
+  // Don't show FAB on the rally page itself
+  if (isOnRallyPage) {
     return null;
   }
 
@@ -42,8 +42,8 @@ export default function RallySubmissionFAB() {
     <>
       {showFAB && (
         <Link
-          to="/dashboard/rally-submission"
-          className={`fixed ${isOnRallyPage ? 'bottom-4 right-24' : 'bottom-6 right-8'} z-[1000] flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ${
+          to="/rally"
+          className={`fixed ${isOnLiveMap ? 'bottom-4 right-24' : 'bottom-6 right-8'} z-[1000] flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ${
             isScrolled ? 'bottom-6 opacity-100' : 'bottom-6 opacity-90 hover:opacity-100'
           }`}
           title="Rally Codes Indienen"

@@ -40,6 +40,7 @@ interface CheckInModalProps {
   qrCode?: string;
   csrfToken: string;
   buddies?: Array<{ buddy_id: string; buddy: { id: string; first_name: string; last_name: string } }>;
+  buddyCheckins?: Record<string, string[]>;
 }
 
 export default function CheckInModal({
@@ -52,6 +53,7 @@ export default function CheckInModal({
   qrCode,
   csrfToken,
   buddies,
+  buddyCheckins
 }: CheckInModalProps) {
   const [selectedBuddies, setSelectedBuddies] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -66,6 +68,18 @@ export default function CheckInModal({
     }
     return Array.from(m.values());
   }, [buddies]);
+
+  // Filter out buddies that are already checked in for this zone
+  const filteredBuddies = useMemo(() => {
+    if (!uniqueBuddies || uniqueBuddies.length === 0) return [];
+    if (!zone?._id) return uniqueBuddies;
+    const zid = zone._id as string;
+    const map = (buddyCheckins || {});
+    return uniqueBuddies.filter(b => {
+      const checked = map[b.buddy_id] || [];
+      return !checked.includes(zid);
+    });
+  }, [uniqueBuddies, buddyCheckins, zone]);
 
   const getBuddyPhoto = (buddy: any) => {
     // Support multiple shapes returned from different loaders
@@ -309,7 +323,7 @@ export default function CheckInModal({
                 </div>
                 <p className="text-sm text-gray-600 mb-3">Rijd je samen? Selecteer wie er bij je is om hen ook in te checken.</p>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {uniqueBuddies.map((buddy) => {
+                  {filteredBuddies.map((buddy) => {
                     const photo = getBuddyPhoto(buddy);
                     return (
                       <label key={buddy.buddy_id} className="flex items-center gap-3 p-2 rounded hover:bg-blue-100 cursor-pointer transition-colors">
@@ -341,6 +355,13 @@ export default function CheckInModal({
                   <div className="mt-3 p-2 bg-blue-100 rounded text-sm text-blue-800">
                     <Icon name="info" className="w-4 h-4 inline mr-1" />
                     {selectedBuddies.length} naftgenoot{selectedBuddies.length > 1 ? 'en' : ''} worden ook ingecheckt
+                  </div>
+                )}
+                {/* Inform user about hidden buddies that are already checked in */}
+                {uniqueBuddies.length > filteredBuddies.length && (
+                  <div className="mt-3 p-2 bg-yellow-50 border border-yellow-100 rounded text-sm text-yellow-800">
+                    <Icon name="info" className="w-4 h-4 inline mr-1" />
+                    {uniqueBuddies.length - filteredBuddies.length} naftgenoot{uniqueBuddies.length - filteredBuddies.length > 1 ? 'en' : ''} zijn al ingecheckt in deze zone en worden niet getoond
                   </div>
                 )}
               </div>

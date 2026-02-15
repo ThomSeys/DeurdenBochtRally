@@ -147,12 +147,8 @@ export async function action({ request }: ActionFunctionArgs) {
         location_lng: longitude ? parseFloat(longitude) : null,
         checked_in_at: new Date().toISOString(),
         checked_in_by: user.id,
+        took_skip_route: useSkipRoute, // if the main user took the skip route, we can mark buddies as also having taken it since they didn't actually check in themselves
       });
-    }
-
-    // Attach skip route flag for the user's check-in only
-    if (useSkipRoute) {
-      if (checkInsToCreate[0]) checkInsToCreate[0].took_skip_route = true;
     }
 
     let insertError = null;
@@ -161,19 +157,6 @@ export async function action({ request }: ActionFunctionArgs) {
       insertError = (res as any).error || null;
     } catch (e: any) {
       insertError = e;
-    }
-
-    // If PostgREST reports the used_skip_route column is missing, retry without it
-    if (insertError && (insertError.code === 'PGRST204' || (insertError.message && String(insertError.message).includes("used_skip_route")))) {
-      await userLogger.warn('rally-checkin', 'used_skip_route column missing; retrying insert without it', { zoneId });
-      const payloadWithoutFlag = { ...insertPayload };
-      delete payloadWithoutFlag.used_skip_route;
-      try {
-        const res2 = await supabaseAdmin.from('rally_zone_checkins').insert(payloadWithoutFlag);
-        insertError = (res2 as any).error || null;
-      } catch (e: any) {
-        insertError = e;
-      }
     }
 
     if (insertError) {
@@ -459,12 +442,38 @@ export async function loader({ request }: LoaderFunctionArgs) {
          }
 
          buddiesList = Array.from(byBuddyId.values());
-    }
 
-    buddiesList = temp.filter(t => t.buddy && t.buddy.id);
+         // Fetch existing check-ins for these buddies so UI can filter already-checked buddies per zone
+         const buddyIds = buddiesList.map(b => b.buddy_id).filter(Boolean);
+         let buddyCheckins: Record<string, string[]> = {};
+         if (buddyIds.length > 0) {
+           try {
+             const { data: buddyCheckinRows } = await supabaseAdmin
+               .from('rally_zone_checkins')
+               .select('participant_id, zone_id')
+               .in('participant_id', buddyIds);
+
+             (buddyCheckinRows || []).forEach((r: any) => {
+               if (!r || !r.participant_id) return;
+               buddyCheckins[r.participant_id] = buddyCheckins[r.participant_id] || [];
+               if (r.zone_id) buddyCheckins[r.participant_id].push(r.zone_id);
+             });
+           } catch (e) {
+             // ignore errors - optional feature
+           }
+         }
+
+         // attach buddyCheckins map for client use
+         (globalThis as any).__buddy_checkins_map = buddyCheckins;
+    } else {
+      buddiesList = temp.filter(t => t.buddy && t.buddy.id);
+      (globalThis as any).__buddy_checkins_map = {};
+    }
   }
 
-  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request), skipUsedZones: loaderSkipMap, buddies: buddiesList };
+  const buddyCheckinsFromGlobal = (globalThis as any).__buddy_checkins_map || {};
+
+  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request), skipUsedZones: loaderSkipMap, buddies: buddiesList, buddyCheckins: buddyCheckinsFromGlobal };
 }
 
 function RallyTourButton() {
@@ -481,7 +490,7 @@ function RallyTourButton() {
 }
 
 export default function Rally() {
-  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones, buddies } = useLoaderData<typeof loader>();
+  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones, buddies, buddyCheckins } = useLoaderData<typeof loader>();
 
   console.log("🚀 ~ Rally ~ buddies:", buddies);
 
@@ -857,6 +866,7 @@ export default function Rally() {
           isSubmitting={isSubmitting}
           csrfToken={csrfToken}
           buddies={buddies}
+          buddyCheckins={buddyCheckins}
         />
       )}
 

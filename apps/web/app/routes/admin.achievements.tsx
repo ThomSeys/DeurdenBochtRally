@@ -128,6 +128,7 @@ export default function AdminAchievements() {
     { value: 'stories', label: 'Aantal verhalen' },
     { value: 'checkin_time', label: 'Check-in tijd' },
     { value: 'combo', label: 'Combinatie (geavanceerd)' },
+    { value: 'hazepads', label: 'Hazepad keuzes' },
   ];
 
   const categories = [
@@ -157,6 +158,8 @@ export default function AdminAchievements() {
         return 'Tijd gebaseerd';
       case 'combo':
         return 'Gecombineerde voorwaarden';
+      case 'hazepads':
+        return `${value} hazenpaden kiezen`;
       default:
         return 'Onbekend type';
     }
@@ -489,12 +492,12 @@ export default function AdminAchievements() {
                       <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-200">
                         <p className="text-sm font-medium text-blue-900">Huidige criteria:</p>
                         <p className="text-sm text-blue-700">
-                          {editingAchievement.criteria ? (
+                          {editingAchievement.criteria && typeof editingAchievement.criteria === 'object' && !Array.isArray(editingAchievement.criteria) && 'type' in editingAchievement.criteria ? (
                             <>
-                              Type: <strong>{editingAchievement.criteria.type}</strong>
-                              {editingAchievement.criteria.value && <> | Waarde: <strong>{editingAchievement.criteria.value}</strong></>}
-                              {editingAchievement.criteria.time_before && <> | Voor: <strong>{editingAchievement.criteria.time_before}</strong></>}
-                              {editingAchievement.criteria.time_after && <> | Na: <strong>{editingAchievement.criteria.time_after}</strong></>}
+                              Type: <strong>{(editingAchievement.criteria as any).type}</strong>
+                              {'value' in editingAchievement.criteria && (editingAchievement.criteria as any).value && <> | Waarde: <strong>{(editingAchievement.criteria as any).value}</strong></>}
+                              {'time_before' in editingAchievement.criteria && (editingAchievement.criteria as any).time_before && <> | Voor: <strong>{(editingAchievement.criteria as any).time_before}</strong></>}
+                              {'time_after' in editingAchievement.criteria && (editingAchievement.criteria as any).time_after && <> | Na: <strong>{(editingAchievement.criteria as any).time_after}</strong></>}
                             </>
                           ) : (
                             <span className="text-red-600">Nog geen criteria ingesteld</span>
@@ -509,7 +512,14 @@ export default function AdminAchievements() {
                           </label>
                           <select
                             name="criteriaType"
-                            defaultValue={editingAchievement.criteria?.type || ''}
+                            defaultValue={
+                              editingAchievement.criteria &&
+                              typeof editingAchievement.criteria === 'object' &&
+                              !Array.isArray(editingAchievement.criteria) &&
+                              'type' in editingAchievement.criteria
+                                ? (editingAchievement.criteria as any).type
+                                : ''
+                            }
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                           >
                             <option value="">Selecteer type...</option>
@@ -528,7 +538,14 @@ export default function AdminAchievements() {
                           <input
                             type="number"
                             name="criteriaValue"
-                            defaultValue={editingAchievement.criteria?.value || ''}
+                            defaultValue={
+                              editingAchievement.criteria &&
+                              typeof editingAchievement.criteria === 'object' &&
+                              !Array.isArray(editingAchievement.criteria) &&
+                              'value' in editingAchievement.criteria
+                                ? (editingAchievement.criteria as any).value
+                                : ''
+                            }
                             placeholder="Bijv. 5"
                             min="0"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
@@ -543,7 +560,14 @@ export default function AdminAchievements() {
                             type="text"
                             name="timeBefore"
                             placeholder="08:00"
-                            defaultValue={editingAchievement.criteria?.time_before || ''}
+                            defaultValue={
+                              editingAchievement.criteria &&
+                              typeof editingAchievement.criteria === 'object' &&
+                              !Array.isArray(editingAchievement.criteria) &&
+                              'time_before' in editingAchievement.criteria
+                                ? (editingAchievement.criteria as any).time_before || ''
+                                : ''
+                            }
                             pattern="[0-2][0-9]:[0-5][0-9]"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                           />
@@ -557,7 +581,14 @@ export default function AdminAchievements() {
                             type="text"
                             name="timeAfter"
                             placeholder="20:00"
-                            defaultValue={editingAchievement.criteria?.time_after || ''}
+                            defaultValue={
+                              editingAchievement.criteria &&
+                              typeof editingAchievement.criteria === 'object' &&
+                              !Array.isArray(editingAchievement.criteria) &&
+                              'time_after' in editingAchievement.criteria
+                                ? (editingAchievement.criteria as any).time_after || ''
+                                : ''
+                            }
                             pattern="[0-2][0-9]:[0-5][0-9]"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                           />
@@ -605,6 +636,7 @@ export default function AdminAchievements() {
             <li><strong>Stories:</strong> Aantal gepubliceerde verhalen</li>
             <li><strong>Check-in tijd:</strong> Check-in voor of na een bepaalde tijd (HH:MM format)</li>
             <li><strong>Combo:</strong> Meerdere voorwaarden (vereist handmatige SQL update)</li>
+            <li><strong>Hazepads:</strong> Aantal unieke hazepad (skip-route) keuzes gebaseerd op submissions</li>
           </ul>
       </div>
       </div>

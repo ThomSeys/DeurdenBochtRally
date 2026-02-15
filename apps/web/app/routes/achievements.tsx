@@ -121,6 +121,24 @@ export const AchievementIcon = ({ name, isUnlocked }: { name: string; isUnlocked
         <circle cx="52" cy="36" r="1.5" fill="#FCD34D"/>
       </svg>
     ),
+    'hurry_hare': (
+      <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hareGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FEF3C7" />
+            <stop offset="100%" stopColor="#FDE68A" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#hareGradient)" stroke="#F59E0B" strokeWidth="3" filter="url(#shadow)"/>
+        <g transform="translate(12,14) scale(0.76)">
+          <path d="M60 30 C66 28 76 30 80 36 C84 42 82 50 76 54 C70 58 62 56 58 52 C54 48 50 44 46 44 C42 44 38 46 34 50 C30 54 26 56 18 56 C12 56 8 52 8 46 C8 40 12 34 18 32 C24 30 34 28 44 26 C52 24 56 26 60 30 Z" fill="#6B4626"/>
+          <path d="M28 36 C32 34 38 34 44 36" stroke="#FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9" />
+          <path d="M70 40 C74 38 78 38 82 40" stroke="#6B4626" strokeWidth="2" strokeLinecap="round" fill="none"/>
+          <path d="M20 62 C26 66 36 68 46 66" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.6"/>
+          <ellipse cx="66" cy="24" rx="6" ry="4" fill="#FEEBC8" />
+        </g>
+      </svg>
+    ),
     'photo_star': (
       <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -218,6 +236,13 @@ async function getParticipantStats(participantId: string) {
     .eq('participant_id', participantId)
     .single();
 
+  // Count unique hazepad submissions (skip-route choices) from rally_zone_checkins
+  const { data: hazepadSubs } = await supabaseAdmin
+    .from('rally_zone_checkins')
+    .select('zone_id, took_skip_route')
+    .eq('participant_id', participantId)
+    .eq('took_skip_route', true);
+
   const { data: photos } = await supabaseAdmin
     .from('participant_photos')
     .select('id')
@@ -237,12 +262,15 @@ async function getParticipantStats(participantId: string) {
     ? Object.keys(submission).filter(k => k.startsWith('rz') && (submission as any)[k]).length 
     : 0;
 
+  const hazepadsSelected = hazepadSubs ? new Set(hazepadSubs.map((s: any) => s.zone_id).filter(Boolean)).size : 0;
+
   return {
     zones_completed: zonesCompleted,
     photos_uploaded: photos?.length || 0,
     likes_received: likes?.length || 0,
     stories_shared: stories?.length || 0,
     checked_in: participant?.checked_in || false,
+    hazepads_selected: hazepadsSelected,
   };
 }
 
@@ -304,6 +332,14 @@ function getAchievementProgress(achievement: any, stats: any) {
         label: time_before ? `Checked in voor ${time_before}` : time_after ? `Checked in na ${time_after}` : 'Checked in',
       };
     
+    case 'hazepads':
+      return {
+        current: stats.hazepads_selected || 0,
+        target: value || 0,
+        percentage: Math.min(100, Math.round(((stats.hazepads_selected || 0) / (value || 1)) * 100)),
+        label: `${stats.hazepads_selected || 0}/${value} hazenpaden`,
+      };
+
     default:
       return { current: 0, target: 0, percentage: 0, label: 'Onbekend criterium' };
   }
@@ -315,8 +351,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   await requestLogger.info('page-view', 'Achievements page loaded');
 
-  // Check and unlock any new achievements for this participant
-  await checkAndUnlockAchievements(userId);
+  // Check and unlock any new achievements for this participant (don't block page on error)
+  try {
+    await checkAndUnlockAchievements(userId);
+  } catch (err) {
+    console.error('[achievements] checkAndUnlockAchievements failed', err);
+    // Log to request logger as well for easier server-side tracing
+    try { await requestLogger.error('achievements-check-failed', String(err)); } catch (e) { /* noop */ }
+  }
 
   // Get all achievements
   const { data: allAchievements } = await supabaseAdmin
