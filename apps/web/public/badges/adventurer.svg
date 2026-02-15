@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="none"/>
+  <circle cx="100" cy="100" r="86" fill="rgba(255,255,255,0.12)"/>
+
+  <!-- Mountain icon in accent color -->
+  <g fill="#FFB77A" transform="translate(0,0)">
+    <polygon points="60,128 100,56 140,128" />
+    <polygon points="88,120 100,84 112,120" opacity="0.95" />
+  </g>
+</svg>

@@ -12,9 +12,9 @@ import { createRequestLogger } from '~/lib/logger.server';
 const MOTO_QUOTES = [
   {
     lines: [
-      '"Vrijheid is de wind langst uwen helm,',
+      '"Vrijheid es de wind langst uiwen elme,',
     ],
-    finalLine: 'en de wég die alsan ma verder goat."'
+    finalLine: 'en de boane die alsan ma verder luupt."'
   },
   {
     lines: [
@@ -24,7 +24,7 @@ const MOTO_QUOTES = [
   },
   {
     lines: [
-      '"Rijjen es oassemen,',
+      '"Rijjen es lijk oassemen,',
     ],
     finalLine: "mee t'landschap als ui longen.\""
   },
@@ -60,7 +60,7 @@ const MOTO_QUOTES = [
   },
   {
     lines: [
-      '"Op twee wielen',
+      '"Op twie wiele',
     ],
     finalLine: 'est elken dag spelen op de koer."'
   },
@@ -68,7 +68,7 @@ const MOTO_QUOTES = [
     lines: [
       '"Als de zonne piekt,',
     ],
-    finalLine: 'droaiek de boane op"'
+    finalLine: 'droaiek mijne gas open"'
   },
 ];
 
@@ -119,25 +119,57 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const totalChallenges = challenges?.length || 0;
   const totalPoints = (challenges || []).reduce((sum: number, c: any) => sum + (c.points_awarded || 0), 0);
   const correctChallenges = (challenges || []).filter((c: any) => c.is_correct).length;
+  // Determine badges based on available metrics and pick a single best badge
+  const photosCount = (photos || []).length;
+  const candidates: Array<{ key: string; name: string; emoji: string }> = [];
+
+  if (totalZones >= 6 && totalChallenges >= 6) {
+    candidates.push({ key: 'discoverer', name: 'De Ontdekker', emoji: '🧭' });
+  }
+
+  if (totalZones >= 6 && correctChallenges >= 4) {
+    candidates.push({ key: 'adventurer', name: 'De Avonturier', emoji: '🗺️' });
+  }
+
+  if (totalZones <= 3 && totalPoints >= 50) {
+    candidates.push({ key: 'doorzetter', name: 'De Doorzetter', emoji: '💪' });
+  }
+
+  if (photosCount >= 3 && totalChallenges <= 3) {
+    candidates.push({ key: 'genieter', name: 'De Genieter', emoji: '🌿' });
+  }
+
+  if (totalZones <= 2 && photosCount <= 2) {
+    candidates.push({ key: 'rechte_lijn', name: 'De Rechte Lijn', emoji: '➡️' });
+  }
+
+  // Priority order for single badge selection
+  const priority = ['discoverer', 'adventurer', 'doorzetter', 'genieter', 'rechte_lijn'];
+  let bestBadge: { key: string; name: string; emoji: string } | null = null;
+  for (const key of priority) {
+    const found = candidates.find(c => c.key === key);
+    if (found) { bestBadge = found; break; }
+  }
 
   const timeline = (checkIns || []).map((ci: any) => ({
     zoneName: zoneNameById.get(ci.zone_id) || 'Zone',
     timestamp: ci.checked_in_at,
   }));
 
-  return {
-    user,
-    totalZones,
-    totalChallenges,
-    totalPoints,
-    correctChallenges,
-    timeline,
-    photos: photos || [],
-  };
+    return {
+      user,
+      totalZones,
+      totalChallenges,
+      totalPoints,
+      correctChallenges,
+      timeline,
+      photos: photos || [],
+      bestBadge,
+    };
 }
 
 export default function DashboardRecap() {
-  const { user, totalZones, totalChallenges, totalPoints, correctChallenges, timeline, photos } = useLoaderData<typeof loader>();
+  const { user, totalZones, totalChallenges, totalPoints, correctChallenges, timeline, photos, bestBadge } = useLoaderData<typeof loader>();
   const [shareStatus, setShareStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   // Get random quote for display
@@ -190,8 +222,64 @@ export default function DashboardRecap() {
       ctx.font = 'italic bold 34px system-ui, -apple-system, sans-serif';
       ctx.fillText(randomQuote.finalLine, 540, quoteY + 10);
 
+      // Draw single best badge (SVG) centered under the quote
+      // Slightly larger badge with added spacing, shadow and ring to emphasize "badge"
+      const layoutBadgeSize = 130;
+      if (bestBadge) {
+        const badgeSize = layoutBadgeSize;
+        const badgesY = quoteY + 40; // more space under the quote
+        const badgeX = (1080 - badgeSize) / 2;
+
+        // Subtle shadow for depth
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.25)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 6;
+
+        // Circle background behind badge (slightly larger to show the ring)
+        ctx.beginPath();
+        ctx.arc(540, badgesY + badgeSize / 2, badgeSize / 2 + 6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.fill();
+        ctx.restore();
+
+        // Outer ring
+        ctx.beginPath();
+        ctx.arc(540, badgesY + badgeSize / 2, badgeSize / 2 + 6, 0, Math.PI * 2);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.stroke();
+
+        try {
+          const img: HTMLImageElement = await new Promise((resolveImg, rejectImg) => {
+            const i = new Image();
+            i.crossOrigin = 'anonymous';
+            i.onload = () => resolveImg(i);
+            i.onerror = () => rejectImg(new Error('Failed to load badge image'));
+            i.src = `/badges/${bestBadge.key}.svg`;
+          });
+
+          // Draw the badge slightly inset so the ring remains visible
+          const inset = 8;
+          ctx.drawImage(img, badgeX + inset, badgesY + inset, badgeSize - inset * 2, badgeSize - inset * 2);
+
+          // Small uppercase indicator and name below to make it explicit
+          ctx.font = '14px system-ui, -apple-system, sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.textAlign = 'center';
+          ctx.fillText('BADGE', 540, badgesY + badgeSize + 30);
+
+          ctx.font = '20px system-ui, -apple-system, sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.fillText(bestBadge.name, 540, badgesY + badgeSize + 52);
+        } catch (err) {
+          console.error('Error loading badge SVG:', err);
+        }
+      }
+
       // Stats cards in 2x2 grid (2 per row)
-      const statsStartY = quoteY + 100;
+      // Reserve extra vertical space if a badge was drawn so stats won't overlap
+      const statsStartY = quoteY + 100 + (bestBadge ? (layoutBadgeSize + 80) : 0);
       const cardWidth = 360;
       const cardHeight = 160;
       const cardGapX = 40;

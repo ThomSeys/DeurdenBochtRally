@@ -61,11 +61,31 @@ export async function action({ request }: ActionFunctionArgs) {
     const zoneId = formData.get('zoneId') as string;
     const latitude = formData.get('latitude') as string;
     const longitude = formData.get('longitude') as string;
+    const selectedBuddiesStr = (formData.get('selectedBuddies') as string) || '';
+    const selectedBuddyIds = selectedBuddiesStr ? selectedBuddiesStr.split(',').filter(Boolean) : [];
     
 
     if (!zoneId) {
       await userLogger.warn('rally-checkin', 'Check-in failed: missing zone ID');
       return { error: 'Zone ID is required' };
+    }
+
+    // Fetch zone start location from Sanity to validate proximity
+    const zone = await sanityClient.fetch(`
+      *[_type == "rallyZone" && _id == $zoneId][0] { _id, title, startPoint }
+    `, { zoneId });
+
+    if (!zone || !zone.startPoint) {
+      await userLogger.warn('rally-checkin', 'Check-in failed: zone not found or missing startPoint', { zoneId });
+      return { error: 'Rally zone niet gevonden' };
+    }
+
+    // If latitude/longitude were provided, ensure user is within 100 meters
+    if (latitude && longitude) {
+      const dist = calculateDistance(parseFloat(latitude), parseFloat(longitude), zone.startPoint.lat, zone.startPoint.lng);
+      if (dist > 100) {
+        return { error: `Je bent te ver weg! Je moet binnen 100 meter van het startpunt zijn. (huidige afstand: ${Math.round(dist)}m)` };
+      }
     }
 
     // Check if already checked in
@@ -87,18 +107,57 @@ export async function action({ request }: ActionFunctionArgs) {
     const useSkipRoute = (formData.get('useSkipRoute') as string) === '1';
 
     // Create check-in (include used_skip_route flag if the column exists)
-    const insertPayload: any = {
+    // Prepare check-ins array for user + any selected buddies
+    const checkInsToCreate: any[] = [];
+
+    checkInsToCreate.push({
       participant_id: user.id,
       zone_id: zoneId,
       location_lat: latitude ? parseFloat(latitude) : null,
       location_lng: longitude ? parseFloat(longitude) : null,
-    };
+      checked_in_at: new Date().toISOString(),
+      checked_in_by: user.id,
+    });
 
-    if (useSkipRoute) insertPayload.took_skip_route = true;
+    // Ensure we don't create duplicate buddy check-ins: fetch existing check-ins for these buddies
+    let filteredBuddyIds = selectedBuddyIds.slice();
+    let skippedBuddyIds: string[] = [];
+    if (filteredBuddyIds.length > 0) {
+      try {
+        const { data: existingForBuddies } = await supabaseAdmin
+          .from('rally_zone_checkins')
+          .select('participant_id')
+          .in('participant_id', filteredBuddyIds)
+          .eq('zone_id', zoneId);
+
+        const existingSet = new Set((existingForBuddies || []).map((r: any) => r.participant_id));
+        skippedBuddyIds = filteredBuddyIds.filter(id => existingSet.has(id));
+        filteredBuddyIds = filteredBuddyIds.filter(id => !existingSet.has(id));
+      } catch (e) {
+        // ignore lookup errors and proceed with provided list
+      }
+    }
+
+    // Add buddy check-ins (marked as checked in by this user) for filtered IDs only
+    for (const buddyId of filteredBuddyIds) {
+      checkInsToCreate.push({
+        participant_id: buddyId,
+        zone_id: zoneId,
+        location_lat: latitude ? parseFloat(latitude) : null,
+        location_lng: longitude ? parseFloat(longitude) : null,
+        checked_in_at: new Date().toISOString(),
+        checked_in_by: user.id,
+      });
+    }
+
+    // Attach skip route flag for the user's check-in only
+    if (useSkipRoute) {
+      if (checkInsToCreate[0]) checkInsToCreate[0].took_skip_route = true;
+    }
 
     let insertError = null;
     try {
-      const res = await supabaseAdmin.from('rally_zone_checkins').insert(insertPayload);
+      const res = await supabaseAdmin.from('rally_zone_checkins').insert(checkInsToCreate);
       insertError = (res as any).error || null;
     } catch (e: any) {
       insertError = e;
@@ -138,11 +197,72 @@ export async function action({ request }: ActionFunctionArgs) {
       console.error('Failed to trigger achievement check:', error);
     }
 
-    return { success: true, message: 'Check-in succesvol!', usedSkipRoute: useSkipRoute, zoneId };
+    // Send notifications to buddies who were actually checked in (filtered list)
+    if (filteredBuddyIds.length > 0) {
+      try {
+        const { data: checkerInfo } = await supabaseAdmin
+          .from('participants')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single();
+
+        const zoneInfo = await sanityClient.fetch(`
+          *[_type == "rallyZone" && _id == $zoneId][0] { title }
+        `, { zoneId });
+
+        for (const buddyId of filteredBuddyIds) {
+          const { data: subscriptions } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('*')
+            .eq('participant_id', buddyId)
+            .eq('is_active', true);
+
+          if (subscriptions && subscriptions.length > 0) {
+            const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
+            await sendPushNotificationWithHistory(
+              subscriptions,
+              {
+                title: 'Groeps Check-in! 🏍️',
+                body: `${checkerInfo?.first_name} ${checkerInfo?.last_name} heeft je ingecheckt bij ${zoneInfo?.title || 'een zone'}`,
+                tag: 'buddy-checkin',
+              },
+              {
+                title: 'Groeps Check-in! 🏍️',
+                body: `${checkerInfo?.first_name} ${checkerInfo?.last_name} heeft je ingecheckt bij ${zoneInfo?.title || 'een zone'}`,
+                eventType: 'buddy_checkin',
+                targetType: 'single',
+                sentBy: user.id,
+                eventData: { zone_id: zoneId, checked_in_by: user.id },
+              }
+            );
+          }
+        }
+      } catch (notifError) {
+        console.error('[rally] Failed to send buddy check-in notifications:', notifError);
+      }
+    }
+
+    return { success: true, message: 'Check-in succesvol!', usedSkipRoute: useSkipRoute, zoneId, buddiesCheckedIn: filteredBuddyIds.length, buddiesSkipped: skippedBuddyIds.length };
   } catch (error: any) {
     await requestLogger.error('rally-checkin', 'Unexpected error during check-in', error);
     return { error: 'Er is een onverwachte fout opgetreden' };
   }
+}
+
+// Haversine formula to calculate distance between two coordinates in meters
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -269,7 +389,82 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Read skip map attached above (defensive fallback)
   const loaderSkipMap = (globalThis as any).__rally_skip_map || {};
 
-  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request), skipUsedZones: loaderSkipMap };
+  // Get user's accepted buddies for group check-in (both directions)
+  let buddiesList: Array<any> = [];
+  if (userId) {
+    const { data: buddyRows } = await supabaseAdmin
+      .from('participant_buddies')
+      .select('participant_id, buddy_id, buddy_first_name, buddy_last_name, buddy_profile_photo_url')
+      .or(`participant_id.eq.${userId},buddy_id.eq.${userId}`)
+      .eq('status', 'accepted');
+
+    const reverseIds: string[] = [];
+    const temp: Array<any> = [];
+    (buddyRows || []).forEach((r: any) => {
+      if (r.participant_id === userId) {
+        temp.push({ buddy_id: r.buddy_id, buddy: { id: r.buddy_id, first_name: r.buddy_first_name, last_name: r.buddy_last_name }, buddy_profile_photo_url: r.buddy_profile_photo_url });
+      } else if (r.buddy_id === userId) {
+        // we'll need to fetch the participant's name & photo separately
+        temp.push({ buddy_id: r.participant_id, buddy: { id: r.participant_id, first_name: null, last_name: null }, buddy_profile_photo_url: null });
+        if (r.participant_id) reverseIds.push(r.participant_id);
+      }
+    });
+
+    if (reverseIds.length > 0) {
+      const { data: participants } = await supabaseAdmin
+        .from('participants')
+        .select('id, first_name, last_name, profile_photo_url')
+        .in('id', reverseIds);
+
+      const byId: Record<string, any> = {};
+      (participants || []).forEach((p: any) => { byId[p.id] = p; });
+
+         temp.forEach((t) => {
+           if (byId[t.buddy.id]) {
+             if ((!t.buddy.first_name || !t.buddy.last_name) && byId[t.buddy.id]) {
+               t.buddy.first_name = byId[t.buddy.id].first_name;
+               t.buddy.last_name = byId[t.buddy.id].last_name;
+             }
+             // attach their profile photo if available
+             if (byId[t.buddy.id].profile_photo_url) {
+               t.buddy_profile_photo_url = byId[t.buddy.id].profile_photo_url;
+             }
+           }
+         });
+
+         // Server-side dedupe: merge entries by buddy_id and prefer any available photo or names
+         const byBuddyId = new Map<string, any>();
+         for (const t of temp) {
+           const id = t.buddy_id;
+           if (!id) continue;
+           if (!byBuddyId.has(id)) {
+             // normalize structure to what the component expects
+             byBuddyId.set(id, {
+               buddy_id: id,
+               buddy: { id: t.buddy.id, first_name: t.buddy.first_name, last_name: t.buddy.last_name },
+               buddy_profile_photo_url: t.buddy_profile_photo_url || null,
+             });
+           } else {
+             const existing = byBuddyId.get(id);
+             // fill missing name fields
+             if ((!existing.buddy.first_name || !existing.buddy.last_name) && (t.buddy.first_name || t.buddy.last_name)) {
+               existing.buddy.first_name = existing.buddy.first_name || t.buddy.first_name;
+               existing.buddy.last_name = existing.buddy.last_name || t.buddy.last_name;
+             }
+             // prefer existing photo, otherwise take new one if present
+             if (!existing.buddy_profile_photo_url && t.buddy_profile_photo_url) {
+               existing.buddy_profile_photo_url = t.buddy_profile_photo_url;
+             }
+           }
+         }
+
+         buddiesList = Array.from(byBuddyId.values());
+    }
+
+    buddiesList = temp.filter(t => t.buddy && t.buddy.id);
+  }
+
+  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request), skipUsedZones: loaderSkipMap, buddies: buddiesList };
 }
 
 function RallyTourButton() {
@@ -286,7 +481,10 @@ function RallyTourButton() {
 }
 
 export default function Rally() {
-  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones } = useLoaderData<typeof loader>();
+  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones, buddies } = useLoaderData<typeof loader>();
+
+  console.log("🚀 ~ Rally ~ buddies:", buddies);
+
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
@@ -658,6 +856,7 @@ export default function Rally() {
           actionData={actionData}
           isSubmitting={isSubmitting}
           csrfToken={csrfToken}
+          buddies={buddies}
         />
       )}
 

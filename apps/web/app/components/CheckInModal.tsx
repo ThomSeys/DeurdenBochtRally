@@ -2,7 +2,7 @@ import { Form } from 'react-router';
 import { Icon } from '~/components/Icon';
 import CSRFInput from '~/components/CSRFInput';
 import MapView from '~/components/MapView';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -39,6 +39,7 @@ interface CheckInModalProps {
   action?: 'CHECKIN' | 'CHECKOUT';
   qrCode?: string;
   csrfToken: string;
+  buddies?: Array<{ buddy_id: string; buddy: { id: string; first_name: string; last_name: string } }>;
 }
 
 export default function CheckInModal({
@@ -50,9 +51,33 @@ export default function CheckInModal({
   action = 'CHECKIN',
   qrCode,
   csrfToken,
+  buddies,
 }: CheckInModalProps) {
+  const [selectedBuddies, setSelectedBuddies] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Deduplicate buddies by `buddy_id` and expose a stable list
+  const uniqueBuddies = useMemo(() => {
+    if (!buddies || buddies.length === 0) return [];
+    const m = new Map<string, any>();
+    for (const b of buddies) {
+      if (!m.has(b.buddy_id)) m.set(b.buddy_id, b);
+    }
+    return Array.from(m.values());
+  }, [buddies]);
+
+  const getBuddyPhoto = (buddy: any) => {
+    // Support multiple shapes returned from different loaders
+    return (
+      buddy?.buddy_profile_photo_url ||
+      buddy?.buddy?.profile_photo_url ||
+      buddy?.buddy?.photo_url ||
+      buddy?.buddy?.photoUrl ||
+      buddy?.buddy?.photo ||
+      null
+    );
+  };
 
   // Get user's current location
   useEffect(() => {
@@ -235,6 +260,11 @@ export default function CheckInModal({
               </>
             )}
 
+            {/* Include selected buddies in form submission */}
+            {selectedBuddies.length > 0 && (
+              <input type="hidden" name="selectedBuddies" value={selectedBuddies.join(',')} />
+            )}
+
             {/* Hazepad option */}
             {zone.skipRoute && (
               <div className="mb-4 p-4 bg-gray-50 rounded-sm border border-gray-200">
@@ -268,6 +298,51 @@ export default function CheckInModal({
                     )}
                   </div>
                 </label>
+              </div>
+            )}
+            {/* Buddy selector (if provided and nearby) */}
+            {buddies && buddies.length > 0 && (
+              <div className="mt-6 mb-6 p-4 bg-blue-50 border border-blue-100 rounded-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon name="users" className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-semibold text-gray-900">Check ook je naftgenoten in</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">Rijd je samen? Selecteer wie er bij je is om hen ook in te checken.</p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {uniqueBuddies.map((buddy) => {
+                    const photo = getBuddyPhoto(buddy);
+                    return (
+                      <label key={buddy.buddy_id} className="flex items-center gap-3 p-2 rounded hover:bg-blue-100 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedBuddies.includes(buddy.buddy_id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBuddies([...selectedBuddies, buddy.buddy_id]);
+                            } else {
+                              setSelectedBuddies(selectedBuddies.filter(id => id !== buddy.buddy_id));
+                            }
+                          }}
+                          className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                        />
+                        <div className="flex items-center gap-2">
+                          {photo ? (
+                            <img src={photo} alt={`${buddy.buddy.first_name || ''} ${buddy.buddy.last_name || ''}`} className="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <Icon name="user" className="w-6 h-6 text-gray-600" />
+                          )}
+                          <span className="text-sm font-medium text-gray-900">{buddy.buddy.first_name} {buddy.buddy.last_name}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                {selectedBuddies.length > 0 && (
+                  <div className="mt-3 p-2 bg-blue-100 rounded text-sm text-blue-800">
+                    <Icon name="info" className="w-4 h-4 inline mr-1" />
+                    {selectedBuddies.length} naftgenoot{selectedBuddies.length > 1 ? 'en' : ''} worden ook ingecheckt
+                  </div>
+                )}
               </div>
             )}
 
@@ -305,6 +380,8 @@ export default function CheckInModal({
               </button>
             </div>
           </Form>
+
+          
 
           {!userLocation ? (
             <p className="text-sm text-gray-600 mt-4 text-center font-semibold flex items-center justify-center gap-2">

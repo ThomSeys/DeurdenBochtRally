@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="none"/>
+  <circle cx="100" cy="100" r="86" fill="rgba(255,255,255,0.12)"/>
+
+  <!-- Leaf icon in accent color -->
+  <g fill="#FFB77A" transform="translate(0,0)">
+    <path d="M70 130 C90 110, 120 100, 130 80 C120 86, 100 96, 84 112 C72 124, 70 130, 70 130 Z" />
+    <path d="M100 72 C110 86, 126 92, 134 100 C118 98, 102 92, 100 72 Z" opacity="0.95" />
+  </g>
+</svg>

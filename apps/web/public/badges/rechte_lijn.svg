@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="none"/>
+  <circle cx="100" cy="100" r="86" fill="rgba(255,255,255,0.12)"/>
+
+  <!-- Straight line icon in accent color -->
+  <g stroke="#FFB77A" stroke-width="12" stroke-linecap="round" fill="none">
+    <line x1="50" y1="100" x2="150" y2="100" />
+  </g>
+</svg>

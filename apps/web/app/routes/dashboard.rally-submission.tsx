@@ -5,6 +5,7 @@ import { requireUserId, getUser } from '~/lib/session.server';
 import { sanityClient } from '~/lib/sanity.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import CheckInModal from '~/components/CheckInModal';
 import { Icon } from '~/components/Icon';
 import { MARKER_COLORS } from '~/lib/constants';
 import { createRequestLogger } from '~/lib/logger.server';
@@ -63,22 +64,79 @@ export async function loader({ request }: LoaderFunctionArgs) {
   });
 
   // Get user's accepted buddies for group check-in
-  const { data: buddies } = await supabaseAdmin
+  // Get user's accepted buddies for group check-in (both directions)
+  const { data: buddyRows } = await supabaseAdmin
     .from('participant_buddies')
-    .select('*')
-    .eq('participant_id', userId)
+    .select('participant_id, buddy_id, buddy_first_name, buddy_last_name, buddy_profile_photo_url')
+    .or(`participant_id.eq.${userId},buddy_id.eq.${userId}`)
     .eq('status', 'accepted');
 
-  const buddiesList = (buddies || []).map(b => ({
-    buddy_id: b.buddy_id,
-    buddy: {
-      id: b.buddy_id,
-      first_name: b.buddy_first_name,
-      last_name: b.buddy_last_name
+  const reverseIds: string[] = [];
+  const tempBuddies: Array<any> = [];
+  (buddyRows || []).forEach((r: any) => {
+    if (r.participant_id === userId) {
+      tempBuddies.push({ buddy_id: r.buddy_id, buddy: { id: r.buddy_id, first_name: r.buddy_first_name, last_name: r.buddy_last_name }, buddy_profile_photo_url: r.buddy_profile_photo_url });
+    } else if (r.buddy_id === userId) {
+      tempBuddies.push({ buddy_id: r.participant_id, buddy: { id: r.participant_id, first_name: null, last_name: null }, buddy_profile_photo_url: null });
+      if (r.participant_id) reverseIds.push(r.participant_id);
     }
-  }));
+  });
 
-  return { zones, checkedZoneIds: Array.from(checkedZoneIds), user, zoneCheckInCounts, buddies: buddiesList };
+  if (reverseIds.length > 0) {
+    const { data: participants } = await supabaseAdmin
+      .from('participants')
+      .select('id, first_name, last_name, profile_photo_url')
+      .in('id', reverseIds);
+
+    const byId: Record<string, any> = {};
+    (participants || []).forEach((p: any) => { byId[p.id] = p; });
+
+    tempBuddies.forEach((t) => {
+      if (byId[t.buddy.id]) {
+        if ((!t.buddy.first_name || !t.buddy.last_name) && byId[t.buddy.id]) {
+          t.buddy.first_name = byId[t.buddy.id].first_name;
+          t.buddy.last_name = byId[t.buddy.id].last_name;
+        }
+        if (byId[t.buddy.id].profile_photo_url) {
+          // attach profile photo into the buddy object
+          t.buddy.profile_photo_url = byId[t.buddy.id].profile_photo_url;
+        }
+      }
+    });
+  }
+
+  // Server-side dedupe and normalize: ensure one entry per buddy_id and move photo into `buddy.profile_photo_url`
+  const byBuddyId = new Map<string, any>();
+  for (const t of tempBuddies) {
+    const id = t.buddy_id;
+    if (!id) continue;
+    if (!byBuddyId.has(id)) {
+      byBuddyId.set(id, {
+        buddy_id: id,
+        buddy: {
+          id: t.buddy.id,
+          first_name: t.buddy.first_name,
+          last_name: t.buddy.last_name,
+          profile_photo_url: t.buddy.profile_photo_url || t.buddy_profile_photo_url || null,
+        },
+      });
+    } else {
+      const existing = byBuddyId.get(id);
+      if ((!existing.buddy.first_name || !existing.buddy.last_name) && (t.buddy.first_name || t.buddy.last_name)) {
+        existing.buddy.first_name = existing.buddy.first_name || t.buddy.first_name;
+        existing.buddy.last_name = existing.buddy.last_name || t.buddy.last_name;
+      }
+      if (!existing.buddy.profile_photo_url && (t.buddy.profile_photo_url || t.buddy_profile_photo_url)) {
+        existing.buddy.profile_photo_url = t.buddy.profile_photo_url || t.buddy_profile_photo_url;
+      }
+    }
+  }
+
+  const buddiesList = Array.from(byBuddyId.values());
+
+  const csrfToken = await import('~/lib/csrf.server').then(m => m.getCSRFToken(request));
+
+  return { zones, checkedZoneIds: Array.from(checkedZoneIds), user, zoneCheckInCounts, buddies: buddiesList, csrfToken };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -129,42 +187,67 @@ export async function action({ request }: ActionFunctionArgs) {
   const selectedBuddiesStr = formData.get('selectedBuddies') as string;
   const selectedBuddyIds = selectedBuddiesStr ? selectedBuddiesStr.split(',').filter(Boolean) : [];
 
-  // Prepare check-ins array (user + selected buddies)
-  const checkInsToCreate = [
-    {
+  // Ensure uniqueness: check for existing check-ins for the user and selected buddies
+  const participantIdsToCheck = Array.from(new Set([userId, ...selectedBuddyIds]));
+  let existingSet = new Set<string>();
+  try {
+    const { data: existingRows } = await supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('participant_id')
+      .in('participant_id', participantIdsToCheck)
+      .eq('zone_id', zoneId);
+    existingSet = new Set((existingRows || []).map((r: any) => r.participant_id));
+  } catch (e) {
+    // ignore lookup errors and proceed
+  }
+
+  const toInsert: any[] = [];
+  const insertedBuddyIds: string[] = [];
+  const skippedBuddyIds: string[] = [];
+
+  // Add user if not present
+  if (!existingSet.has(userId)) {
+    toInsert.push({
       participant_id: userId,
       zone_id: zoneId,
       location_lat: latitude,
       location_lng: longitude,
       checked_in_at: new Date().toISOString(),
-      checked_in_by: userId, // Self check-in
-    }
-  ];
-
-  // Add buddy check-ins (they get same location/time, but marked as checked in by the user)
-  for (const buddyId of selectedBuddyIds) {
-    checkInsToCreate.push({
-      participant_id: buddyId,
-      zone_id: zoneId,
-      location_lat: latitude,
-      location_lng: longitude,
-      checked_in_at: new Date().toISOString(),
-      checked_in_by: userId, // Checked in by the user, not themselves
+      checked_in_by: userId,
     });
+  } else {
+    // user already checked in; treat as skipped
   }
 
-  // Insert all check-ins
+  // Add buddies only when they don't already have a record
+  for (const buddyId of selectedBuddyIds) {
+    if (!existingSet.has(buddyId)) {
+      toInsert.push({
+        participant_id: buddyId,
+        zone_id: zoneId,
+        location_lat: latitude,
+        location_lng: longitude,
+        checked_in_at: new Date().toISOString(),
+        checked_in_by: userId,
+      });
+      insertedBuddyIds.push(buddyId);
+    } else {
+      skippedBuddyIds.push(buddyId);
+    }
+  }
+
+  // Insert all new check-ins
   const { error } = await supabaseAdmin
     .from('rally_zone_checkins')
-    .insert(checkInsToCreate);
+    .insert(toInsert);
 
   if (error) {
     console.error('[rally-submission] Check-in error:', error);
     return { error: 'Check-in mislukt. Probeer opnieuw.' };
   }
 
-  // Send notifications to buddies who were checked in
-  if (selectedBuddyIds.length > 0) {
+  // Send notifications to buddies who were actually inserted
+  if (typeof insertedBuddyIds !== 'undefined' && insertedBuddyIds.length > 0) {
     try {
       const { data: checkerInfo } = await supabaseAdmin
         .from('participants')
@@ -178,7 +261,7 @@ export async function action({ request }: ActionFunctionArgs) {
         }
       `, { zoneId });
 
-      for (const buddyId of selectedBuddyIds) {
+      for (const buddyId of insertedBuddyIds) {
         const { data: subscriptions } = await supabaseAdmin
           .from('push_subscriptions')
           .select('*')
@@ -187,7 +270,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
         if (subscriptions && subscriptions.length > 0) {
           const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
-          
           await sendPushNotificationWithHistory(
             subscriptions,
             {
@@ -212,7 +294,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  return { success: true, buddiesCheckedIn: selectedBuddyIds.length };
+  return { success: true, buddiesCheckedIn: (typeof insertedBuddyIds !== 'undefined' ? insertedBuddyIds.length : 0), buddiesSkipped: (typeof skippedBuddyIds !== 'undefined' ? skippedBuddyIds.length : 0) };
 }
 
 // Haversine formula to calculate distance between two coordinates in meters
@@ -232,7 +314,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function RallySubmission() {
-  const { zones, checkedZoneIds, user, zoneCheckInCounts, buddies } = useLoaderData<typeof loader>();
+  const { zones, checkedZoneIds, user, zoneCheckInCounts, buddies, csrfToken } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
@@ -547,158 +629,17 @@ export default function RallySubmission() {
         </div>
       </main>
 
-      {/* Location Confirmation Modal */}
+      {/* Location Confirmation Modal (uses shared CheckInModal) */}
       {showMapModal && location && currentZone && (
-        <div className="fixed inset-0 bg-black/50 z-[1500] flex items-center justify-center p-4" onClick={() => setShowMapModal(false)}>
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header - Fixed */}
-            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 text-white flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold">Check-in Locatie</h3>
-                  <p className="text-sm text-primary-100">Zone {currentZone.order}: {currentZone.title}</p>
-                </div>
-                <button
-                  onClick={() => setShowMapModal(false)}
-                  className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto flex-1">{/* Distance Info */}
-            <div className={`px-6 py-4 border-b ${
-              distance <= 100 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-            }`}>
-              <div className="flex items-center gap-3">
-                <Icon 
-                  name={distance <= 100 ? 'check' : 'alert-triangle'} 
-                  className={`w-6 h-6 ${
-                    distance <= 100 ? 'text-green-600' : 'text-red-600'
-                  }`}
-                />
-                <div>
-                  <p className={`font-semibold ${
-                    distance <= 100 ? 'text-green-900' : 'text-red-900'
-                  }`}>
-                    {distance <= 100 ? 'Binnen bereik!' : 'Te ver weg'}
-                  </p>
-                  <p className={`text-sm ${
-                    distance <= 100 ? 'text-green-700' : 'text-red-700'
-                  }`}>
-                    Afstand tot startpunt: <strong>{Math.round(distance)}m</strong> (max. 100m)
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Map */}
-            <div id="check-in-map" className="w-full h-[400px] bg-gray-100"></div>
-
-            {/* Legend */}
-            <div className="px-6 py-4 bg-gray-50 border-t">
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow"></div>
-                  <span className="text-gray-700">Zone Startpunt</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow"></div>
-                  <span className="text-gray-700">Jouw Locatie</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500/30 rounded-full border border-green-500"></div>
-                  <span className="text-gray-700">100m Bereik</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Buddy Selector - only if user has buddies and within range */}
-            {buddies && buddies.length > 0 && distance <= 100 && (
-              <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="users" className="w-5 h-5 text-blue-600" />
-                  <h4 className="font-semibold text-gray-900">Check ook je naftgenoten in</h4>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">
-                  Rijd je samen? Selecteer wie er bij je is om hen ook in te checken.
-                </p>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {buddies.map((buddy: any) => (
-                    <label
-                      key={buddy.buddy_id}
-                      className="flex items-center gap-3 p-2 rounded hover:bg-blue-100 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedBuddies.includes(buddy.buddy_id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedBuddies([...selectedBuddies, buddy.buddy_id]);
-                          } else {
-                            setSelectedBuddies(selectedBuddies.filter(id => id !== buddy.buddy_id));
-                          }
-                        }}
-                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                      />
-                      <div className="flex items-center gap-2">
-                        <Icon name="user" className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {buddy.buddy.first_name} {buddy.buddy.last_name}
-                        </span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                {selectedBuddies.length > 0 && (
-                  <div className="mt-3 p-2 bg-blue-100 rounded text-sm text-blue-800">
-                    <Icon name="info" className="w-4 h-4 inline mr-1" />
-                    {selectedBuddies.length} naftgenoot{selectedBuddies.length > 1 ? 'en' : ''} worden ook ingecheckt
-                  </div>
-                )}
-              </div>
-            )}
-            </div>
-
-            {/* Action Buttons - Fixed at bottom */}
-            <div className="px-6 py-4 bg-white border-t flex gap-3 flex-shrink-0">
-              <button
-                onClick={() => setShowMapModal(false)}
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-sm text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
-              >
-                Annuleren
-              </button>
-              {distance <= 100 ? (
-                <Form method="post" className="flex-1" onSubmit={() => setShowMapModal(false)}>
-                  <input type="hidden" name="zoneId" value={currentZone._id} />
-                  <input type="hidden" name="action" value="manual_checkin" />
-                  <input type="hidden" name="latitude" value={location.latitude} />
-                  <input type="hidden" name="longitude" value={location.longitude} />
-                  <input type="hidden" name="selectedBuddies" value={selectedBuddies.join(',')} />
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-2.5 bg-green-600 text-white font-semibold rounded-sm hover:bg-green-700 transition-colors disabled:opacity-50"
-                  >
-                    <Icon name="check" className="w-4 h-4 inline mr-2" />
-                    Bevestig Check-in{selectedBuddies.length > 0 && ` (+${selectedBuddies.length})`}
-                  </button>
-                </Form>
-              ) : (
-                <button
-                  disabled
-                  className="flex-1 px-4 py-2.5 bg-gray-300 text-gray-500 font-semibold rounded-sm cursor-not-allowed"
-                >
-                  Te ver weg om in te checken
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <CheckInModal
+          isOpen={!!showMapModal}
+          onClose={() => setShowMapModal(false)}
+          zone={{ ...currentZone, startLocation: currentZone.startPoint }}
+          actionData={actionData}
+          isSubmitting={isSubmitting}
+          csrfToken={csrfToken}
+          buddies={buddies}
+        />
       )}
     </div>
   );
