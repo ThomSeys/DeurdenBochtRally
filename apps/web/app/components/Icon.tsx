@@ -310,6 +310,13 @@ export function Icon({ name, className = '', size }: IconProps): ReactElement | 
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
       </svg>
     ),
+    share: (
+      <svg className={combinedClassName} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4 4 4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v12" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 21h16" />
+      </svg>
+    ),
     loader: (
       <svg className={combinedClassName} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

@@ -1,12 +1,14 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useModal } from '~/contexts/ModalContext';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { sanityClient } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { Lightbox } from '~/components/Lightbox';
 
 // Moto quotes - used on poster AND recap page
 const MOTO_QUOTES = [
@@ -210,6 +212,55 @@ export default function DashboardRecap() {
 
       const randomQuote = MOTO_QUOTES[Math.floor(Math.random() * MOTO_QUOTES.length)];
 
+      // Precompute layout to ensure everything fits; apply global scale if needed
+      const layoutBadgeSize = 130;
+      const cardWidth = 360;
+      const cardHeight = 160;
+      const cardGapX = 40;
+      const cardGapY = 30;
+
+      const hazepadsToDraw = (typeof (window as any).__RECAP_HAZEPADS_COUNT__ !== 'undefined')
+        ? (window as any).__RECAP_HAZEPADS_COUNT__
+        : (typeof hazepadsSelected !== 'undefined' ? hazepadsSelected : 0);
+
+      const stats = [
+        { label: 'Zones bezocht', value: totalZones.toString() },
+        { label: 'Challenges gedaan', value: totalChallenges.toString() },
+        { label: 'Punten gescoord', value: totalPoints.toString() },
+        { label: 'Correcte challenges', value: correctChallenges.toString() },
+        { label: 'Hazepaden gekozen', value: hazepadsToDraw.toString() },
+      ];
+
+      const cols = 2;
+      const rows = Math.ceil(stats.length / cols);
+
+      // estimate vertical positions used by different sections (match draw logic)
+      const quoteStartY = 420;
+      const quoteLinesHeight = (randomQuote.lines || []).length * 40;
+      const quoteLoopEnd = quoteStartY + quoteLinesHeight; // matches quoteY after loop
+      const badgeTop = quoteLoopEnd + (bestBadge ? 80 : 0);
+      const badgeBottom = badgeTop + (bestBadge ? (layoutBadgeSize + 52) : 0);
+      const statsStartY = quoteLoopEnd + 100 + (bestBadge ? (layoutBadgeSize + 120) : 0);
+      // Photos layout: allow up to 9 images and compute size so they fit
+      const photosToShowCount = Math.min((photos || []).length, 9);
+      const photosPerRow = photosToShowCount >= 3 ? 3 : (photosToShowCount || 1);
+      const photoGap = 20;
+      const photoContainerPadding = 120; // left+right total padding
+      const photoContainerWidth = 1080 - photoContainerPadding;
+      const photoSize = Math.max(100, Math.min(200, Math.floor((photoContainerWidth - (photosPerRow - 1) * photoGap) / photosPerRow)));
+      const photoRows = photosToShowCount > 0 ? Math.ceil(photosToShowCount / photosPerRow) : 0;
+      const photosStartY = statsStartY + (cardHeight * rows) + cardGapY + 80;
+      const footerStartY = photosToShowCount > 0
+        ? photosStartY + (photoRows * (photoSize + photoGap)) + 60
+        : photosStartY + 60;
+      const footerEndY = footerStartY + 100;
+
+      const requiredHeight = footerEndY + 20;
+      const scale = Math.min(1, canvas.height / requiredHeight);
+      if (scale < 1) {
+        ctx.scale(scale, scale);
+      }
+
       // Gradient background
       const gradient = ctx.createLinearGradient(0, 0, 0, 1920);
       gradient.addColorStop(0, '#4338ca'); // indigo-700
@@ -247,7 +298,6 @@ export default function DashboardRecap() {
 
       // Draw single best badge (SVG) centered under the quote
       // Slightly larger badge with added spacing, shadow and ring to emphasize "badge"
-      const layoutBadgeSize = 130;
       if (bestBadge) {
         const badgeSize = layoutBadgeSize;
         const badgesY = quoteY + 80; // more space under the quote (extra top spacing for badge)
@@ -300,31 +350,9 @@ export default function DashboardRecap() {
         }
       }
 
-      // Stats cards in grid
-      // Reserve extra vertical space if a badge was drawn so stats won't overlap
-      const statsStartY = quoteY + 100 + (bestBadge ? (layoutBadgeSize + 120) : 0);
-      const cardWidth = 360;
-      const cardHeight = 160;
-      const cardGapX = 40;
-      const cardGapY = 30;
-      const gridStartX = (1080 - (cardWidth * 2 + cardGapX)) / 2;
+        // Stats cards in grid
+        const gridStartX = (1080 - (cardWidth * 2 + cardGapX)) / 2;
       
-          const hazepadsToDraw = (typeof (window as any).__RECAP_HAZEPADS_COUNT__ !== 'undefined')
-            ? (window as any).__RECAP_HAZEPADS_COUNT__
-            : (typeof hazepadsSelected !== 'undefined' ? hazepadsSelected : 0);
-
-          const stats = [
-            { label: 'Zones bezocht', value: totalZones.toString() },
-            { label: 'Challenges gedaan', value: totalChallenges.toString() },
-            { label: 'Punten gescoord', value: totalPoints.toString() },
-            { label: 'Correcte challenges', value: correctChallenges.toString() },
-            { label: 'Hazepaden gekozen', value: hazepadsToDraw.toString() },
-          ];
-
-          // Dynamic grid layout for stats (2 columns)
-          const cols = 2;
-          const rows = Math.ceil(stats.length / cols);
-
           stats.forEach((stat, idx) => {
             const col = idx % cols;
             const row = Math.floor(idx / cols);
@@ -367,15 +395,13 @@ export default function DashboardRecap() {
             ctx.fillText(stat.label, x + cardWidth / 2, y + 115);
           });
 
-      const photosStartY = statsStartY + (cardHeight * rows) + cardGapY + 80;
+      // photosStartY was precomputed above to ensure consistent layout
 
       // Load and draw photos (max 6 photos in 3x2 grid)
       if (photos.length > 0) {
-        const photosToShow = photos.slice(0, 6);
-        const photoSize = 200;
-        const photoGap = 20;
-        const photosPerRow = 3;
-        const totalWidth = photosPerRow * photoSize + (photosPerRow - 1) * photoGap;
+        const photosToShow = photos.slice(0, photosToShowCount);
+        const photosPerRowLocal = photosPerRow;
+        const totalWidth = photosPerRowLocal * photoSize + (photosPerRowLocal - 1) * photoGap;
         const photoStartX = (1080 - totalWidth) / 2;
 
         // Label above photos
@@ -431,11 +457,6 @@ export default function DashboardRecap() {
         }
       }
 
-      // Footer positioning (dynamic based on photos)
-      const footerStartY = photos.length > 0 
-        ? photosStartY + (Math.ceil(Math.min(photos.length, 6) / 3) * 220) + 60
-        : photosStartY + 60;
-
       // (Hazepads are now integrated into the stats grid above)
 
       // Footer
@@ -454,6 +475,14 @@ export default function DashboardRecap() {
       ctx.textAlign = 'center';
       ctx.fillText('VZW DdB', 540, footerStartY + 64);
 
+      // Footer
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = 'italic 22px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Legendes voor het leven', canvas.width / 2, canvas.height - 120);
+      ctx.fillText('Merci voor mee te doen', canvas.width / 2, canvas.height - 92);
+      ctx.fillText('VZW DdB', canvas.width / 2, canvas.height - 64);
+
       canvas.toBlob((blob) => {
         if (blob) resolve(blob);
         else reject(new Error('Could not generate image'));
@@ -461,12 +490,418 @@ export default function DashboardRecap() {
     });
   };
 
+  // Generate a photos-only poster (larger grid) and return a Blob
+  const generatePhotosPoster = (): Promise<Blob> => {
+    return new Promise(async (resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('No canvas context'));
+
+      // simple gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#4338ca');
+      gradient.addColorStop(1, '#ec4899');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Header (title + user name)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('DEUR DEN BOCHT', canvas.width / 2, 120);
+
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`${user.first_name} ${user.last_name}`, canvas.width / 2, 200);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Mijn 2026 Recap', canvas.width / 2, 240);
+
+      // Photos grid - reuse precomputed photoSize from above logic, but reserve footer space
+      const photosToShowCount = Math.min((photos || []).length, 9);
+      const photosPerRow = photosToShowCount >= 3 ? 3 : (photosToShowCount || 1);
+      const photoGap = 20;
+      const photoContainerPadding = 80; // narrower padding to allow larger photos
+      const photoContainerWidth = canvas.width - photoContainerPadding;
+      let photoSize = Math.max(120, Math.min(420, Math.floor((photoContainerWidth - (photosPerRow - 1) * photoGap) / photosPerRow)));
+
+      // layout positions
+      let startY = 320; // place grid below header
+
+      // Reserve footer height to avoid overlap
+      const footerHeight = 160; // space for footer texts
+      const footerY = canvas.height - footerHeight;
+
+      const rowsNeeded = photosToShowCount > 0 ? Math.ceil(photosToShowCount / photosPerRow) : 0;
+      if (rowsNeeded > 0) {
+        const maxGridHeight = Math.max(0, footerY - startY - 24); // small padding above footer
+        const maxPhotoSizeByHeight = Math.floor((maxGridHeight - (rowsNeeded - 1) * photoGap) / rowsNeeded);
+        if (maxPhotoSizeByHeight > 0) {
+          photoSize = Math.min(photoSize, maxPhotoSizeByHeight);
+        }
+        // enforce minimum so images don't disappear
+        photoSize = Math.max(80, photoSize);
+      }
+
+      const totalWidth = photosPerRow * photoSize + (photosPerRow - 1) * photoGap;
+      const startX = (canvas.width - totalWidth) / 2;
+
+      try {
+        const photosToShow = photos.slice(0, photosToShowCount);
+        const imagePromises = photosToShow.map((p: any) => {
+          return new Promise<HTMLImageElement>((resolveImg, rejectImg) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolveImg(img);
+            img.onerror = () => rejectImg(new Error('Failed to load image'));
+            img.src = p.image_url;
+          });
+        });
+
+        const loaded = await Promise.all(imagePromises);
+        loaded.forEach((img, index) => {
+          const col = index % photosPerRow;
+          const row = Math.floor(index / photosPerRow);
+          const x = startX + col * (photoSize + photoGap);
+          const y = startY + row * (photoSize + photoGap);
+
+          // cover-fit with rounded corners and subtle border
+          const scale = Math.max(photoSize / img.width, photoSize / img.height);
+          const scaledW = img.width * scale;
+          const scaledH = img.height * scale;
+          const offsetX = (photoSize - scaledW) / 2;
+          const offsetY = (photoSize - scaledH) / 2;
+
+          // rounded clip
+          const radius = 10;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x + radius, y);
+          ctx.lineTo(x + photoSize - radius, y);
+          ctx.quadraticCurveTo(x + photoSize, y, x + photoSize, y + radius);
+          ctx.lineTo(x + photoSize, y + photoSize - radius);
+          ctx.quadraticCurveTo(x + photoSize, y + photoSize, x + photoSize - radius, y + photoSize);
+          ctx.lineTo(x + radius, y + photoSize);
+          ctx.quadraticCurveTo(x, y + photoSize, x, y + photoSize - radius);
+          ctx.lineTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.closePath();
+          ctx.clip();
+
+          ctx.drawImage(img, x + offsetX, y + offsetY, scaledW, scaledH);
+          ctx.restore();
+
+          // rounded border
+          ctx.strokeStyle = 'rgba(255,255,255,0.66)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(x + radius, y);
+          ctx.lineTo(x + photoSize - radius, y);
+          ctx.quadraticCurveTo(x + photoSize, y, x + photoSize, y + radius);
+          ctx.lineTo(x + photoSize, y + photoSize - radius);
+          ctx.quadraticCurveTo(x + photoSize, y + photoSize, x + photoSize - radius, y + photoSize);
+          ctx.lineTo(x + radius, y + photoSize);
+          ctx.quadraticCurveTo(x, y + photoSize, x, y + photoSize - radius);
+          ctx.lineTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.closePath();
+          ctx.stroke();
+        });
+      } catch (err) {
+        console.error('Failed to build photos poster', err);
+      }
+
+      // Footer for photos poster
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = 'italic 22px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Legendes voor het leven', canvas.width / 2, canvas.height - 120);
+      ctx.fillText('Merci voor mee te doen', canvas.width / 2, canvas.height - 92);
+      ctx.fillText('VZW DdB', canvas.width / 2, canvas.height - 64);
+
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Could not generate image'));
+      }, 'image/png');
+    });
+  };
+
+  // Generate a badge + quote poster (header + badge + quote + footer)
+  const generateBadgePoster = (): Promise<Blob> => {
+    return new Promise(async (resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('No canvas context'));
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#4338ca');
+      gradient.addColorStop(1, '#ec4899');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Header
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('DEUR DEN BOCHT', canvas.width / 2, 140);
+
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`${user.first_name} ${user.last_name}`, canvas.width / 2, 220);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Mijn 2026 Recap', canvas.width / 2, 260);
+
+      // Quote
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.font = 'italic 28px system-ui, -apple-system, sans-serif';
+      const quote = randomQuote;
+      let qy = 320;
+      (quote.lines || []).forEach((l) => {
+        ctx.fillText(l, canvas.width / 2, qy);
+        qy += 36;
+      });
+      ctx.font = 'italic bold 30px system-ui, -apple-system, sans-serif';
+      ctx.fillText(quote.finalLine, canvas.width / 2, qy + 6);
+
+      // Badge area
+      if (bestBadge) {
+        try {
+          const img: HTMLImageElement = await new Promise((res, rej) => {
+            const i = new Image();
+            i.crossOrigin = 'anonymous';
+            i.onload = () => res(i);
+            i.onerror = rej;
+            i.src = `/badges/${bestBadge.key}.svg`;
+          });
+          const badgeSize = 400;
+          const bx = (canvas.width - badgeSize) / 2;
+          const by = qy + 200;
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, by + badgeSize / 2, badgeSize / 2 + 8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fill();
+          ctx.drawImage(img, bx + 8, by + 8, badgeSize - 16, badgeSize - 16);
+          ctx.font = '32px system-ui, -apple-system, sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.fillText('BADGE', canvas.width / 2, by + badgeSize + 60);
+          ctx.font = '60px system-ui, -apple-system, sans-serif';
+          ctx.fillText(bestBadge.name, canvas.width / 2, by + badgeSize + 120);
+        } catch (e) {
+          console.error('Badge load fail', e);
+        }
+      }
+
+      // Footer
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = 'italic 22px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Legendes voor het leven', canvas.width / 2, canvas.height - 120);
+      ctx.fillText('Merci voor mee te doen', canvas.width / 2, canvas.height - 92);
+      ctx.fillText('VZW DdB', canvas.width / 2, canvas.height - 64);
+
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('No blob'))), 'image/png');
+    });
+  };
+
+  // Generate a stats-only poster (header + stats grid + footer)
+  const generateStatsPoster = (): Promise<Blob> => {
+    return new Promise(async (resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('No canvas context'));
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#4338ca');
+      gradient.addColorStop(1, '#ec4899');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Header
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = 'bold 48px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('DEUR DEN BOCHT', canvas.width / 2, 140);
+
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`${user.first_name} ${user.last_name}`, canvas.width / 2, 220);
+
+      // Stats grid
+      const statsList = [
+        { label: 'Zones bezocht', value: totalZones.toString() },
+        { label: 'Challenges gedaan', value: totalChallenges.toString() },
+        { label: 'Punten gescoord', value: totalPoints.toString() },
+        { label: 'Correcte challenges', value: correctChallenges.toString() },
+        { label: 'Hazepaden gekozen', value: (hazepadsSelected || 0).toString() },
+      ];
+
+      const cols = 2;
+      const cardW = 420;
+      const cardH = 180;
+      const gap = 36;
+      const totalW = cols * cardW + (cols - 1) * gap;
+      const startX = (canvas.width - totalW) / 2;
+      const startY = 320;
+
+      statsList.forEach((s, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * (cardW + gap);
+        const y = startY + row * (cardH + gap);
+
+        // rounded rect
+        const r = 16;
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + cardW - r, y);
+        ctx.quadraticCurveTo(x + cardW, y, x + cardW, y + r);
+        ctx.lineTo(x + cardW, y + cardH - r);
+        ctx.quadraticCurveTo(x + cardW, y + cardH, x + cardW - r, y + cardH);
+        ctx.lineTo(x + r, y + cardH);
+        ctx.quadraticCurveTo(x, y + cardH, x, y + cardH - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.value, x + cardW / 2, y + 78);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = '24px system-ui, -apple-system, sans-serif';
+        ctx.fillText(s.label, x + cardW / 2, y + 120);
+      });
+
+      // Footer
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = 'italic 22px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Legendes voor het leven', canvas.width / 2, canvas.height - 120);
+      ctx.fillText('Merci voor mee te doen', canvas.width / 2, canvas.height - 92);
+      ctx.fillText('VZW DdB', canvas.width / 2, canvas.height - 64);
+
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('No blob'))), 'image/png');
+    });
+  };
+
+  // small wrapper component for modal lightbox that supports multiple urls
+  function PosterLightbox({ urls, onClose }: { urls: string[]; onClose: () => void }) {
+    const [idx, setIdx] = useState(0);
+
+    const downloadCurrent = () => {
+      const a = document.createElement('a');
+      a.href = urls[idx];
+      a.download = `deur-den-bocht-poster-${idx + 1}.png`;
+      a.click();
+    };
+
+    const shareCurrent = async () => {
+      try {
+        const res = await fetch(urls[idx]);
+        const blob = await res.blob();
+        const file = new File([blob], `deur-den-bocht-poster-${idx + 1}.png`, { type: 'image/png' });
+        if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+          await navigator.share({ files: [file], title: 'Mijn Deur Den Bocht Recap' });
+          return;
+        }
+      } catch (e) {
+        // fallback
+      }
+      downloadCurrent();
+    };
+
+    return (
+      <Lightbox
+        imageSrc={urls[idx]}
+        showNav
+        onPrev={() => setIdx((i) => (i - 1 + urls.length) % urls.length)}
+        onNext={() => setIdx((i) => (i + 1) % urls.length)}
+        overlays={
+          // put icons inside the image wrapper so they're positioned relative to the image
+          <div className="absolute right-6 bottom-6 z-50 flex gap-3 items-center">
+            <button
+              type="button"
+              onClick={shareCurrent}
+              aria-label="Share poster"
+              title="Share"
+              className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+            >
+              <Icon name="share" className="w-5 h-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={downloadCurrent}
+              aria-label="Download poster"
+              title="Download"
+              className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+            >
+              <Icon name="download" className="w-5 h-5" />
+            </button>
+          </div>
+        }
+        onClose={onClose}
+      />
+    );
+  }
+
+  const { openModal, closeModal } = useModal();
+
+  const openPostersLightbox = async () => {
+    // generate overview, badge, stats and photos posters and open PosterLightbox
+    try {
+      // Generate only badge, stats and photos posters (no combined overview poster)
+      const [badgeBlob, statsBlob, photosBlob] = await Promise.all([
+        generateBadgePoster(),
+        generateStatsPoster(),
+        generatePhotosPoster(),
+      ]);
+
+      const urls = [
+        URL.createObjectURL(badgeBlob),
+        URL.createObjectURL(statsBlob),
+        URL.createObjectURL(photosBlob),
+      ];
+
+      let modalId: string;
+
+      modalId = openModal({
+        variant: 'lightbox',
+        content: (
+          <PosterLightbox
+            urls={urls}
+            onClose={() => {
+              urls.forEach((u) => URL.revokeObjectURL(u));
+              if (modalId) closeModal(modalId);
+            }}
+          />
+        ),
+        closeOnBackdrop: true,
+      });
+    } catch (err) {
+      console.error('Failed to generate posters', err);
+    }
+  };
+
   const handleShare = async () => {
     setShareStatus('idle');
     
     try {
-      const imageBlob = await generateShareImage();
-      const file = new File([imageBlob], 'deur-den-bocht-recap.png', { type: 'image/png' });
+      // Use the badge poster for quick download/share instead of the combined overview
+      const imageBlob = await generateBadgePoster();
+      const file = new File([imageBlob], 'deur-den-bocht-badge.png', { type: 'image/png' });
 
       // Check if mobile/touch device
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
@@ -475,8 +910,8 @@ export default function DashboardRecap() {
       // Only try share API on mobile devices
       if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
-          title: 'Mijn Deur Den Bocht Recap',
-          text: `🏍️ ${totalZones} zones, ${totalChallenges} challenges, ${totalPoints} punten!`,
+          title: 'Mijn Deur Den Bocht Badge',
+          text: `🏍️ ${user.first_name}'s badge — ${bestBadge?.name || ''}`,
           files: [file],
         });
         setShareStatus('success');
@@ -485,7 +920,7 @@ export default function DashboardRecap() {
         const url = URL.createObjectURL(imageBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'deur-den-bocht-recap.png';
+        a.download = 'deur-den-bocht-badge.png';
         a.click();
         URL.revokeObjectURL(url);
         setShareStatus('success');
@@ -524,7 +959,7 @@ export default function DashboardRecap() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-5 gap-6">
           <div className="bg-white rounded-sm shadow p-6">
             <p className="text-sm text-gray-500">Zones bezocht</p>
             <p className="text-3xl font-bold text-indigo-600 mt-2">{totalZones}</p>
@@ -585,16 +1020,18 @@ export default function DashboardRecap() {
               </p>
             </div>
             
-            <button
-              onClick={handleShare}
-              className="mt-6 w-full px-4 py-2 bg-white text-slate-900 rounded-sm font-semibold hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
-              type="button"
-            >
-              <Icon name="download" className="w-4 h-4" />
-              {shareStatus === 'success' ? '✓ Opgeslagen!' : shareStatus === 'error' ? 'Fout opgetreden' : 'Download poster'}
-            </button>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={openPostersLightbox}
+                className="flex-1 px-4 py-2 bg-white/10 text-white border border-white/20 rounded-sm font-semibold hover:bg-white/20 transition-colors"
+                type="button"
+              >
+                <Icon name="image" className="w-4 h-4" />
+                Bekijk posters
+              </button>
+            </div>
             <p className="text-xs text-slate-300 mt-2">
-              {shareStatus === 'success' ? 'Poster gedownload! Deel op je socials 📸' : 'Download een poster met jouw stats om te delen'}
+              {shareStatus === 'success' ? 'Poster gedownload! Deel op je socials 📸' : 'Download een poster met jouw stats om te delen — of bekijk meerdere posters'}
             </p>
           </div>
         </div>
