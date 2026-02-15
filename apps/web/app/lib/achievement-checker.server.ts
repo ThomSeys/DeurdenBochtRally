@@ -191,8 +191,16 @@ export async function checkAndUnlockAchievements(participantId: string): Promise
       continue;
     }
 
+    // Ensure points is a number (not null) for type compatibility
+    const achievementForCheck: Achievement = {
+      ...achievement,
+      points: achievement.points ?? 0,
+      // If criteria is stored as JSON, ensure correct typing
+      criteria: achievement.criteria as Achievement['criteria'],
+    };
+
     // Check if criteria is met
-    const earned = await checkAchievementCriteria(participantId, achievement);
+    const earned = await checkAchievementCriteria(participantId, achievementForCheck);
 
     if (earned) {
       // Unlock achievement
