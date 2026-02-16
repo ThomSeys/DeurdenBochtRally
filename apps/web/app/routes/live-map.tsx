@@ -397,6 +397,8 @@ export default function LiveMap() {
   const [showZoneRoutes, setShowZoneRoutes] = useState(true);
   const [showEventMarkers, setShowEventMarkers] = useState(true);
   const [showEmergencyAlerts, setShowEmergencyAlerts] = useState(true);
+  const [showUserLocation, setShowUserLocation] = useState(true);
+  const [showLiveLocations, setShowLiveLocations] = useState(isAdmin ? true : false);
 
   // Get user's location
   useEffect(() => {
@@ -470,6 +472,8 @@ export default function LiveMap() {
           showEventMarkers={showEventMarkers}
           showEmergencyAlerts={showEmergencyAlerts}
           isAdmin={isAdmin}
+          enableUserLocation={showUserLocation}
+          showLiveLocations={showLiveLocations}
         />
 
         {/* Legend */}
@@ -512,12 +516,28 @@ export default function LiveMap() {
             )}
 
             <div className="border-b pb-2.5">
-              <div className="flex items-center gap-2">
+              <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors flex items-center gap-2" onClick={() => setShowUserLocation(!showUserLocation)}>
                 <Icon name="marker" className="w-4 h-4 text-purple-600" />
-                <div className="w-4 h-4 bg-purple-600 border-2 border-white rounded-full shadow"></div>
-                <span>Uw Locatie</span>
+                <span style={{opacity: showUserLocation ? 1 : 0.5}}>Uw Locatie</span>
+              </div>
+              <div className="flex items-center gap-2 pl-6">
+                <div className="w-3 h-3 bg-purple-600 rounded-full border-2 border-white shadow"></div>
+                <span className="text-sm text-gray-600">Toon uw huidige positie op de kaart</span>
               </div>
             </div>
+
+            {isAdmin && (
+              <div className="border-b pb-2.5">
+                <div className="font-medium text-gray-700 mb-2 cursor-pointer hover:text-primary-600 transition-colors flex items-center gap-2" onClick={() => setShowLiveLocations(!showLiveLocations)}>
+                  <Icon name="users" className="w-4 h-4" />
+                  <span style={{opacity: showLiveLocations ? 1 : 0.5}}>Live locaties deelnemers ({liveLocations?.length || 0})</span>
+                </div>
+                <div className="flex items-center gap-2 pl-6">
+                  <div style={{ background: '#2563eb', width: '14px', height: '14px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                  <span className="text-sm text-gray-600">Admin: realtime deelnemer-locaties</span>
+                </div>
+              </div>
+            )}
 
             {eventMarkers.length > 0 && (
               <div className="border-b pb-2.5">
@@ -556,7 +576,7 @@ export default function LiveMap() {
 }
 
 // Dynamic import of map component
-function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin, liveLocations }: any) {
+function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, checkIns, routeTipSubmissions, buddyList, likedPhotoIds, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin, liveLocations, enableUserLocation, showLiveLocations }: any) {
   const [MapComponent, setMapComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -593,6 +613,8 @@ function LiveEventMapComponent({ rallyZones, eventMarkers, emergencyAlerts, gpxR
       showEventMarkers={showEventMarkers}
       showEmergencyAlerts={showEmergencyAlerts}
       isAdmin={isAdmin}
+      enableUserLocation={enableUserLocation}
+      showLiveLocations={showLiveLocations}
     />
   );
 }
