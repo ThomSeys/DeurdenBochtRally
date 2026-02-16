@@ -6,16 +6,21 @@ type Options = {
   postUrl?: string; // fallback HTTP publish endpoint
   userId: string;
   watchOptions?: PositionOptions;
+  // minimum interval between sent location updates in milliseconds
+  // defaults to 90_000 (90 seconds) to reduce battery/network usage
+  minIntervalMs?: number;
   onError?: (err: Error) => void;
 };
 
 export function startLiveTracking(opts: Options) {
-  const { wsUrl, postUrl = '/api/live-location', userId, watchOptions, onError } = opts;
+  const { wsUrl, postUrl = '/api/live-location', userId, watchOptions, onError, minIntervalMs = 90_000 } = opts;
   let ws: WebSocket | null = null;
   let watchId: number | null = null;
+  let lastSentAt = 0;
+  let pendingPos: { lat: number; lng: number; ts: number; userId: string } | null = null;
+  let sendTimer: number | null = null;
 
-  function sendLoc(lat: number, lng: number, ts?: number) {
-    const payload = { userId, lat, lng, ts: ts || Date.now() };
+  function doSend(payload: { userId: string; lat: number; lng: number; ts: number }) {
     if (ws && ws.readyState === WebSocket.OPEN) {
       try {
         ws.send(JSON.stringify({ type: 'location', data: payload }));
@@ -34,6 +39,38 @@ export function startLiveTracking(opts: Options) {
     }).catch(err => onError?.(err));
   }
 
+  function sendLocThrottled(lat: number, lng: number, ts?: number) {
+    const now = Date.now();
+    const payload = { userId, lat, lng, ts: ts || now };
+
+    // If never sent or past interval, send immediately
+    if (!lastSentAt || now - lastSentAt >= minIntervalMs) {
+      doSend(payload);
+      lastSentAt = now;
+      // clear any pending
+      if (sendTimer) {
+        clearTimeout(sendTimer);
+        sendTimer = null;
+      }
+      pendingPos = null;
+      return;
+    }
+
+    // Otherwise keep latest position as pending and schedule send when interval elapses
+    pendingPos = payload;
+    if (!sendTimer) {
+      const delay = Math.max(0, minIntervalMs - (now - lastSentAt));
+      sendTimer = window.setTimeout(() => {
+        if (pendingPos) {
+          doSend(pendingPos);
+          lastSentAt = Date.now();
+          pendingPos = null;
+        }
+        sendTimer = null;
+      }, delay) as unknown as number;
+    }
+  }
+
   if (wsUrl) {
     try {
       ws = new WebSocket(wsUrl);
@@ -50,7 +87,7 @@ export function startLiveTracking(opts: Options) {
     watchId = navigator.geolocation.watchPosition(
       pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
-        sendLoc(lat, lng, pos.timestamp);
+        sendLocThrottled(lat, lng, pos.timestamp);
       },
       err => onError?.(err as unknown as Error),
       watchOptions || { enableHighAccuracy: false, maximumAge: 5000, timeout: 10000 }
@@ -60,6 +97,16 @@ export function startLiveTracking(opts: Options) {
   }
 
   return function stop() {
+    // send any pending position immediately before stopping
+    if (pendingPos) {
+      try { doSend(pendingPos); } catch (e) {}
+      pendingPos = null;
+    }
+    if (sendTimer) {
+      clearTimeout(sendTimer);
+      sendTimer = null;
+    }
+
     if (watchId !== null) navigator.geolocation.clearWatch(watchId);
     if (ws) {
       try {
