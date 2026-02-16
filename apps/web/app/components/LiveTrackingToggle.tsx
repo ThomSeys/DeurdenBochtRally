@@ -25,6 +25,39 @@ export default function LiveTrackingToggle({ userId, wsUrl, isTransparent }: Pro
   const stopRef = useRef<(() => void) | null>(null);
   const userToggledRef = useRef(false);
 
+  async function ensureGeolocationAllowed(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    if (!('geolocation' in navigator)) {
+      alert('Locatie wordt niet ondersteund in deze browser');
+      return false;
+    }
+
+    try {
+      // Prefer Permissions API when available to detect denied state
+      // @ts-ignore PermissionName may be narrower in some TS configs
+      if (navigator.permissions && navigator.permissions.query) {
+        const p = await navigator.permissions.query({ name: 'geolocation' });
+        if (p.state === 'granted') return true;
+        if (p.state === 'denied') return false;
+        // if 'prompt' fallthrough to actually requesting position to trigger prompt
+      }
+
+      // Fallback: try to request a single position which will either succeed or fail.
+      return await new Promise<boolean>(resolve => {
+        const done = (ok: boolean) => {
+          try { resolve(ok); } catch (e) {}
+        };
+        navigator.geolocation.getCurrentPosition(
+          () => done(true),
+          () => done(false),
+          { timeout: 10000 }
+        );
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
   useEffect(() => {
     // Optionally, fetch initial consent from server
     let mounted = true;
@@ -49,8 +82,19 @@ export default function LiveTrackingToggle({ userId, wsUrl, isTransparent }: Pro
   useEffect(() => {
     if (userId) {
         if (enabled) {
-        // start tracking
-        stopRef.current = startLiveTracking({ wsUrl, userId, onError: err => console.warn('[lt]', err) });
+        // Before starting, double-check permission state (handle denied case)
+        (async () => {
+          const ok = await ensureGeolocationAllowed();
+          if (!ok) {
+            // Prevent starting and clear UI
+            try { localStorage.setItem('liveTrackingConsent', 'false'); } catch (e) {}
+            setEnabled(false);
+            return;
+          }
+
+          // start tracking
+          stopRef.current = startLiveTracking({ wsUrl, userId, onError: err => console.warn('[lt]', err) });
+        })();
         // persist consent on server only when user explicitly toggled
         if (userToggledRef.current) {
           try { localStorage.setItem('liveTrackingConsent', 'true'); } catch (e) {}
@@ -80,7 +124,17 @@ export default function LiveTrackingToggle({ userId, wsUrl, isTransparent }: Pro
       <button
         type="button"
         aria-pressed={enabled}
-        onClick={() => {
+        onClick={async () => {
+          // If enabling, ensure geolocation permission is available (or trigger prompt)
+          if (!enabled) {
+            const ok = await ensureGeolocationAllowed();
+            if (!ok) {
+              // user denied or not supported
+              alert('Live tracking vereist locatie-toestemming. Schakel locatievoorzieningen in de browser of app-instellingen in.');
+              return;
+            }
+          }
+
           // mark that the user explicitly toggled so we send the POST in the effect
           userToggledRef.current = true;
           try { localStorage.setItem('liveTrackingConsent', (!enabled).toString()); } catch (e) {}
