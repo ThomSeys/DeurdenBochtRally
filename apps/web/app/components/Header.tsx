@@ -569,7 +569,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                           <span>Live Kaart</span>
                         </Link>
                         <>{user && (
-                          <div className="px-4 py-3">
+                          <div className="px-4">
                             <LiveTrackingToggle userId={user.id} isTransparent={false} />
                           </div>
                         )}</>
