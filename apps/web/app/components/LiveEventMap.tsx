@@ -126,6 +126,7 @@ interface LiveEventMapProps {
   enableUserLocation?: boolean;
   showLiveLocations?: boolean;
   focusLocation?: { lat: number; lng: number } | null;
+  
 }
 
 export default function LiveEventMap({
@@ -357,6 +358,8 @@ export default function LiveEventMap({
         });
         zoneRoutesRef.current = [];
 
+        // Skip: hazepads are rendered per-zone from rallyZone.skipRoute
+
 
         // Add check-in markers (admins or explicitly allowed public view)
         if (showCheckIns && (isAdmin || allowPublicCheckIns)) {
@@ -433,6 +436,35 @@ export default function LiveEventMap({
                 }
               } catch (err) {
                 console.error('Error loading GPX for zone:', zone.title, err);
+              }
+            }
+            // If the zone defines a skipRoute GPX (hazepad), render it for admins with dashed red styling
+            if (isAdmin && zone.skipRoute?.gpxFile?.asset?.url) {
+              try {
+                const response = await fetch(zone.skipRoute.gpxFile.asset.url);
+                const gpxText = await response.text();
+                const parser = new DOMParser();
+                const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
+
+                const skipPoints: [number, number][] = [];
+                const skipTrkpts = gpxDoc.querySelectorAll('trkpt');
+                skipTrkpts.forEach((pt) => {
+                  const lat = parseFloat(pt.getAttribute('lat') || '0');
+                  const lon = parseFloat(pt.getAttribute('lon') || '0');
+                  if (lat && lon) skipPoints.push([lat, lon]);
+                });
+
+                if (skipPoints.length > 0) {
+                  const skipPoly = L.default.polyline(skipPoints, {
+                    color: '#ef4444',
+                    weight: 3,
+                    opacity: 0.85,
+                    dashArray: '8 6',
+                  }).addTo(mapRef.current);
+                  zoneRoutesRef.current.push(skipPoly);
+                }
+              } catch (err) {
+                console.error('Error loading skipRoute GPX for zone:', zone.title, err);
               }
             }
           }));

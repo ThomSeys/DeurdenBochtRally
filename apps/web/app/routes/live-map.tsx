@@ -57,30 +57,39 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Fetch rally zones with GPX routes (Concept B)
   const rallyZones = await sanityClient.fetch(`
-    *[_type == "rallyZone"] | order(order asc) {
-      _id,
-      title,
-      character,
-      color,
-      "startLocation": startPoint,
-      "endLocation": endPoint,
-      "is_open": coalesce(is_active, true),
-      emergency_contact,
-      routeTips[] {
-        name,
-        color,
-        locations[] {
-          _key,
-          name,
-          coordinates {
-            lat,
-            lng
-          },
-          type,
-          description
-        }
-      }
-    }
+          *[_type == "rallyZone"] | order(order asc) {
+            _id,
+            title,
+            character,
+            color,
+            "startLocation": startPoint,
+            "endLocation": endPoint,
+            "is_open": coalesce(is_active, true),
+            emergency_contact,
+            // main GPX route (for full route display)
+            gpxRoute { asset-> { url } },
+            // skip-route / hazepad info
+            skipRoute {
+              instructions,
+              "startPoint": startPoint,
+              "endPoint": endPoint,
+              gpxFile { asset-> { url } }
+            },
+            routeTips[] {
+              name,
+              color,
+              locations[] {
+                _key,
+                name,
+                coordinates {
+                  lat,
+                  lng
+                },
+                type,
+                description
+              }
+            }
+          }
   `);
 
   // Fetch check-ins for visualization with participant info (Concept B: latest check-in per participant)
@@ -120,6 +129,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       updatedAt
     }
   `);
+
+  // Fetch hazepad paths (optional - may be empty if not configured in Sanity)
+      // Removed separate hazepad fetch since hazepad data lives under rallyZone.skipRoute.gpxFile
 
   // Fetch buddy group challenge submissions for route tip popups
   const { data: buddyLinks, error: buddyError } = await supabaseAdmin
@@ -332,7 +344,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
         asset-> {
           url
         }
-      }
+      },
+      gpsInstructions
     }
   `);
 
@@ -448,6 +461,12 @@ export default function LiveMap() {
                   </span>
                 )}
               </p>
+              {siteConfig?.gpsInstructions && (
+                <div className="mt-3 p-3 bg-white/10 rounded text-sm text-yellow-50 border border-yellow-200/20">
+                  <strong className="block font-semibold mb-1">GPX &amp; GPS — Belangrijke info</strong>
+                  <div>{siteConfig.gpsInstructions}</div>
+                </div>
+              )}
             </div>
             <LiveMapTourButton />
           </div>

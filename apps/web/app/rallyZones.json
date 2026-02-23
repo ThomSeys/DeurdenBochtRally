@@ -1,0 +1,1394 @@
+[
+  {
+    "_id": "rallyZone-rz-1",
+    "title": "RZ-1",
+    "description": "Een uitdagende zone vol korte beklimmingen, karaktervolle wegen en fotogenieke stops. Kies je route, test je techniek en verzamel punten - klaar om te vertrekken?",
+    "center": {
+      "lat": 50.79029,
+      "lon": 3.52475
+    },
+    "routeTips": [
+      {
+        "_type": "routeTip",
+        "name": "RZ-1 — Technisch",
+        "description": "Technische optie met highlights in de zone.",
+        "routeType": "technical",
+        "difficulty": "hard",
+        "estimatedDistance": 32,
+        "character": "Steile stukken, technische secties",
+        "warnings": "Let op kasseien en smalle wegen",
+        "highlights": "Oude Kwaremont",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-1-t"
+          }
+        },
+        "color": "#D35400",
+        "locations": [
+          {
+            "name": "RZ-1 — Technisch — Start",
+            "coordinates": {
+              "lat": 50.865,
+              "lng": 3.57963
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-1",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "Oude Kwaremont",
+            "coordinates": {
+              "lat": 50.7762,
+              "lng": 3.5248
+            },
+            "type": "highlight",
+            "description": "Kwaremontplein, 9690 Kluisbergen",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto van het uitzicht bij Oude Kwaremont",
+              "hint": "Kies een panoramisch zicht",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-1 — Technisch — Eind",
+            "coordinates": {
+              "lat": 50.74142,
+              "lng": 3.67867
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      },
+      {
+        "_type": "routeTip",
+        "name": "RZ-1 — Panoramisch",
+        "description": "Panoramische optie met highlights in de zone.",
+        "routeType": "panoramic",
+        "difficulty": "medium",
+        "estimatedDistance": 32,
+        "character": "Panoramisch, rustig",
+        "warnings": "Landwegjes en landbouwverkeer mogelijk",
+        "highlights": "RZ-1 start; Wolvenberg, 9700 Oudenaarde; Koppenberg, Oudenaarde; Paterbergstraat, 9690 Kluisbergen",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-1-p"
+          }
+        },
+        "color": "#1E8449",
+        "locations": [
+          {
+            "name": "RZ-1 — Panoramisch — Start",
+            "coordinates": {
+              "lat": 50.865,
+              "lng": 3.57963
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-1",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "RZ-1 start",
+            "coordinates": {
+              "lat": 50.864934,
+              "lng": 3.580242
+            },
+            "type": "highlight",
+            "description": "Tuintjesstraat 33, 9700 Oudenaarde",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij RZ-1 start",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Wolvenberg, 9700 Oudenaarde",
+            "coordinates": {
+              "lat": 50.842434,
+              "lng": 3.640514
+            },
+            "type": "highlight",
+            "description": "Wolvenberg, 9700 Oudenaarde",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Wolvenberg, 9700 Oudenaarde",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Koppenberg, Oudenaarde",
+            "coordinates": {
+              "lat": 50.810981,
+              "lng": 3.590985
+            },
+            "type": "highlight",
+            "description": "Koppenberg, Oudenaarde",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Koppenberg, Oudenaarde",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Paterbergstraat, 9690 Kluisbergen",
+            "coordinates": {
+              "lat": 50.782554,
+              "lng": 3.545648
+            },
+            "type": "highlight",
+            "description": "Paterbergstraat, 9690 Kluisbergen",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Paterbergstraat, 9690 Kluisbergen",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-1 — Panoramisch — Eind",
+            "coordinates": {
+              "lat": 50.74142,
+              "lng": 3.67867
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "id": "0d76027f-6fdf-4243-8988-973777e250f4",
+        "name": "RZ-1 start",
+        "lat": 50.864934,
+        "lon": 3.580242
+      },
+      {
+        "id": "8405322d-ab05-4246-9168-6df49d3a4e73",
+        "name": "Wolvenberg, 9700 Oudenaarde",
+        "lat": 50.842434,
+        "lon": 3.640514
+      },
+      {
+        "id": "f09f5536-4c70-49ef-b1e5-5ee6524bac90",
+        "name": "Koppenberg, Oudenaarde",
+        "lat": 50.810981,
+        "lon": 3.590985
+      },
+      {
+        "id": "16c4fcd5-bae7-46d2-8e43-e6fafd971aae",
+        "name": "Oude Kwaremont",
+        "lat": 50.7762,
+        "lon": 3.5248
+      },
+      {
+        "id": "43baa80d-2672-48ef-a76f-1a375f9cad2a",
+        "name": "Paterbergstraat, 9690 Kluisbergen",
+        "lat": 50.782554,
+        "lon": 3.545648
+      },
+      {
+        "id": "83ed58ba-c04d-4401-8ee0-d6d522813cd4",
+        "name": "Mont-de-l'Enclus",
+        "lat": 50.743776,
+        "lon": 3.506653
+      }
+    ],
+    "poiCount": 16,
+    "indexRange": [
+      1353,
+      2241
+    ],
+    "color": "orange",
+    "radius_m": 120,
+    "is_open": true,
+    "startPoint": {
+      "lat": 50.865,
+      "lng": 3.57963
+    },
+    "endPoint": {
+      "lat": 50.74142,
+      "lng": 3.67867
+    },
+    "order": 1,
+    "image": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "image-placeholder-1-0d76027f-6fdf-4243-8988-973777e250f4"
+      }
+    },
+    "reference_photo": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "reference-photo-placeholder-1-0d76027f-6fdf-4243-8988-973777e250f4"
+      }
+    },
+    "gpxRoute": {
+      "_type": "file",
+      "asset": {
+        "_type": "reference",
+        "_ref": "gpx-placeholder-1-0d76027f-6fdf-4243-8988-973777e250f4"
+      }
+    },
+    "skipRoute": {
+      "instructions": "Gebruik dit hazepad wanneer de zone afgesloten is. Volg de alternatieve GPX voor een veilige omleiding.",
+      "gpxFile": {
+        "_type": "file",
+        "asset": {
+          "_type": "reference",
+          "_ref": "skip-gpx-placeholder-1-0d76027f-6fdf-4243-8988-973777e250f4"
+        }
+      },
+      "startPoint": {
+        "lat": 50.865,
+        "lng": 3.57963
+      },
+      "endPoint": {
+        "lat": 50.74142,
+        "lng": 3.67867
+      }
+    },
+    "edition": {
+      "_type": "reference",
+      "_ref": "edition-2026"
+    },
+    "location": "De Vlaamse Ardennen",
+    "estimatedDistance": 32,
+    "exit": "Volg de aanwijzingen bij het vertrek.",
+    "lus": "",
+    "rejoin": "Voeg weer in op de hoofdroute bij het eindpunt.",
+    "checkpoints": [],
+    "checkpoint": "",
+    "codeHint": "",
+    "solution": "",
+    "validAnswers": [],
+    "points": 0
+  },
+  {
+    "_id": "rallyZone-rz-2",
+    "title": "RZ-2",
+    "description": "Automatisch gegenereerde beschrijving voor RZ-2.",
+    "center": {
+      "lat": 50.28348,
+      "lon": 4.66112
+    },
+    "routeTips": [
+      {
+        "_type": "routeTip",
+        "name": "RZ-2 — Technisch",
+        "description": "Technische optie met highlights in de zone.",
+        "routeType": "technical",
+        "difficulty": "hard",
+        "estimatedDistance": 34,
+        "character": "Steile stukken, technische secties",
+        "warnings": "Let op kasseien en smalle wegen",
+        "highlights": "RZ-2 start; Abbaye d'Aulne; Jardins Suspendus; Ferme du château de Cour-sur-Heure",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-2-t"
+          }
+        },
+        "color": "#D35400",
+        "locations": [
+          {
+            "name": "RZ-2 — Technisch — Start",
+            "coordinates": {
+              "lat": 50.3833,
+              "lng": 4.34474
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-2",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "RZ-2 start",
+            "coordinates": {
+              "lat": 50.382957,
+              "lng": 4.344971
+            },
+            "type": "highlight",
+            "description": "Rue de Leernes 40, 6111 Montigny-le-Tilleul",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij RZ-2 start",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Abbaye d'Aulne",
+            "coordinates": {
+              "lat": 50.365129,
+              "lng": 4.332742
+            },
+            "type": "highlight",
+            "description": "Rue Émile Vandervelde 277, 6534 Thuin",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Abbaye d'Aulne",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Jardins Suspendus",
+            "coordinates": {
+              "lat": 50.338333,
+              "lng": 4.292287
+            },
+            "type": "highlight",
+            "description": "Rue Alphonse Liégeois 4, 6530 Thuin",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Jardins Suspendus",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Ferme du château de Cour-sur-Heure",
+            "coordinates": {
+              "lat": 50.295922,
+              "lng": 4.387205
+            },
+            "type": "highlight",
+            "description": "Rue Saint-Jean, 6120 Ham-sur-Heure-Nalinnes",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Ferme du château de Cour-sur-Heure",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-2 — Technisch — Eind",
+            "coordinates": {
+              "lat": 50.26012,
+              "lng": 4.91056
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      },
+      {
+        "_type": "routeTip",
+        "name": "RZ-2 — Panoramisch",
+        "description": "Panoramische optie met highlights in de zone.",
+        "routeType": "panoramic",
+        "difficulty": "medium",
+        "estimatedDistance": 34,
+        "character": "Panoramisch, rustig",
+        "warnings": "Landwegjes en landbouwverkeer mogelijk",
+        "highlights": "RZ-2 start; Abbaye d'Aulne; Jardins Suspendus; Ferme du château de Cour-sur-Heure",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-2-p"
+          }
+        },
+        "color": "#1E8449",
+        "locations": [
+          {
+            "name": "RZ-2 — Panoramisch — Start",
+            "coordinates": {
+              "lat": 50.3833,
+              "lng": 4.34474
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-2",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "RZ-2 start",
+            "coordinates": {
+              "lat": 50.382957,
+              "lng": 4.344971
+            },
+            "type": "highlight",
+            "description": "Rue de Leernes 40, 6111 Montigny-le-Tilleul",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij RZ-2 start",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Abbaye d'Aulne",
+            "coordinates": {
+              "lat": 50.365129,
+              "lng": 4.332742
+            },
+            "type": "highlight",
+            "description": "Rue Émile Vandervelde 277, 6534 Thuin",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Abbaye d'Aulne",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Jardins Suspendus",
+            "coordinates": {
+              "lat": 50.338333,
+              "lng": 4.292287
+            },
+            "type": "highlight",
+            "description": "Rue Alphonse Liégeois 4, 6530 Thuin",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Jardins Suspendus",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Ferme du château de Cour-sur-Heure",
+            "coordinates": {
+              "lat": 50.295922,
+              "lng": 4.387205
+            },
+            "type": "highlight",
+            "description": "Rue Saint-Jean, 6120 Ham-sur-Heure-Nalinnes",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Ferme du château de Cour-sur-Heure",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-2 — Panoramisch — Eind",
+            "coordinates": {
+              "lat": 50.26012,
+              "lng": 4.91056
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "id": "13aefe78-9c5b-499f-909e-7cf874ab8c3a",
+        "name": "RZ-2 start",
+        "lat": 50.382957,
+        "lon": 4.344971
+      },
+      {
+        "id": "020b18c0-8c9e-42d6-8c00-881bf6c5f9eb",
+        "name": "Abbaye d'Aulne",
+        "lat": 50.365129,
+        "lon": 4.332742
+      },
+      {
+        "id": "0fcaeb65-d42c-4ac7-bebb-fda4a4ed48c7",
+        "name": "Jardins Suspendus",
+        "lat": 50.338333,
+        "lon": 4.292287
+      },
+      {
+        "id": "9d06f1ea-9380-49c0-9236-1c1f1ce468af",
+        "name": "Ferme du château de Cour-sur-Heure",
+        "lat": 50.295922,
+        "lon": 4.387205
+      },
+      {
+        "id": "917ab3b8-baa0-48fb-a605-5626086a61ba",
+        "name": "Les Lacs de l'Eau d'Heure",
+        "lat": 50.192398,
+        "lon": 4.381871
+      },
+      {
+        "id": "28849618-2b6b-40b1-b209-8f356d532eed",
+        "name": "Barrage De La Plate Taille",
+        "lat": 50.188354,
+        "lon": 4.386097
+      }
+    ],
+    "poiCount": 13,
+    "indexRange": [
+      4983,
+      6762
+    ],
+    "color": "red",
+    "radius_m": 120,
+    "is_open": true,
+    "startPoint": {
+      "lat": 50.3833,
+      "lng": 4.34474
+    },
+    "endPoint": {
+      "lat": 50.26012,
+      "lng": 4.91056
+    },
+    "order": 2,
+    "image": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "image-placeholder-2-13aefe78-9c5b-499f-909e-7cf874ab8c3a"
+      }
+    },
+    "reference_photo": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "reference-photo-placeholder-2-13aefe78-9c5b-499f-909e-7cf874ab8c3a"
+      }
+    },
+    "gpxRoute": {
+      "_type": "file",
+      "asset": {
+        "_type": "reference",
+        "_ref": "gpx-placeholder-2-13aefe78-9c5b-499f-909e-7cf874ab8c3a"
+      }
+    },
+    "skipRoute": {
+      "instructions": "Gebruik dit hazepad wanneer de zone afgesloten is. Volg de alternatieve GPX voor een veilige omleiding.",
+      "gpxFile": {
+        "_type": "file",
+        "asset": {
+          "_type": "reference",
+          "_ref": "skip-gpx-placeholder-2-13aefe78-9c5b-499f-909e-7cf874ab8c3a"
+        }
+      },
+      "startPoint": {
+        "lat": 50.3833,
+        "lng": 4.34474
+      },
+      "endPoint": {
+        "lat": 50.26012,
+        "lng": 4.91056
+      }
+    },
+    "edition": {
+      "_type": "reference",
+      "_ref": "edition-2026"
+    },
+    "location": "Regionale rallyzone",
+    "estimatedDistance": 34,
+    "exit": "Volg de aanwijzingen bij het vertrek.",
+    "lus": "",
+    "rejoin": "Voeg weer in op de hoofdroute bij het eindpunt.",
+    "checkpoints": [],
+    "checkpoint": "",
+    "codeHint": "",
+    "solution": "",
+    "validAnswers": [],
+    "points": 0
+  },
+  {
+    "_id": "rallyZone-rz-3",
+    "title": "RZ-3",
+    "description": "Automatisch gegenereerde beschrijving voor RZ-3.",
+    "center": {
+      "lat": 49.86883,
+      "lon": 4.90608
+    },
+    "routeTips": [
+      {
+        "_type": "routeTip",
+        "name": "RZ-3 — Technisch",
+        "description": "Technische optie met highlights in de zone.",
+        "routeType": "technical",
+        "difficulty": "hard",
+        "estimatedDistance": 36,
+        "character": "Steile stukken, technische secties",
+        "warnings": "Let op kasseien en smalle wegen",
+        "highlights": "Château de Bouillon; Le Tombeau du Géant",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-3-t"
+          }
+        },
+        "color": "#D35400",
+        "locations": [
+          {
+            "name": "RZ-3 — Technisch — Start",
+            "coordinates": {
+              "lat": 50.00194,
+              "lng": 4.7924
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-3",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "Château de Bouillon",
+            "coordinates": {
+              "lat": 49.793278,
+              "lng": 5.066218
+            },
+            "type": "highlight",
+            "description": "Rue du Petit, 6830 Bouillon",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Château de Bouillon",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Le Tombeau du Géant",
+            "coordinates": {
+              "lat": 49.821836,
+              "lng": 5.048034
+            },
+            "type": "highlight",
+            "description": "Rue de Châteaumont, 6833 Bouillon",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto van het uitzicht bij Le Tombeau du Géant",
+              "hint": "Kies een panoramisch zicht",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-3 — Technisch — Eind",
+            "coordinates": {
+              "lat": 49.81442,
+              "lng": 5.11212
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      },
+      {
+        "_type": "routeTip",
+        "name": "RZ-3 — Panoramisch",
+        "description": "Panoramische optie met highlights in de zone.",
+        "routeType": "panoramic",
+        "difficulty": "medium",
+        "estimatedDistance": 36,
+        "character": "Panoramisch, rustig",
+        "warnings": "Landwegjes en landbouwverkeer mogelijk",
+        "highlights": "RZ-3 start; La Membrette, 5550 Vresse-sur-Semois; Ardois'Alle; Poupehan, Bouillon",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-3-p"
+          }
+        },
+        "color": "#1E8449",
+        "locations": [
+          {
+            "name": "RZ-3 — Panoramisch — Start",
+            "coordinates": {
+              "lat": 50.00194,
+              "lng": 4.7924
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-3",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "RZ-3 start",
+            "coordinates": {
+              "lat": 50.0018,
+              "lng": 4.793275
+            },
+            "type": "highlight",
+            "description": "Rue des Gros Chênes, 08170 Hargnies",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij RZ-3 start",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "La Membrette, 5550 Vresse-sur-Semois",
+            "coordinates": {
+              "lat": 49.863622,
+              "lng": 4.902121
+            },
+            "type": "highlight",
+            "description": "La Membrette, 5550 Vresse-sur-Semois",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij La Membrette, 5550 Vresse-sur-Semois",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Ardois'Alle",
+            "coordinates": {
+              "lat": 49.837555,
+              "lng": 4.96689
+            },
+            "type": "highlight",
+            "description": "Rue de Reposseau 12, 5550 Vresse-sur-Semois",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Ardois'Alle",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Poupehan, Bouillon",
+            "coordinates": {
+              "lat": 49.812224,
+              "lng": 5.0029
+            },
+            "type": "highlight",
+            "description": "Poupehan, Bouillon",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Poupehan, Bouillon",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-3 — Panoramisch — Eind",
+            "coordinates": {
+              "lat": 49.81442,
+              "lng": 5.11212
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "id": "9673ebb4-36d8-49f1-acd3-a3f0a3e0939e",
+        "name": "RZ-3 start",
+        "lat": 50.0018,
+        "lon": 4.793275
+      },
+      {
+        "id": "7d6bf1c4-8f34-470e-a744-1e286c3fc4ee",
+        "name": "La Membrette, 5550 Vresse-sur-Semois",
+        "lat": 49.863622,
+        "lon": 4.902121
+      },
+      {
+        "id": "17770369-9b50-4483-b42b-25168a5a6186",
+        "name": "Ardois'Alle",
+        "lat": 49.837555,
+        "lon": 4.96689
+      },
+      {
+        "id": "1333caa5-c91d-4d12-a0a6-6b663617d656",
+        "name": "Poupehan, Bouillon",
+        "lat": 49.812224,
+        "lon": 5.0029
+      },
+      {
+        "id": "305f3117-77e4-419f-b804-10217bf92fba",
+        "name": "Château de Bouillon",
+        "lat": 49.793278,
+        "lon": 5.066218
+      },
+      {
+        "id": "334049df-db25-4d6e-83f2-45c5ce3b330f",
+        "name": "Le Tombeau du Géant",
+        "lat": 49.821836,
+        "lon": 5.048034
+      }
+    ],
+    "poiCount": 7,
+    "indexRange": [
+      7860,
+      10467
+    ],
+    "color": "green",
+    "radius_m": 120,
+    "is_open": true,
+    "startPoint": {
+      "lat": 50.00194,
+      "lng": 4.7924
+    },
+    "endPoint": {
+      "lat": 49.81442,
+      "lng": 5.11212
+    },
+    "order": 3,
+    "image": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "image-placeholder-3-9673ebb4-36d8-49f1-acd3-a3f0a3e0939e"
+      }
+    },
+    "reference_photo": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "reference-photo-placeholder-3-9673ebb4-36d8-49f1-acd3-a3f0a3e0939e"
+      }
+    },
+    "gpxRoute": {
+      "_type": "file",
+      "asset": {
+        "_type": "reference",
+        "_ref": "gpx-placeholder-3-9673ebb4-36d8-49f1-acd3-a3f0a3e0939e"
+      }
+    },
+    "skipRoute": {
+      "instructions": "Gebruik dit hazepad wanneer de zone afgesloten is. Volg de alternatieve GPX voor een veilige omleiding.",
+      "gpxFile": {
+        "_type": "file",
+        "asset": {
+          "_type": "reference",
+          "_ref": "skip-gpx-placeholder-3-9673ebb4-36d8-49f1-acd3-a3f0a3e0939e"
+        }
+      },
+      "startPoint": {
+        "lat": 50.00194,
+        "lng": 4.7924
+      },
+      "endPoint": {
+        "lat": 49.81442,
+        "lng": 5.11212
+      }
+    },
+    "edition": {
+      "_type": "reference",
+      "_ref": "edition-2026"
+    },
+    "location": "Regionale rallyzone",
+    "estimatedDistance": 36,
+    "exit": "Volg de aanwijzingen bij het vertrek.",
+    "lus": "",
+    "rejoin": "Voeg weer in op de hoofdroute bij het eindpunt.",
+    "checkpoints": [],
+    "checkpoint": "",
+    "codeHint": "",
+    "solution": "",
+    "validAnswers": [],
+    "points": 0
+  },
+  {
+    "_id": "rallyZone-rz-4",
+    "title": "RZ-4",
+    "description": "Automatisch gegenereerde beschrijving voor RZ-4.",
+    "center": {
+      "lat": 50.10643,
+      "lon": 5.47197
+    },
+    "routeTips": [
+      {
+        "_type": "routeTip",
+        "name": "RZ-4 — Technisch",
+        "description": "Technische optie met highlights in de zone.",
+        "routeType": "technical",
+        "difficulty": "hard",
+        "estimatedDistance": 38,
+        "character": "Steile stukken, technische secties",
+        "warnings": "Let op kasseien en smalle wegen",
+        "highlights": "Grotte De Lorette-Rochefort",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-4-t"
+          }
+        },
+        "color": "#D35400",
+        "locations": [
+          {
+            "name": "RZ-4 — Technisch — Start",
+            "coordinates": {
+              "lat": 50.02381,
+              "lng": 5.26296
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-4",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "Grotte De Lorette-Rochefort",
+            "coordinates": {
+              "lat": 50.1559,
+              "lng": 5.2255
+            },
+            "type": "highlight",
+            "description": "Rue Beauregard, 5580 Rochefort",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Grotte De Lorette-Rochefort",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-4 — Technisch — Eind",
+            "coordinates": {
+              "lat": 50.14331,
+              "lng": 5.65907
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      },
+      {
+        "_type": "routeTip",
+        "name": "RZ-4 — Panoramisch",
+        "description": "Panoramische optie met highlights in de zone.",
+        "routeType": "panoramic",
+        "difficulty": "medium",
+        "estimatedDistance": 38,
+        "character": "Panoramisch, rustig",
+        "warnings": "Landwegjes en landbouwverkeer mogelijk",
+        "highlights": "RZ-4 start; Château de Mirwart; Abbaye Notre-Dame de Saint-Remy; La Roche-en-Ardenne",
+        "exitInstructions": "Volg de bewegwijzering vanaf het startpunt.",
+        "routeInstructions": "Volg de aangegeven route en stop bij highlights.",
+        "rejoinInstructions": "Voeg weer in op de hoofdroute bij het eindpunt.",
+        "gpxFile": {
+          "_type": "file",
+          "asset": {
+            "_type": "reference",
+            "_ref": "gpx-tip-placeholder-4-p"
+          }
+        },
+        "color": "#1E8449",
+        "locations": [
+          {
+            "name": "RZ-4 — Panoramisch — Start",
+            "coordinates": {
+              "lat": 50.02381,
+              "lng": 5.26296
+            },
+            "type": "start",
+            "description": "Startpunt",
+            "challenge": {
+              "type": "text",
+              "question": "Schrijf kort waar jullie deze route starten bij RZ-4",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          },
+          {
+            "name": "RZ-4 start",
+            "coordinates": {
+              "lat": 50.023699,
+              "lng": 5.262668
+            },
+            "type": "highlight",
+            "description": "Rue de Mirwart 85, 6890 Libin",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij RZ-4 start",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Château de Mirwart",
+            "coordinates": {
+              "lat": 50.054308,
+              "lng": 5.257453
+            },
+            "type": "highlight",
+            "description": "Rue du Château, 6870 Saint-Hubert",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Château de Mirwart",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "Abbaye Notre-Dame de Saint-Remy",
+            "coordinates": {
+              "lat": 50.178096,
+              "lng": 5.21966
+            },
+            "type": "highlight",
+            "description": "Abbaye Saint-Remy, 5580 Rochefort",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij Abbaye Notre-Dame de Saint-Remy",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "La Roche-en-Ardenne",
+            "coordinates": {
+              "lat": 50.182744,
+              "lng": 5.57569
+            },
+            "type": "highlight",
+            "description": "La Roche-en-Ardenne",
+            "challenge": {
+              "type": "photo",
+              "question": "Maak een foto bij La Roche-en-Ardenne",
+              "hint": "Let op compositie",
+              "points": 5,
+              "isActive": true,
+              "options": [],
+              "correctAnswer": ""
+            }
+          },
+          {
+            "name": "RZ-4 — Panoramisch — Eind",
+            "coordinates": {
+              "lat": 50.14331,
+              "lng": 5.65907
+            },
+            "type": "end",
+            "description": "Eindpunt (rejoin GPX)",
+            "challenge": {
+              "type": "text",
+              "question": "Hebben jullie de route voltooid?",
+              "hint": "",
+              "options": [],
+              "correctAnswer": "",
+              "points": 1,
+              "isActive": true
+            }
+          }
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "id": "19548e83-d181-4cb8-a154-0a76be11c768",
+        "name": "RZ-4 start",
+        "lat": 50.023699,
+        "lon": 5.262668
+      },
+      {
+        "id": "719f599d-8ad2-4ee9-9d02-ccf6b2c35b46",
+        "name": "Château de Mirwart",
+        "lat": 50.054308,
+        "lon": 5.257453
+      },
+      {
+        "id": "d82d48b7-d58a-4903-8cd6-51bd28fc93c8",
+        "name": "Abbaye Notre-Dame de Saint-Remy",
+        "lat": 50.178096,
+        "lon": 5.21966
+      },
+      {
+        "id": "af5aa2b5-6371-476b-947b-185b535e4ee3",
+        "name": "Grotte De Lorette-Rochefort",
+        "lat": 50.1559,
+        "lon": 5.2255
+      },
+      {
+        "id": "472cc58b-e135-45c5-834d-15353acf7214",
+        "name": "La Roche-en-Ardenne",
+        "lat": 50.182744,
+        "lon": 5.57569
+      },
+      {
+        "id": "f205077e-547a-406e-85cc-301f652e362e",
+        "name": "RZ-4 eind",
+        "lat": 50.142602,
+        "lon": 5.659377
+      }
+    ],
+    "poiCount": 6,
+    "indexRange": [
+      11491,
+      13469
+    ],
+    "color": "yellow",
+    "radius_m": 120,
+    "is_open": true,
+    "startPoint": {
+      "lat": 50.02381,
+      "lng": 5.26296
+    },
+    "endPoint": {
+      "lat": 50.14331,
+      "lng": 5.65907
+    },
+    "order": 4,
+    "image": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "image-placeholder-4-19548e83-d181-4cb8-a154-0a76be11c768"
+      }
+    },
+    "reference_photo": {
+      "_type": "image",
+      "asset": {
+        "_type": "reference",
+        "_ref": "reference-photo-placeholder-4-19548e83-d181-4cb8-a154-0a76be11c768"
+      }
+    },
+    "gpxRoute": {
+      "_type": "file",
+      "asset": {
+        "_type": "reference",
+        "_ref": "gpx-placeholder-4-19548e83-d181-4cb8-a154-0a76be11c768"
+      }
+    },
+    "skipRoute": {
+      "instructions": "Gebruik dit hazepad wanneer de zone afgesloten is. Volg de alternatieve GPX voor een veilige omleiding.",
+      "gpxFile": {
+        "_type": "file",
+        "asset": {
+          "_type": "reference",
+          "_ref": "skip-gpx-placeholder-4-19548e83-d181-4cb8-a154-0a76be11c768"
+        }
+      },
+      "startPoint": {
+        "lat": 50.02381,
+        "lng": 5.26296
+      },
+      "endPoint": {
+        "lat": 50.14331,
+        "lng": 5.65907
+      }
+    },
+    "edition": {
+      "_type": "reference",
+      "_ref": "edition-2026"
+    },
+    "location": "Regionale rallyzone",
+    "estimatedDistance": 38,
+    "exit": "Volg de aanwijzingen bij het vertrek.",
+    "lus": "",
+    "rejoin": "Voeg weer in op de hoofdroute bij het eindpunt.",
+    "checkpoints": [],
+    "checkpoint": "",
+    "codeHint": "",
+    "solution": "",
+    "validAnswers": [],
+    "points": 0
+  }
+]

@@ -24,6 +24,9 @@
 - **[OFFLINE-DATA-HANDLING.md](OFFLINE-DATA-HANDLING.md)** - Data synchronization
 - **[PUSH-NOTIFICATIONS-IMPLEMENTATION.md](PUSH-NOTIFICATIONS-IMPLEMENTATION.md)** - Push notifications
 
+### Tools & Integrations
+- **[HAZEPAD.md](HAZEPAD.md)** - Kort overzicht en FAQ over Hazepad (notitie/checklist service)
+
 ## Reference
 
 ### Code & Examples

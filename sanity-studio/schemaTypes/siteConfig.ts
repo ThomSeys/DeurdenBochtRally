@@ -177,6 +177,14 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'gpsInstructions',
+      title: 'GPS & GPX Instructies',
+      type: 'text',
+      description: 'Duidelijke instructies voor deelnemers over hoe GPX bestanden te gebruiken en welke apparaten worden ondersteund. Vermeld duidelijk dat het grootste deel van de route via GPS gevolgd wordt (niet de rally zone markers).',
+      rows: 6,
+      initialValue: `Belangrijk: Het grootste deel van de route zal via GPS gevolgd worden (niet de rally zone markers). Deelnemers moeten een manier hebben om GPX-bestanden te volgen: een smartphone met een GPX-app of een standalone GPS-apparaat (bijv. TomTom of Garmin). We testen de GPX-bestanden op zowel TomTom als Garmin. Zorg dat je apparaat/ app up-to-date is en dat je de GPX importeert vóór de rit.`,
+    }),
+    defineField({
       name: 'spotifyPlaylistUrl',
       title: 'Spotify Playlist Embed URL',
       type: 'url',
