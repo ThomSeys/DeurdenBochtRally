@@ -72,3 +72,5 @@ export function useModal() {
 export function useOptionalModal() {
   return useContext(ModalContext);
 }
+
+// (no global helpers)

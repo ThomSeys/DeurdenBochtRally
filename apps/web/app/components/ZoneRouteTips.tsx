@@ -3,6 +3,7 @@ import { Icon } from './Icon';
 import RouteTipsMap from './RouteTipsMap';
 import Carousel from './Carousel';
 import ChallengeModal from './ChallengeModal';
+import { useModal } from '~/contexts/ModalContext';
 
 interface ZoneRouteTipsProps {
   routeTips: any[];
@@ -37,6 +38,7 @@ export default function ZoneRouteTips({
   const hasLocations = routeTips.some((tip: any) => tip.locations && tip.locations.length > 0);
 
   const currentTip = routeTips[currentIndex];
+  const { openModal, closeModal } = useModal();
 
   const getRouteIcon = (type: string) => {
     switch (type) {
@@ -59,15 +61,44 @@ export default function ZoneRouteTips({
           <div className="flex-1">
             <div className="flex items-start justify-between gap-2 mb-2">
               <h5 className="font-bold text-lg text-gray-900">{tip.name}</h5>
-              {tip.difficulty && (
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                  tip.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                  tip.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {tip.difficulty === 'easy' ? '● Makkelijk' : tip.difficulty === 'medium' ? '●● Gemiddeld' : '●●● Uitdagend'}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {tip.difficulty && (
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                    tip.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                    tip.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {tip.difficulty === 'easy' ? '● Makkelijk' : tip.difficulty === 'medium' ? '●● Gemiddeld' : '●●● Uitdagend'}
+                  </span>
+                )}
+
+                {/* Route preview / navigation button */}
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const mod = (await import('./RouteNavigationModal')).default;
+                    const ModalComp = mod;
+                    const modalId = openModal({
+                      variant: 'lightbox',
+                      content: (
+                        <ModalComp
+                          tip={tip}
+                          zoneTitle={zoneTitle}
+                          zoneStartLocation={zoneStartLocation}
+                          zoneEndLocation={zoneEndLocation}
+                          userLocation={userLocation}
+                          onClose={() => closeModal(modalId)}
+                        />
+                      ),
+                    });
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-full text-sm hover:opacity-90"
+                >
+                  <Icon name="navigation" className="w-4 h-4" />
+                  Bekijk route
+                </button>
+              </div>
             </div>
             
             {tip.description && (
