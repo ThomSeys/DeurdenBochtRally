@@ -127,7 +127,7 @@ export default function About() {
                 )}
                 {/* Full-width hero image banner */}
                 {story.imageUrl && (
-                  <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] mb-12 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden group">
+                  <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] mb-12 overflow-hidden group">
                     {/* Image with parallax effect */}
                     <div className="absolute inset-0">
                       <img
@@ -162,7 +162,7 @@ export default function About() {
                 )}
 
                 {/* Content section */}
-                <div className="max-w-4xl mx-auto px-6">
+                <div className="max-w-5xl mx-auto px-6">
                   {!story.imageUrl && (
                     <>
                       <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
