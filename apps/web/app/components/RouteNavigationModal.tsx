@@ -289,7 +289,7 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
 
       <div className="flex-1 flex min-h-0 flex-col md:flex-row">
         <div ref={mapContainerRef} className="w-full md:w-[70%]" style={{ height: '100%' }} />
-        <div className="w-full m:w-80 border-l overflow-y-auto p-3 h-full">
+        <div className="w-full md:w-1/2 border-l overflow-y-auto p-3 h-full">
           <div>
             <h4 className="font-semibold mb-2">Stappen ({steps.length})</h4>
             {loading && <div>Route laden…</div>}
