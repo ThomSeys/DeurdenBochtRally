@@ -59,7 +59,7 @@ export default function ZoneRouteTips({
             className="w-6 h-6 text-accent-500 mt-0.5 flex-shrink-0" 
           />
           <div className="flex-1">
-            <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex flex-col md:flex-row items-start justify-between gap-2 mb-2">
               <h5 className="font-bold text-lg text-gray-900">{tip.name}</h5>
               <div className="flex items-center gap-2">
                 {tip.difficulty && (
@@ -119,6 +119,7 @@ export default function ZoneRouteTips({
                   {tip.routeType === 'technical' && 'Technisch'}
                   {tip.routeType === 'fast' && 'Sportief'}
                   {tip.routeType === 'relaxed' && 'Ontspannen'}
+                  {tip.routeType === 'mixed' && 'Gemengd'}
                 </div>
               )}
             </div>

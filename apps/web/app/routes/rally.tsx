@@ -492,11 +492,8 @@ function RallyTourButton() {
 export default function Rally() {
   const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones, buddies, buddyCheckins } = useLoaderData<typeof loader>();
 
-  console.log("🚀 ~ Rally ~ buddies:", buddies);
-
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
-  const [visibleMaps, setVisibleMaps] = useState<Set<string>>(new Set());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [checkInModalZone, setCheckInModalZone] = useState<any>(null);
   const [zoneWeatherData, setZoneWeatherData] = useState<Record<string, any>>({});
@@ -599,18 +596,6 @@ export default function Rally() {
       fetchZoneWeather();
     }
   }, [segments]);
-
-  const toggleMap = (segmentId: string) => {
-    setVisibleMaps(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(segmentId)) {
-        newSet.delete(segmentId);
-      } else {
-        newSet.add(segmentId);
-      }
-      return newSet;
-    });
-  };
 
   return (
     <div className="min-h-screen flex flex-col">

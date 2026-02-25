@@ -140,32 +140,25 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
             return (θ + 360) % 360;
           };
 
-          const setRotation = (angleDeg: number) => {
-            try {
-              const container = mapRef.current.getContainer();
-              container.style.transform = `rotate(${ -angleDeg }deg)`;
-              // counter-rotate waypoint markers so they stay visually upright
-              waypointMarkersRef.current.forEach((m) => {
-                try { if (m && m._icon) m._icon.style.transform = `rotate(${ angleDeg }deg)`; } catch (e) {}
-              });
-              // also counter-rotate user marker if present
-              try { if (userMarkerRef.current && userMarkerRef.current._icon) userMarkerRef.current._icon.style.transform = `rotate(${ angleDeg }deg)`; } catch (e) {}
-            } catch (e) {}
-          };
+          // no map rotation: keep map north-up; we'll rotate only the user marker element to indicate heading
 
           const updatePos = async (lat: number, lng: number, heading?: number) => {
             setUserPos({ lat, lng, heading });
             try {
               const L = (await import('leaflet')).default;
+              const headingDeg = heading || 0;
               // create marker if missing
               if (!userMarkerRef.current) {
                 const arrowSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M5 12l7-7 7 7"/></svg>';
-                const html = `<div class="user-location-marker" style="background:${TEAL}; width:34px; height:34px; border-radius:50%; border:3px solid white; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 8px rgba(20,136,166,0.25);">${arrowSvg}</div>`;
+                const html = `<div class="user-location-marker" style="background:${TEAL}; width:34px; height:34px; border-radius:50%; border:3px solid white; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 8px rgba(20,136,166,0.25); transform: rotate(${headingDeg}deg);">${arrowSvg}</div>`;
                 const divIcon = L.divIcon({ html, className: '', iconSize: [34, 34], iconAnchor: [17, 17] });
                 userMarkerRef.current = L.marker([lat, lng], { icon: divIcon, zIndexOffset: 1000 }).addTo(mapRef.current);
                 userMarkerRef.current.bindPopup('Jouw locatie');
+                // ensure the icon element has rotation applied
+                try { const el = userMarkerRef.current._icon as HTMLElement | undefined; if (el) el.style.transform = `rotate(${headingDeg}deg)`; } catch (e) {}
               } else {
                 userMarkerRef.current.setLatLng([lat, lng]);
+                try { const el = userMarkerRef.current._icon as HTMLElement | undefined; if (el) el.style.transform = `rotate(${headingDeg}deg)`; } catch (e) {}
               }
             } catch (e) { console.warn('user marker error', e); }
           };
@@ -179,9 +172,7 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
             prevPos = { lat, lng };
             // move map center to user
             try { mapRef.current.setView([lat, lng], mapRef.current.getZoom()); } catch (e) {}
-            // rotate map so travel direction is up
-            if (typeof bearing === 'number') setRotation(bearing);
-            // update/create user marker
+            // update/create user marker and set its heading; keep map north-up
             updatePos(lat, lng, bearing);
             // store last heading in state
             setUserPos({ lat, lng, heading: bearing });
@@ -242,14 +233,7 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
             userMarkerRef.current = null;
           }
         } catch (e) {}
-        try {
-          // reset map rotation and marker transforms
-          if (mapRef.current) {
-            const container = mapRef.current.getContainer();
-            if (container) container.style.transform = '';
-          }
-          waypointMarkersRef.current.forEach((m) => { try { if (m && m._icon) m._icon.style.transform = ''; } catch (e) {} });
-        } catch (e) {}
+        // (no rotation cleanup needed since map was not rotated)
       } catch (e) {}
     };
   }, [isClient]);
@@ -285,7 +269,7 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
 
   return (
     <div className="w-full h-[90vh] bg-white rounded-lg overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b gap-4">
         <div className="flex items-center gap-3">
           <Icon name="map" className="w-5 h-5 text-gray-700" />
           <div>
@@ -297,18 +281,15 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
           <button type="button" onClick={() => { downloadGPX(); }} className="px-3 py-1 rounded bg-gray-100">
             <Icon name="download" className="w-4 h-4" />
           </button>
-          <button type="button" onClick={() => openInGoogleMaps()} className="px-3 py-1 rounded bg-gray-100">
-            <Icon name="external-link" className="w-4 h-4" />
-          </button>
           <button type="button" onClick={() => { if (onClose) onClose(); /* modal container close handled externally */ }} className="px-3 py-1 rounded bg-gray-100">
             Sluiten
           </button>
         </div>
       </div>
 
-      <div className="flex-1 flex min-h-0">
-        <div ref={mapContainerRef} style={{ width: '70%', height: '100%' }} />
-        <div className="w-80 border-l overflow-y-auto p-3 h-full">
+      <div className="flex-1 flex min-h-0 flex-col md:flex-row">
+        <div ref={mapContainerRef} className="w-full md:w-[70%]" style={{ height: '100%' }} />
+        <div className="w-full m:w-80 border-l overflow-y-auto p-3 h-full">
           <div>
             <h4 className="font-semibold mb-2">Stappen ({steps.length})</h4>
             {loading && <div>Route laden…</div>}
