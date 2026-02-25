@@ -260,7 +260,8 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
   const openInGoogleMaps = () => {
     const waypoints = buildWaypoints();
     if (waypoints.length === 0) return;
-    const origin = `${waypoints[0].lat},${waypoints[0].lng}`;
+    // prefer current user location if available
+    const origin = userPos ? `${userPos.lat},${userPos.lng}` : `${waypoints[0].lat},${waypoints[0].lng}`;
     const destination = `${waypoints[waypoints.length - 1].lat},${waypoints[waypoints.length - 1].lng}`;
     const via = waypoints.slice(1, -1).map((w) => `${w.lat},${w.lng}`).join('%7C');
     const url = `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${via ? `&waypoints=${via}` : ''}`;
@@ -280,6 +281,9 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => { downloadGPX(); }} className="px-3 py-1 rounded bg-gray-100">
             <Icon name="download" className="w-4 h-4" />
+          </button>
+          <button type="button" onClick={() => { openInGoogleMaps(); }} className="px-3 py-1 rounded bg-gray-100" title="Open in Google Maps">
+            <Icon name="external-link" className="w-4 h-4" />
           </button>
           <button type="button" onClick={() => { if (onClose) onClose(); /* modal container close handled externally */ }} className="px-3 py-1 rounded bg-gray-100">
             Sluiten
