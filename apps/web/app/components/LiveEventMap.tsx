@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_ROUTE_COLORS, MARKER_COLORS } from '~/lib/constants';
 import { useModal } from '~/contexts/ModalContext';
 import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
@@ -320,11 +321,11 @@ export default function LiveEventMap({
             });
 
             if (trackPoints.length > 0) {
-              // Create polyline for the route
+              // Create polyline for the route (use teal color)
               gpxLayerRef.current = L.default.polyline(trackPoints, {
-                color: '#4F46E5',
+                color: '#14B8A6',
                 weight: 4,
-                opacity: 0.7,
+                opacity: 0.9,
               }).addTo(mapRef.current);
 
               // Fit map to route bounds only if no focus location is set
@@ -393,82 +394,6 @@ export default function LiveEventMap({
 
         // Add rally zone start markers and load GPX routes
         if (showZoneRoutes) {
-          // Process all zones
-          await Promise.all(rallyZones.map(async (zone) => {
-            // Load zone GPX route if available
-            if (zone.gpxRoute?.asset?.url) {
-              try {
-                const response = await fetch(zone.gpxRoute.asset.url);
-                const gpxText = await response.text();
-                const parser = new DOMParser();
-                const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
-                
-                const trackPoints: [number, number][] = [];
-                const trkpts = gpxDoc.querySelectorAll('trkpt');
-                
-                trkpts.forEach((pt) => {
-                  const lat = parseFloat(pt.getAttribute('lat') || '0');
-                  const lon = parseFloat(pt.getAttribute('lon') || '0');
-                  if (lat && lon) {
-                    trackPoints.push([lat, lon]);
-                  }
-                });
-
-                if (trackPoints.length > 0) {
-                  // Get zone color for the route
-                  const colorMap: Record<string, string> = {
-                    green: '#15803d',
-                    yellow: '#a16207',
-                    orange: '#c2410c',
-                    red: '#b91c1c',
-                  };
-                  const zoneColor = colorMap[zone.color] || '#4F46E5';
-
-                  // Add zone route with dashed line
-                  const routePolyline = L.default.polyline(trackPoints, {
-                    color: zoneColor,
-                    weight: 3,
-                    opacity: 0.5,
-                  }).addTo(mapRef.current);
-                  
-                  // Store reference to clean up later
-                  zoneRoutesRef.current.push(routePolyline);
-                }
-              } catch (err) {
-                console.error('Error loading GPX for zone:', zone.title, err);
-              }
-            }
-            // If the zone defines a skipRoute GPX (hazepad), render it for admins with dashed red styling
-            if (isAdmin && zone.skipRoute?.gpxFile?.asset?.url) {
-              try {
-                const response = await fetch(zone.skipRoute.gpxFile.asset.url);
-                const gpxText = await response.text();
-                const parser = new DOMParser();
-                const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
-
-                const skipPoints: [number, number][] = [];
-                const skipTrkpts = gpxDoc.querySelectorAll('trkpt');
-                skipTrkpts.forEach((pt) => {
-                  const lat = parseFloat(pt.getAttribute('lat') || '0');
-                  const lon = parseFloat(pt.getAttribute('lon') || '0');
-                  if (lat && lon) skipPoints.push([lat, lon]);
-                });
-
-                if (skipPoints.length > 0) {
-                  const skipPoly = L.default.polyline(skipPoints, {
-                    color: '#ef4444',
-                    weight: 3,
-                    opacity: 0.85,
-                    dashArray: '8 6',
-                  }).addTo(mapRef.current);
-                  zoneRoutesRef.current.push(skipPoly);
-                }
-              } catch (err) {
-                console.error('Error loading skipRoute GPX for zone:', zone.title, err);
-              }
-            }
-          }));
-
           // Add start markers for all zones
           rallyZones.forEach((zone) => {
             // Skip zones without start location or invalid coordinates
@@ -488,8 +413,8 @@ export default function LiveEventMap({
             // Start point marker - always visible, green background with flag SVG
             const flagSvg = '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>';
             const startIcon = L.default.divIcon({
-              html: `<div style="background-color: #22c55e; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">${flagSvg}</div>`,
-              className: '',
+              html: `<div class="zone-start-icon" style="background-color: #10B981 !important; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center;">${flagSvg}</div>`,
+              className: 'zone-start-icon',
               iconSize: [32, 32],
               iconAnchor: [16, 16],
             });
@@ -516,7 +441,7 @@ export default function LiveEventMap({
             // End point marker - always visible, red background with flag SVG
             if (zone.endLocation && zone.endLocation.lat && zone.endLocation.lng) {
               const endIcon = L.default.divIcon({
-                html: `<div style="background-color: #ef4444; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">${flagSvg}</div>`,
+                html: `<div style="background-color: #ef4444; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center;">${flagSvg}</div>`,
                 className: '',
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],
@@ -543,7 +468,7 @@ export default function LiveEventMap({
               zone.checkpoints.forEach((checkpoint, index) => {
                 if (checkpoint.location && checkpoint.location.lat && checkpoint.location.lng) {
                   const checkpointIcon = L.default.divIcon({
-                    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; font-weight: bold;">${index + 1}</div>`,
+                    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; font-weight: bold;">${index + 1}</div>`,
                     className: '',
                     iconSize: [24, 24],
                     iconAnchor: [12, 12],
@@ -577,7 +502,8 @@ export default function LiveEventMap({
                 if (tip.locations && tip.locations.length > 0) {
                   const tipColor = tip.color || defaultTipColors[tipIndex % defaultTipColors.length];
                   
-                  tip.locations.forEach((location) => {
+                  tip.locations.forEach((location, locIndex) => {
+                    const locationColor = locIndex === 0 ? MARKER_COLORS.zoneStart : tipColor;
                     // Skip locations without valid coordinates
                     if (!location.coordinates || !location.coordinates.lat || !location.coordinates.lng) {
                       console.warn('⚠️ Location missing coordinates:', location.name, location.coordinates);
@@ -644,7 +570,7 @@ export default function LiveEventMap({
                         '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>';
 
                     const tipLocationIcon = L.default.divIcon({
-                      html: `<div style="background-color: ${tipColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">${locationIcon}</div>`,
+                      html: `<div style="background-color: ${locationColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center;">${locationIcon}</div>`,
                       className: '',
                       iconSize: [30, 30],
                       iconAnchor: [15, 15],
@@ -662,12 +588,12 @@ export default function LiveEventMap({
                       .addTo(mapRef.current)
                       .bindPopup(`
                         <div style="min-width: 200px;">
-                          <div style="font-weight: bold; color: ${tipColor}; margin-bottom: 4px; font-size: 13px;">
+                          <div style="font-weight: bold; color: ${locationColor}; margin-bottom: 4px; font-size: 13px;">
                             ${tip.name}
                           </div>
                           <strong style="font-size: 15px;">${location.name}</strong><br/>
                           <span style="color: #666; font-size: 12px;">${zone.title}</span><br/>
-                          <div style="margin-top: 8px; padding: 6px 8px; background: ${tipColor}20; border-radius: 4px; font-size: 12px; color: #374151;">
+                          <div style="margin-top: 8px; padding: 6px 8px; background: ${locationColor}20; border-radius: 4px; font-size: 12px; color: #374151;">
                             ${typeLabel}
                           </div>
                           ${location.description ? `<div style="margin-top: 8px; font-size: 12px; color: #6b7280;">${location.description}</div>` : ''}
@@ -694,7 +620,7 @@ export default function LiveEventMap({
           const icon = getEventTypeIcon(marker.type, 'white');
 
           const eventIcon = L.default.divIcon({
-            html: `<div style="background-color: ${color}; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; 2s infinite;">${icon.svg}</div>`,
+            html: `<div style="background-color: ${color}; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.16); display: flex; align-items: center; justify-content: center; 2s infinite;">${icon.svg}</div>`,
             className: '',
             iconSize: [40, 40],
             iconAnchor: [20, 20],

@@ -85,16 +85,18 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
     }
 
     routeTips.forEach((tip, tipIndex) => {
-      const color = tip.color || DEFAULT_ROUTE_COLORS[tipIndex % DEFAULT_ROUTE_COLORS.length];
+      const baseColor = tip.color || DEFAULT_ROUTE_COLORS[tipIndex % DEFAULT_ROUTE_COLORS.length];
       if (tip.locations && tip.locations.length > 0) {
-        tip.locations.forEach((loc) => {
+        tip.locations.forEach((loc, locIndex) => {
+          // Make the first marker of a route green (zone start color)
+          const locColor = locIndex === 0 ? MARKER_COLORS.zoneStart : baseColor;
           allLocations.push({
             lat: loc.coordinates.lat,
             lng: loc.coordinates.lng,
             name: loc.name,
             type: loc.type,
             description: loc.description,
-            color,
+            color: locColor,
             routeName: tip.name,
           });
         });
@@ -146,13 +148,13 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
             '<svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>';
 
         const iconHtml = `
-          <div style="
-            background-color: ${loc.color};
+          <div class="zone-start-icon" style="
+            background-color: ${loc.color} !important;
             width: ${loc.type === 'zone-start' || loc.type === 'zone-end' ? '36px' : '30px'};
             height: ${loc.type === 'zone-start' || loc.type === 'zone-end' ? '36px' : '30px'};
             border-radius: 50%;
             border: 3px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
             display: flex;
             align-items: center;
             justify-content: center;

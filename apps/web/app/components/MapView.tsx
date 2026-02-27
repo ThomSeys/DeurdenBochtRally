@@ -82,8 +82,8 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
 
       // Create custom icons
       const startIcon = L.default.divIcon({
-        html: '<div style="background-color: #22c55e; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 16px;">🏁</div>',
-        className: '',
+        html: '<div class="zone-start-icon" style="background-color: #10B981 !important; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 16px;">🏁</div>',
+        className: 'zone-start-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 16],
       });
