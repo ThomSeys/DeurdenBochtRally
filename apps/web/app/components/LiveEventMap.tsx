@@ -33,6 +33,7 @@ interface RallyZone {
   };
   routeTips?: Array<{
     name: string;
+    gpxFile?: { asset?: { url?: string } } | null;
     color?: string;
     locations?: Array<{
       _key?: string;

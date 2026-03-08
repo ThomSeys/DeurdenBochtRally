@@ -15,6 +15,7 @@ interface ZoneRouteTipsProps {
   completedChallenges?: string[]; // Array of location keys that have been completed
   isZoneCheckedIn?: boolean;
   zoneSkipUsed?: boolean;
+  initialIndex?: number;
 }
 
 export default function ZoneRouteTips({
@@ -27,13 +28,15 @@ export default function ZoneRouteTips({
   completedChallenges = [],
   isZoneCheckedIn = false,
   zoneSkipUsed = false,
+  initialIndex = 0,
 }: ZoneRouteTipsProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
   const [selectedChallenge, setSelectedChallenge] = useState<{
     challenge: any;
     locationName: string;
     locationKey: string;
   } | null>(null);
+  const [hoveredLocationKey, setHoveredLocationKey] = useState<string | null>(null);
   
   const hasLocations = routeTips.some((tip: any) => tip.locations && tip.locations.length > 0);
 
@@ -72,32 +75,25 @@ export default function ZoneRouteTips({
                   </span>
                 )}
 
-                {/* Route preview / navigation button */}
-                <button
-                  type="button"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const mod = (await import('./RouteNavigationModal')).default;
-                    const ModalComp = mod;
-                    const modalId = openModal({
-                      variant: 'lightbox',
-                      content: (
-                        <ModalComp
-                          tip={tip}
-                          zoneTitle={zoneTitle}
-                          zoneStartLocation={zoneStartLocation}
-                          zoneEndLocation={zoneEndLocation}
-                          userLocation={userLocation}
-                          onClose={() => closeModal(modalId)}
-                        />
-                      ),
-                    });
-                  }}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-full text-sm hover:opacity-90"
-                >
-                  <Icon name="navigation" className="w-4 h-4" />
-                  Bekijk route
-                </button>
+                {tip.gpxFile && tip.gpxFile.asset && tip.gpxFile.asset.url && (
+                  (() => {
+                    const gpxUrl = tip.gpxFile.asset.url;
+                    const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
+                    return (
+                      <a
+                        href={gpxUrl}
+                        download={gpxFilename}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-800 rounded-full text-sm hover:opacity-90"
+                      >
+                        <Icon name="download" className="w-4 h-4" />
+                        Download GPX
+                      </a>
+                    );
+                  })()
+                )}
               </div>
             </div>
             
@@ -211,6 +207,8 @@ export default function ZoneRouteTips({
                       return (
                         <button
                           key={idx}
+                          onMouseEnter={() => setHoveredLocationKey(loc._key)}
+                          onMouseLeave={() => setHoveredLocationKey(null)}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!isCompleted && !isLocked) {
@@ -316,6 +314,7 @@ export default function ZoneRouteTips({
                 zoneEndLocation={zoneEndLocation ?? undefined}
                 userLocation={userLocation ?? undefined}
                 className="h-[400px] lg:h-full lg:flex-1"
+                highlightedLocationId={hoveredLocationKey}
               />
             </div>
           )}

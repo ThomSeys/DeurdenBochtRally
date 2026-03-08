@@ -71,11 +71,13 @@ export default function Carousel({
   // Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disabled) return;
+    e.stopPropagation();
     touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (disabled) return;
+    e.stopPropagation();
     touchEndX.current = e.touches[0].clientX;
   };
 
@@ -103,6 +105,13 @@ export default function Carousel({
     touchEndX.current = 0;
   };
 
+  const handleTouchCancel = (e: React.TouchEvent) => {
+    if (disabled) return;
+    e.stopPropagation();
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
   if (items.length === 0) {
     return null;
   }
@@ -115,6 +124,7 @@ export default function Carousel({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
     >
       {/* Current Item */}
       <div className={`flex-1 flex flex-col touch-pan-y ${itemClassName}`}>

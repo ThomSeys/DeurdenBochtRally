@@ -15,6 +15,7 @@ import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useMasterTour } from '~/components/MasterTour';
 import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
+import Carousel from '~/components/Carousel';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const siteConfig = data?.siteConfig;
@@ -297,6 +298,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         routeInstructions,
         rejoinInstructions,
         color,
+        gpxFile { asset-> { url } },
         locations[] {
           _key,
           name,
@@ -597,6 +599,7 @@ export default function Rally() {
     }
   }, [segments]);
 
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -606,40 +609,112 @@ export default function Rally() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-bold mb-4">De Rally Route</h1>
           <p className="text-xl max-w-3xl mx-auto">
-            8 adventure segmenten om je rit onvergetelijk te maken
+            4 adventure segmenten om je rit onvergetelijk te maken
           </p>
           <RallyTourButton />
         </div>
       </section>
 
-      {/* How it works */}
+      {/* How it works (collapsible) */}
       <section data-tour="rally-how-it-works" className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-            Hoe werkt het?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-sm shadow">
-              <h3 className="font-bold text-lg mb-2">1. Kies Je Avontuur</h3>
-              <p className="text-gray-700">Kies tussen de volledige route of selecteer specifieke rally zones die jou aanspreken</p>
+          <details className="rounded-lg overflow-hidden bg-white shadow-md">
+            <summary className="p-6 cursor-pointer flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Hoe werkt het?</h2>
+                <p className="text-sm text-gray-600 mt-1">Korte uitleg en tips om het meeste uit je rally-ervaring te halen. Klik om uit te vouwen.</p>
+              </div>
+              <div className="text-sm text-gray-500">Meer info ▾</div>
+            </summary>
+
+            <div className="p-6 border-t">
+              <Carousel
+                items={[
+                  {
+                    title: '1. Kies Je Avontuur',
+                    description: 'Kies tussen de volledige route of selecteer specifieke rally zones die jou aanspreken',
+                    more: (
+                      <div className="mt-3 text-sm text-gray-700">
+                        <p className="mb-2">Kies de volledige route voor een lange dag vol highlights of selecteer individuele zones voor kortere etappes.</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Volledige route: volg de route zoals samengesteld door de organisatie.</li>
+                          <li>Zone-selectie: perfect om specifieke landschappen of moeilijkheidsgraden te ervaren.</li>
+                          <li>Tip: bekijk afstand en moeilijkheid vóór vertrek.</li>
+                        </ul>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: '2. Download & Rijd',
+                    description: 'Download de GPX en geniet van prachtige wegen, bochten en landschappen',
+                    more: (
+                      <div className="mt-3 text-sm text-gray-700">
+                        <p className="mb-2">Gebruik de GPX op je GPS-app of stuur het naar je navigatie. Zorg dat je telefoonhouder en powerbank klaar zijn.</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Controleer CORS/URL toegang als je GPX via de website laadt.</li>
+                          <li>Voor turn-by-turn nav: importeer de GPX in je navigatie-app.</li>
+                          <li>Veiligheidstips: plan pauzes en controleer het weer.</li>
+                        </ul>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: '3. Check In (Optioneel)',
+                    description: 'Scan QR codes bij zones om je reis te tracken - geen verplichting, gewoon voor de fun!',
+                    more: (
+                      <div className="mt-3 text-sm text-gray-700">
+                        <p className="mb-2">Check-ins geven je extra context en ontgrendelen challenges en badges.</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Je moet binnen ~100m van het startpunt zijn om in te checken.</li>
+                          <li>Je kunt ook groeps-checkins doen voor vrienden.</li>
+                          <li>Check-ins zijn optioneel — rijd veilig en geniet.</li>
+                        </ul>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: '4. Doe de challenges (Optioneel)',
+                    description: 'Voltooi uitdagingen om punten te verdienen - Samen maken we er wat legendarisch van!',
+                    more: (
+                      <div className="mt-3 text-sm text-gray-700">
+                        <p className="mb-2">Challenges variëren van foto-opdrachten tot quizvragen bij specifieke locaties.</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Sommige challenges worden automatisch gevalideerd, andere worden handmatig gecontroleerd.</li>
+                          <li>Verdien punten en vergelijk met vrienden in de leaderboard.</li>
+                          <li>Wees respectvol bij foto-opdrachten (privéterrein, verkeer, etc.).</li>
+                        </ul>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: '5. Deel Je Verhaal',
+                    description: "Upload foto's en deel je beleving met de community - dát maakt jou een echte bocht-held!",
+                    more: (
+                      <div className="mt-3 text-sm text-gray-700">
+                        <p className="mb-2">Deel hoogtepunten en help anderen de mooiste plekken te vinden.</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Upload foto's in de app en tag locaties.</li>
+                          <li>Gebruik badges en reacties om community-interactie te stimuleren.</li>
+                          <li>Privacy: zorg dat gedeelde content geen persoonlijke data bevat.</li>
+                        </ul>
+                      </div>
+                    ),
+                  },
+                ]}
+                renderItem={(item: any) => (
+                  <div className="bg-white p-6 rounded-sm shadow">
+                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                    <p className="text-gray-700">{item.description}</p>
+                    {item.more}
+                  </div>
+                )}
+                showControls={true}
+                showDots={true}
+                showCounter={false}
+                className=""
+              />
             </div>
-            <div className="bg-white p-6 rounded-sm shadow">
-              <h3 className="font-bold text-lg mb-2">2. Download & Rijd</h3>
-              <p className="text-gray-700">Download de GPX en geniet van prachtige wegen, bochten en landschappen</p>
-            </div>
-            <div data-tour="rally-checkin-info" className="bg-white p-6 rounded-sm shadow">
-              <h3 className="font-bold text-lg mb-2">3. Check In (Optioneel)</h3>
-              <p className="text-gray-700">Scan QR codes bij zones om je reis te tracken - geen verplichting, gewoon voor de fun!</p>
-            </div>
-            <div className="bg-white p-6 rounded-sm shadow">
-              <h3 className="font-bold text-lg mb-2">4. Doe de challenges (Optioneel)</h3>
-              <p className="text-gray-700">Voltooi uitdagingen om punten te verdienen - Samen maken we er wat legendarisch van!</p>
-            </div>
-            <div className="bg-white p-6 rounded-sm shadow">
-              <h3 className="font-bold text-lg mb-2">5. Deel Je Verhaal</h3>
-              <p className="text-gray-700">Upload foto's en deel je beleving met de community - dát maakt jou een echte bocht-held!</p>
-            </div>
-          </div>
+          </details>
         </div>
       </section>
 
@@ -671,171 +746,185 @@ export default function Rally() {
               </div>
             )}
             
-            <div className="space-y-6">
-              {segments.map((segment: any) => {
-                const isCheckedIn = checkedInSet.has(segment._id);
-                const canViewData = isCheckedIn || user?.is_admin || true; // Always show for now
-                  
-                return (
-                  <details
-                    key={segment._id}
-                    className={`group border-l-4 rounded-lg shadow-lg overflow-hidden bg-white border-${segment.color || 'gray'}-500`}
-                    open
-                  >
-                    <summary className="p-6 md:p-8 cursor-pointer hover:bg-gray-50 transition-colors list-none">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex flex-col gap-3 mb-2">
-                            <div>
-                            {segment.is_open ? (
-                              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                                Open
-                              </span>
-                            ) : (
-                              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                                Gesloten
-                              </span>
-                            )}</div>
-                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
-                              {segment.title}
-                            </h3>
-                          </div>
-                          <p className="text-gray-600 text-sm ml-8">{segment.location}</p>
-                        </div>
-                        <div className="text-right ml-4 flex flex-col gap-3">
-                          <div className="inline-block bg-gray-50 px-4 py-2 rounded-lg">
-                            <span className="text-sm text-gray-600">Afstand</span>
-                            <div className="text-xl font-bold text-primary-600">
-                              {segment.routeTips?.length > 0 
-                                ? `${Math.min(...segment.routeTips.map((t: any) => t.estimatedDistance))}-${Math.max(...segment.routeTips.map((t: any) => t.estimatedDistance))} km`
-                                : '- km'
-                              }
+            <div>
+              <Carousel
+                items={segments}
+                renderItem={(segment: any) => {
+                  const isCheckedIn = checkedInSet.has(segment._id);
+                  const canViewData = isCheckedIn || user?.is_admin || true;
+                  return (
+                    <details
+                      key={segment._id}
+                      className={`group border-l-4 rounded-lg shadow-lg overflow-hidden bg-white border-${segment.color || 'gray'}-500`}
+                      open
+                    >
+                      <summary className="p-6 md:p-8 cursor-pointer hover:bg-gray-50 transition-colors list-none">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex flex-col gap-3 mb-2">
+                              <div>
+                              {segment.is_open ? (
+                                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                                  Open
+                                </span>
+                              ) : (
+                                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
+                                  Gesloten
+                                </span>
+                              )}</div>
+                              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+                                {segment.title}
+                              </h3>
                             </div>
+                            <p className="text-gray-600 text-sm ml-8">{segment.location}</p>
                           </div>
-                          {zoneWeatherData[segment._id] && (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setSelectedWeatherZone({ ...zoneWeatherData[segment._id], zoneName: segment.title });
-                              }}
-                              className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg transition-colors border border-sky-200"
-                            >
-                              <img
-                                src={`https://openweathermap.org/img/wn/${zoneWeatherData[segment._id].icon}@2x.png`}
-                                alt="weather"
-                                className="w-6 h-6"
-                              />
-                              <span className="text-sm font-semibold text-sky-900">{zoneWeatherData[segment._id].temp}°</span>
-                            </button>
-                          )}
+                          <div className="text-right ml-4 flex flex-col gap-3">
+                            <div className="inline-block bg-gray-50 px-4 py-2 rounded-lg">
+                              <span className="text-sm text-gray-600">Afstand</span>
+                              <div className="text-xl font-bold text-primary-600">
+                                {segment.routeTips?.length > 0 
+                                  ? `${Math.min(...segment.routeTips.map((t: any) => t.estimatedDistance))}-${Math.max(...segment.routeTips.map((t: any) => t.estimatedDistance))} km`
+                                  : '- km'
+                                }
+                              </div>
+                            </div>
+                            {zoneWeatherData[segment._id] && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setSelectedWeatherZone({ ...zoneWeatherData[segment._id], zoneName: segment.title });
+                                }}
+                                className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg transition-colors border border-sky-200"
+                              >
+                                <img
+                                  src={`https://openweathermap.org/img/wn/${zoneWeatherData[segment._id].icon}@2x.png`}
+                                  alt="weather"
+                                  className="w-6 h-6"
+                                />
+                                <span className="text-sm font-semibold text-sky-900">{zoneWeatherData[segment._id].temp}°</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </summary>
-                    
-                    <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-gray-100">
-                      {segment.description && (
-                        <p className="text-gray-700 mb-6 mt-4">{segment.description}</p>
-                      )}
-                      
-                      {/* Route Tips or Hazepad download if user used skip route */}
-                      {segment.routeTips && segment.routeTips.length > 0 && (
-                        <div data-tour="rally-tips">
-                          {skipUsedMap[segment._id] === true && segment.skipRoute?.gpxFile?.asset?.url ? (
-                            (() => {
-                              const gpxUrl = segment.skipRoute.gpxFile.asset.url;
-                              const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
-                              // Try to derive sensible start/end points for MapView fallbacks
-                              const skipStart = segment.skipRoute?.startPoint?.lat
-                                ? { lat: segment.skipRoute.startPoint.lat, lng: segment.skipRoute.startPoint.lng, name: `${segment.title} start` }
-                                : segment.startLocation?.coordinates
-                                ? { lat: segment.startLocation.coordinates.lat, lng: segment.startLocation.coordinates.lng }
-                                : undefined;
-                              const skipEnd = segment.skipRoute?.endPoint?.lat
-                                ? { lat: segment.skipRoute.endPoint.lat, lng: segment.skipRoute.endPoint.lng, name: `${segment.title} einde` }
-                                : segment.endLocation?.coordinates
-                                ? { lat: segment.endLocation.coordinates.lat, lng: segment.endLocation.coordinates.lng }
-                                : undefined;
+                      </summary>
 
-                              return (
-                                <>
-                                  <div className="mb-4 p-4 rounded-sm border border-dashed border-primary-200 bg-primary-50 flex items-center justify-between">
-                                    <div>
-                                      <h5 className="font-semibold text-primary-900">Hazepad geselecteerd</h5>
-                                      <p className="text-sm text-gray-700">Je hebt gekozen voor het hazepad — routetips en challenges zijn uitgeschakeld voor deze zone.</p>
+                      <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-gray-100">
+                        {segment.description && (
+                          <p className="text-gray-700 mb-6 mt-4">{segment.description}</p>
+                        )}
+
+                        {segment.routeTips && segment.routeTips.length > 0 && (
+                          <div data-tour="rally-tips">
+                            {skipUsedMap[segment._id] === true && segment.skipRoute?.gpxFile?.asset?.url ? (
+                              (() => {
+                                const gpxUrl = segment.skipRoute.gpxFile.asset.url;
+                                const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
+                                const skipStart = segment.skipRoute?.startPoint?.lat
+                                  ? { lat: segment.skipRoute.startPoint.lat, lng: segment.skipRoute.startPoint.lng, name: `${segment.title} start` }
+                                  : segment.startLocation?.coordinates
+                                  ? { lat: segment.startLocation.coordinates.lat, lng: segment.startLocation.coordinates.lng }
+                                  : undefined;
+                                const skipEnd = segment.skipRoute?.endPoint?.lat
+                                  ? { lat: segment.skipRoute.endPoint.lat, lng: segment.skipRoute.endPoint.lng, name: `${segment.title} einde` }
+                                  : segment.endLocation?.coordinates
+                                  ? { lat: segment.endLocation.coordinates.lat, lng: segment.endLocation.coordinates.lng }
+                                  : undefined;
+
+                                return (
+                                  <>
+                                    <div className="mb-4 p-4 rounded-sm border border-dashed border-primary-200 bg-primary-50 flex items-center justify-between">
+                                      <div>
+                                        <h5 className="font-semibold text-primary-900">Hazepad geselecteerd</h5>
+                                        <p className="text-sm text-gray-700">Je hebt gekozen voor het hazepad — routetips en challenges zijn uitgeschakeld voor deze zone.</p>
+                                      </div>
+                                      <a
+                                        href={gpxUrl}
+                                        download={gpxFilename}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded"
+                                      >
+                                        <Icon name="download" className="w-4 h-4" />
+                                        Download GPX
+                                      </a>
                                     </div>
-                                    <a
-                                      href={gpxUrl}
-                                      download={gpxFilename}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded"
-                                    >
-                                      <Icon name="download" className="w-4 h-4" />
-                                      Download GPX
-                                    </a>
-                                  </div>
 
-                                  {/* Inline map showing the skip GPX and user's location */}
-                                  <div className="mt-4 rounded-sm overflow-hidden border border-gray-100">
-                                    <MapView
-                                      startPoint={skipStart}
-                                      endPoint={skipEnd}
-                                      skipGpxUrl={gpxUrl}
-                                      className="w-full h-64"
-                                    />
-                                  </div>
-                                </>
-                              );
-                            })()
-                          ) : (
-                            <ZoneRouteTips
-                              routeTips={segment.routeTips}
-                              zoneTitle={segment.title}
-                              zoneId={segment._id}
-                              zoneStartLocation={segment.startLocation}
-                              zoneEndLocation={segment.endLocation}
-                              userLocation={userLocation}
-                              completedChallenges={completedChallenges || []}
-                              isZoneCheckedIn={checkedInSet.has(segment._id)}
-                              zoneSkipUsed={skipUsedMap[segment._id] === true}
-                            />
-                          )}
-                        </div>
-                      )}
+                                    <div className="mt-4 rounded-sm overflow-hidden border border-gray-100">
+                                      <MapView
+                                        startPoint={skipStart}
+                                        endPoint={skipEnd}
+                                        skipGpxUrl={gpxUrl}
+                                        className="w-full h-64"
+                                      />
+                                    </div>
+                                  </>
+                                );
+                              })()
+                            ) : (
+                              <ZoneRouteTips
+                                routeTips={segment.routeTips}
+                                zoneTitle={segment.title}
+                                zoneId={segment._id}
+                                zoneStartLocation={segment.startLocation}
+                                zoneEndLocation={segment.endLocation}
+                                userLocation={userLocation}
+                                completedChallenges={completedChallenges || []}
+                                isZoneCheckedIn={checkedInSet.has(segment._id)}
+                                zoneSkipUsed={skipUsedMap[segment._id] === true}
+                                initialIndex={(() => {
+                                  const tips = segment.routeTips || [];
+                                  for (let i = 0; i < tips.length; i++) {
+                                    const tip = tips[i];
+                                    if (!tip || !Array.isArray(tip.locations)) continue;
+                                    const activeLocations = tip.locations.filter((loc: any) => loc.challenge && loc.challenge.isActive !== false);
+                                    if (activeLocations.length === 0) continue;
+                                    const anyIncomplete = activeLocations.some((loc: any) => !((completedChallenges || []).includes(loc._key)));
+                                    if (anyIncomplete) return i;
+                                  }
+                                  return 0;
+                                })()}
+                              />
+                            )}
+                          </div>
+                        )}
 
-                      {/* Check-in Button */}
-                      {userId && !checkedInSet.has(segment._id) && (
-                        <button
-                          data-tour="rally-checkin-button"
-                          onClick={() => setCheckInModalZone(segment)}
-                          className="w-full mt-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-4 rounded-sm font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                        >
-                          <Icon name="map-pin" className="w-5 h-5" />
-                          Check In bij deze Zone
-                        </button>
-                      )}
+                        {userId && !checkedInSet.has(segment._id) && (
+                          <button
+                            data-tour="rally-checkin-button"
+                            onClick={() => setCheckInModalZone(segment)}
+                            className="w-full mt-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-4 rounded-sm font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                          >
+                            <Icon name="map-pin" className="w-5 h-5" />
+                            Check In bij deze Zone
+                          </button>
+                        )}
 
-                      {userId && checkedInSet.has(segment._id) && (
-                        <div className="mt-4 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-400 p-4 rounded-sm shadow-sm">
-                          <p className="text-teal-900 font-bold flex items-center gap-2">
-                            <Icon name="check-circle" className="w-5 h-5" />
-                            Je bent in deze zone al ingecheckt!
-                          </p>
-                        </div>
-                      )}
-                      
-                      {!segment.is_open && (
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-sm mt-4">
-                          <p className="text-yellow-800 font-semibold flex items-center gap-2">
-                            <Icon name="info" className="w-5 h-5" />
-                            Dit segment is momenteel niet actief
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </details>
-                );
-              })}
+                        {userId && checkedInSet.has(segment._id) && (
+                          <div className="mt-4 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-400 p-4 rounded-sm shadow-sm">
+                            <p className="text-teal-900 font-bold flex items-center gap-2">
+                              <Icon name="check-circle" className="w-5 h-5" />
+                              Je bent in deze zone al ingecheckt!
+                            </p>
+                          </div>
+                        )}
+                        
+                        {!segment.is_open && (
+                          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-sm mt-4">
+                            <p className="text-yellow-800 font-semibold flex items-center gap-2">
+                              <Icon name="info" className="w-5 h-5" />
+                              Dit segment is momenteel niet actief
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  );
+                }}
+                showControls={true}
+                showDots={true}
+                showCounter={true}
+                className=""
+              />
             </div>
           </div>
         </section>

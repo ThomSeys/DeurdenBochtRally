@@ -12,6 +12,7 @@ interface RouteLocation {
 interface RouteTip {
   name: string;
   locations?: RouteLocation[];
+  gpxFile?: { asset?: { url?: string } } | null;
   color?: string;
 }
 
@@ -279,9 +280,21 @@ export default function RouteNavigationModal({ tip, zoneTitle, zoneStartLocation
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => { downloadGPX(); }} className="px-3 py-1 rounded bg-gray-100">
-            <Icon name="download" className="w-4 h-4" />
-          </button>
+          {tip.gpxFile && tip.gpxFile.asset && tip.gpxFile.asset.url ? (
+            (() => {
+              const gpxUrl = tip.gpxFile!.asset!.url!;
+              const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
+              return (
+                <a href={gpxUrl} download={gpxFilename} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded bg-gray-100 inline-flex items-center gap-2" title="Download GPX bestand">
+                  <Icon name="download" className="w-4 h-4" />
+                </a>
+              );
+            })()
+          ) : (
+            <button type="button" onClick={() => { downloadGPX(); }} className="px-3 py-1 rounded bg-gray-100">
+              <Icon name="download" className="w-4 h-4" />
+            </button>
+          )}
           <button type="button" onClick={() => { openInGoogleMaps(); }} className="px-3 py-1 rounded bg-gray-100" title="Open in Google Maps">
             <Icon name="external-link" className="w-4 h-4" />
           </button>
