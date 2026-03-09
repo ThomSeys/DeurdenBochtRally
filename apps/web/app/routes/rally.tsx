@@ -748,6 +748,7 @@ export default function Rally() {
             
             <div>
               <Carousel
+                nested
                 items={segments}
                 renderItem={(segment: any) => {
                   const isCheckedIn = checkedInSet.has(segment._id);

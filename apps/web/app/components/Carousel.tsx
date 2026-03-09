@@ -7,6 +7,7 @@ interface CarouselProps {
   showControls?: boolean;
   showDots?: boolean;
   showCounter?: boolean;
+  nested?: boolean;
   className?: string;
   itemClassName?: string;
   onIndexChange?: (index: number) => void;
@@ -25,6 +26,7 @@ export default function Carousel({
   onIndexChange,
   currentIndex: controlledIndex,
   disabled = false,
+  nested = false,
 }: CarouselProps) {
   const [internalIndex, setInternalIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -70,19 +72,19 @@ export default function Carousel({
 
   // Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (disabled) return;
+    if (disabled || nested) return;
     e.stopPropagation();
     touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (disabled) return;
+    if (disabled || nested) return;
     e.stopPropagation();
     touchEndX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
-    if (disabled) return;
+    if (disabled || nested) return;
     const swipeThreshold = 100; // minimum distance for a swipe
     const diff = touchStartX.current - touchEndX.current;
 
@@ -121,10 +123,12 @@ export default function Carousel({
   return (
     <div 
       className={`flex flex-col ${className}`}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchCancel}
+      {...(!nested ? {
+        onTouchStart: handleTouchStart,
+        onTouchMove: handleTouchMove,
+        onTouchEnd: handleTouchEnd,
+        onTouchCancel: handleTouchCancel,
+      } : {})}
     >
       {/* Current Item */}
       <div className={`flex-1 flex flex-col touch-pan-y ${itemClassName}`}>
@@ -139,15 +143,15 @@ export default function Carousel({
               <button
                 onClick={(e) => goToPrevious(e)}
                 disabled={isAnimating || disabled}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                className={`flex items-center gap-2 ${nested ? 'px-2 py-1 text-sm' : 'px-4 py-2'} bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20`}
                 aria-label="Vorige item"
               >
                 <Icon name="chevron-left" className="w-5 h-5" />
-                <span className="hidden sm:inline">Vorige</span>
+                <span className={`hidden sm:inline ${nested ? 'text-sm' : ''}`}>Vorige</span>
               </button>
 
               {/* Dots Indicator */}
-              {showDots && (
+              {(!nested && showDots) && (
                 <div className="flex items-center gap-2 z-20">
                   {items.map((_, idx) => (
                     <button
@@ -168,17 +172,17 @@ export default function Carousel({
               <button
                 onClick={(e) => goToNext(e)}
                 disabled={isAnimating || disabled}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                className={`flex items-center gap-2 ${nested ? 'px-2 py-1 text-sm' : 'px-4 py-2'} bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20`}
                 aria-label="Volgende item"
               >
-                <span className="hidden sm:inline">Volgende</span>
+                <span className={`hidden sm:inline ${nested ? 'text-sm' : ''}`}>Volgende</span>
                 <Icon name="chevron-right" className="w-5 h-5" />
               </button>
             </div>
           )}
 
           {/* Counter */}
-          {showCounter && (
+          {(!nested && showCounter) && (
             <div className="text-center mt-2 text-sm text-gray-600">
               Item {currentIndex + 1} van {items.length}
             </div>
