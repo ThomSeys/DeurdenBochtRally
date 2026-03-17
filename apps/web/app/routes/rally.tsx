@@ -1,21 +1,17 @@
-import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
+import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 
-import { useLoaderData, Link, Form, useActionData, useNavigation } from 'react-router';
+import { useLoaderData, Link } from 'react-router';
 import { useState, useEffect } from 'react';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
-import MapView from '~/components/MapView';
-import RouteTipsMap from '~/components/RouteTipsMap';
-import ZoneRouteTips from '~/components/ZoneRouteTips';
-import CheckInModal from '~/components/CheckInModal';
 import { getActiveEdition, getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { Icon } from '~/components/Icon';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useMasterTour } from '~/components/MasterTour';
-import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
 import Carousel from '~/components/Carousel';
+import HeroMedia from '~/components/HeroMedia';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const siteConfig = data?.siteConfig;
@@ -40,442 +36,55 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-export async function action({ request }: ActionFunctionArgs) {
-  const requestLogger = createRequestLogger(request);
+const ZONE_COLORS: Record<string, { border: string; badge: string; fallback: string }> = {
+  green:  { border: 'border-green-500',  badge: 'bg-green-500',  fallback: 'from-green-900 via-green-700 to-green-500' },
+  yellow: { border: 'border-yellow-500', badge: 'bg-yellow-500', fallback: 'from-yellow-900 via-yellow-700 to-yellow-500' },
+  orange: { border: 'border-orange-500', badge: 'bg-orange-500', fallback: 'from-orange-900 via-orange-700 to-orange-500' },
+  red:    { border: 'border-red-500',    badge: 'bg-red-600',    fallback: 'from-red-950 via-red-800 to-red-600' },
+};
 
-  try {
-    // Verify CSRF token first
-    const isValidToken = await verifyCSRFToken(request);
-    if (!isValidToken) {
-      await requestLogger.warn('rally-checkin', 'Check-in failed: invalid CSRF token');
-      return { error: 'Invalid form submission. Please try again.', status: 403 };
-    }
+const DIFFICULTY_LABELS: Record<string, { label: string; cls: string }> = {
+  easy:   { label: 'Eenvoudig',  cls: 'bg-green-100 text-green-700' },
+  medium: { label: 'Gemiddeld',  cls: 'bg-yellow-100 text-yellow-700' },
+  hard:   { label: 'Uitdagend',  cls: 'bg-red-100 text-red-700' },
+};
 
-    const user = await getUser(request);
-    if (!user) {
-      await requestLogger.warn('rally-checkin', 'Check-in failed: user not authenticated');
-      return { error: 'Je moet ingelogd zijn' };
-    }
-
-    const userLogger = requestLogger.withUser(user.id);
-    const formData = await request.formData();
-    const zoneId = formData.get('zoneId') as string;
-    const latitude = formData.get('latitude') as string;
-    const longitude = formData.get('longitude') as string;
-    const selectedBuddiesStr = (formData.get('selectedBuddies') as string) || '';
-    const selectedBuddyIds = selectedBuddiesStr ? selectedBuddiesStr.split(',').filter(Boolean) : [];
-    
-
-    if (!zoneId) {
-      await userLogger.warn('rally-checkin', 'Check-in failed: missing zone ID');
-      return { error: 'Zone ID is required' };
-    }
-
-    // Fetch zone start location from Sanity to validate proximity
-    const zone = await sanityClient.fetch(`
-      *[_type == "rallyZone" && _id == $zoneId][0] { _id, title, startPoint }
-    `, { zoneId });
-
-    if (!zone || !zone.startPoint) {
-      await userLogger.warn('rally-checkin', 'Check-in failed: zone not found or missing startPoint', { zoneId });
-      return { error: 'Rally zone niet gevonden' };
-    }
-
-    // If latitude/longitude were provided, ensure user is within 100 meters
-    if (latitude && longitude) {
-      const dist = calculateDistance(parseFloat(latitude), parseFloat(longitude), zone.startPoint.lat, zone.startPoint.lng);
-      if (dist > 100) {
-        return { error: `Je bent te ver weg! Je moet binnen 100 meter van het startpunt zijn. (huidige afstand: ${Math.round(dist)}m)` };
-      }
-    }
-
-    // Check if already checked in
-    if (!user.is_admin) {
-      const { data: existingCheckIn } = await supabaseAdmin
-        .from('rally_zone_checkins')
-        .select('id')
-        .eq('participant_id', user.id)
-        .eq('zone_id', zoneId)
-        .single();
-
-      if (existingCheckIn) {
-        await userLogger.warn('rally-checkin', 'Duplicate check-in attempt', { zoneId });
-        return { error: 'Je hebt deze zone al bezocht!' };
-      }
-    }
-
-    // Respect user's choice to use the skip route if submitted in the form
-    const useSkipRoute = (formData.get('useSkipRoute') as string) === '1';
-
-    // Create check-in (include used_skip_route flag if the column exists)
-    // Prepare check-ins array for user + any selected buddies
-    const checkInsToCreate: any[] = [];
-
-    checkInsToCreate.push({
-      participant_id: user.id,
-      zone_id: zoneId,
-      location_lat: latitude ? parseFloat(latitude) : null,
-      location_lng: longitude ? parseFloat(longitude) : null,
-      checked_in_at: new Date().toISOString(),
-      checked_in_by: user.id,
-    });
-
-    // Ensure we don't create duplicate buddy check-ins: fetch existing check-ins for these buddies
-    let filteredBuddyIds = selectedBuddyIds.slice();
-    let skippedBuddyIds: string[] = [];
-    if (filteredBuddyIds.length > 0) {
-      try {
-        const { data: existingForBuddies } = await supabaseAdmin
-          .from('rally_zone_checkins')
-          .select('participant_id')
-          .in('participant_id', filteredBuddyIds)
-          .eq('zone_id', zoneId);
-
-        const existingSet = new Set((existingForBuddies || []).map((r: any) => r.participant_id));
-        skippedBuddyIds = filteredBuddyIds.filter(id => existingSet.has(id));
-        filteredBuddyIds = filteredBuddyIds.filter(id => !existingSet.has(id));
-      } catch (e) {
-        // ignore lookup errors and proceed with provided list
-      }
-    }
-
-    // Add buddy check-ins (marked as checked in by this user) for filtered IDs only
-    for (const buddyId of filteredBuddyIds) {
-      checkInsToCreate.push({
-        participant_id: buddyId,
-        zone_id: zoneId,
-        location_lat: latitude ? parseFloat(latitude) : null,
-        location_lng: longitude ? parseFloat(longitude) : null,
-        checked_in_at: new Date().toISOString(),
-        checked_in_by: user.id,
-        took_skip_route: useSkipRoute, // if the main user took the skip route, we can mark buddies as also having taken it since they didn't actually check in themselves
-      });
-    }
-
-    let insertError = null;
-    try {
-      const res = await supabaseAdmin.from('rally_zone_checkins').insert(checkInsToCreate);
-      insertError = (res as any).error || null;
-    } catch (e: any) {
-      insertError = e;
-    }
-
-    if (insertError) {
-      await userLogger.error('rally-checkin', 'Database error during check-in', insertError);
-      return { error: 'Er is iets misgegaan bij het opslaan' };
-    }
-
-    await userLogger.info('rally-checkin', 'Check-in successful', { zoneId });
-
-    // Trigger achievement check
-    try {
-      await fetch(`${new URL(request.url).origin}/api/check-achievements`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          participantId: user.id,
-          action: 'check-participant'
-        })
-      });
-    } catch (error) {
-      console.error('Failed to trigger achievement check:', error);
-    }
-
-    // Send notifications to buddies who were actually checked in (filtered list)
-    if (filteredBuddyIds.length > 0) {
-      try {
-        const { data: checkerInfo } = await supabaseAdmin
-          .from('participants')
-          .select('first_name, last_name')
-          .eq('id', user.id)
-          .single();
-
-        const zoneInfo = await sanityClient.fetch(`
-          *[_type == "rallyZone" && _id == $zoneId][0] { title }
-        `, { zoneId });
-
-        for (const buddyId of filteredBuddyIds) {
-          const { data: subscriptions } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('*')
-            .eq('participant_id', buddyId)
-            .eq('is_active', true);
-
-          if (subscriptions && subscriptions.length > 0) {
-            const { sendPushNotificationWithHistory } = await import('~/lib/push-notifications-enhanced.server');
-            await sendPushNotificationWithHistory(
-              subscriptions,
-              {
-                title: 'Groeps Check-in! 🏍️',
-                body: `${checkerInfo?.first_name} ${checkerInfo?.last_name} heeft je ingecheckt bij ${zoneInfo?.title || 'een zone'}`,
-                tag: 'buddy-checkin',
-              },
-              {
-                title: 'Groeps Check-in! 🏍️',
-                body: `${checkerInfo?.first_name} ${checkerInfo?.last_name} heeft je ingecheckt bij ${zoneInfo?.title || 'een zone'}`,
-                eventType: 'buddy_checkin',
-                targetType: 'single',
-                sentBy: user.id,
-                eventData: { zone_id: zoneId, checked_in_by: user.id },
-              }
-            );
-          }
-        }
-      } catch (notifError) {
-        console.error('[rally] Failed to send buddy check-in notifications:', notifError);
-      }
-    }
-
-    return { success: true, message: 'Check-in succesvol!', usedSkipRoute: useSkipRoute, zoneId, buddiesCheckedIn: filteredBuddyIds.length, buddiesSkipped: skippedBuddyIds.length };
-  } catch (error: any) {
-    await requestLogger.error('rally-checkin', 'Unexpected error during check-in', error);
-    return { error: 'Er is een onverwachte fout opgetreden' };
-  }
-}
-
-// Haversine formula to calculate distance between two coordinates in meters
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // Distance in meters
-}
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  // Require authentication to access rally page
   const userId = await requireUserId(request);
   const requestLogger = createRequestLogger(request, userId);
-  
   await requestLogger.info('page-view', 'Rally page loaded');
-  
-  // Fetch user, edition, and config in parallel
+
   const [user, edition, siteConfig] = await Promise.all([
     getUser(request),
     getActiveEdition(),
     getSiteConfig(),
   ]);
-  
-  // Get Event Segments (Concept B)
-  // Admins can see all zones, non-admins only see active zones
+
   const filterCondition = user?.is_admin ? '' : ' && is_open == true';
   const segments = await sanityClient.fetch(`
     *[_type == "rallyZone"${filterCondition}] | order(order asc) {
-      _id,
-      title,
-      description,
-      location,
-      order,
-      color,
-      is_open,
-      is_active,
-      "startLocation": startPoint,
-      "endLocation": endPoint,
-      skipRoute {
-        instructions,
-        estimatedDistance,
-        startPoint { lat, lng },
-        endPoint { lat, lng },
-        gpxFile { asset-> { url } }
-      },
+      _id, title, description, location, order, color, is_open,
+      "imageUrl": image.asset->url,
       routeTips[] {
-        name,
-        description,
-        routeType,
-        difficulty,
-        estimatedDistance,
-        character,
-        warnings,
-        highlights,
-        exitInstructions,
-        routeInstructions,
-        rejoinInstructions,
-        color,
-        gpxFile { asset-> { url } },
-        locations[] {
-          _key,
-          name,
-          coordinates {
-            lat,
-            lng
-          },
-          type,
-          description,
-          challenge {
-            type,
-            question,
-            hint,
-            options,
-            correctAnswer,
-            points,
-            isActive
-          }
-        }
+        name, estimatedDistance, difficulty, routeType,
+        "challengeCount": count(locations[defined(challenge)])
       }
     }
   `);
 
-  console.log('[rally] user:', user?.email, 'is_admin:', user?.is_admin, 'segments count:', segments.length);
-
-  // Get user's check-ins if logged in
   let userCheckIns: string[] = [];
-  let completedChallenges: string[] = [];
   if (userId) {
-    const { data: participant } = await supabaseAdmin
-      .from('participants')
-      .select('id')
-      .eq('id', userId)
-      .single();
-
-      if (participant) {
-      const { data: checkIns } = await supabaseAdmin
-        .from('rally_zone_checkins')
-        .select('*')
-        .eq('participant_id', participant.id);
-
-      if (checkIns) {
-        // Get unique zone IDs that the user has checked into
-        userCheckIns = [...new Set(checkIns.map((ci: any) => ci.zone_id))];
-        console.log('[rally] userCheckIns:', userCheckIns);
-
-        // Build map of which zones were checked-in with a skip-route flag
-        const skipMap: Record<string, boolean> = {};
-        checkIns.forEach((ci: any) => {
-          const zone = ci.zone_id;
-          const used = !!(ci.took_skip_route || ci.used_skip_route || ci.tookSkipRoute || ci.usedSkipRoute);
-          if (zone) skipMap[zone] = skipMap[zone] || used;
-        });
-
-        // Attach to the return payload via a variable we'll include below
-        (globalThis as any).__rally_skip_map = skipMap;
-        console.log('[rally] skipMap:', skipMap);
-      }
-
-      // Get completed challenges
-      const { data: challengeSubmissions } = await supabaseAdmin
-        .from('route_challenge_submissions')
-        .select('location_key')
-        .eq('participant_id', participant.id);
-
-      if (challengeSubmissions) {
-        completedChallenges = challengeSubmissions.map(cs => cs.location_key);
-        console.log('[rally] completedChallenges:', completedChallenges.length);
-      }
+    const { data: checkIns } = await supabaseAdmin
+      .from('rally_zone_checkins')
+      .select('zone_id')
+      .eq('participant_id', userId);
+    if (checkIns) {
+      userCheckIns = [...new Set(checkIns.map((ci: any) => ci.zone_id))] as string[];
     }
   }
 
-  // Read skip map attached above (defensive fallback)
-  const loaderSkipMap = (globalThis as any).__rally_skip_map || {};
-
-  // Get user's accepted buddies for group check-in (both directions)
-  let buddiesList: Array<any> = [];
-  if (userId) {
-    const { data: buddyRows } = await supabaseAdmin
-      .from('participant_buddies')
-      .select('participant_id, buddy_id, buddy_first_name, buddy_last_name, buddy_profile_photo_url')
-      .or(`participant_id.eq.${userId},buddy_id.eq.${userId}`)
-      .eq('status', 'accepted');
-
-    const reverseIds: string[] = [];
-    const temp: Array<any> = [];
-    (buddyRows || []).forEach((r: any) => {
-      if (r.participant_id === userId) {
-        temp.push({ buddy_id: r.buddy_id, buddy: { id: r.buddy_id, first_name: r.buddy_first_name, last_name: r.buddy_last_name }, buddy_profile_photo_url: r.buddy_profile_photo_url });
-      } else if (r.buddy_id === userId) {
-        // we'll need to fetch the participant's name & photo separately
-        temp.push({ buddy_id: r.participant_id, buddy: { id: r.participant_id, first_name: null, last_name: null }, buddy_profile_photo_url: null });
-        if (r.participant_id) reverseIds.push(r.participant_id);
-      }
-    });
-
-    if (reverseIds.length > 0) {
-      const { data: participants } = await supabaseAdmin
-        .from('participants')
-        .select('id, first_name, last_name, profile_photo_url')
-        .in('id', reverseIds);
-
-      const byId: Record<string, any> = {};
-      (participants || []).forEach((p: any) => { byId[p.id] = p; });
-
-         temp.forEach((t) => {
-           if (byId[t.buddy.id]) {
-             if ((!t.buddy.first_name || !t.buddy.last_name) && byId[t.buddy.id]) {
-               t.buddy.first_name = byId[t.buddy.id].first_name;
-               t.buddy.last_name = byId[t.buddy.id].last_name;
-             }
-             // attach their profile photo if available
-             if (byId[t.buddy.id].profile_photo_url) {
-               t.buddy_profile_photo_url = byId[t.buddy.id].profile_photo_url;
-             }
-           }
-         });
-
-         // Server-side dedupe: merge entries by buddy_id and prefer any available photo or names
-         const byBuddyId = new Map<string, any>();
-         for (const t of temp) {
-           const id = t.buddy_id;
-           if (!id) continue;
-           if (!byBuddyId.has(id)) {
-             // normalize structure to what the component expects
-             byBuddyId.set(id, {
-               buddy_id: id,
-               buddy: { id: t.buddy.id, first_name: t.buddy.first_name, last_name: t.buddy.last_name },
-               buddy_profile_photo_url: t.buddy_profile_photo_url || null,
-             });
-           } else {
-             const existing = byBuddyId.get(id);
-             // fill missing name fields
-             if ((!existing.buddy.first_name || !existing.buddy.last_name) && (t.buddy.first_name || t.buddy.last_name)) {
-               existing.buddy.first_name = existing.buddy.first_name || t.buddy.first_name;
-               existing.buddy.last_name = existing.buddy.last_name || t.buddy.last_name;
-             }
-             // prefer existing photo, otherwise take new one if present
-             if (!existing.buddy_profile_photo_url && t.buddy_profile_photo_url) {
-               existing.buddy_profile_photo_url = t.buddy_profile_photo_url;
-             }
-           }
-         }
-
-         buddiesList = Array.from(byBuddyId.values());
-
-         // Fetch existing check-ins for these buddies so UI can filter already-checked buddies per zone
-         const buddyIds = buddiesList.map(b => b.buddy_id).filter(Boolean);
-         let buddyCheckins: Record<string, string[]> = {};
-         if (buddyIds.length > 0) {
-           try {
-             const { data: buddyCheckinRows } = await supabaseAdmin
-               .from('rally_zone_checkins')
-               .select('participant_id, zone_id')
-               .in('participant_id', buddyIds);
-
-             (buddyCheckinRows || []).forEach((r: any) => {
-               if (!r || !r.participant_id) return;
-               buddyCheckins[r.participant_id] = buddyCheckins[r.participant_id] || [];
-               if (r.zone_id) buddyCheckins[r.participant_id].push(r.zone_id);
-             });
-           } catch (e) {
-             // ignore errors - optional feature
-           }
-         }
-
-         // attach buddyCheckins map for client use
-         (globalThis as any).__buddy_checkins_map = buddyCheckins;
-    } else {
-      buddiesList = temp.filter(t => t.buddy && t.buddy.id);
-      (globalThis as any).__buddy_checkins_map = {};
-    }
-  }
-
-  const buddyCheckinsFromGlobal = (globalThis as any).__buddy_checkins_map || {};
-
-  return { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken: await getCSRFToken(request), skipUsedZones: loaderSkipMap, buddies: buddiesList, buddyCheckins: buddyCheckinsFromGlobal };
+  return { userId, user, edition, segments, siteConfig, userCheckIns };
 }
 
 function RallyTourButton() {
@@ -492,220 +101,276 @@ function RallyTourButton() {
 }
 
 export default function Rally() {
-  const { userId, user, edition, segments, siteConfig, userCheckIns, completedChallenges, csrfToken, skipUsedZones, buddies, buddyCheckins } = useLoaderData<typeof loader>();
+  const { userId, user, edition, segments, siteConfig, userCheckIns } = useLoaderData<typeof loader>();
+  const [checkedInSet] = useState(() => new Set(userCheckIns || []));
 
-  const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [checkInModalZone, setCheckInModalZone] = useState<any>(null);
-  const [zoneWeatherData, setZoneWeatherData] = useState<Record<string, any>>({});
-  const [selectedWeatherZone, setSelectedWeatherZone] = useState<any>(null);
-  const [localCheckedIn, setLocalCheckedIn] = useState<Set<string>>(new Set(userCheckIns || []));
-  const [skipUsedMap, setSkipUsedMap] = useState<Record<string, boolean>>(skipUsedZones || {});
-  const checkedInSet = localCheckedIn;
-
-  // Keep localCheckedIn in sync when loader updates
-  useEffect(() => {
-    setLocalCheckedIn(new Set(userCheckIns || []));
-  }, [userCheckIns]);
-
-  // Initialize skipUsedMap from loader-provided values (persisted choices)
-  useEffect(() => {
-    if (skipUsedZones && Object.keys(skipUsedZones).length > 0) {
-      setSkipUsedMap(skipUsedZones);
-    }
-  }, [skipUsedZones]);
-  const isSubmitting = navigation.state === 'submitting';
-
-  // Get user's current location
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.log('[rally] Geolocation error:', error.message);
-        }
-      );
-    }
-  }, []);
-
-  // Close modal on successful check-in
-  useEffect(() => {
-    if (actionData?.success) {
-      setCheckInModalZone(null);
-      // Optimistically add this zone to the local checked-in set so UI updates immediately
-      if (actionData.zoneId) {
-        setLocalCheckedIn((prev) => {
-          const next = new Set(prev);
-          next.add(actionData.zoneId);
-          return next;
-        });
-      }
-
-      // Record whether the user used the skip route for this zone
-      if (actionData.usedSkipRoute && actionData.zoneId) {
-        setSkipUsedMap((prev) => ({ ...prev, [actionData.zoneId]: true }));
-      }
-    }
-  }, [actionData]);
-
-  // Fetch weather data for each segment
-  useEffect(() => {
-    const fetchZoneWeather = async () => {
-      const weatherData: Record<string, any> = {};
-      
-      for (const segment of segments) {
-        // Try to get coordinates from startLocation, fallback to first routeTip location
-        let lat: number | undefined;
-        let lng: number | undefined;
-        
-        if (segment.startLocation?.coordinates) {
-          lat = segment.startLocation.coordinates.lat;
-          lng = segment.startLocation.coordinates.lng;
-        } else if (segment.routeTips?.[0]?.locations?.[0]?.coordinates) {
-          lat = segment.routeTips[0].locations[0].coordinates.lat;
-          lng = segment.routeTips[0].locations[0].coordinates.lng;
-        }
-        
-        if (lat && lng) {
-          try {
-            const response = await fetch(
-              `/api/weather?lat=${lat}&lon=${lng}&location=${encodeURIComponent(segment.title)}`
-            );
-            if (response.ok) {
-              const data = await response.json();
-              if (data.data) {
-                weatherData[segment._id] = data.data;
-              }
-            }
-          } catch (error) {
-            console.error(`Failed to fetch weather for ${segment.title}:`, error);
-          }
-        } else {
-          console.warn(`No coordinates found for segment ${segment.title}`);
-        }
-      }
-      
-      setZoneWeatherData(weatherData);
-    };
-
-    if (segments.length > 0) {
-      fetchZoneWeather();
-    }
-  }, [segments]);
-
+  const openSegments = segments.filter((s: any) => s.is_open);
+  const allDistances = segments.flatMap((s: any) =>
+    (s.routeTips || []).map((t: any) => t.estimatedDistance).filter(Boolean)
+  );
+  const totalMinKm = allDistances.length ? Math.min(...allDistances) : null;
+  const totalMaxKm = allDistances.length ? Math.max(...allDistances) : null;
+  const checkedInCount = segments.filter((s: any) => checkedInSet.has(s._id)).length;
+  const heroBgUrl = siteConfig?.heroBackgroundImage?.asset?.url;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold mb-4">De Rally Route</h1>
-          <p className="text-xl max-w-3xl mx-auto">
-            4 adventure segmenten om je rit onvergetelijk te maken
-          </p>
-          <RallyTourButton />
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          <div className="max-w-3xl">
+            <p className="text-primary-200 font-semibold text-sm uppercase tracking-widest mb-3">
+              {siteConfig?.eventName || 'Deur Den Bocht'} · {siteConfig?.eventDate ? new Date(siteConfig.eventDate).getFullYear() : new Date().getFullYear()}
+            </p>
+            <h1 className="text-5xl lg:text-6xl font-black mb-4 leading-tight">
+              De Rally Route
+            </h1>
+            <p className="text-lg lg:text-xl text-primary-100 leading-relaxed mb-8 max-w-2xl">
+              Rijd door spectaculaire zones, ontdek verborgen wegen en doe uitdagende opdrachten onderweg.
+              Jij kiest je eigen avontuur.
+            </p>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-6 mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="flag" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black leading-none">{openSegments.length}</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Zones beschikbaar</div>
+                </div>
+              </div>
+
+              {totalMinKm && (
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                    <Icon name="road" className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black leading-none">
+                      {totalMinKm === totalMaxKm ? `${totalMinKm}` : `${totalMinKm}–${totalMaxKm}`}
+                      <span className="text-base font-semibold ml-1">km</span>
+                    </div>
+                    <div className="text-xs text-primary-200 mt-0.5">Per zone</div>
+                  </div>
+                </div>
+              )}
+
+              {checkedInCount > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-teal-500/30 backdrop-blur-sm flex items-center justify-center">
+                    <Icon name="check-circle" className="w-5 h-5 text-teal-300" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black leading-none">
+                      {checkedInCount}
+                      <span className="text-base font-normal text-primary-300">/{openSegments.length}</span>
+                    </div>
+                    <div className="text-xs text-primary-200 mt-0.5">Ingecheckt</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <RallyTourButton />
+          </div>
         </div>
       </section>
 
-      {/* How it works (collapsible) */}
-      <section data-tour="rally-how-it-works" className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <details className="rounded-lg overflow-hidden bg-white shadow-md">
-            <summary className="p-6 cursor-pointer flex items-center justify-between">
+      {/* Zone Cards */}
+      {segments && segments.length > 0 && (
+        <section data-tour="rally-segments" className="py-12 flex-1">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">Hoe werkt het?</h2>
-                <p className="text-sm text-gray-600 mt-1">Korte uitleg en tips om het meeste uit je rally-ervaring te halen. Klik om uit te vouwen.</p>
+                <h2 className="text-3xl font-bold text-gray-900 mb-1">Rally Zones</h2>
+                <p className="text-gray-500">Klik op een zone voor de volledige details, route tips en challenges.</p>
               </div>
-              <div className="text-sm text-gray-500">Meer info ▾</div>
-            </summary>
+              {checkedInCount > 0 && (
+                <div className="hidden sm:flex items-center gap-2 text-sm text-teal-700 font-semibold bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
+                  <Icon name="check-circle" className="w-4 h-4" />
+                  {checkedInCount} van {openSegments.length} ingecheckt
+                </div>
+              )}
+            </div>
 
-            <div className="p-6 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {segments.map((segment: any) => {
+                const isCheckedIn = checkedInSet.has(segment._id);
+                const distances = (segment.routeTips || []).map((t: any) => t.estimatedDistance).filter(Boolean);
+                const minDist = distances.length ? Math.min(...distances) : null;
+                const maxDist = distances.length ? Math.max(...distances) : null;
+                const routeTipCount = (segment.routeTips || []).length;
+                const challengeCount = (segment.routeTips || []).reduce(
+                  (sum: number, t: any) => sum + (t.challengeCount || 0),
+                  0
+                );
+                const difficulties = [
+                  ...new Set(
+                    (segment.routeTips || []).map((t: any) => t.difficulty).filter(Boolean)
+                  ),
+                ] as string[];
+                const diffOrder: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+                difficulties.sort((a, b) => (diffOrder[a] ?? 99) - (diffOrder[b] ?? 99));
+                const colors = ZONE_COLORS[segment.color] || ZONE_COLORS.green;
+
+                return (
+                  <Link
+                    key={segment._id}
+                    to={`/zone/${segment.order}`}
+                    className="group block bg-white rounded-2xl shadow-sm hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 border border-gray-100"
+                  >
+                    {/* Image banner */}
+                    <div className="relative h-52 overflow-hidden">
+                      {segment.imageUrl ? (
+                        <img
+                          src={segment.imageUrl}
+                          alt={segment.title}
+                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${colors.fallback}`} />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+                      {/* Zone number */}
+                      <div className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow">
+                        <span className="text-sm font-black text-gray-800">{segment.order}</span>
+                      </div>
+
+                      {/* Status badge */}
+                      <div className="absolute top-3 right-3">
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shadow ${
+                          segment.is_open
+                            ? 'bg-green-500 text-white'
+                            : 'bg-black/50 text-gray-200 backdrop-blur-sm'
+                        }`}>
+                          {segment.is_open ? 'Open' : 'Gesloten'}
+                        </span>
+                      </div>
+
+                      {/* Distance overlay bottom-left */}
+                      {minDist !== null && (
+                        <div className="absolute bottom-3 left-3 text-white drop-shadow-md">
+                          <div className="text-xl font-black">
+                            {minDist === maxDist ? `${minDist} km` : `${minDist}–${maxDist} km`}
+                          </div>
+                          <div className="text-xs text-white/80">per route</div>
+                        </div>
+                      )}
+
+                      {/* Checked-in badge bottom-right */}
+                      {isCheckedIn && (
+                        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-teal-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow">
+                          <Icon name="checkSimple" className="w-3 h-3" />
+                          Ingecheckt
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-5">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-primary-600 transition-colors leading-snug">
+                        {segment.title}
+                      </h3>
+
+                      {segment.location && (
+                        <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
+                          <Icon name="marker" className="w-4 h-4 shrink-0 text-gray-400" />
+                          <span>{segment.location}</span>
+                        </div>
+                      )}
+
+                      {segment.description && (
+                        <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
+                          {segment.description}
+                        </p>
+                      )}
+
+                      {/* Stats row */}
+                      {(routeTipCount > 0 || challengeCount > 0) && (
+                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                          {routeTipCount > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <Icon name="map" className="w-4 h-4" />
+                              <span>{routeTipCount} {routeTipCount === 1 ? 'route' : 'routes'}</span>
+                            </div>
+                          )}
+                          {challengeCount > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <Icon name="star" className="w-4 h-4" />
+                              <span>{challengeCount} {challengeCount === 1 ? 'challenge' : 'challenges'}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Difficulty pills */}
+                      {difficulties.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {difficulties.map((d: string) => {
+                            const diff = DIFFICULTY_LABELS[d];
+                            if (!diff) return null;
+                            return (
+                              <span key={d} className={`text-xs font-medium px-2 py-0.5 rounded-full ${diff.cls}`}>
+                                {diff.label}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Card footer */}
+                    <div className="px-5 pb-4 flex items-center justify-between">
+                      <div className={`h-1 w-10 rounded-full ${colors.badge}`} />
+                      <span className="text-sm font-semibold text-primary-600 group-hover:text-primary-700 flex items-center gap-1 transition-colors">
+                        Ontdekken
+                        <Icon name="chevron-right" className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* How it works (collapsible) */}
+      <section data-tour="rally-how-it-works" className="py-10 bg-white border-t">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <details className="rounded-xl overflow-hidden border border-gray-200">
+            <summary className="p-5 cursor-pointer flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors select-none">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Icon name="info" className="w-4 h-4 text-primary-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">Hoe werkt het?</h2>
+                  <p className="text-xs text-gray-500">Korte uitleg over zones, check-ins en challenges</p>
+                </div>
+              </div>
+              <Icon name="chevron-right" className="w-5 h-5 text-gray-400 rotate-90" />
+            </summary>
+            <div className="p-6 border-t border-gray-200">
               <Carousel
                 items={[
-                  {
-                    title: '1. Kies Je Avontuur',
-                    description: 'Kies tussen de volledige route of selecteer specifieke rally zones die jou aanspreken',
-                    more: (
-                      <div className="mt-3 text-sm text-gray-700">
-                        <p className="mb-2">Kies de volledige route voor een lange dag vol highlights of selecteer individuele zones voor kortere etappes.</p>
-                        <ul className="list-disc ml-5 space-y-1">
-                          <li>Volledige route: volg de route zoals samengesteld door de organisatie.</li>
-                          <li>Zone-selectie: perfect om specifieke landschappen of moeilijkheidsgraden te ervaren.</li>
-                          <li>Tip: bekijk afstand en moeilijkheid vóór vertrek.</li>
-                        </ul>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: '2. Download & Rijd',
-                    description: 'Download de GPX en geniet van prachtige wegen, bochten en landschappen',
-                    more: (
-                      <div className="mt-3 text-sm text-gray-700">
-                        <p className="mb-2">Gebruik de GPX op je GPS-app of stuur het naar je navigatie. Zorg dat je telefoonhouder en powerbank klaar zijn.</p>
-                        <ul className="list-disc ml-5 space-y-1">
-                          <li>Controleer CORS/URL toegang als je GPX via de website laadt.</li>
-                          <li>Voor turn-by-turn nav: importeer de GPX in je navigatie-app.</li>
-                          <li>Veiligheidstips: plan pauzes en controleer het weer.</li>
-                        </ul>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: '3. Check In (Optioneel)',
-                    description: 'Scan QR codes bij zones om je reis te tracken - geen verplichting, gewoon voor de fun!',
-                    more: (
-                      <div className="mt-3 text-sm text-gray-700">
-                        <p className="mb-2">Check-ins geven je extra context en ontgrendelen challenges en badges.</p>
-                        <ul className="list-disc ml-5 space-y-1">
-                          <li>Je moet binnen ~100m van het startpunt zijn om in te checken.</li>
-                          <li>Je kunt ook groeps-checkins doen voor vrienden.</li>
-                          <li>Check-ins zijn optioneel — rijd veilig en geniet.</li>
-                        </ul>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: '4. Doe de challenges (Optioneel)',
-                    description: 'Voltooi uitdagingen om punten te verdienen - Samen maken we er wat legendarisch van!',
-                    more: (
-                      <div className="mt-3 text-sm text-gray-700">
-                        <p className="mb-2">Challenges variëren van foto-opdrachten tot quizvragen bij specifieke locaties.</p>
-                        <ul className="list-disc ml-5 space-y-1">
-                          <li>Sommige challenges worden automatisch gevalideerd, andere worden handmatig gecontroleerd.</li>
-                          <li>Verdien punten en vergelijk met vrienden in de leaderboard.</li>
-                          <li>Wees respectvol bij foto-opdrachten (privéterrein, verkeer, etc.).</li>
-                        </ul>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: '5. Deel Je Verhaal',
-                    description: "Upload foto's en deel je beleving met de community - dát maakt jou een echte bocht-held!",
-                    more: (
-                      <div className="mt-3 text-sm text-gray-700">
-                        <p className="mb-2">Deel hoogtepunten en help anderen de mooiste plekken te vinden.</p>
-                        <ul className="list-disc ml-5 space-y-1">
-                          <li>Upload foto's in de app en tag locaties.</li>
-                          <li>Gebruik badges en reacties om community-interactie te stimuleren.</li>
-                          <li>Privacy: zorg dat gedeelde content geen persoonlijke data bevat.</li>
-                        </ul>
-                      </div>
-                    ),
-                  },
+                  { title: '1. Kies Je Avontuur', description: 'Kies een rally zone en bekijk de route tips die jou aanspreken.' },
+                  { title: '2. Download & Rijd', description: 'Download de GPX en geniet van prachtige wegen, bochten en landschappen.' },
+                  { title: '3. Check In (Optioneel)', description: 'Check in bij de zone om je bezoek te registreren en badges te verdienen.' },
+                  { title: '4. Doe de Challenges (Optioneel)', description: 'Voltooi highlights bij bijzondere locaties en verdien punten voor de leaderboard.' },
+                  { title: '5. Deel Je Verhaal', description: "Upload foto's en deel je beleving met de community." },
                 ]}
                 renderItem={(item: any) => (
-                  <div className="bg-white p-6 rounded-sm shadow">
-                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                    <p className="text-gray-700">{item.description}</p>
-                    {item.more}
+                  <div className="bg-gray-50 p-5 rounded-xl border border-gray-100">
+                    <h3 className="font-bold text-base mb-1 text-gray-900">{item.title}</h3>
+                    <p className="text-sm text-gray-600">{item.description}</p>
                   </div>
                 )}
                 showControls={true}
@@ -718,307 +383,12 @@ export default function Rally() {
         </div>
       </section>
 
-      {/* Rally Route Segments */}
-      {segments && segments.length > 0 && (
-        <section data-tour="rally-segments" className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
-              De Rally Route - {segments.length} Segmenten
-            </h2>
-            
-            {/* Complete Route User Notice */}
-            {user?.route_preference === 'scenic' && (
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-sm mb-8 max-w-4xl mx-auto">
-                <div className="flex items-start">
-                  <Icon name="info" className="w-6 h-6 text-blue-500 mr-3 flex-shrink-0 mt-1" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                      Scenic Route Modus
-                    </h3>
-                    <p className="text-blue-800 mb-3">
-                      Je hebt gekozen voor de <strong>Scenic Route</strong> ervaring. Deze rally zones zijn optioneel voor jou - je kunt de volledige route rijden zonder in te checken bij specifieke zones.
-                    </p>
-                    <p className="text-blue-700 text-sm">
-                      💡 Tip: Download je GPX route vanuit het dashboard en geniet gewoon van de rit!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div>
-              <Carousel
-                nested
-                items={segments}
-                renderItem={(segment: any) => {
-                  const isCheckedIn = checkedInSet.has(segment._id);
-                  const canViewData = isCheckedIn || user?.is_admin || true;
-                  return (
-                    <details
-                      key={segment._id}
-                      className={`group border-l-4 rounded-lg shadow-lg overflow-hidden bg-white border-${segment.color || 'gray'}-500`}
-                      open
-                    >
-                      <summary className="p-6 md:p-8 cursor-pointer hover:bg-gray-50 transition-colors list-none">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex flex-col gap-3 mb-2">
-                              <div>
-                              {segment.is_open ? (
-                                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                                  Open
-                                </span>
-                              ) : (
-                                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                                  Gesloten
-                                </span>
-                              )}</div>
-                              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
-                                {segment.title}
-                              </h3>
-                            </div>
-                            <p className="text-gray-600 text-sm ml-8">{segment.location}</p>
-                          </div>
-                          <div className="text-right ml-4 flex flex-col gap-3">
-                            <div className="inline-block bg-gray-50 px-4 py-2 rounded-lg">
-                              <span className="text-sm text-gray-600">Afstand</span>
-                              <div className="text-xl font-bold text-primary-600">
-                                {segment.routeTips?.length > 0 
-                                  ? `${Math.min(...segment.routeTips.map((t: any) => t.estimatedDistance))}-${Math.max(...segment.routeTips.map((t: any) => t.estimatedDistance))} km`
-                                  : '- km'
-                                }
-                              </div>
-                            </div>
-                            {zoneWeatherData[segment._id] && (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setSelectedWeatherZone({ ...zoneWeatherData[segment._id], zoneName: segment.title });
-                                }}
-                                className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg transition-colors border border-sky-200"
-                              >
-                                <img
-                                  src={`https://openweathermap.org/img/wn/${zoneWeatherData[segment._id].icon}@2x.png`}
-                                  alt="weather"
-                                  className="w-6 h-6"
-                                />
-                                <span className="text-sm font-semibold text-sky-900">{zoneWeatherData[segment._id].temp}°</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </summary>
-
-                      <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-gray-100">
-                        {segment.description && (
-                          <p className="text-gray-700 mb-6 mt-4">{segment.description}</p>
-                        )}
-
-                        {segment.routeTips && segment.routeTips.length > 0 && (
-                          <div data-tour="rally-tips">
-                            {skipUsedMap[segment._id] === true && segment.skipRoute?.gpxFile?.asset?.url ? (
-                              (() => {
-                                const gpxUrl = segment.skipRoute.gpxFile.asset.url;
-                                const gpxFilename = decodeURIComponent((gpxUrl.split('/').pop() || 'route.gpx'));
-                                const skipStart = segment.skipRoute?.startPoint?.lat
-                                  ? { lat: segment.skipRoute.startPoint.lat, lng: segment.skipRoute.startPoint.lng, name: `${segment.title} start` }
-                                  : segment.startLocation?.coordinates
-                                  ? { lat: segment.startLocation.coordinates.lat, lng: segment.startLocation.coordinates.lng }
-                                  : undefined;
-                                const skipEnd = segment.skipRoute?.endPoint?.lat
-                                  ? { lat: segment.skipRoute.endPoint.lat, lng: segment.skipRoute.endPoint.lng, name: `${segment.title} einde` }
-                                  : segment.endLocation?.coordinates
-                                  ? { lat: segment.endLocation.coordinates.lat, lng: segment.endLocation.coordinates.lng }
-                                  : undefined;
-
-                                return (
-                                  <>
-                                    <div className="mb-4 p-4 rounded-sm border border-dashed border-primary-200 bg-primary-50 flex items-center justify-between">
-                                      <div>
-                                        <h5 className="font-semibold text-primary-900">Hazepad geselecteerd</h5>
-                                        <p className="text-sm text-gray-700">Je hebt gekozen voor het hazepad — routetips en challenges zijn uitgeschakeld voor deze zone.</p>
-                                      </div>
-                                      <a
-                                        href={gpxUrl}
-                                        download={gpxFilename}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded"
-                                      >
-                                        <Icon name="download" className="w-4 h-4" />
-                                        Download GPX
-                                      </a>
-                                    </div>
-
-                                    <div className="mt-4 rounded-sm overflow-hidden border border-gray-100">
-                                      <MapView
-                                        startPoint={skipStart}
-                                        endPoint={skipEnd}
-                                        skipGpxUrl={gpxUrl}
-                                        className="w-full h-64"
-                                      />
-                                    </div>
-                                  </>
-                                );
-                              })()
-                            ) : (
-                              <ZoneRouteTips
-                                routeTips={segment.routeTips}
-                                zoneTitle={segment.title}
-                                zoneId={segment._id}
-                                zoneStartLocation={segment.startLocation}
-                                zoneEndLocation={segment.endLocation}
-                                userLocation={userLocation}
-                                completedChallenges={completedChallenges || []}
-                                isZoneCheckedIn={checkedInSet.has(segment._id)}
-                                zoneSkipUsed={skipUsedMap[segment._id] === true}
-                                initialIndex={(() => {
-                                  const tips = segment.routeTips || [];
-                                  for (let i = 0; i < tips.length; i++) {
-                                    const tip = tips[i];
-                                    if (!tip || !Array.isArray(tip.locations)) continue;
-                                    const activeLocations = tip.locations.filter((loc: any) => loc.challenge && loc.challenge.isActive !== false);
-                                    if (activeLocations.length === 0) continue;
-                                    const anyIncomplete = activeLocations.some((loc: any) => !((completedChallenges || []).includes(loc._key)));
-                                    if (anyIncomplete) return i;
-                                  }
-                                  return 0;
-                                })()}
-                              />
-                            )}
-                          </div>
-                        )}
-
-                        {userId && !checkedInSet.has(segment._id) && (
-                          <button
-                            data-tour="rally-checkin-button"
-                            onClick={() => setCheckInModalZone(segment)}
-                            className="w-full mt-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-4 rounded-sm font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                          >
-                            <Icon name="map-pin" className="w-5 h-5" />
-                            Check In bij deze Zone
-                          </button>
-                        )}
-
-                        {userId && checkedInSet.has(segment._id) && (
-                          <div className="mt-4 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-400 p-4 rounded-sm shadow-sm">
-                            <p className="text-teal-900 font-bold flex items-center gap-2">
-                              <Icon name="check-circle" className="w-5 h-5" />
-                              Je bent in deze zone al ingecheckt!
-                            </p>
-                          </div>
-                        )}
-                        
-                        {!segment.is_open && (
-                          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-sm mt-4">
-                            <p className="text-yellow-800 font-semibold flex items-center gap-2">
-                              <Icon name="info" className="w-5 h-5" />
-                              Dit segment is momenteel niet actief
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </details>
-                  );
-                }}
-                showControls={true}
-                showDots={true}
-                showCounter={true}
-                className=""
-              />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Check-in Modal */}
-      {checkInModalZone && (
-        <CheckInModal
-          isOpen={!!checkInModalZone}
-          onClose={() => setCheckInModalZone(null)}
-          zone={checkInModalZone}
-          actionData={actionData}
-          isSubmitting={isSubmitting}
-          csrfToken={csrfToken}
-          buddies={buddies}
-          buddyCheckins={buddyCheckins}
-        />
-      )}
-
-      {/* Weather Detail Modal */}
-      {selectedWeatherZone && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1100]">
-          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[90vh] overflow-auto">
-            <div className="bg-gradient-to-br from-sky-50 to-sky-100 p-6 border-b border-sky-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-sky-600 font-semibold">Weerinfo</p>
-                  <h3 className="text-2xl font-bold text-sky-900 mt-1">{selectedWeatherZone.zoneName}</h3>
-                </div>
-                <button
-                  onClick={() => setSelectedWeatherZone(null)}
-                  className="text-sky-600 hover:text-sky-900 text-2xl leading-none"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              {/* Current Weather */}
-              <div className="flex items-center gap-4 bg-sky-50 p-4 rounded-lg">
-                <img
-                  src={`https://openweathermap.org/img/wn/${selectedWeatherZone.icon}@2x.png`}
-                  alt={selectedWeatherZone.description}
-                  className="w-16 h-16"
-                />
-                <div>
-                  <div className="text-4xl font-bold text-sky-900">{selectedWeatherZone.temp}°</div>
-                  <p className="text-sm text-sky-700 capitalize">{selectedWeatherZone.description}</p>
-                </div>
-              </div>
-
-              {/* Weather Details */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Gevoelstemperatuur</span>
-                  <span className="font-semibold text-gray-900">{selectedWeatherZone.feels_like}°</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Windsnelheid</span>
-                  <span className="font-semibold text-gray-900">{selectedWeatherZone.wind_speed} km/h</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Luchtvochtigheid</span>
-                  <span className="font-semibold text-gray-900">{selectedWeatherZone.humidity}%</span>
-                </div>
-                {selectedWeatherZone.rain_probability > 0 && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Kans op regen</span>
-                    <span className="font-semibold text-gray-900">{selectedWeatherZone.rain_probability}%</span>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => setSelectedWeatherZone(null)}
-                className="w-full mt-4 py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold transition-colors"
-              >
-                Sluiten
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CTA */}
+      {/* CTA for non-registered users */}
       {!userId && edition?.registrationOpen && (
         <section className="py-16 bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Klaar voor het avontuur?</h2>
-            <p className="text-xl mb-8">
-              Schrijf je in en ontdek de mooiste routes en verhalen
-            </p>
+            <p className="text-xl mb-8">Schrijf je in en ontdek de mooiste routes en verhalen</p>
             <Link
               to="/registration"
               className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-sm text-lg font-semibold transition-colors"
@@ -1033,3 +403,12 @@ export default function Rally() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+

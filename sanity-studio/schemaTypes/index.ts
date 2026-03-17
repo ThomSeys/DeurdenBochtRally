@@ -13,6 +13,8 @@ import eventStory from './eventStory';
 import rideStory from './rideStory';
 import featureCard from './featureCard';
 import featureFlags from './featureFlags';
+import videoRecap from './videoRecap';
+import videoEmbed from './videoEmbed';
 
 export const schemaTypes = [
   edition,
@@ -30,5 +32,7 @@ export const schemaTypes = [
   rideStory,
   featureCard,
   featureFlags,
+  videoRecap,
+  videoEmbed,
 ];
 

@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import PortableText from '~/components/PortableText';
 import Carousel from '~/components/Carousel';
+import HeroMedia from '~/components/HeroMedia';
 import { getActiveEdition, getSiteConfig, getStats, getPricingTiers, getSponsors, getPageContent, getFeatureCards } from '~/lib/sanity.server';
 import { urlFor } from '~/lib/sanity';
 import { getUserId } from '~/lib/session.server';
@@ -127,15 +128,9 @@ export default function Index() {
       <Header fixed transparent={true} />
       
       {/* Hero Section */}
-      <section 
-        className="relative text-white min-h-screen overflow-hidden bg-cover bg-center bg-fixed"
-        style={siteConfig?.heroBackgroundImage ? {
-          backgroundImage: `url('${urlFor(siteConfig.heroBackgroundImage).width(1920).height(1080).url()}')`,
-          backgroundAttachment: 'fixed'
-        } : { backgroundColor: '#000000' }}
-      >
-        {/* Background overlay - lighter to show image */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-primary-900/50 to-black/70 z-10"></div>
+      <section className="relative text-white min-h-screen overflow-hidden bg-cover bg-center bg-fixed">
+        {/* Background media (image or video) */}
+        <HeroMedia siteConfig={siteConfig} />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 h-full flex items-center justify-center py-32 md:py-48">
           <div className="text-center">

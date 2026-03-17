@@ -1,4 +1,5 @@
-import { useState, useRef, type ReactNode } from 'react';
+import React, { useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
 import { Icon } from './Icon';
 
 interface CarouselProps {
@@ -28,121 +29,118 @@ export default function Carousel({
   disabled = false,
   nested = false,
 }: CarouselProps) {
-  const [internalIndex, setInternalIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const isControlled = controlledIndex !== undefined;
-  const currentIndex = isControlled ? controlledIndex : internalIndex;
-  
-  const setCurrentIndex = (newIndex: number) => {
-    // Clamp index to valid range
-    const clampedIndex = ((newIndex % items.length) + items.length) % items.length;
-    if (!isControlled) {
-      setInternalIndex(clampedIndex);
-    }
-    onIndexChange?.(clampedIndex);
-  };
-  
-  // Touch/swipe state
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
+  const emblaOptions = { loop: true, skipSnaps: false, align: 'center', containScroll: 'trimSnaps' };
+  const [emblaRef, emblaApi] = useEmblaCarousel(emblaOptions);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const rafRef = useRef<number | null>(null);
 
-  const goToNext = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (isAnimating || disabled) return;
-    setIsAnimating(true);
-    setCurrentIndex((currentIndex + 1) % items.length);
-    setTimeout(() => setIsAnimating(false), 300);
-  };
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => {
+      const idx = emblaApi.selectedScrollSnap();
+      setSelectedIndex(idx);
+      onIndexChange?.(idx);
+    };
+    emblaApi.on('select', onSelect);
+    // initialize
+    onSelect();
+    // animation: update slide transforms based on scroll position
+    const update = () => {
+      if (!emblaApi) return;
+      const snaps = emblaApi.scrollSnapList();
+      const progress = emblaApi.scrollProgress();
+      const slides = emblaApi.slideNodes();
 
-  const goToPrevious = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (isAnimating || disabled) return;
-    setIsAnimating(true);
-    setCurrentIndex((currentIndex - 1 + items.length) % items.length);
-    setTimeout(() => setIsAnimating(false), 300);
-  };
+      slides.forEach((slide: HTMLElement, i: number) => {
+        const snap = snaps[i];
+        let diff = progress - snap;
+        if (diff > 0.5) diff -= 1;
+        if (diff < -0.5) diff += 1;
+        const abs = Math.abs(diff);
 
-  const goToSlide = (index: number, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (isAnimating || disabled) return;
-    setIsAnimating(true);
-    setCurrentIndex(index);
-    setTimeout(() => setIsAnimating(false), 300);
-  };
+        const scale = 1 - Math.min(abs * 0.5, 0.22);
+        const opacity = 1 - Math.min(abs * 0.6, 0.7);
+        const translateY = Math.min(abs * 28, 28);
 
-  // Swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (disabled || nested) return;
-    e.stopPropagation();
-    touchStartX.current = e.touches[0].clientX;
-  };
+        slide.style.willChange = 'transform, opacity';
+        slide.style.transition = 'transform 420ms cubic-bezier(0.22,1,0.36,1), opacity 320ms ease';
+        slide.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
+        slide.style.opacity = `${Math.max(opacity, 0.3)}`;
+      });
+    };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (disabled || nested) return;
-    e.stopPropagation();
-    touchEndX.current = e.touches[0].clientX;
-  };
+    const onScroll = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(update);
+    };
 
-  const handleTouchEnd = () => {
-    if (disabled || nested) return;
-    const swipeThreshold = 100; // minimum distance for a swipe
-    const diff = touchStartX.current - touchEndX.current;
+    emblaApi.on('scroll', onScroll);
+    // initial update to set styles
+    update();
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('scroll', onScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [emblaApi, onIndexChange]);
 
-    if (Math.abs(diff) > swipeThreshold && !isAnimating) {
-      if (diff > 0) {
-        // Swiped left - go to next
-        setIsAnimating(true);
-        setCurrentIndex((currentIndex + 1) % items.length);
-        setTimeout(() => setIsAnimating(false), 300);
-      } else {
-        // Swiped right - go to previous
-        setIsAnimating(true);
-        setCurrentIndex((currentIndex - 1 + items.length) % items.length);
-        setTimeout(() => setIsAnimating(false), 300);
+  // Keyboard navigation (left / right) while embla is initialized
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        emblaApi.scrollPrev();
+      } else if (e.key === 'ArrowRight') {
+        emblaApi.scrollNext();
       }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [emblaApi]);
+
+  // Controlled index support
+  useEffect(() => {
+    if (controlledIndex !== undefined && emblaApi) {
+      emblaApi.scrollTo(controlledIndex);
     }
+  }, [controlledIndex, emblaApi]);
 
-    // Reset
-    touchStartX.current = 0;
-    touchEndX.current = 0;
+  if (!items || items.length === 0) return null;
+
+  const prev = () => {
+    if (disabled || !emblaApi) return;
+    emblaApi.scrollPrev();
   };
 
-  const handleTouchCancel = (e: React.TouchEvent) => {
-    if (disabled) return;
-    e.stopPropagation();
-    touchStartX.current = 0;
-    touchEndX.current = 0;
+  const next = () => {
+    if (disabled || !emblaApi) return;
+    emblaApi.scrollNext();
   };
 
-  if (items.length === 0) {
-    return null;
-  }
-
-  const currentItem = items[currentIndex];
+  const goTo = (index: number) => {
+    if (disabled || !emblaApi) return;
+    emblaApi.scrollTo(index);
+  };
 
   return (
-    <div 
-      className={`flex flex-col ${className}`}
-      {...(!nested ? {
-        onTouchStart: handleTouchStart,
-        onTouchMove: handleTouchMove,
-        onTouchEnd: handleTouchEnd,
-        onTouchCancel: handleTouchCancel,
-      } : {})}
-    >
-      {/* Current Item */}
-      <div className={`flex-1 flex flex-col touch-pan-y ${itemClassName}`}>
-        {renderItem(currentItem, currentIndex)}
+    <div className={`flex flex-col ${className}`}>
+      <div className={`embla overflow-hidden ${nested ? '' : ''}`} ref={emblaRef}>
+        <div className={`embla__container flex ${itemClassName}`}>
+          {items.map((it, idx) => (
+            <div key={idx} className="embla__slide min-w-full">
+              {renderItem(it, idx)}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Navigation Controls */}
       {items.length > 1 && (
         <div className="flex-shrink-0 mt-4">
           {showControls && (
             <div className="flex items-center justify-between pointer-events-auto">
               <button
-                onClick={(e) => goToPrevious(e)}
-                disabled={isAnimating || disabled}
+                onClick={prev}
+                disabled={disabled}
                 className={`flex items-center gap-2 ${nested ? 'px-2 py-1 text-sm' : 'px-4 py-2'} bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20`}
                 aria-label="Vorige item"
               >
@@ -150,17 +148,16 @@ export default function Carousel({
                 <span className={`hidden sm:inline ${nested ? 'text-sm' : ''}`}>Vorige</span>
               </button>
 
-              {/* Dots Indicator */}
               {(!nested && showDots) && (
                 <div className="flex items-center gap-2 z-20">
                   {items.map((_, idx) => (
                     <button
                       key={idx}
-                      onClick={(e) => goToSlide(idx, e)}
-                      disabled={isAnimating || disabled}
+                      onClick={() => goTo(idx)}
+                      disabled={disabled}
                       className={`h-2 rounded-full transition-all pointer-events-auto ${
-                        idx === currentIndex 
-                          ? 'w-8 bg-accent-500' 
+                        idx === selectedIndex
+                          ? 'w-8 bg-accent-500'
                           : 'w-2 bg-gray-300 hover:bg-gray-400'
                       } disabled:opacity-50`}
                       aria-label={`Ga naar item ${idx + 1}`}
@@ -170,8 +167,8 @@ export default function Carousel({
               )}
 
               <button
-                onClick={(e) => goToNext(e)}
-                disabled={isAnimating || disabled}
+                onClick={next}
+                disabled={disabled}
                 className={`flex items-center gap-2 ${nested ? 'px-2 py-1 text-sm' : 'px-4 py-2'} bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20`}
                 aria-label="Volgende item"
               >
@@ -181,10 +178,9 @@ export default function Carousel({
             </div>
           )}
 
-          {/* Counter */}
           {(!nested && showCounter) && (
             <div className="text-center mt-2 text-sm text-gray-600">
-              Item {currentIndex + 1} van {items.length}
+              Item {selectedIndex + 1} van {items.length}
             </div>
           )}
         </div>

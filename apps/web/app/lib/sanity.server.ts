@@ -65,6 +65,12 @@ export async function getSiteConfig() {
           url
         }
       },
+      heroBackgroundVideo{
+        asset->{
+          _id,
+          url
+        }
+      },
       featureImage1{
         asset->{
           _id,

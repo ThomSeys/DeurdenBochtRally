@@ -105,6 +105,15 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'heroBackgroundVideo',
+      title: 'Hero Background Video',
+      type: 'file',
+      description: 'Optional video file to use as the hero background. If set, video will autoplay (muted) instead of the image.',
+      options: {
+        accept: 'video/*',
+      },
+    }),
+    defineField({
       name: 'featureImage1',
       title: 'Feature Image 1',
       type: 'image',

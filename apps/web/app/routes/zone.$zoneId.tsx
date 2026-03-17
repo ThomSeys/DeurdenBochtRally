@@ -1,93 +1,96 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from 'react-router';
-import { useLoaderData, Form, useActionData, useNavigation } from 'react-router';
+import { useLoaderData, Form, useActionData, useNavigation, Link } from 'react-router';
 import { useState, useEffect } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
-import { sanityClient } from '~/lib/sanity.server';
+import { sanityClient, getActiveEdition, getSiteConfig } from '~/lib/sanity.server';
 import Header from '~/components/Header';
+import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
-import PortableText from '~/components/PortableText';
+import MapView from '~/components/MapView';
+import ZoneRouteTips from '~/components/ZoneRouteTips';
+import CSRFInput from '~/components/CSRFInput';
 import { createRequestLogger } from '~/lib/logger.server';
+import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: 'Rally Zone - Deur Den Bocht' },
-  ];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const zone = data?.zone;
+  const title = zone ? `${zone.title} - Deur Den Bocht` : 'Rally Zone - Deur Den Bocht';
+  return [{ title }];
 };
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export async function action({ params, request }: ActionFunctionArgs) {
   const requestLogger = createRequestLogger(request);
 
   try {
+    const isValidToken = await verifyCSRFToken(request);
+    if (!isValidToken) {
+      return { error: 'Ongeldige formulierinzending. Probeer opnieuw.' };
+    }
+
     const user = await getUser(request);
     if (!user) {
-      await requestLogger.warn('zone', 'Zone action failed: user not authenticated');
+      await requestLogger.warn('zone-checkin', 'Check-in failed: not authenticated');
       return { error: 'Je moet ingelogd zijn' };
     }
 
     const userLogger = requestLogger.withUser(user.id);
-
     const { zoneId } = params;
-    if (!zoneId) {
-      await userLogger.warn('zone', 'Zone action failed: missing zone ID');
-      return { error: 'Zone ID is required' };
+
+    if (!zoneId || isNaN(parseInt(zoneId))) {
+      return { error: 'Ongeldige zone' };
     }
 
     const formData = await request.formData();
-    const action = formData.get('action') as string;
-    const qrCode = formData.get('qrCode') as string;
     const latitude = formData.get('latitude') as string;
     const longitude = formData.get('longitude') as string;
 
-    // Get the zone from Sanity to verify it exists
     const zone = await sanityClient.fetch(
-      `*[_type == "rallyZone" && order == $order][0] {
-        _id,
-        title,
-        is_active
-      }`,
+      `*[_type == "rallyZone" && order == $order][0] { _id, title, startPoint, is_open }`,
       { order: parseInt(zoneId) }
     );
 
     if (!zone) {
-      await userLogger.warn('zone', 'Zone not found', { zoneId });
       return { error: 'Rally zone niet gevonden' };
     }
 
-    // Admins can check in/out even if zone is not active
-    if (!zone.is_active && !user.is_admin) {
-      await userLogger.warn('zone', 'Zone check-in failed: zone not active', { 
-        zoneId,
-        zoneName: zone.title 
-      });
-      return { error: 'Deze zone is momenteel niet actief' };
+    if (!zone.is_open && !user.is_admin) {
+      return { error: 'Deze zone is momenteel gesloten' };
     }
 
-    // Check if action is valid
-    if (action !== 'CHECKIN' && action !== 'CHECKOUT') {
-      await userLogger.warn('zone', 'Invalid zone action', { action, zoneId });
-      return { error: 'Ongeldige actie' };
+    if (latitude && longitude && zone.startPoint?.lat && zone.startPoint?.lng) {
+      const dist = calculateDistance(
+        parseFloat(latitude), parseFloat(longitude),
+        zone.startPoint.lat, zone.startPoint.lng
+      );
+      if (dist > 100) {
+        return { error: `Je bent te ver weg! Je moet binnen 100 meter van het startpunt zijn. (${Math.round(dist)}m)` };
+      }
     }
 
-    // Check if already checked in (Concept B: one check-in per zone)
     if (!user.is_admin) {
-      const { data: existingCheckIn } = await supabaseAdmin
+      const { data: existing } = await supabaseAdmin
         .from('rally_zone_checkins')
         .select('id')
         .eq('participant_id', user.id)
         .eq('zone_id', zone._id)
-        .single();
+        .maybeSingle();
 
-      if (existingCheckIn) {
-        await userLogger.warn('zone', 'Duplicate check-in attempt', { 
-          zoneId,
-          zoneName: zone.title 
-        });
-        return { error: 'Je hebt deze zone al bezocht!' };
+      if (existing) {
+        return { error: 'Je bent al ingecheckt bij deze zone!' };
       }
     }
 
-    // Create check-in
     const { error: insertError } = await supabaseAdmin
       .from('rally_zone_checkins')
       .insert({
@@ -95,48 +98,26 @@ export async function action({ params, request }: ActionFunctionArgs) {
         zone_id: zone._id,
         location_lat: latitude ? parseFloat(latitude) : null,
         location_lng: longitude ? parseFloat(longitude) : null,
+        checked_in_at: new Date().toISOString(),
+        checked_in_by: user.id,
       });
 
     if (insertError) {
-      await userLogger.error('zone', 'Zone check-in database error', insertError as Error, {
-        zoneId,
-        zoneName: zone.title,
-        action
-      });
-      return { error: 'Er ging iets mis bij het opslaan' };
+      await userLogger.error('zone-checkin', 'Database error', insertError as Error);
+      return { error: 'Er is iets misgegaan bij het opslaan' };
     }
 
-    await userLogger.info('zone', `Zone ${action.toLowerCase()} successful`, { 
-      zoneId,
-      zoneName: zone.title,
-      action,
-      latitude,
-      longitude
-    });
+    await userLogger.info('zone-checkin', 'Check-in successful', { zoneId });
 
-    // Trigger achievement check after successful check-in (async, don't block)
-    if (action === 'CHECKIN') {
-      fetch('/api/check-achievements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          action: 'check-all',
-          participantId: user.id
-        })
-      }).catch(err => {
-        console.error('[zone] achievement check failed', err);
-      });
-    }
+    fetch('/api/check-achievements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantId: user.id, action: 'check-participant' }),
+    }).catch(() => {});
 
-    return { 
-      success: true, 
-      action,
-      message: action === 'CHECKIN' ? 'Check-in succesvol!' : 'Check-out succesvol!'
-    };
+    return { success: true, message: 'Check-in succesvol! 🏍️' };
   } catch (error) {
-    await requestLogger.error('zone', 'Zone action failed with exception', error as Error, {
-      zoneId: params.zoneId
-    });
+    await requestLogger.error('zone-checkin', 'Unexpected error', error as Error);
     return { error: 'Onverwachte fout' };
   }
 }
@@ -147,311 +128,367 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   const { zoneId } = params;
 
   if (!zoneId || isNaN(parseInt(zoneId))) {
-    throw new Response('Invalid zone ID', { status: 400 });
+    throw new Response('Ongeldige zone ID', { status: 400 });
   }
 
   const zoneOrder = parseInt(zoneId);
 
-  // Get zone from Sanity
-  const zone = await sanityClient.fetch(
-    `*[_type == "rallyZone" && order == $order][0] {
-      _id,
-      title,
-      order,
-      character,
-      start_location,
-      end_location,
-      briefing,
-      guidelines,
-      estimated_duration_minutes,
-      difficulty,
-      emergency_contact,
-      is_active
-    }`,
-    { order: zoneOrder }
-  );
+  const [zone, allZones, edition, siteConfig, csrfToken] = await Promise.all([
+    sanityClient.fetch(
+      `*[_type == "rallyZone" && order == $order][0] {
+        _id, title, description, location, order, color, is_open,
+        "imageUrl": image.asset->url,
+        "startLocation": startPoint,
+        "endLocation": endPoint,
+        skipRoute {
+          instructions, estimatedDistance,
+          startPoint { lat, lng }, endPoint { lat, lng },
+          gpxFile { asset-> { url } }
+        },
+        routeTips[] {
+          name, description, routeType, difficulty, estimatedDistance, character,
+          warnings, highlights, exitInstructions, routeInstructions, rejoinInstructions,
+          color, gpxFile { asset-> { url } },
+          locations[] {
+            _key, name, coordinates { lat, lng }, type, description,
+            challenge { type, question, hint, options, correctAnswer, points, isActive }
+          }
+        }
+      }`,
+      { order: zoneOrder }
+    ),
+    sanityClient.fetch(`*[_type == "rallyZone"] | order(order asc) { _id, title, order }`),
+    getActiveEdition(),
+    getSiteConfig(),
+    getCSRFToken(request),
+  ]);
 
   if (!zone) {
     throw new Response('Zone niet gevonden', { status: 404 });
   }
 
-  // Get next zone for navigation after checkout
-  const nextZone = await sanityClient.fetch(
-    `*[_type == "rallyZone" && order == $nextOrder][0] {
-      _id,
-      title,
-      order
-    }`,
-    { nextOrder: zoneOrder + 1 }
-  );
+  let isCheckedIn = false;
+  let completedChallenges: string[] = [];
+  let skipUsed = false;
 
-  // Get user's check-in for this zone
-  let checkIns = null;
-  let totalCheckInsCount = 0;
-  if (user) {
-    const { data } = await supabaseAdmin
-      .from('rally_zone_checkins')
-      .select('*')
-      .eq('participant_id', user.id)
-      .eq('zone_id', zone._id)
-      .order('checked_in_at', { ascending: false });
-    
-    checkIns = data;
+  if (userId) {
+    const [checkInResult, challengeResult] = await Promise.all([
+      supabaseAdmin
+        .from('rally_zone_checkins')
+        .select('*')
+        .eq('participant_id', userId)
+        .eq('zone_id', zone._id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('route_challenge_submissions')
+        .select('location_key')
+        .eq('participant_id', userId),
+    ]);
 
-    // Get total number of check-ins for this zone
-    const { count } = await supabaseAdmin
-      .from('rally_zone_checkins')
-      .select('*', { count: 'exact', head: true })
-      .eq('zone_id', zone._id);
-    
-    totalCheckInsCount = count || 0;
+    isCheckedIn = !!checkInResult.data;
+    skipUsed = !!(checkInResult.data?.took_skip_route || checkInResult.data?.used_skip_route);
+    completedChallenges = (challengeResult.data || []).map((c: any) => c.location_key);
   }
 
-  return { 
-    zone, 
-    nextZone,
+  return {
+    zone,
     user,
-    checkIns,
-    zoneNumber: zoneOrder,
-    totalCheckInsCount
+    isCheckedIn,
+    completedChallenges,
+    skipUsed,
+    allZones,
+    edition,
+    siteConfig,
+    csrfToken,
+    zoneOrder,
   };
 }
 
 export default function ZonePage() {
-  const { zone, nextZone, user, checkIns, zoneNumber, totalCheckInsCount } = useLoaderData<typeof loader>();
+  const { zone, user, isCheckedIn, completedChallenges, skipUsed, allZones, edition, siteConfig, csrfToken, zoneOrder } =
+    useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
 
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [checkedIn, setCheckedIn] = useState(isCheckedIn);
+  const [weatherData, setWeatherData] = useState<any>(null);
 
-  // Get current location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error('Location error:', error);
-          setLocationError('Kon locatie niet bepalen (optioneel)');
-        }
+        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
       );
     }
   }, []);
 
-  // Determine if user has already checked in
-  const hasCheckedIn = checkIns && checkIns.length > 0;
-  const suggestedAction = hasCheckedIn ? 'CHECKOUT' : 'CHECKIN';
-  const shouldCheckOut = hasCheckedIn;
+  useEffect(() => {
+    if (actionData?.success) {
+      setCheckedIn(true);
+    }
+  }, [actionData]);
 
-  const difficultyColor = 
-    zone.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-    zone.difficulty === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-    'bg-red-100 text-red-800';
+  useEffect(() => {
+    if (zone.startLocation?.lat && zone.startLocation?.lng) {
+      fetch(
+        `/api/weather?lat=${zone.startLocation.lat}&lon=${zone.startLocation.lng}&location=${encodeURIComponent(zone.title)}`
+      )
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d?.data) setWeatherData(d.data); })
+        .catch(() => {});
+    }
+  }, [zone]);
+
+  const routeTipCount = zone.routeTips?.length || 0;
+  const allHighlights = zone.routeTips?.flatMap((tip: any) =>
+    (tip.locations || []).filter((loc: any) => loc.challenge?.isActive !== false && loc.challenge)
+  ) || [];
+  const highlightCount = allHighlights.length;
+  const completedHighlightCount = allHighlights.filter((loc: any) =>
+    completedChallenges.includes(loc._key)
+  ).length;
+
+  const prevZone = (allZones as any[]).find((z) => z.order === zoneOrder - 1);
+  const nextZone = (allZones as any[]).find((z) => z.order === zoneOrder + 1);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Header fixed transparent={true} />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Zone Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {zone.title}
-              </h1>
-              <p className="text-gray-600 italic">{zone.character}</p>
-            </div>
-            <div className="text-right flex flex-col gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${difficultyColor}`}>
-                {zone.difficulty === 'easy' ? 'Makkelijk' : 
-                 zone.difficulty === 'moderate' ? 'Gemiddeld' : 
-                 'Uitdagend'}
-              </span>
-              {zone.estimated_duration_minutes && (
-                <p className="text-sm text-gray-500 mt-2">
-                  ~{zone.estimated_duration_minutes} min
-                </p>
-              )}
-            </div>
-          </div>
-
-          {!zone.is_active && (
-            <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
-              <p className="text-red-800 font-semibold">Deze zone is momenteel gesloten</p>
+      <main className="flex-1">
+        {/* Zone Hero */}
+        <div className="bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500 text-white">
+          {zone.imageUrl && (
+            <div className="relative h-44 md:h-60 overflow-hidden">
+              <img
+                src={zone.imageUrl}
+                alt={zone.title}
+                className="w-full h-full object-cover opacity-40"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary-900 via-primary-900/60 to-transparent" />
             </div>
           )}
+          <div className="max-w-7xl mx-auto px-8 py-6 relative">
+            {/* Breadcrumb */}
+            <nav className="mb-3">
+              <Link
+                to="/rally"
+                className="text-white/70 hover:text-white text-sm flex items-center gap-1 w-fit transition-colors"
+              >
+                <Icon name="chevron-left" className="w-4 h-4" />
+                Rally Zones
+              </Link>
+            </nav>
 
-          {/* Location Info */}
-          <div data-tour="zone-locations" className="grid md:grid-cols-2 gap-4 mt-4">
-            <div className="bg-gray-50 p-4 rounded">
-              <h3 className="font-semibold text-gray-900 mb-2">Check-in Locatie</h3>
-              <p className="text-gray-700">{zone.start_location?.name}</p>
-              {zone.start_location?.landmark_description && (
-                <p className="text-sm text-gray-600 mt-1">{zone.start_location.landmark_description}</p>
-              )}
-            </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <h3 className="font-semibold text-gray-900 mb-2">Check-out Locatie</h3>
-              <p className="text-gray-700">{zone.end_location?.name}</p>
-              {zone.end_location?.landmark_description && (
-                <p className="text-sm text-gray-600 mt-1">{zone.end_location.landmark_description}</p>
-              )}
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-0">
+                <span
+                  className={`inline-block text-xs font-semibold px-2 py-0.5 rounded mb-2 ${
+                    zone.is_open
+                      ? 'bg-green-500/30 text-green-200'
+                      : 'bg-yellow-500/30 text-yellow-200'
+                  }`}
+                >
+                  {zone.is_open ? 'Open' : 'Gesloten'}
+                </span>
+                <h1 className="text-3xl md:text-4xl font-bold mb-1">{zone.title}</h1>
+                {zone.location && (
+                  <p className="text-white/70 text-sm italic">{zone.location}</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-4 shrink-0">
+                {routeTipCount > 0 && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{routeTipCount}</div>
+                    <div className="text-xs uppercase tracking-wide text-white/70">Route Tips</div>
+                  </div>
+                )}
+                {highlightCount > 0 && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{highlightCount}</div>
+                    <div className="text-xs uppercase tracking-wide text-white/70">Highlights</div>
+                  </div>
+                )}
+                {weatherData && (
+                  <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full">
+                    <img
+                      src={`https://openweathermap.org/img/wn/${weatherData.icon}.png`}
+                      className="w-6 h-6"
+                      alt=""
+                    />
+                    <span className="font-bold">{weatherData.temp}°</span>
+                  </div>
+                )}
+              </div>
+
+                {/* Check-in */}
+                {user ? (
+                  <div className="">
+                    {checkedIn ? (
+                      <div className="flex items-center gap-3 text-teal-700">
+                        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center shrink-0">
+                          <Icon name="check-circle" className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-bold">Je bent ingecheckt!</p>
+                          <p className="text-sm text-teal-600">Je hebt deze zone bezocht.</p>
+                        </div>
+                      </div>
+                    ) : zone.is_open ? (
+                      <Form method="post">
+                        <CSRFInput token={csrfToken} />
+                        {location && (
+                          <>
+                            <input type="hidden" name="latitude" value={location.lat} />
+                            <input type="hidden" name="longitude" value={location.lng} />
+                          </>
+                        )}
+
+                        {actionData?.error && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-800 text-sm">
+                            {actionData.error}
+                          </div>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full py-3 px-6 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <Icon name="map-pin" className="w-5 h-5" />
+                          {isSubmitting ? 'Bezig...' : 'Check In bij deze Zone'}
+                        </button>
+
+                        {!location && (
+                          <p className="text-xs text-gray-400 text-center mt-2">
+                            📍 Locatie wordt bepaald — check-in is al mogelijk
+                          </p>
+                        )}
+                      </Form>
+                    ) : (
+                      <div className="text-center text-yellow-700 bg-yellow-50 rounded-lg p-4">
+                        <Icon name="lock" className="w-6 h-6 mx-auto mb-1" />
+                        <p className="font-semibold">Zone is gesloten</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 text-center">
+                    <p className="text-yellow-800 font-semibold mb-3">
+                      Log in om in te checken bij deze zone
+                    </p>
+                    <Link
+                      to="/login"
+                      className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                    >
+                      Inloggen
+                    </Link>
+                  </div>
+                )}  
             </div>
           </div>
         </div>
 
-        {/* Briefing */}
-        {zone.briefing && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Briefing</h2>
-            <div className="prose prose-sm max-w-none text-gray-700">
-              <PortableText value={zone.briefing} />
+        <div className="max-w-7xl mx-auto px-8 py-6 space-y-5">
+          {/* Description */}
+          {zone.description && (
+            <p className="text-gray-600 leading-relaxed">{zone.description}</p>
+          )}
+
+          {/* Map */}
+          {(zone.startLocation || zone.endLocation) && (
+            <div className="rounded-xl overflow-hidden shadow-md border border-gray-100">
+              <MapView
+                startPoint={
+                  zone.startLocation
+                    ? { lat: zone.startLocation.lat, lng: zone.startLocation.lng, name: 'Startpunt' }
+                    : undefined
+                }
+                endPoint={
+                  zone.endLocation
+                    ? { lat: zone.endLocation.lat, lng: zone.endLocation.lng, name: 'Eindpunt' }
+                    : undefined
+                }
+                className="w-full h-56 md:h-72"
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Guidelines */}
-        {zone.guidelines && zone.guidelines.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Richtlijnen</h2>
-            <ul className="space-y-2">
-              {zone.guidelines.map((guideline: string, i: number) => (
-                <li key={i} className="flex items-start">
-                  <Icon name="check" className="w-5 h-5 text-green-500 mr-2 mt-0.5" />
-                  <span className="text-gray-700">{guideline}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          
 
-        {/* Check-in/Checkout Form */}
-        {user && zone.is_active && (
-          <div data-tour="zone-checkin-form" className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {suggestedAction === 'CHECKIN' ? 'Check In' : 'Check Out'}
-            </h2>
+          {/* Route Tips */}
+          {routeTipCount > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-3">Kies je Route Tip</h2>
+              <ZoneRouteTips
+                routeTips={zone.routeTips}
+                zoneTitle={zone.title}
+                zoneId={zone._id}
+                zoneStartLocation={zone.startLocation}
+                zoneEndLocation={zone.endLocation}
+                userLocation={location}
+                completedChallenges={completedChallenges}
+                isZoneCheckedIn={checkedIn}
+                zoneSkipUsed={skipUsed}
+                initialIndex={(() => {
+                  const tips = zone.routeTips || [];
+                  for (let i = 0; i < tips.length; i++) {
+                    const tip = tips[i];
+                    if (!tip || !Array.isArray(tip.locations)) continue;
+                    const active = tip.locations.filter(
+                      (loc: any) => loc.challenge && loc.challenge.isActive !== false
+                    );
+                    if (active.length === 0) continue;
+                    if (active.some((loc: any) => !completedChallenges.includes(loc._key))) return i;
+                  }
+                  return 0;
+                })()}
+              />
+            </div>
+          )}
 
-            {actionData?.error && (
-              <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
-                <p className="text-red-800">{actionData.error}</p>
-              </div>
-            )}
 
-            {actionData?.success && (
-              <div className="bg-green-50 border border-green-200 rounded p-4 mb-4">
-                <p className="text-green-800 font-semibold">{actionData.message}</p>
-              </div>
-            )}
-
-            <Form method="post">
-              <input type="hidden" name="action" value={suggestedAction} />
-              <input type="hidden" name="qrCode" value={`RZ${zoneNumber}-${suggestedAction}`} />
-              {location && (
-                <>
-                  <input type="hidden" name="latitude" value={location.latitude} />
-                  <input type="hidden" name="longitude" value={location.longitude} />
-                </>
-              )}
-
-              <button
-                data-tour="zone-checkin-button"
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full py-4 px-6 rounded-lg font-bold text-white text-lg transition-all ${
-                  suggestedAction === 'CHECKIN'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                } disabled:opacity-50`}
+          {/* Zone Navigation */}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            {prevZone ? (
+              <Link
+                to={`/zone/${prevZone.order}`}
+                className="flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-800 bg-white rounded-lg px-4 py-2.5 shadow-sm border border-gray-100 transition-colors"
               >
-                {isSubmitting ? 'Bezig...' : suggestedAction === 'CHECKIN' ? 'Check In' : 'Check Out'}
-              </button>
-            </Form>
-
-            {locationError && (
-              <p className="text-sm text-gray-500 mt-2 text-center">{locationError}</p>
+                <Icon name="chevron-left" className="w-4 h-4" />
+                {prevZone.title}
+              </Link>
+            ) : (
+              <div />
             )}
 
-            {/* Next Route Section - Show when ready to checkout */}
-            {shouldCheckOut && nextZone && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="font-bold text-blue-900 mb-3 flex items-center">
-                  <Icon name="map" className="w-5 h-5 mr-2" />
-                  Volgende Route
-                </h3>
-                <p className="text-blue-800 mb-3">Na check-out: {nextZone.title}</p>
-                <a
-                  href={`/gpx/zones/rz${zoneNumber + 1}-${nextZone.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.gpx`}
-                  download
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-                >
-                  <Icon name="download" className="w-4 h-4 mr-2" />
-                  Download GPX Route
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {!user && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <p className="text-yellow-800 font-semibold mb-4">
-              Je moet ingelogd zijn om in te checken
-            </p>
-            <a
-              href="/login"
-              className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg"
+            <Link
+              to="/rally"
+              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
             >
-              Inloggen
-            </a>
-          </div>
-        )}
+              <Icon name="grid" className="w-4 h-4" />
+              Alle Zones
+            </Link>
 
-        {/* Check-in History */}
-        {checkIns && checkIns.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Jouw Geschiedenis</h2>
-            <div className="space-y-2">
-              {checkIns.map((checkIn: any) => (
-                <div key={checkIn.id} className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center">
-                    <Icon 
-                      name="log-in" 
-                      className="w-5 h-5 mr-2 text-green-500"
-                    />
-                    <span className="font-medium">
-                      Check-in
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-600">
-                    {new Date(checkIn.checked_in_at).toLocaleString('nl-NL')}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {nextZone ? (
+              <Link
+                to={`/zone/${nextZone.order}`}
+                className="flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-800 bg-white rounded-lg px-4 py-2.5 shadow-sm border border-gray-100 transition-colors"
+              >
+                {nextZone.title}
+                <Icon name="chevron-right" className="w-4 h-4" />
+              </Link>
+            ) : (
+              <div />
+            )}
           </div>
-        )}
+        </div>
+      </main>
 
-        {/* Emergency Contact */}
-        {zone.emergency_contact && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mt-6">
-            <div className="flex items-center">
-              <Icon name="alert-triangle" className="w-6 h-6 text-red-600 mr-3" />
-              <div>
-                <h3 className="font-bold text-red-900">Noodcontact</h3>
-                <p className="text-red-800">{zone.emergency_contact}</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <Footer siteConfig={siteConfig} edition={edition} />
     </div>
   );
 }
