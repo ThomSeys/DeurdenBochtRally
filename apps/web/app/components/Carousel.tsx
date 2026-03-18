@@ -29,7 +29,7 @@ export default function Carousel({
   disabled = false,
   nested = false,
 }: CarouselProps) {
-  const emblaOptions = { loop: true, skipSnaps: false, align: 'center', containScroll: 'trimSnaps' };
+  const emblaOptions = { loop: true, skipSnaps: false, align: 'center' as const, containScroll: 'trimSnaps' as const };
   const [emblaRef, emblaApi] = useEmblaCarousel(emblaOptions);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const rafRef = useRef<number | null>(null);
