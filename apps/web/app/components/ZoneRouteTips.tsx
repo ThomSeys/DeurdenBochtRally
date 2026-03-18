@@ -302,10 +302,10 @@ export default function ZoneRouteTips({
           </h4>
         </div>
         
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 lg:items-stretch">
           {/* Map showing current route tip */}
           {hasLocations && (
-            <div className="bg-gray-50 p-4 rounded-lg flex flex-col">
+            <div className="bg-gray-50 lg:p-4 rounded-lg flex flex-col">
               <RouteTipsMap 
                 key={currentIndex}
                 routeTips={[currentTip]} 

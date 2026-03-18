@@ -124,10 +124,10 @@ export default function Carousel({
 
   return (
     <div className={`flex flex-col ${className}`}>
-      <div className={`embla overflow-hidden ${nested ? '' : ''}`} ref={emblaRef}>
-        <div className={`embla__container flex ${itemClassName}`}>
+      <div className={`embla w-full overflow-hidden ${nested ? '' : ''}`} ref={emblaRef}>
+        <div className={`embla__container flex max-w-full ${itemClassName}`}>
           {items.map((it, idx) => (
-            <div key={idx} className="embla__slide min-w-full">
+            <div key={idx} className="embla__slide flex-shrink-0 w-full overflow-hidden">
               {renderItem(it, idx)}
             </div>
           ))}
