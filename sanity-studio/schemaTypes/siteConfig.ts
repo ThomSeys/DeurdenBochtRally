@@ -114,6 +114,13 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'aboutHeroImage',
+      title: 'About Page Hero Image',
+      type: 'image',
+      description: 'Dedicated hero image for the About page (recommended: 1920x800). Use a different image than the main hero to avoid reuse.',
+      options: { hotspot: true },
+    }),
+    defineField({
       name: 'featureImage1',
       title: 'Feature Image 1',
       type: 'image',

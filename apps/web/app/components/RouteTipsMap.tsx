@@ -20,14 +20,22 @@ interface RouteTipsMapProps {
   userLocation?: { lat: number; lng: number } | null;
   className?: string;
   highlightedLocationId?: string | null;
+  interactive?: boolean;
+  initialLocked?: boolean;
 }
 
-export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, zoneEndLocation, userLocation, className = '', highlightedLocationId = null }: RouteTipsMapProps) {
+import { Icon } from './Icon';
+
+export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, zoneEndLocation, userLocation, className = '', highlightedLocationId = null, interactive, initialLocked = false }: RouteTipsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [isClient, setIsClient] = useState(false);
   const LRef = useRef<any>(null);
+  const [locked, setLocked] = useState<boolean>(initialLocked);
+
+  const isControlled = typeof interactive === 'boolean';
+  const effectiveInteractive = isControlled ? interactive! : !locked;
 
   useEffect(() => {
     setIsClient(true);
@@ -130,7 +138,14 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         const centerLat = allLocations.reduce((sum, loc) => sum + loc.lat, 0) / allLocations.length;
         const centerLng = allLocations.reduce((sum, loc) => sum + loc.lng, 0) / allLocations.length;
 
-        mapRef.current = L.map(mapContainerRef.current!).setView([centerLat, centerLng], 10);
+        mapRef.current = L.map(mapContainerRef.current!, {
+          dragging: effectiveInteractive,
+          scrollWheelZoom: effectiveInteractive,
+          doubleClickZoom: effectiveInteractive,
+          boxZoom: effectiveInteractive,
+          touchZoom: effectiveInteractive,
+          keyboard: effectiveInteractive,
+        }).setView([centerLat, centerLng], 10);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors',
@@ -224,7 +239,7 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
         markersRef.current = [];
       }
     };
-  }, [isClient, routeTips, zoneStartLocation, zoneEndLocation, zoneTitle, userLocation]);
+  }, [isClient, routeTips, zoneStartLocation, zoneEndLocation, zoneTitle, userLocation, effectiveInteractive]);
   // NOTE: marker highlighting controlled by external prop
   // We'll update icons when highlightedLocationId prop changes.
 
@@ -287,15 +302,53 @@ export default function RouteTipsMap({ routeTips, zoneTitle, zoneStartLocation, 
     });
   }, [isClient, highlightedLocationId]);
 
+  // Enable/disable map interactivity when `interactive` prop changes
+  useEffect(() => {
+    if (!isClient || !mapRef.current) return;
+    try {
+      const map = mapRef.current;
+      if (map.dragging) {
+        effectiveInteractive ? map.dragging.enable() : map.dragging.disable();
+      }
+      if (map.scrollWheelZoom) {
+        effectiveInteractive ? map.scrollWheelZoom.enable() : map.scrollWheelZoom.disable();
+      }
+      if (map.touchZoom) {
+        effectiveInteractive ? map.touchZoom.enable() : map.touchZoom.disable();
+      }
+      if (map.doubleClickZoom) {
+        effectiveInteractive ? map.doubleClickZoom.enable() : map.doubleClickZoom.disable();
+      }
+      if (map.boxZoom) {
+        effectiveInteractive ? map.boxZoom.enable() : map.boxZoom.disable();
+      }
+      if (map.keyboard && map.keyboard.enable) {
+        effectiveInteractive ? map.keyboard.enable() : map.keyboard.disable();
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [effectiveInteractive, isClient]);
+
   if (!isClient) {
     return <div className={`bg-gray-200 rounded-lg ${className}`} style={{ height: '400px' }} />;
   }
 
   return (
-    <div 
-      ref={mapContainerRef} 
-      className={`rounded-lg shadow-lg ${className}`} 
-      style={{ height: '400px', width: '100%' }} 
-    />
+    <div className={`relative rounded-lg ${className}`} style={{ height: '400px', width: '100%' }}>
+      <div ref={mapContainerRef} className={`rounded-lg shadow-lg h-full w-full`} />
+
+      {/* Lock/unlock button overlay (only if not controlled externally) */}
+      {!isControlled && (
+        <button
+          onClick={() => setLocked((v) => !v)}
+          title={locked ? 'Ontgrendel kaart' : 'Vergrendel kaart'}
+          className="absolute top-3 right-3 z-40 bg-white/90 hover:bg-white text-gray-700 rounded-full p-2 shadow-md border border-gray-100"
+          aria-pressed={!locked}
+        >
+          <Icon name={locked ? 'lock' : 'eye'} className="w-5 h-5" />
+        </button>
+      )}
+    </div>
   );
 }

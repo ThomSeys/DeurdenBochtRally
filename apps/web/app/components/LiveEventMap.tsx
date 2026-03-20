@@ -163,6 +163,8 @@ export default function LiveEventMap({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const { openModal, closeModal } = useModal();
+  const [locked, setLocked] = useState<boolean>(true);
+  const effectiveInteractive = !locked;
 
   // Only run on client side
   useEffect(() => {
@@ -276,14 +278,21 @@ export default function LiveEventMap({
     import('leaflet').then(async (L) => {
       try {
         // Initialize map only once
-        if (!mapRef.current && mapContainerRef.current) {
+          if (!mapRef.current && mapContainerRef.current) {
           // Use focusLocation if available, otherwise default center (Belgium, Aalter area)
           const defaultCenter: [number, number] = [51.0967, 3.4400];
           const center: [number, number] = focusLocation 
             ? [focusLocation.lat, focusLocation.lng] 
             : defaultCenter;
           
-          mapRef.current = L.default.map(mapContainerRef.current).setView(center, 13);
+          mapRef.current = L.default.map(mapContainerRef.current, {
+            dragging: effectiveInteractive,
+            scrollWheelZoom: effectiveInteractive,
+            doubleClickZoom: effectiveInteractive,
+            boxZoom: effectiveInteractive,
+            touchZoom: effectiveInteractive,
+            keyboard: effectiveInteractive,
+          }).setView(center, 13);
 
           // Add light gray map tiles (CartoDB Voyager - balanced theme)
           L.default.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -766,8 +775,36 @@ export default function LiveEventMap({
         console.error('Error initializing map:', error);
         setMapError('Failed to initialize map');
       }
-    });
-  }, [isClient, rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, userLocation, routeTipSubmissions, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin]);
+      });
+    }, [isClient, rallyZones, eventMarkers, emergencyAlerts, gpxRouteUrl, userLocation, routeTipSubmissions, currentUserId, showCheckIns, showZoneRoutes, showEventMarkers, showEmergencyAlerts, isAdmin, effectiveInteractive]);
+
+    // Toggle map interactivity handlers when lock state changes
+    useEffect(() => {
+      if (!isClient || !mapRef.current) return;
+      try {
+        const map = mapRef.current;
+        if (map.dragging) {
+          effectiveInteractive ? map.dragging.enable() : map.dragging.disable();
+        }
+        if (map.scrollWheelZoom) {
+          effectiveInteractive ? map.scrollWheelZoom.enable() : map.scrollWheelZoom.disable();
+        }
+        if (map.touchZoom) {
+          effectiveInteractive ? map.touchZoom.enable() : map.touchZoom.disable();
+        }
+        if (map.doubleClickZoom) {
+          effectiveInteractive ? map.doubleClickZoom.enable() : map.doubleClickZoom.disable();
+        }
+        if (map.boxZoom) {
+          effectiveInteractive ? map.boxZoom.enable() : map.boxZoom.disable();
+        }
+        if (map.keyboard && map.keyboard.enable) {
+          effectiveInteractive ? map.keyboard.enable() : map.keyboard.disable();
+        }
+      } catch (err) {
+        // ignore
+      }
+    }, [effectiveInteractive, isClient]);
 
   useEffect(() => {
     if (!isClient || !mapRef.current || !focusLocation) return;
@@ -947,7 +984,20 @@ export default function LiveEventMap({
 
   return (
     <>
-      <div ref={mapContainerRef} className="w-full h-full" />
+      <div className="relative w-full h-full">
+        <div ref={mapContainerRef} className="w-full h-full" />
+        <div className="absolute top-3 right-3 z-50">
+          <button
+            type="button"
+            onClick={() => setLocked((s) => !s)}
+            aria-pressed={!locked}
+            title={locked ? 'Ontgrendel kaart' : 'Vergrendel kaart'}
+            className="w-9 h-9 bg-white p-2 rounded-full shadow-md flex items-center justify-center text-gray-700 hover:bg-gray-50 focus:outline-none"
+          >
+            <Icon name={locked ? 'lock' : 'eye'} />
+          </button>
+        </div>
+      </div>
       <style>{`
         @keyframes pulse {
           0%, 100% { transform: scale(1); }

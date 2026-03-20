@@ -1,12 +1,12 @@
 import React from 'react';
 import { urlFor } from '~/lib/sanity';
 
-export default function HeroMedia({ siteConfig }: { siteConfig: any }) {
+export default function HeroMedia({ siteConfig, neverShowVideo }: { siteConfig: any, neverShowVideo?: boolean }) {
   const videoUrl = siteConfig?.heroBackgroundVideo?.asset?.url;
 
   const image = siteConfig?.heroBackgroundImage;
 
-  if (videoUrl) {
+  if (videoUrl && !neverShowVideo) {
     return (
       <>
         <video

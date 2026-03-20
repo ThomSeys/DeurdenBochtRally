@@ -37,6 +37,7 @@ export default function ZoneRouteTips({
     locationKey: string;
   } | null>(null);
   const [hoveredLocationKey, setHoveredLocationKey] = useState<string | null>(null);
+  const [mapInteractive, setMapInteractive] = useState<boolean>(false);
   
   const hasLocations = routeTips.some((tip: any) => tip.locations && tip.locations.length > 0);
 
@@ -305,7 +306,7 @@ export default function ZoneRouteTips({
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 lg:items-stretch">
           {/* Map showing current route tip */}
           {hasLocations && (
-            <div className="bg-gray-50 lg:p-4 rounded-lg flex flex-col">
+            <div className="bg-gray-50 rounded-lg flex flex-col relative">
               <RouteTipsMap 
                 key={currentIndex}
                 routeTips={[currentTip]} 
@@ -315,7 +316,18 @@ export default function ZoneRouteTips({
                 userLocation={userLocation ?? undefined}
                 className="h-[400px] lg:h-full lg:flex-1"
                 highlightedLocationId={hoveredLocationKey}
+                interactive={mapInteractive}
               />
+
+              {/* External lock toggle for this map */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setMapInteractive((v) => !v); }}
+                title={mapInteractive ? 'Vergrendel kaart' : 'Ontgrendel kaart'}
+                className="absolute top-3 right-3 z-[1000] bg-white/90 hover:bg-white text-gray-700 rounded-full p-2 shadow-md border border-gray-100"
+                aria-pressed={mapInteractive}
+              >
+                <Icon name={mapInteractive ? 'eye' : 'lock'} className="w-5 h-5" />
+              </button>
             </div>
           )}
           

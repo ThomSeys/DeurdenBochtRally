@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Icon } from './Icon';
 
 interface MapViewProps {
   startPoint?: { lat: number; lng: number; name?: string };
@@ -14,6 +15,9 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
   const userMarkerRef = useRef<any>(null);
   const [isClient, setIsClient] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  // Locking is handled internally for MapView components
+  const [locked, setLocked] = useState<boolean>(true);
+  const effectiveInteractive = !locked;
 
   console.log('[MapView] Rendering with:', { startPoint, endPoint, className });
 
@@ -52,10 +56,14 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
       // Initialize map
       if (!mapRef.current && mapContainerRef.current) {
         console.log('[MapView] Creating new map instance');
-        mapRef.current = L.default.map(mapContainerRef.current).setView(
-          [startPoint.lat, startPoint.lng],
-          13
-        );
+        mapRef.current = L.default.map(mapContainerRef.current, {
+          dragging: effectiveInteractive,
+          scrollWheelZoom: effectiveInteractive,
+          doubleClickZoom: effectiveInteractive,
+          boxZoom: effectiveInteractive,
+          touchZoom: effectiveInteractive,
+          keyboard: effectiveInteractive,
+        }).setView([startPoint.lat, startPoint.lng], 13);
 
         // Add CartoDB Voyager tiles (balanced light/dark theme)
         L.default.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -212,7 +220,35 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
         userMarkerRef.current = null;
       }
     };
-  }, [isClient, startPoint, endPoint, userLocation, markers, skipGpxUrl]);
+  }, [isClient, startPoint, endPoint, userLocation, markers, skipGpxUrl, effectiveInteractive]);
+
+  // Toggle map handlers when effectiveInteractive changes
+  useEffect(() => {
+    if (!isClient || !mapRef.current) return;
+    try {
+      const map = mapRef.current;
+      if (map.dragging) {
+        effectiveInteractive ? map.dragging.enable() : map.dragging.disable();
+      }
+      if (map.scrollWheelZoom) {
+        effectiveInteractive ? map.scrollWheelZoom.enable() : map.scrollWheelZoom.disable();
+      }
+      if (map.touchZoom) {
+        effectiveInteractive ? map.touchZoom.enable() : map.touchZoom.disable();
+      }
+      if (map.doubleClickZoom) {
+        effectiveInteractive ? map.doubleClickZoom.enable() : map.doubleClickZoom.disable();
+      }
+      if (map.boxZoom) {
+        effectiveInteractive ? map.boxZoom.enable() : map.boxZoom.disable();
+      }
+      if (map.keyboard && map.keyboard.enable) {
+        effectiveInteractive ? map.keyboard.enable() : map.keyboard.disable();
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [effectiveInteractive, isClient]);
 
   if (!isClient) {
     return (
@@ -230,5 +266,18 @@ export default function MapView({ startPoint, endPoint, markers = [], className 
     );
   }
 
-  return <div ref={mapContainerRef} className={className} />;
+  return (
+    <div className={`relative ${className}`}>
+      <div ref={mapContainerRef} className="w-full h-full" />
+
+      <button
+        onClick={(e) => { e.stopPropagation(); setLocked((v) => !v); }}
+        title={locked ? 'Ontgrendel kaart' : 'Vergrendel kaart'}
+        className="absolute top-3 right-3 z-[1000] bg-white/90 hover:bg-white text-gray-700 rounded-full p-2 shadow-md border border-gray-100"
+        aria-pressed={!locked}
+      >
+        <Icon name={locked ? 'lock' : 'eye'} className="w-5 h-5" />
+      </button>
+    </div>
+  );
 }

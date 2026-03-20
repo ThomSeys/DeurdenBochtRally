@@ -119,9 +119,9 @@ export default function Rally() {
 
       {/* Hero */}
       <section className="relative text-white overflow-hidden">
-        <HeroMedia siteConfig={siteConfig} />
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20">
           <div className="max-w-3xl">
             <p className="text-primary-200 font-semibold text-sm uppercase tracking-widest mb-3">
               {siteConfig?.eventName || 'Deur Den Bocht'} · {siteConfig?.eventDate ? new Date(siteConfig.eventDate).getFullYear() : new Date().getFullYear()}
