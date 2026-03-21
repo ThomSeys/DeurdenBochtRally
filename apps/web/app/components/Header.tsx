@@ -364,24 +364,25 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
       </nav>
 
       {/* Desktop User Menu Flyout */}
-      <>
-        <div
-          className={`fixed inset-0 z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isTransparent ? 'bg-black/40 backdrop-blur-md h-[100vh]' : 'bg-black/30 backdrop-blur-sm'}`}
-          <Link
-            to="/admin"
-            className="flex items-center gap-3 px-4 py-3 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors font-bold"
-            onClick={() => { tap(); onClose(); }}
-          >
+      {user && (
+        <>
+          <div
+            className={`fixed inset-0 z-[1100] hidden md:block transition-opacity duration-300 ${userMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            onClick={() => { tap(); setUserMenuOpen(false); }}
+          />
+
+          <div className={`hidden md:block fixed top-16 right-4 z-[1110] w-80 max-w-[92vw] transform transition-all duration-200 ${userMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 pointer-events-none'}`}>
+            <div className="h-full flex flex-col bg-white rounded-lg shadow-xl overflow-hidden">
               {/* Header */}
-              <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+              <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
                     <Icon name="user" className="w-6 h-6 text-primary-600" />
                   </div>
-                  <div
-                  className={`fixed inset-0 z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isTransparent ? 'bg-black/40 backdrop-blur-md h-[100vh]' : 'bg-black/30 backdrop-blur-sm'}`}
-                  onClick={() => { tap(); setUserMenuOpen(false); }}
-                />
+                  <div>
+                    <h3 className="font-bold text-gray-900">{user.first_name}</h3>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => { tap(); setUserMenuOpen(false); }}
@@ -392,18 +393,37 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               </div>
 
               {/* Navigation */}
-              <div className="flex-1 overflow-y-auto py-4">
+              <div className="flex-1 overflow-y-auto py-3">
                 <div className="px-2 space-y-1">
+                  <Link
+                    to="/"
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => { tap(); setUserMenuOpen(false); }}
+                  >
+                    <Icon name="home" className="w-5 h-5" />
+                    <span>Home</span>
+                  </Link>
+
+                  <Link
+                    to="/about"
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                    onClick={() => { tap(); setUserMenuOpen(false); }}
+                  >
+                    <Icon name="info" className="w-5 h-5" />
+                    <span>Over het event</span>
+                  </Link>
+
                   {rallyZonesEnabled && user.route_preference !== 'scenic' && (
                     <Link
                       to="/rally"
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                        onClick={() => { tap(); setUserMenuOpen(false); }}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                      onClick={() => { tap(); setUserMenuOpen(false); }}
                     >
                       <Icon name="target" className="w-5 h-5" />
                       <span>Rally Zones</span>
                     </Link>
                   )}
+
                   {showLiveMap && (
                     <Link
                       to="/live-map"
@@ -414,6 +434,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       <span>Live Kaart</span>
                     </Link>
                   )}
+
                   <Link
                     to="/dashboard"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -422,6 +443,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Icon name="chart" className="w-5 h-5" />
                     <span>Dashboard</span>
                   </Link>
+
                   <Link
                     to="/dashboard/profile-edit"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -430,7 +452,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Icon name="user" className="w-5 h-5" />
                     <span>Mijn Profiel</span>
                   </Link>
-                  
+
                   <Link
                     to="/dashboard/riding-buddies"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
@@ -439,8 +461,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Icon name="users" className="w-5 h-5" />
                     <span>Naftgenoten</span>
                   </Link>
-                  
-                  {/* Help / Tour Button */}
+
                   {onboardingTourEnabled && (
                     <button
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium w-full text-left"
@@ -453,31 +474,29 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                       <span>Rondleiding</span>
                     </button>
                   )}
+
+                  {emergencySosEnabled && (
+                    <div className="px-2 mt-4 pt-4 border-t border-gray-200">
+                      <button
+                        className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          const event = new CustomEvent('trigger-emergency-sos');
+                          window.dispatchEvent(event);
+                        }}
+                      >
+                        <Icon name="alert-triangle" className="w-5 h-5" />
+                        <span>Noodknop</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {user.is_admin && adminDashboardEnabled && (
+                    <div className="px-2 mt-4 pt-4 border-t border-gray-200">
+                      <AdminMenuSection onClose={() => setUserMenuOpen(false)} stats={adminMenuStatsFetcher.data} />
+                    </div>
+                  )}
                 </div>
-
-                {/* Emergency Button */}
-                {emergencySosEnabled && (
-                  <div className="px-2 mt-4 pt-4 border-t border-gray-200">
-                    <button
-                      className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium w-full"
-                      onClick={() => {
-                        setUserMenuOpen(false);
-                        const event = new CustomEvent('trigger-emergency-sos');
-                        window.dispatchEvent(event);
-                      }}
-                    >
-                      <Icon name="alert-triangle" className="w-5 h-5" />
-                      <span>Noodknop</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Admin Link */}
-                {user.is_admin && adminDashboardEnabled && (
-                  <div className="px-2 mt-4 pt-4 border-t border-gray-200">
-                    <AdminMenuSection onClose={() => setUserMenuOpen(false)} stats={adminMenuStatsFetcher.data} />
-                  </div>
-                )}
               </div>
 
               {/* Footer / Logout */}
@@ -494,8 +513,8 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
               </div>
             </div>
           </div>
-        )}
-      </>
+        </>
+      )}
 
       {/* Mobile Menu Flyout */}
       <>
