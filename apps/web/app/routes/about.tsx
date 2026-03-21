@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
 import Header from '~/components/Header';
@@ -102,6 +102,86 @@ function ParallaxImage({ src, alt, watermark }: { src: string; alt: string; wate
   );
 }
 
+type NavItem = { id: string; label: string; tag?: string };
+
+function ChapterNav({ items }: { items: NavItem[] }) {
+  const [open, setOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string>(items[0]?.id ?? '');
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    items.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveId(id); },
+        { rootMargin: '-40% 0px -50% 0px', threshold: 0 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach(o => o.disconnect());
+  }, [items]);
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setOpen(false);
+  };
+
+  return (
+    <div className="fixed bottom-6 left-6 z-50">
+      {/* Panel */}
+      <div
+        className={`mb-3 origin-bottom-left transition-all duration-200 ${
+          open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
+        }`}
+      >
+        <div className="bg-gray-900 border border-white/10 shadow-2xl rounded-xl overflow-hidden min-w-[210px]">
+          <div className="px-4 pt-3 pb-2">
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Navigatie</p>
+          </div>
+          <ul>
+            {items.map((item, i) => (
+              <li key={item.id}>
+                <button
+                  onClick={() => scrollTo(item.id)}
+                  className={`w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors ${
+                    activeId === item.id ? 'text-white' : 'text-white/45 hover:text-white/80'
+                  }`}
+                >
+                  <span className={`text-[10px] font-black tabular-nums shrink-0 ${
+                    activeId === item.id ? 'text-primary-400' : 'text-white/20'
+                  }`}>
+                    {item.tag ?? String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className="text-sm font-semibold leading-snug">{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Toggle button */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-10 h-10 rounded-full bg-gray-900 border border-white/15 shadow-xl flex items-center justify-center text-white hover:bg-gray-800 transition-colors"
+        aria-label={open ? 'Sluit hoofdstukken' : 'Open hoofdstukken'}
+      >
+        <svg
+          className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-45' : ''}`}
+          viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"
+        >
+          <line x1="2" y1="4" x2="14" y2="4" />
+          <line x1="2" y1="8" x2="14" y2="8" />
+          <line x1="2" y1="12" x2="14" y2="12" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 // List of available icon names in the Icon component
 const availableIcons = [
   'bell', 'check', 'checkSimple', 'x', 'lightning', 'megaphone', 'target', 'chart', 'flag', 'trophy',
@@ -195,6 +275,21 @@ export default function About() {
         </div>
       </section>
 
+      {/* Chapter navigation */}
+      {stories && stories.length > 0 && (
+        <ChapterNav
+          items={[
+            ...stories.map((s: any, i: number) => ({
+              id: `chapter-${i + 1}`,
+              label: s.title,
+            })),
+            ...(schedule && schedule.length > 0 ? [{ id: 'nav-programma', label: 'Programma', tag: '—' }] : []),
+            ...(faq && faq.length > 0 ? [{ id: 'nav-faq', label: 'FAQ', tag: '—' }] : []),
+            { id: 'nav-overnachtingen', label: 'Overnachtingen', tag: '—' },
+          ]}
+        />
+      )}
+
       {/* Event Stories */}
       {stories && stories.length > 0 && (
         <section className="overflow-hidden">
@@ -240,7 +335,7 @@ export default function About() {
                 <ParallaxImage src={story.imageUrl} alt={story.title} watermark={chapterNum} />
               );
               return (
-                <div key={story._id} className="flex flex-col-reverse lg:flex-row lg:items-stretch">
+                <div key={story._id} id={`chapter-${index + 1}`} className="flex flex-col-reverse lg:flex-row lg:items-stretch">
                   {imageRight ? <>{textHalf}{imageHalf}</> : <>{imageHalf}{textHalf}</>}
                 </div>
               );
@@ -251,7 +346,7 @@ export default function About() {
             const bgClass = darkBgs[index % darkBgs.length];
             const highlightCols = story.highlights?.length >= 3 ? 'grid-cols-3' : 'grid-cols-2';
             return (
-              <div key={story._id} className={`${bgClass} relative overflow-hidden py-28 px-8`}>
+              <div key={story._id} id={`chapter-${index + 1}`} className={`${bgClass} relative overflow-hidden py-28 px-8`}>
                 {/* Decorative watermark number */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
                   <span className="text-[260px] font-black text-white/[0.03] leading-none">
@@ -300,7 +395,7 @@ export default function About() {
 
       {/* Schedule */}
       {schedule && schedule.length > 0 && (
-        <section className="bg-gray-900 relative overflow-hidden py-28 px-8">
+        <section id="nav-programma" className="bg-gray-900 relative overflow-hidden py-28 px-8">
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
             <span className="text-[220px] font-black text-white/[0.03] leading-none">DAG</span>
@@ -443,7 +538,7 @@ export default function About() {
 
       {/* FAQ */}
       {faq && faq.length > 0 && (
-        <section className="py-20 bg-gray-50">
+        <section id="nav-faq" className="py-20 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -479,7 +574,7 @@ export default function About() {
       )}
 
       {/* Accommodation */}
-      <section className="py-20 bg-white">
+      <section id="nav-overnachtingen" className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
