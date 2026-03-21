@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from './Icon';
 import { useFetcher } from 'react-router';
 import { compressImage } from '~/lib/image-compression';
+import { useHaptics } from '~/lib/haptics';
 
 interface ChallengeModalProps {
   challenge: {
@@ -33,8 +34,16 @@ export default function ChallengeModal({
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const fetcher = useFetcher();
+  const { tap, success: hapticSuccess, error: hapticError } = useHaptics();
 
   const isSubmitting = fetcher.state === 'submitting';
+
+  // Haptic feedback on result
+  useEffect(() => {
+    if (!fetcher.data) return;
+    if (fetcher.data.success) hapticSuccess();
+    else if (fetcher.data.error) hapticError();
+  }, [fetcher.data]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const originalFile = e.target.files?.[0];
@@ -178,7 +187,7 @@ export default function ChallengeModal({
               </div>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => { tap(); onClose(); }}
               className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
               disabled={isSubmitting}
             >
@@ -360,7 +369,7 @@ export default function ChallengeModal({
                       name="answer"
                       value={option}
                       checked={answer === option}
-                      onChange={(e) => setAnswer(e.target.value)}
+                      onChange={(e) => { tap(); setAnswer(e.target.value); }}
                       className="mr-3"
                       disabled={isSubmitting}
                     />

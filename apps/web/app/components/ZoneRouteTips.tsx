@@ -4,6 +4,7 @@ import RouteTipsMap from './RouteTipsMap';
 import Carousel from './Carousel';
 import ChallengeModal from './ChallengeModal';
 import { useModal } from '~/contexts/ModalContext';
+import { useHaptics } from '~/lib/haptics';
 
 interface ZoneRouteTipsProps {
   routeTips: any[];
@@ -43,6 +44,7 @@ export default function ZoneRouteTips({
 
   const currentTip = routeTips[currentIndex];
   const { openModal, closeModal } = useModal();
+  const { tap, select } = useHaptics();
 
   const getRouteIcon = (type: string) => {
     switch (type) {
@@ -213,6 +215,7 @@ export default function ZoneRouteTips({
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!isCompleted && !isLocked) {
+                              select();
                               setSelectedChallenge({
                                 challenge: loc.challenge,
                                 locationName: loc.name,
@@ -321,7 +324,7 @@ export default function ZoneRouteTips({
 
               {/* External lock toggle for this map */}
               <button
-                onClick={(e) => { e.stopPropagation(); setMapInteractive((v) => !v); }}
+                onClick={(e) => { e.stopPropagation(); tap(); setMapInteractive((v) => !v); }}
                 title={mapInteractive ? 'Vergrendel kaart' : 'Ontgrendel kaart'}
                 className="absolute top-3 right-3 z-[1000] bg-white/90 hover:bg-white text-gray-700 rounded-full p-2 shadow-md border border-gray-100"
                 aria-pressed={mapInteractive}
@@ -340,7 +343,7 @@ export default function ZoneRouteTips({
             showCounter={true}
             itemClassName=""
             currentIndex={currentIndex}
-            onIndexChange={setCurrentIndex}
+            onIndexChange={(idx) => { tap(); setCurrentIndex(idx); }}
             disabled={!!selectedChallenge}
           />
         </div>

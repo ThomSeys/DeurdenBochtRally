@@ -3,6 +3,7 @@ import { Icon } from '~/components/Icon';
 import CSRFInput from '~/components/CSRFInput';
 import MapView from '~/components/MapView';
 import { useEffect, useState, useMemo } from 'react';
+import { useHaptics } from '~/lib/haptics';
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -58,6 +59,13 @@ export default function CheckInModal({
   const [selectedBuddies, setSelectedBuddies] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const { tap, success: hapticSuccess, error: hapticError } = useHaptics();
+
+  // Haptic feedback on action result
+  useEffect(() => {
+    if (actionData?.success) hapticSuccess();
+    else if (actionData?.error) hapticError();
+  }, [actionData]);
 
   // Deduplicate buddies by `buddy_id` and expose a stable list
   const uniqueBuddies = useMemo(() => {
@@ -164,7 +172,7 @@ export default function CheckInModal({
               <p className="text-white/90 text-lg font-semibold">{zone.title}</p>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => { tap(); onClose(); }}
               className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/20 rounded-sm"
             >
               <Icon name="x" className="w-7 h-7" />
@@ -331,6 +339,7 @@ export default function CheckInModal({
                           type="checkbox"
                           checked={selectedBuddies.includes(buddy.buddy_id)}
                           onChange={(e) => {
+                            tap();
                             if (e.target.checked) {
                               setSelectedBuddies([...selectedBuddies, buddy.buddy_id]);
                             } else {

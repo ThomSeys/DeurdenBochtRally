@@ -12,6 +12,7 @@ import ZoneRouteTips from '~/components/ZoneRouteTips';
 import CSRFInput from '~/components/CSRFInput';
 import { createRequestLogger } from '~/lib/logger.server';
 import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
+import { useHaptics } from '~/lib/haptics';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const zone = data?.zone;
@@ -214,6 +215,7 @@ export default function ZonePage() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [checkedIn, setCheckedIn] = useState(isCheckedIn);
   const [weatherData, setWeatherData] = useState<any>(null);
+  const { success: hapticSuccess, error: hapticError } = useHaptics();
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -226,7 +228,10 @@ export default function ZonePage() {
 
   useEffect(() => {
     if (actionData?.success) {
+      hapticSuccess();
       setCheckedIn(true);
+    } else if (actionData?.error) {
+      hapticError();
     }
   }, [actionData]);
 

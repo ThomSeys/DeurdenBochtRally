@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Icon } from './Icon';
+import { useHaptics } from '~/lib/haptics';
 
 interface EmergencySOSButtonProps {
   participantId?: number;
@@ -18,6 +19,7 @@ export function EmergencySOSButton({
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { warning, heavy, success: hapticSuccess, error: hapticError } = useHaptics();
 
   useEffect(() => {
     const handleTrigger = () => {
@@ -61,6 +63,7 @@ export function EmergencySOSButton({
   };
 
   const handleSOSClick = () => {
+    warning();
     getCurrentLocation();
   };
 
@@ -73,7 +76,7 @@ export function EmergencySOSButton({
 
   const handleSubmit = async () => {
     if (!location) return;
-
+    heavy();
     setIsSending(true);
     setError(null);
 
@@ -94,6 +97,7 @@ export function EmergencySOSButton({
       }
 
       setSuccess(true);
+      hapticSuccess();
       setTimeout(() => {
         setShowConfirmation(false);
         setLocation(null);
@@ -101,6 +105,7 @@ export function EmergencySOSButton({
       }, 2000);
     } catch (err) {
       console.error('Error sending SOS:', err);
+      hapticError();
       setError('Kon noodoproep niet versturen. Probeer het opnieuw.');
     } finally {
       setIsSending(false);

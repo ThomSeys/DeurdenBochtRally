@@ -22,6 +22,7 @@
     "@supabase/supabase-js": "^2.90.1",
     "@types/leaflet": "^1.9.21",
     "driver.js": "^1.4.0",
+    "embla-carousel-react": "^8.0.0",
     "isbot": "^5.1.31",
     "leaflet": "^1.9.4",
     "pdfkit": "^0.15.1",
@@ -30,12 +31,12 @@
     "react-dom": "^19.2.3",
     "react-leaflet": "^5.0.0",
     "react-pdf": "^10.3.0",
-    "embla-carousel-react": "^8.0.0",
     "react-router": "7.12.0",
     "recharts": "^3.7.0",
     "resend": "^6.7.0",
     "sharp": "^0.34.5",
     "stripe": "^20.1.2",
+    "web-haptics": "^0.0.6",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

@@ -7,6 +7,7 @@ import MapView from '~/components/MapView';
 import HeroMedia from '~/components/HeroMedia';
 import { Icon } from '~/components/Icon';
 import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig, sanityClient } from '~/lib/sanity.server';
+import { useHaptics } from '~/lib/haptics';
 import { getUserId } from '~/lib/session.server';
 import PortableText from '~/components/PortableText';
 import { createRequestLogger } from '~/lib/logger.server';
@@ -107,6 +108,7 @@ type NavItem = { id: string; label: string; tag?: string };
 function ChapterNav({ items }: { items: NavItem[] }) {
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState<string>(items[0]?.id ?? '');
+  const { tap } = useHaptics();
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -124,6 +126,7 @@ function ChapterNav({ items }: { items: NavItem[] }) {
   }, [items]);
 
   const scrollTo = (id: string) => {
+    tap();
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setOpen(false);
@@ -165,7 +168,7 @@ function ChapterNav({ items }: { items: NavItem[] }) {
 
       {/* Toggle button */}
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => { tap(); setOpen(v => !v); }}
         className="w-10 h-10 rounded-full bg-gray-900 border border-white/15 shadow-xl flex items-center justify-center text-white hover:bg-gray-800 transition-colors"
         aria-label={open ? 'Sluit hoofdstukken' : 'Open hoofdstukken'}
       >
