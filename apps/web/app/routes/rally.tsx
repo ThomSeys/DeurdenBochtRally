@@ -10,7 +10,6 @@ import { Icon } from '~/components/Icon';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useMasterTour } from '~/components/MasterTour';
-import Carousel from '~/components/Carousel';
 import HeroMedia from '~/components/HeroMedia';
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -184,202 +183,192 @@ export default function Rally() {
 
       {/* Zone Cards */}
       {segments && segments.length > 0 && (
-        <section data-tour="rally-segments" className="py-12 flex-1">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-1">Rally Zones</h2>
-                <p className="text-gray-500">Klik op een zone voor de volledige details, route tips en challenges.</p>
-              </div>
-              {checkedInCount > 0 && (
-                <div className="hidden sm:flex items-center gap-2 text-sm text-teal-700 font-semibold bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
-                  <Icon name="check-circle" className="w-4 h-4" />
-                  {checkedInCount} van {openSegments.length} ingecheckt
+        <section data-tour="rally-segments" className="overflow-hidden">
+          {segments.map((segment: any, idx: number) => {
+            const isCheckedIn = checkedInSet.has(segment._id);
+            const distances = (segment.routeTips || []).map((t: any) => t.estimatedDistance).filter(Boolean);
+            const minDist = distances.length ? Math.min(...distances) : null;
+            const maxDist = distances.length ? Math.max(...distances) : null;
+            const routeTipCount = (segment.routeTips || []).length;
+            const challengeCount = (segment.routeTips || []).reduce(
+              (sum: number, t: any) => sum + (t.challengeCount || 0), 0
+            );
+            const difficulties = [
+              ...new Set((segment.routeTips || []).map((t: any) => t.difficulty).filter(Boolean)),
+            ] as string[];
+            const diffOrder: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+            difficulties.sort((a, b) => (diffOrder[a] ?? 99) - (diffOrder[b] ?? 99));
+            const colors = ZONE_COLORS[segment.color] || ZONE_COLORS.green;
+            const imageRight = idx % 2 === 0;
+            const chapterNum = String(segment.order).padStart(2, '0');
+
+            const textHalf = (
+              <div className="lg:w-[52%] bg-gray-900 text-white flex flex-col justify-center px-8 py-16 lg:px-16 xl:px-24">
+                {/* Zone label row */}
+                <div className="flex items-center gap-3 mb-5">
+                  <p className="text-primary-400 font-bold uppercase tracking-widest text-xs">
+                    Zone {chapterNum}
+                  </p>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                    segment.is_open ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/40'
+                  }`}>
+                    {segment.is_open ? 'Open' : 'Gesloten'}
+                  </span>
+                  {isCheckedIn && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-400 flex items-center gap-1">
+                      <Icon name="checkSimple" className="w-3 h-3" /> Ingecheckt
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {segments.map((segment: any) => {
-                const isCheckedIn = checkedInSet.has(segment._id);
-                const distances = (segment.routeTips || []).map((t: any) => t.estimatedDistance).filter(Boolean);
-                const minDist = distances.length ? Math.min(...distances) : null;
-                const maxDist = distances.length ? Math.max(...distances) : null;
-                const routeTipCount = (segment.routeTips || []).length;
-                const challengeCount = (segment.routeTips || []).reduce(
-                  (sum: number, t: any) => sum + (t.challengeCount || 0),
-                  0
-                );
-                const difficulties = [
-                  ...new Set(
-                    (segment.routeTips || []).map((t: any) => t.difficulty).filter(Boolean)
-                  ),
-                ] as string[];
-                const diffOrder: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
-                difficulties.sort((a, b) => (diffOrder[a] ?? 99) - (diffOrder[b] ?? 99));
-                const colors = ZONE_COLORS[segment.color] || ZONE_COLORS.green;
+                <h2 className="text-3xl lg:text-4xl xl:text-5xl font-black text-white mb-4 leading-tight">
+                  {segment.title}
+                </h2>
 
-                return (
-                  <Link
-                    key={segment._id}
-                    to={`/zone/${segment.order}`}
-                    className="group block bg-white rounded-2xl shadow-sm hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 border border-gray-100"
-                  >
-                    {/* Image banner */}
-                    <div className="relative h-52 overflow-hidden">
-                      {segment.imageUrl ? (
-                        <img
-                          src={segment.imageUrl}
-                          alt={segment.title}
-                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${colors.fallback}`} />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                {segment.location && (
+                  <div className="flex items-center gap-2 text-white/40 text-sm mb-6 border-l-2 border-primary-500 pl-4">
+                    <Icon name="marker" className="w-4 h-4 shrink-0" />
+                    <span>{segment.location}</span>
+                  </div>
+                )}
 
-                      {/* Zone number */}
-                      <div className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow">
-                        <span className="text-sm font-black text-gray-800">{segment.order}</span>
+                {segment.description && (
+                  <p className="text-white/65 text-base lg:text-lg leading-relaxed mb-10">
+                    {segment.description}
+                  </p>
+                )}
+
+                {/* Stats */}
+                <div className="flex flex-wrap gap-6 mb-10">
+                  {minDist !== null && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                        <Icon name="road" className="w-4 h-4 text-primary-400" />
                       </div>
-
-                      {/* Status badge */}
-                      <div className="absolute top-3 right-3">
-                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shadow ${
-                          segment.is_open
-                            ? 'bg-green-500 text-white'
-                            : 'bg-black/50 text-gray-200 backdrop-blur-sm'
-                        }`}>
-                          {segment.is_open ? 'Open' : 'Gesloten'}
-                        </span>
+                      <div>
+                        <div className="text-xl font-black text-white leading-none">
+                          {minDist === maxDist ? `${minDist}` : `${minDist}–${maxDist}`}
+                          <span className="text-sm font-semibold ml-1">km</span>
+                        </div>
+                        <div className="text-xs text-white/40 mt-0.5">Per route</div>
                       </div>
-
-                      {/* Distance overlay bottom-left */}
-                      {minDist !== null && (
-                        <div className="absolute bottom-3 left-3 text-white drop-shadow-md">
-                          <div className="text-xl font-black">
-                            {minDist === maxDist ? `${minDist} km` : `${minDist}–${maxDist} km`}
-                          </div>
-                          <div className="text-xs text-white/80">per route</div>
-                        </div>
-                      )}
-
-                      {/* Checked-in badge bottom-right */}
-                      {isCheckedIn && (
-                        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-teal-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow">
-                          <Icon name="checkSimple" className="w-3 h-3" />
-                          Ingecheckt
-                        </div>
-                      )}
                     </div>
-
-                    {/* Content */}
-                    <div className="p-5">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-primary-600 transition-colors leading-snug">
-                        {segment.title}
-                      </h3>
-
-                      {segment.location && (
-                        <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-3">
-                          <Icon name="marker" className="w-4 h-4 shrink-0 text-gray-400" />
-                          <span>{segment.location}</span>
-                        </div>
-                      )}
-
-                      {segment.description && (
-                        <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
-                          {segment.description}
-                        </p>
-                      )}
-
-                      {/* Stats row */}
-                      {(routeTipCount > 0 || challengeCount > 0) && (
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                          {routeTipCount > 0 && (
-                            <div className="flex items-center gap-1.5">
-                              <Icon name="map" className="w-4 h-4" />
-                              <span>{routeTipCount} {routeTipCount === 1 ? 'route' : 'routes'}</span>
-                            </div>
-                          )}
-                          {challengeCount > 0 && (
-                            <div className="flex items-center gap-1.5">
-                              <Icon name="star" className="w-4 h-4" />
-                              <span>{challengeCount} {challengeCount === 1 ? 'challenge' : 'challenges'}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Difficulty pills */}
-                      {difficulties.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {difficulties.map((d: string) => {
-                            const diff = DIFFICULTY_LABELS[d];
-                            if (!diff) return null;
-                            return (
-                              <span key={d} className={`text-xs font-medium px-2 py-0.5 rounded-full ${diff.cls}`}>
-                                {diff.label}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
+                  )}
+                  {routeTipCount > 0 && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                        <Icon name="map" className="w-4 h-4 text-primary-400" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-black text-white leading-none">{routeTipCount}</div>
+                        <div className="text-xs text-white/40 mt-0.5">{routeTipCount === 1 ? 'Route' : 'Routes'}</div>
+                      </div>
                     </div>
+                  )}
+                  {challengeCount > 0 && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                        <Icon name="star" className="w-4 h-4 text-primary-400" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-black text-white leading-none">{challengeCount}</div>
+                        <div className="text-xs text-white/40 mt-0.5">{challengeCount === 1 ? 'Challenge' : 'Challenges'}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                    {/* Card footer */}
-                    <div className="px-5 pb-4 flex items-center justify-between">
-                      <div className={`h-1 w-10 rounded-full ${colors.badge}`} />
-                      <span className="text-sm font-semibold text-primary-600 group-hover:text-primary-700 flex items-center gap-1 transition-colors">
-                        Ontdekken
-                        <Icon name="chevron-right" className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                {/* Difficulty + CTA */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {difficulties.map((d: string) => {
+                    const diff = DIFFICULTY_LABELS[d];
+                    if (!diff) return null;
+                    return (
+                      <span key={d} className={`text-xs font-semibold px-3 py-1 rounded-full ${diff.cls}`}>
+                        {diff.label}
                       </span>
-                    </div>
+                    );
+                  })}
+                  <Link
+                    to={`/zone/${segment.order}`}
+                    className="ml-auto inline-flex items-center gap-2 text-sm font-bold text-primary-400 hover:text-primary-300 transition-colors group/cta"
+                  >
+                    Ontdekken
+                    <Icon name="chevron-right" className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform" />
                   </Link>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+
+                {/* Color bar */}
+                <div className={`mt-10 h-0.5 w-16 rounded-full ${colors.badge}`} />
+              </div>
+            );
+
+            const imageHalf = (
+              <div className="lg:w-[48%] h-72 sm:h-[28rem] lg:h-auto relative">
+                {segment.imageUrl ? (
+                  <img
+                    src={segment.imageUrl}
+                    alt={segment.title}
+                    className="w-full h-full object-cover block"
+                  />
+                ) : (
+                  <div className={`w-full h-full bg-gradient-to-br ${colors.fallback}`} />
+                )}
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="absolute bottom-6 left-6 text-white/[0.12] text-[110px] font-black leading-none select-none">
+                  {chapterNum}
+                </div>
+              </div>
+            );
+
+            return (
+              <div key={segment._id} className="flex flex-col-reverse lg:flex-row lg:items-stretch">
+                {imageRight ? <>{textHalf}{imageHalf}</> : <>{imageHalf}{textHalf}</>}
+              </div>
+            );
+          })}
         </section>
       )}
 
-      {/* How it works (collapsible) */}
-      <section data-tour="rally-how-it-works" className="py-10 bg-white border-t">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <details className="rounded-xl overflow-hidden border border-gray-200">
-            <summary className="p-5 cursor-pointer flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors select-none">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center shrink-0">
-                  <Icon name="info" className="w-4 h-4 text-primary-600" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">Hoe werkt het?</h2>
-                  <p className="text-xs text-gray-500">Korte uitleg over zones, check-ins en challenges</p>
-                </div>
-              </div>
-              <Icon name="chevron-right" className="w-5 h-5 text-gray-400 rotate-90" />
-            </summary>
-            <div className="p-6 border-t border-gray-200">
-              <Carousel
-                items={[
-                  { title: '1. Kies Je Avontuur', description: 'Kies een rally zone en bekijk de route tips die jou aanspreken.' },
-                  { title: '2. Download & Rijd', description: 'Download de GPX en geniet van prachtige wegen, bochten en landschappen.' },
-                  { title: '3. Check In (Optioneel)', description: 'Check in bij de zone om je bezoek te registreren en badges te verdienen.' },
-                  { title: '4. Doe de Challenges (Optioneel)', description: 'Voltooi highlights bij bijzondere locaties en verdien punten voor de leaderboard.' },
-                  { title: '5. Deel Je Verhaal', description: "Upload foto's en deel je beleving met de community." },
-                ]}
-                renderItem={(item: any) => (
-                  <div className="bg-gray-50 p-5 rounded-xl border border-gray-100">
-                    <h3 className="font-bold text-base mb-1 text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-600">{item.description}</p>
+      {/* How it works */}
+      <section data-tour="rally-how-it-works" className="bg-primary-950 relative overflow-hidden py-24 px-8">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
+          <span className="text-[200px] font-black text-white/[0.03] leading-none">HOE</span>
+        </div>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-40" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-40" />
+
+        <div className="relative max-w-4xl mx-auto text-white">
+          <p className="text-primary-400 font-bold uppercase tracking-widest text-xs mb-5 text-center">
+            In vijf stappen
+          </p>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-center mb-20 leading-tight">
+            Hoe werkt het?
+          </h2>
+
+          <div className="relative">
+            <div className="absolute left-0 top-0 bottom-0 w-px bg-accent-500/30 hidden md:block" />
+            <div className="space-y-0">
+              {[
+                { num: '01', title: 'Kies Je Avontuur', desc: 'Kies een rally zone en bekijk de route tips die jou aanspreken.' },
+                { num: '02', title: 'Download & Rijd', desc: 'Download de GPX en geniet van prachtige wegen, bochten en landschappen.' },
+                { num: '03', title: 'Check In', desc: 'Check in bij de zone om je bezoek te registreren en badges te verdienen. Volledig optioneel.' },
+                { num: '04', title: 'Doe de Challenges', desc: 'Voltooi highlights bij bijzondere locaties en verdien punten voor de leaderboard. Ook optioneel.' },
+                { num: '05', title: 'Deel Je Verhaal', desc: "Upload foto's en deel je beleving met de community via #Bochtenkoning2026." },
+              ].map((step) => (
+                <div key={step.num} className="relative md:pl-16 border-b border-white/10 last:border-b-0 py-8">
+                  <div className="absolute left-0 top-10 w-2.5 h-2.5 rounded-full bg-accent-500 -translate-x-[5px] hidden md:block" />
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-3">
+                    <span className="text-accent-500 font-black text-lg tabular-nums shrink-0">{step.num}</span>
+                    <div>
+                      <h3 className="text-xl font-black text-white mb-2">{step.title}</h3>
+                      <p className="text-white/55 text-base leading-relaxed">{step.desc}</p>
+                    </div>
                   </div>
-                )}
-                showControls={true}
-                showDots={true}
-                showCounter={false}
-                className=""
-              />
+                </div>
+              ))}
             </div>
-          </details>
+          </div>
         </div>
       </section>
 

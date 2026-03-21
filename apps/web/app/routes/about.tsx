@@ -1,8 +1,10 @@
+import { useRef, useEffect } from 'react';
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import MapView from '~/components/MapView';
+import HeroMedia from '~/components/HeroMedia';
 import { Icon } from '~/components/Icon';
 import { getActiveEdition, getScheduleItems, getBenefitItems, getFAQItems, getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { getUserId } from '~/lib/session.server';
@@ -66,6 +68,40 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { userId, edition, siteConfig, schedule, benefits, faq, stories };
 }
 
+function ParallaxImage({ src, alt, watermark }: { src: string; alt: string; watermark: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const img = imgRef.current;
+    if (!container || !img) return;
+    const onScroll = () => {
+      const rect = container.getBoundingClientRect();
+      const progress = (window.innerHeight / 2 - (rect.top + rect.height / 2)) / window.innerHeight;
+      img.style.transform = `translateY(${progress * 80}px)`;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="lg:w-[48%] h-72 sm:h-[28rem] lg:h-auto relative overflow-hidden">
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className="w-full h-[125%] object-cover block will-change-transform -mt-[12.5%]"
+      />
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute bottom-6 left-6 text-white/[0.12] text-[110px] font-black leading-none select-none">
+        {watermark}
+      </div>
+    </div>
+  );
+}
+
 // List of available icon names in the Icon component
 const availableIcons = [
   'bell', 'check', 'checkSimple', 'x', 'lightning', 'megaphone', 'target', 'chart', 'flag', 'trophy',
@@ -94,188 +130,234 @@ export default function About() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Hero with gradient and pattern */}
-      <section className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-20 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 break-words">
-            Over het Event
-          </h1>
-          <p className="text-xl sm:text-2xl mb-8 text-primary-100">
-            Een unieke rally-ervaring door de mooiste wegen van België
-          </p>
-          {edition && (
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full">
-              <Icon name="calendar" className="w-5 h-5" />
-              <span className="font-semibold">{new Date(edition.eventDate).toLocaleDateString('nl-BE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+      {/* Hero */}
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20">
+          <div className="max-w-3xl">
+            <p className="text-primary-200 font-semibold text-sm uppercase tracking-widest mb-3">
+              {siteConfig?.eventName || 'Deur Den Bocht'} · {edition ? new Date(edition.eventDate).getFullYear() : new Date().getFullYear()}
+            </p>
+            <h1 className="text-5xl lg:text-6xl font-black mb-4 leading-tight">
+              Over het Event
+            </h1>
+            <p className="text-lg lg:text-xl text-primary-100 leading-relaxed mb-8 max-w-2xl">
+              Een unieke rally-ervaring door de mooiste wegen van België. Geen race, geen tijdsdruk — puur rijplezier.
+            </p>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-6">
+              {edition && (
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                    <Icon name="calendar" className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-black leading-none">
+                      {new Date(edition.eventDate).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long' })}
+                    </div>
+                    <div className="text-xs text-primary-200 mt-0.5">
+                      {new Date(edition.eventDate).getFullYear()}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="road" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">500+<span className="text-base font-semibold ml-1">km</span></div>
+                  <div className="text-xs text-primary-200 mt-0.5">Puur rijplezier</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="flag" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">4</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Rally zones</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="motorcycle" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">2</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Rijformules</div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </section>
 
       {/* Event Stories */}
       {stories && stories.length > 0 && (
-        <section className="py-24 bg-gradient-to-b from-white via-gray-50 to-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
-            {stories.map((story: any, index: number) => (
-              <div key={story._id} className="relative">
-                {/* Decorative elements */}
-                {index % 2 === 0 && (
-                  <div className="absolute -top-12 -left-12 w-32 h-32 bg-primary-100 rounded-full blur-3xl opacity-30"></div>
-                )}
-                {index % 2 === 1 && (
-                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent-100 rounded-full blur-3xl opacity-30"></div>
-                )}
-                {/* Full-width hero image banner */}
-                {story.imageUrl && (
-                  <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] mb-12 overflow-hidden group">
-                    {/* Image with parallax effect */}
-                    <div className="absolute inset-0">
-                      <img
-                        src={story.imageUrl}
-                        alt={story.title}
-                        className="w-full h-full object-cover transform blur-sm group-hover:blur-none transition-all duration-1000"
-                      />
-                    </div>
-                    
-                    {/* Gradient overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-900/30 to-transparent"></div>
-                    
-                    {/* Content overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16">
-                      <div className="max-w-7xl mx-auto">
-                        <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-2xl">
-                          {story.title}
-                        </h2>
-                        {story.subtitle && (
-                          <p className="text-xl sm:text-2xl lg:text-3xl text-white/90 font-medium italic drop-shadow-lg max-w-3xl">
-                            {story.subtitle}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Decorative corner elements */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-bl-full blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-600/10 rounded-tr-full blur-2xl"></div>
-                  </div>
-                )}
+        <section className="overflow-hidden">
+          {stories.map((story: any, index: number) => {
+            const hasImage = !!story.imageUrl;
+            const chapterNum = String(index + 1).padStart(2, '0');
 
-                {/* Content section */}
-                <div className="max-w-5xl mx-auto px-6">
-                  {!story.imageUrl && (
-                    <>
-                      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-                        {story.title}
-                      </h2>
-                      {story.subtitle && (
-                        <p className="text-xl sm:text-2xl text-primary-600 mb-6 font-medium italic">{story.subtitle}</p>
-                      )}
-                    </>
+            // Stories with image: split layout (dark panel + parallax image)
+            if (hasImage) {
+              const imageRight = index % 2 === 0;
+              const textHalf = (
+                <div className="lg:w-[52%] bg-gray-900 text-white flex flex-col justify-center px-8 py-16 lg:px-16 xl:px-24">
+                  <p className="text-primary-400 font-bold uppercase tracking-widest text-xs mb-5">
+                    Hoofdstuk {chapterNum}
+                  </p>
+                  <h2 className="text-3xl lg:text-4xl xl:text-5xl font-black text-white mb-4 leading-tight">
+                    {story.title}
+                  </h2>
+                  {story.subtitle && (
+                    <p className="text-white/55 text-lg mb-10 font-medium border-l-2 border-primary-500 pl-4">
+                      {story.subtitle}
+                    </p>
                   )}
-                  
-                  <div className="mb-12">
-                    <PortableText value={story.content} />
-                  </div>
-                  
+                  <PortableText value={story.content} variant="dark" />
                   {story.highlights && story.highlights.length > 0 && (
-                    <div className={`grid grid-cols-2 gap-4 md:grid-cols-${Math.min(story.highlights.length, 4)}`}>
-                      {story.highlights.map((highlight: any, idx: number) => {
-                        // Rich gradient variations
-                        const variants = [
-                          {
-                            base: "bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600",
-                            hover: "hover:from-primary-500 hover:via-primary-600 hover:to-primary-700"
-                          },
-                          {
-                            base: "bg-gradient-to-bl from-primary-500 via-primary-600 to-primary-500",
-                            hover: "hover:from-primary-600 hover:via-primary-700 hover:to-primary-600"
-                          },
-                          {
-                            base: "bg-gradient-to-tr from-primary-400 via-primary-600 to-primary-500",
-                            hover: "hover:from-primary-500 hover:via-primary-700 hover:to-primary-600"
-                          },
-                          {
-                            base: "bg-gradient-to-tl from-primary-500 via-primary-400 to-primary-600",
-                            hover: "hover:from-primary-600 hover:via-primary-500 hover:to-primary-700"
-                          }
-                        ];
-                        const variant = variants[idx % variants.length];
-                        
-                        return (
-                          <div 
-                            key={idx} 
-                            className={`group relative overflow-hidden cursor-pointer ${variant.base} ${variant.hover} p-6 rounded-xl transition-all duration-500 hover:shadow-2xl text-center`}
-                          >
-                            {/* Animated gradient overlay on hover */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            
-                            {/* Subtle glow effect */}
-                            <div className="absolute -inset-1 bg-gradient-to-r from-primary-300/0 via-primary-200/20 to-primary-300/0 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            
-                            {/* Content */}
-                            <div className="relative z-10">
-                              <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight drop-shadow-lg">
-                                {highlight.number}
-                              </div>
-                              <div className="text-xs sm:text-sm text-white/90 font-medium uppercase tracking-wide">
-                                {highlight.label}
-                              </div>
-                            </div>
+                    <div className={`mt-10 pt-8 border-t border-white/10 grid gap-6 ${story.highlights.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                      {story.highlights.map((highlight: any) => (
+                        <div key={highlight._key} className="text-center">
+                          <div className="text-3xl font-black text-primary-400 mb-1">
+                            {highlight.number}
                           </div>
-                        );
-                      })}
+                          <div className="text-xs text-white/40 uppercase tracking-widest leading-snug">
+                            {highlight.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+              // index 2 = hoofdstuk 3: sticky parallax — foto blijft steken terwijl tekst scrollt
+              const imageHalf = (
+                <ParallaxImage src={story.imageUrl} alt={story.title} watermark={chapterNum} />
+              );
+              return (
+                <div key={story._id} className="flex flex-col-reverse lg:flex-row lg:items-stretch">
+                  {imageRight ? <>{textHalf}{imageHalf}</> : <>{imageHalf}{textHalf}</>}
+                </div>
+              );
+            }
+
+            // No image: dramatic dark full-width section
+            const darkBgs = ['bg-gray-900', 'bg-primary-950', 'bg-gray-800'];
+            const bgClass = darkBgs[index % darkBgs.length];
+            const highlightCols = story.highlights?.length >= 3 ? 'grid-cols-3' : 'grid-cols-2';
+            return (
+              <div key={story._id} className={`${bgClass} relative overflow-hidden py-28 px-8`}>
+                {/* Decorative watermark number */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
+                  <span className="text-[260px] font-black text-white/[0.03] leading-none">
+                    {chapterNum}
+                  </span>
+                </div>
+                {/* Accent lines decoration */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-40" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-40" />
+
+                <div className="relative max-w-4xl mx-auto text-white">
+                  <p className="text-primary-400 font-bold uppercase tracking-widest text-xs mb-5 text-center">
+                    Hoofdstuk {chapterNum}
+                  </p>
+                  <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-center mb-4 leading-tight">
+                    {story.title}
+                  </h2>
+                  {story.subtitle && (
+                    <p className="text-white/55 text-xl text-center mb-14 font-medium max-w-xl mx-auto">
+                      {story.subtitle}
+                    </p>
+                  )}
+                  <div className="max-w-2xl mx-auto">
+                    <PortableText value={story.content} variant="dark" />
+                  </div>
+                  {story.highlights && story.highlights.length > 0 && (
+                    <div className={`mt-16 grid ${highlightCols} gap-px bg-white/10 max-w-2xl mx-auto`}>
+                      {story.highlights.map((highlight: any) => (
+                        <div key={highlight._key} className="bg-gray-900 py-8 px-6 text-center">
+                          <div className="text-4xl font-black text-primary-400 mb-2">
+                            {highlight.number}
+                          </div>
+                          <div className="text-xs text-white/50 uppercase tracking-widest">
+                            {highlight.label}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </section>
       )}
 
       {/* Schedule */}
       {schedule && schedule.length > 0 && (
-        <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Programma
-              </h2>
-              <p className="text-lg text-gray-600">Plan je dag met ons gedetailleerde schema</p>
-            </div>
-            
-            {/* Mobile & Desktop: Vertical timeline */}
-            <div className="relative px-10 border-l-4 border-accent-500">
-              
-              <div className="space-y-8">
+        <section className="bg-gray-900 relative overflow-hidden py-28 px-8">
+          {/* Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
+            <span className="text-[220px] font-black text-white/[0.03] leading-none">DAG</span>
+          </div>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-accent-500 to-transparent opacity-40" />
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-accent-500 to-transparent opacity-40" />
+
+          <div className="relative max-w-4xl mx-auto">
+            <p className="text-primary-400 font-bold uppercase tracking-widest text-xs mb-5 text-center">
+              Jouw dag op een rij
+            </p>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white text-center mb-20 leading-tight">
+              Programma
+            </h2>
+
+            <div className="relative">
+              {/* Vertical accent line */}
+              <div className="absolute left-0 top-0 bottom-0 w-px bg-accent-500/30 hidden md:block" />
+
+              <div className="space-y-0">
                 {schedule.map((item: any, index: number) => (
-                  <div key={item._id} className="relative">
-                    {/* Time badge - positioned on the orb */}
-                    <div className="mb-2">
-                      <span className="inline-block px-3 py-1 bg-primary-100 text-gray-700 text-sm font-bold rounded">
-                        {item.time}
-                      </span>
-                    </div>
-                    <div className="bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg shadow-md lg:shadow-lg p-4 lg:p-6 border-l-4 border-primary-600 hover:shadow-xl transition-shadow">
-                      <h3 className="text-lg lg:text-2xl font-bold text-white mb-2 lg:mb-3">{item.title}</h3>
-                      <p className="text-white text-sm lg:text-lg mb-2 lg:mb-4">{item.description}</p>
+                  <div key={item._id} className="relative md:pl-16 group">
+                    {/* Dot on the line */}
+                    <div className="absolute left-0 top-8 w-2.5 h-2.5 rounded-full bg-accent-500 -translate-x-[5px] hidden md:block" />
+
+                    <div className="border-b border-white/10 last:border-b-0 py-10">
+                      {/* Time + title row */}
+                      <div className="flex flex-col sm:flex-row sm:items-baseline gap-3 mb-4">
+                        <span className="text-accent-500 font-black text-lg tabular-nums shrink-0">
+                          {item.time}
+                        </span>
+                        <h3 className="text-2xl lg:text-3xl font-black text-white leading-tight">
+                          {item.title}
+                        </h3>
+                      </div>
+
+                      <p className="text-white/55 text-base lg:text-lg leading-relaxed mb-6">
+                        {item.description}
+                      </p>
+
                       {item.details && item.details.length > 0 && (
-                        <ul className="space-y-1 lg:space-y-0 text-sm lg:text-base lg:grid lg:grid-cols-2 lg:gap-3 border-t border-primary-400 pt-2 lg:pt-4">
+                        <div className="grid sm:grid-cols-2 gap-3 border-l-2 border-accent-500/40 pl-5">
                           {item.details.map((detail: string, idx: number) => (
-                            <li key={idx} className="flex items-start">
-                              <Icon name="check-circle" className="w-4 h-4 lg:w-5 lg:h-5 text-white mr-2 flex-shrink-0 mt-0.5" />
-                              <span className="text-white">{detail}</span>
-                            </li>
+                            <div key={idx} className="flex items-start gap-3">
+                              <Icon name="check" className="w-4 h-4 text-accent-500 shrink-0 mt-1" />
+                              <span className="text-white/65 text-sm">{detail}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       )}
+
                       {index === 0 && siteConfig?.startLocation && (
-                        <div className="mt-3 lg:mt-4">
+                        <div className="mt-8">
                           <MapView
                             startPoint={siteConfig.startLocation}
                             endPoint={siteConfig.startLocation}
-                            className="h-48 lg:h-72 rounded lg:rounded-lg"
+                            className="h-56 lg:h-80"
                           />
                         </div>
                       )}
@@ -284,7 +366,6 @@ export default function About() {
                 ))}
               </div>
             </div>
-
           </div>
         </section>
       )}
