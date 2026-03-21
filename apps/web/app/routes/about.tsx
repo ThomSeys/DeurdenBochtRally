@@ -430,7 +430,7 @@ export default function About() {
           {/* Map */}
           <div className="mb-12">
             <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">Ligging Eindpunt & Accommodaties</h3>
-            <div className="rounded-lg overflow-hidden shadow-lg border-2 border-gray-200">
+            <div className="rounded-lg overflow-hidden relative">
               <MapView
                 startPoint={{ lat: 50.25, lng: 5.7345567, name: "Baraque de Fraiture (Finish)" }}
                 endPoint={{ lat: 50.25, lng: 5.7345567, name: "Baraque de Fraiture (Finish)" }}
@@ -441,8 +441,187 @@ export default function About() {
                   { lat: 50.4264, lng: 6.0261, name: "Malmedy (~25km)", color: "#d97706", icon: "🏍️" },
                   { lat: 50.3500, lng: 5.8500, name: "Campings regio", color: "#16a34a", icon: "🏕️" },
                 ]}
-                className="h-96"
+                className="h-[80vh]"
               />
+              <div className="md:absolute md:top-4 md:left-4 z-[1000] lg:w-1/3 h-[calc(100%-2rem)] overflow-y-auto backdrop-blur-sm lg:rounded-lg py-4 lg:py-0">
+                {/* Accommodation Options */}
+                <div className="space-y-6">
+                  {/* Vielsalm */}
+                  <div className="bg-white rounded-lg shadow-lg border-2 border-primary-200 p-6 hover:shadow-xl transition-shadow">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <Icon name="building" className="w-10 h-10 text-primary-600 flex-shrink-0" />
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900">Vielsalm</h3>
+                          <p className="text-primary-600 font-medium flex items-center gap-1 mt-1">
+                            <Icon name="road" className="w-4 h-4" />
+                            ~10 km van finish (15 min rijden)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                          DICHTSBIJ
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 mb-4">
+                      Centraal gelegen stadje met goede voorzieningen. Perfecte uitvalsbasis voor motorrijders.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel Des Ardennes</h4>
+                        <p className="text-sm text-gray-600 mb-2">Centrum Vielsalm, klassiek hotel met restaurant</p>
+                        <p className="text-xs text-gray-500">±€60-80/nacht • Tel: +32 80 21 50 88</p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏡 B&B La Fermette</h4>
+                        <p className="text-sm text-gray-600 mb-2">Gezellige B&B in landelijke omgeving</p>
+                        <p className="text-xs text-gray-500">±€70-90/nacht • booking.com</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* La Roche-en-Ardenne */}
+                  <div className="bg-white rounded-lg shadow-lg border-2 border-primary-200 p-6 hover:shadow-xl transition-shadow">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <Icon name="building" className="w-10 h-10 text-primary-600 flex-shrink-0" />
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900">La Roche-en-Ardenne</h3>
+                          <p className="text-primary-600 font-medium flex items-center gap-1 mt-1">
+                            <Icon name="road" className="w-4 h-4" />
+                            ~20 km van finish (25 min rijden)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
+                          POPULAIR
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 mb-4">
+                      Pittoresk toeristisch stadje met kasteel. Veel restaurants en gezellige uitstraling. Ideaal voor een avondje ontspannen.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel Le Chalet</h4>
+                        <p className="text-sm text-gray-600 mb-2">Modern hotel met zwembad en wellness</p>
+                        <p className="text-xs text-gray-500">±€90-120/nacht • www.lechalet.be</p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel Le Grillon</h4>
+                        <p className="text-sm text-gray-600 mb-2">Charmant familiehotel in centrum</p>
+                        <p className="text-xs text-gray-500">±€70-95/nacht • Tel: +32 84 41 18 27</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Houffalize */}
+                  <div className="bg-white rounded-lg shadow-lg border-2 border-primary-200 p-6 hover:shadow-xl transition-shadow">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <Icon name="building" className="w-10 h-10 text-primary-600 flex-shrink-0" />
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900">Houffalize</h3>
+                          <p className="text-primary-600 font-medium flex items-center gap-1 mt-1">
+                            <Icon name="road" className="w-4 h-4" />
+                            ~15 km van finish (20 min rijden)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 mb-4">
+                      Sportief dorp, bekend bij mountainbikers en motorrijders. Goede middenweg qua afstand en prijs.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel de la Cascade</h4>
+                        <p className="text-sm text-gray-600 mb-2">Comfortabel hotel met restaurant</p>
+                        <p className="text-xs text-gray-500">±€65-85/nacht • booking.com</p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏡 B&B's & Gîtes</h4>
+                        <p className="text-sm text-gray-600 mb-2">Verschillende kleinschalige B&B's beschikbaar</p>
+                        <p className="text-xs text-gray-500">±€50-75/nacht • Airbnb/booking.com</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Motorherbergen */}
+                  <div className="bg-white rounded-lg shadow-lg border-2 border-accent-300 p-6 hover:shadow-xl transition-shadow">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <Icon name="motorcycle" className="w-10 h-10 text-accent-600 flex-shrink-0" />
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900">Motorvriendelijke Accommodaties</h3>
+                          <p className="text-accent-600 font-medium flex items-center gap-1 mt-1">
+                            <Icon name="heart" className="w-4 h-4" />
+                            Speciale voorzieningen voor motorrijders
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-accent-100 text-accent-800 text-xs font-bold rounded-full">
+                          🏍️ BIKER
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 mb-4">
+                      Deze locaties zijn speciaal ingericht voor motorrijders: overdekte/beveiligde parking, droograuimte voor kledij, werkplaats, wasstraat.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏍️ Gîte du Biker (Malmedy)</h4>
+                        <p className="text-sm text-gray-600 mb-2">Motorherberg met alle voorzieningen, 25km van finish</p>
+                        <p className="text-xs text-gray-500">±€60-80/nacht • www.gitedubiker.be</p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏍️ Hotel Sport (Houffalize)</h4>
+                        <p className="text-sm text-gray-600 mb-2">Bekend bij motorclubs, beveiligde parking</p>
+                        <p className="text-xs text-gray-500">±€70-90/nacht • Tel: +32 61 28 80 35</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Campings */}
+                  <div className="bg-white rounded-lg shadow-lg border-2 border-green-300 p-6 hover:shadow-xl transition-shadow">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <Icon name="tree" className="w-10 h-10 text-green-600 flex-shrink-0" />
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900">Campings</h3>
+                          <p className="text-green-600 font-medium flex items-center gap-1 mt-1">
+                            <Icon name="money" className="w-4 h-4" />
+                            Budget-vriendelijk €15-30/nacht
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                          VOORDELIG
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 mb-4">
+                      Diverse campings in de Ardennen. Ideaal voor avonturiers of groepen die samen willen blijven.
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏕️ Camping Petite Suisse</h4>
+                        <p className="text-sm text-gray-600 mb-2">Grote camping nabij Dochamps, ~12km van finish</p>
+                        <p className="text-xs text-gray-500">±€20-30/nacht plaatsje • www.petitesuisse.be</p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">🏕️ Camping Les Myrtilles</h4>
+                        <p className="text-sm text-gray-600 mb-2">Nabij Vielsalm, kleinschalig en rustig</p>
+                        <p className="text-xs text-gray-500">±€15-25/nacht plaatsje • booking.com</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <p className="text-center text-sm text-gray-600 mt-2">
               📍 Baraque de Fraiture (hoogste punt van België) - Eindpunt van de rally
@@ -463,183 +642,7 @@ export default function About() {
             </div>
           </div>
 
-          {/* Accommodation Options */}
-          <div className="space-y-6 mb-8">
-            {/* Vielsalm */}
-            <div className="bg-white rounded-lg shadow-lg border-2 border-primary-200 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="building" className="w-10 h-10 text-primary-600 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Vielsalm</h3>
-                    <p className="text-primary-600 font-medium flex items-center gap-1 mt-1">
-                      <Icon name="road" className="w-4 h-4" />
-                      ~10 km van finish (15 min rijden)
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                    DICHTSBIJ
-                  </span>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                Centraal gelegen stadje met goede voorzieningen. Perfecte uitvalsbasis voor motorrijders.
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel Des Ardennes</h4>
-                  <p className="text-sm text-gray-600 mb-2">Centrum Vielsalm, klassiek hotel met restaurant</p>
-                  <p className="text-xs text-gray-500">±€60-80/nacht • Tel: +32 80 21 50 88</p>
-                </div>
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏡 B&B La Fermette</h4>
-                  <p className="text-sm text-gray-600 mb-2">Gezellige B&B in landelijke omgeving</p>
-                  <p className="text-xs text-gray-500">±€70-90/nacht • booking.com</p>
-                </div>
-              </div>
-            </div>
-
-            {/* La Roche-en-Ardenne */}
-            <div className="bg-white rounded-lg shadow-lg border-2 border-primary-200 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="building" className="w-10 h-10 text-primary-600 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">La Roche-en-Ardenne</h3>
-                    <p className="text-primary-600 font-medium flex items-center gap-1 mt-1">
-                      <Icon name="road" className="w-4 h-4" />
-                      ~20 km van finish (25 min rijden)
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
-                    POPULAIR
-                  </span>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                Pittoresk toeristisch stadje met kasteel. Veel restaurants en gezellige uitstraling. Ideaal voor een avondje ontspannen.
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel Le Chalet</h4>
-                  <p className="text-sm text-gray-600 mb-2">Modern hotel met zwembad en wellness</p>
-                  <p className="text-xs text-gray-500">±€90-120/nacht • www.lechalet.be</p>
-                </div>
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel Le Grillon</h4>
-                  <p className="text-sm text-gray-600 mb-2">Charmant familiehotel in centrum</p>
-                  <p className="text-xs text-gray-500">±€70-95/nacht • Tel: +32 84 41 18 27</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Houffalize */}
-            <div className="bg-white rounded-lg shadow-lg border-2 border-primary-200 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="building" className="w-10 h-10 text-primary-600 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Houffalize</h3>
-                    <p className="text-primary-600 font-medium flex items-center gap-1 mt-1">
-                      <Icon name="road" className="w-4 h-4" />
-                      ~15 km van finish (20 min rijden)
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                Sportief dorp, bekend bij mountainbikers en motorrijders. Goede middenweg qua afstand en prijs.
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏨 Hotel de la Cascade</h4>
-                  <p className="text-sm text-gray-600 mb-2">Comfortabel hotel met restaurant</p>
-                  <p className="text-xs text-gray-500">±€65-85/nacht • booking.com</p>
-                </div>
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏡 B&B's & Gîtes</h4>
-                  <p className="text-sm text-gray-600 mb-2">Verschillende kleinschalige B&B's beschikbaar</p>
-                  <p className="text-xs text-gray-500">±€50-75/nacht • Airbnb/booking.com</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Motorherbergen */}
-            <div className="bg-white rounded-lg shadow-lg border-2 border-accent-300 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="motorcycle" className="w-10 h-10 text-accent-600 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Motorvriendelijke Accommodaties</h3>
-                    <p className="text-accent-600 font-medium flex items-center gap-1 mt-1">
-                      <Icon name="heart" className="w-4 h-4" />
-                      Speciale voorzieningen voor motorrijders
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 bg-accent-100 text-accent-800 text-xs font-bold rounded-full">
-                    🏍️ BIKER
-                  </span>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                Deze locaties zijn speciaal ingericht voor motorrijders: overdekte/beveiligde parking, droograuimte voor kledij, werkplaats, wasstraat.
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏍️ Gîte du Biker (Malmedy)</h4>
-                  <p className="text-sm text-gray-600 mb-2">Motorherberg met alle voorzieningen, 25km van finish</p>
-                  <p className="text-xs text-gray-500">±€60-80/nacht • www.gitedubiker.be</p>
-                </div>
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏍️ Hotel Sport (Houffalize)</h4>
-                  <p className="text-sm text-gray-600 mb-2">Bekend bij motorclubs, beveiligde parking</p>
-                  <p className="text-xs text-gray-500">±€70-90/nacht • Tel: +32 61 28 80 35</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Campings */}
-            <div className="bg-white rounded-lg shadow-lg border-2 border-green-300 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="tree" className="w-10 h-10 text-green-600 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Campings</h3>
-                    <p className="text-green-600 font-medium flex items-center gap-1 mt-1">
-                      <Icon name="money" className="w-4 h-4" />
-                      Budget-vriendelijk €15-30/nacht
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                    VOORDELIG
-                  </span>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                Diverse campings in de Ardennen. Ideaal voor avonturiers of groepen die samen willen blijven.
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏕️ Camping Petite Suisse</h4>
-                  <p className="text-sm text-gray-600 mb-2">Grote camping nabij Dochamps, ~12km van finish</p>
-                  <p className="text-xs text-gray-500">±€20-30/nacht plaatsje • www.petitesuisse.be</p>
-                </div>
-                <div className="bg-gray-50 rounded p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">🏕️ Camping Les Myrtilles</h4>
-                  <p className="text-sm text-gray-600 mb-2">Nabij Vielsalm, kleinschalig en rustig</p>
-                  <p className="text-xs text-gray-500">±€15-25/nacht plaatsje • booking.com</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Bottom Tips */}
           <div className="grid md:grid-cols-2 gap-6">
