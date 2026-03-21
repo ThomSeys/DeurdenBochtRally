@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { useLoaderData, Link } from 'react-router';
 import { useState, useMemo, useEffect } from 'react';
+import { useHaptics } from '~/lib/haptics';
 import { useModal } from '~/contexts/ModalContext';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
@@ -799,8 +800,10 @@ export default function DashboardRecap() {
   // small wrapper component for modal lightbox that supports multiple urls
   function PosterLightbox({ urls, onClose }: { urls: string[]; onClose: () => void }) {
     const [idx, setIdx] = useState(0);
+    const { tap } = useHaptics();
 
     const downloadCurrent = () => {
+      tap();
       const a = document.createElement('a');
       a.href = urls[idx];
       a.download = `deur-den-bocht-poster-${idx + 1}.png`;
@@ -808,6 +811,7 @@ export default function DashboardRecap() {
     };
 
     const shareCurrent = async () => {
+      tap();
       try {
         const res = await fetch(urls[idx]);
         const blob = await res.blob();
@@ -833,7 +837,7 @@ export default function DashboardRecap() {
           <div className="absolute right-6 bottom-6 z-50 flex gap-3 items-center">
             <button
               type="button"
-              onClick={shareCurrent}
+              onClick={() => { tap(); shareCurrent(); }}
               aria-label="Share poster"
               title="Share"
               className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-md hover:scale-105 transition-transform"
@@ -843,7 +847,7 @@ export default function DashboardRecap() {
 
             <button
               type="button"
-              onClick={downloadCurrent}
+              onClick={() => { tap(); downloadCurrent(); }}
               aria-label="Download poster"
               title="Download"
               className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-md hover:scale-105 transition-transform"

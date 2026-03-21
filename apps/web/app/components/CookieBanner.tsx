@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import { useHaptics } from '~/lib/haptics';
 
 export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
+  const { tap, success } = useHaptics();
 
   useEffect(() => {
     // Check if user has already accepted cookies
@@ -14,6 +16,7 @@ export default function CookieBanner() {
   }, []);
 
   const handleAcceptAll = () => {
+    tap();
     localStorage.setItem('cookie-consent', JSON.stringify({
       analytics: true,
       functional: true,
@@ -29,10 +32,12 @@ export default function CookieBanner() {
       }),
     }));
     setIsHiding(true);
+    success();
     setTimeout(() => setShowBanner(false), 300);
   };
 
   const handleAcceptEssential = () => {
+    tap();
     localStorage.setItem('cookie-consent', JSON.stringify({
       analytics: false,
       functional: false,
@@ -48,6 +53,7 @@ export default function CookieBanner() {
       }),
     }));
     setIsHiding(true);
+    success();
     setTimeout(() => setShowBanner(false), 300);
   };
 

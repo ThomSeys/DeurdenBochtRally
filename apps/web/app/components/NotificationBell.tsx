@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { getEventTypeDisplay } from '~/lib/notification-types';
+import { useHaptics } from '~/lib/haptics';
 
 export function NotificationBell({ isTransparent }: { isTransparent?: boolean }) {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -22,11 +23,12 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const { tap, select } = useHaptics();
 
   return (
     <div className="relative">
       <button
-        onClick={() => setShowPanel(!showPanel)}
+        onClick={() => { tap(); setShowPanel(!showPanel); }}
         className={`relative p-2 transition-all ${
           isTransparent
             ? 'text-white/90 hover:text-white drop-shadow-md'
@@ -63,7 +65,7 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
           {/* Backdrop */}
           <div
             className="fixed inset-0 z-30"
-            onClick={() => setShowPanel(false)}
+            onClick={() => { tap(); setShowPanel(false); }}
           />
 
           {/* Popover - Responsive positioning */}
@@ -98,9 +100,11 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
                       notif.read ? 'border-gray-300 opacity-75' : 'border-primary-600'
                     }`}
                     onClick={() => {
+                      tap();
                       setNotifications((prev) =>
                         prev.map((n, i) => (i === idx ? { ...n, read: true } : n))
                       );
+                      select();
                       setSelectedNotification(notif);
                     }}
                   >
@@ -157,7 +161,7 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
             <div className="sticky bottom-0 border-t bg-gray-50">
               <Link
                 to="/dashboard/notification-history"
-                onClick={() => setShowPanel(false)}
+                onClick={() => { tap(); setShowPanel(false); }}
                 className="block w-full text-center py-3 text-primary-600 hover:text-primary-700 hover:bg-gray-100 font-medium text-sm transition-colors"
               >
                 Bekijk alle meldingen →
@@ -177,10 +181,10 @@ export function NotificationBell({ isTransparent }: { isTransparent?: boolean })
           <div className="fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 flex items-center justify-center sm:p-4 p-0">
             <div className="bg-white sm:rounded-lg shadow-2xl max-w-md w-full sm:max-h-96 h-screen sm:h-auto overflow-y-auto flex flex-col">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b flex justify-between items-start gap-4">
+                <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 border-b flex justify-between items-start gap-4">
                 <h2 className="font-bold text-lg pr-4">{selectedNotification.title}</h2>
                 <button
-                  onClick={() => setSelectedNotification(null)}
+                  onClick={() => { tap(); setSelectedNotification(null); }}
                   className="text-white hover:opacity-80 transition-opacity flex-shrink-0"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

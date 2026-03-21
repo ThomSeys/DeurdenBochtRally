@@ -1,5 +1,6 @@
 import { Link, useMatches, Form, useFetcher } from 'react-router';
 import { useState, useEffect } from 'react';
+import { useHaptics } from '~/lib/haptics';
 import { NotificationBell } from './NotificationBell';
 import { Icon } from '~/components/Icon';
 import { EmergencySOSButton } from './EmergencySOSButton';
@@ -39,6 +40,7 @@ type AdminMenuStats = {
 // Admin Menu with flyout submenu categories
 function AdminMenuSection({ onClose, stats }: { onClose: () => void; stats?: AdminMenuStats }) {
   const [submenuOpen, setSubmenuOpen] = useState<string | null>(null);
+  const { tap } = useHaptics();
 
   const adminCategories = {
     urgent: {
@@ -176,7 +178,7 @@ function AdminMenuSection({ onClose, stats }: { onClose: () => void; stats?: Adm
         {Object.entries(adminCategories).map(([key, category]) => (
           <div key={key} className="relative">
             <button
-              onClick={() => setSubmenuOpen(submenuOpen === key ? null : key)}
+              onClick={() => { tap(); setSubmenuOpen(submenuOpen === key ? null : key); }}
               className={`w-full flex items-center justify-between px-4 py-3 ${category.color} rounded-lg transition-colors font-medium text-left`}
             >
               <span className="flex items-center gap-2 text-sm">
@@ -201,7 +203,7 @@ function AdminMenuSection({ onClose, stats }: { onClose: () => void; stats?: Adm
                     key={item.to}
                     to={item.to}
                     className="flex items-center justify-between gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                    onClick={onClose}
+                    onClick={() => { tap(); onClose(); }}
                   >
                     <span className="flex items-center gap-2">
                       <Icon name={item.icon} className="w-4 h-4" />
@@ -230,6 +232,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
   const adminMenuStatsFetcher = useFetcher<AdminMenuStats>();
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { tap } = useHaptics();
 
   // Feature flags
   const rallyZonesEnabled = isEnabled('rally-zones-enabled');
@@ -312,7 +315,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   <LiveTrackingToggle userId={user.id} isTransparent={isTransparent} />
                   <NotificationBell isTransparent={isTransparent} />
                   <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    onClick={() => { tap(); setUserMenuOpen(!userMenuOpen); }}
                     className={`flex items-center space-x-2 text-sm font-semibold uppercase tracking-wide transition-colors ${isTransparent ? 'text-white drop-shadow-md hover:text-primary-100' : 'text-white hover:text-primary-100'}`}
                   >
                     <span>{user.first_name}</span>
@@ -344,7 +347,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
           <div className="md:hidden flex items-center gap-2">
             <NotificationBell isTransparent={isTransparent} />
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => { tap(); setMobileMenuOpen(!mobileMenuOpen); }}
               className="text-white p-2"
               aria-label="Toggle menu"
             >
@@ -364,24 +367,24 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
       <>
         <div
           className={`fixed inset-0 z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isTransparent ? 'bg-black/40 backdrop-blur-md h-[100vh]' : 'bg-black/30 backdrop-blur-sm'}`}
-          onClick={() => setUserMenuOpen(false)}
-        />
-        {user && (
-          <div className={`fixed top-0 right-0 h-screen w-80 shadow-2xl z-[1110] transform transition-transform duration-300 ease-out ${userMenuOpen ? 'translate-x-0' : 'translate-x-full'} bg-white`}>
-            <div className="h-full flex flex-col bg-white">
+          <Link
+            to="/admin"
+            className="flex items-center gap-3 px-4 py-3 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors font-bold"
+            onClick={() => { tap(); onClose(); }}
+          >
               {/* Header */}
               <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
                     <Icon name="user" className="w-6 h-6 text-primary-600" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-lg">{user.first_name} {user.last_name}</h3>
-                    <p className="text-gray-500 text-sm">{user.email}</p>
-                  </div>
+                  <div
+                  className={`fixed inset-0 z-[1100] transition-opacity duration-300 ${userMenuOpen && user ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isTransparent ? 'bg-black/40 backdrop-blur-md h-[100vh]' : 'bg-black/30 backdrop-blur-sm'}`}
+                  onClick={() => { tap(); setUserMenuOpen(false); }}
+                />
                 </div>
                 <button
-                  onClick={() => setUserMenuOpen(false)}
+                  onClick={() => { tap(); setUserMenuOpen(false); }}
                   className="text-gray-400 hover:text-gray-600 p-1"
                 >
                   <Icon name="x" className="w-6 h-6" />
@@ -394,8 +397,8 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   {rallyZonesEnabled && user.route_preference !== 'scenic' && (
                     <Link
                       to="/rally"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                      onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
+                        onClick={() => { tap(); setUserMenuOpen(false); }}
                     >
                       <Icon name="target" className="w-5 h-5" />
                       <span>Rally Zones</span>
@@ -405,7 +408,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                     <Link
                       to="/live-map"
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                      onClick={() => setUserMenuOpen(false)}
+                      onClick={() => { tap(); setUserMenuOpen(false); }}
                     >
                       <Icon name="map" className="w-5 h-5" />
                       <span>Live Kaart</span>
@@ -414,7 +417,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   <Link
                     to="/dashboard"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                    onClick={() => setUserMenuOpen(false)}
+                    onClick={() => { tap(); setUserMenuOpen(false); }}
                   >
                     <Icon name="chart" className="w-5 h-5" />
                     <span>Dashboard</span>
@@ -422,7 +425,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   <Link
                     to="/dashboard/profile-edit"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                    onClick={() => setUserMenuOpen(false)}
+                    onClick={() => { tap(); setUserMenuOpen(false); }}
                   >
                     <Icon name="user" className="w-5 h-5" />
                     <span>Mijn Profiel</span>
@@ -431,7 +434,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
                   <Link
                     to="/dashboard/riding-buddies"
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors font-medium"
-                    onClick={() => setUserMenuOpen(false)}
+                    onClick={() => { tap(); setUserMenuOpen(false); }}
                   >
                     <Icon name="users" className="w-5 h-5" />
                     <span>Naftgenoten</span>

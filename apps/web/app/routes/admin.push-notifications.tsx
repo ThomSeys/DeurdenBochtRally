@@ -6,6 +6,7 @@ import Header from '~/components/Header';
 import { notificationTemplates } from '~/lib/push-notifications-enhanced.server';
 import { Icon } from '~/components/Icon';
 import { createRequestLogger } from '~/lib/logger.server';
+import { useHaptics } from '~/lib/haptics';
 import { eventTypeConfig } from '~/lib/notification-types';
 
 export const meta: MetaFunction = () => {
@@ -591,6 +592,7 @@ export default function AdminPushNotifications() {
   const [selectedTab, setSelectedTab] = useState<'quick' | 'broadcast' | 'targeted' | 'history'>('quick');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [showManualSelection, setShowManualSelection] = useState(false);
+  const { tap } = useHaptics();
 
   const isLoading = fetcher.state === 'submitting';
   const result = fetcher.data;
@@ -957,7 +959,7 @@ export default function AdminPushNotifications() {
               <div className="border-t pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowManualSelection(!showManualSelection)}
+                  onClick={() => { tap(); setShowManualSelection(!showManualSelection); }}
                   className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                 >
                   {showManualSelection ? '▼ Verbergen' : '▶ Tonen'} Handmatige Deelnemersselectie
@@ -982,7 +984,7 @@ export default function AdminPushNotifications() {
                 disabled={isLoading}
                 className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium"
               >
-                {isLoading ? 'Verzenden...' : 'Gericht Bericht Versturen'}
+                {isLoading ? 'Verzenden...' : `Verzenden naar Alle ${activeSubscriptions} Abonnees`}
               </button>
             </fetcher.Form>
           </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useHaptics } from '~/lib/haptics';
 import { startLiveTracking } from '../utils/live-tracking-client';
 
 // Minimal toggle component to opt-in/out of live-tracking.
@@ -26,6 +27,7 @@ export default function LiveTrackingToggle({ userId, wsUrl, isTransparent }: Pro
   const userToggledRef = useRef(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const { tap, warning } = useHaptics();
 
   const showTooltip = permissionDenied && (tooltipVisible || (typeof window !== 'undefined' && window.innerWidth < 768));
 
@@ -168,6 +170,7 @@ export default function LiveTrackingToggle({ userId, wsUrl, isTransparent }: Pro
         onFocus={() => setTooltipVisible(true)}
         onBlur={() => setTooltipVisible(false)}
         onClick={async () => {
+          tap();
           // If enabling, ensure geolocation permission is available (or trigger prompt)
           if (!enabled) {
             const ok = await ensureGeolocationAllowed();

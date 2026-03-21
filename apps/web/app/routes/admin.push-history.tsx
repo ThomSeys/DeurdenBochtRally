@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Icon } from '~/components/Icon';
 import Header from '~/components/Header';
 import { createRequestLogger } from '~/lib/logger.server';
+import { useHaptics } from '~/lib/haptics';
 
 export const handle = { title: 'Push Notifications History - Admin' };
 
@@ -184,6 +185,7 @@ export default function AdminPushHistory() {
   const fetcher = useFetcher();
   const [selectedTab, setSelectedTab] = useState<'history' | 'send-targeted' | 'broadcast'>('history');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { tap } = useHaptics();
 
   const isLoading = fetcher.state === 'submitting';
   const result = fetcher.data;
@@ -371,7 +373,7 @@ export default function AdminPushHistory() {
                     </div>
 
                     <button
-                      onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                      onClick={() => { tap(); setExpandedId(expandedId === notif.id ? null : notif.id); }}
                       className="w-full px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
                     >
                       {expandedId === notif.id ? 'Hide Details' : 'Show Details'}
@@ -390,6 +392,7 @@ export default function AdminPushHistory() {
                             <input type="hidden" name="historyId" value={notif.id} />
                             <button
                               type="submit"
+                              onClick={() => tap()}
                               disabled={isLoading}
                               className="w-full px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 disabled:opacity-50"
                             >
@@ -457,7 +460,7 @@ export default function AdminPushHistory() {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <button
-                            onClick={() => setExpandedId(expandedId === notif.id ? null : notif.id)}
+                            onClick={() => { tap(); setExpandedId(expandedId === notif.id ? null : notif.id); }}
                             className="text-primary-600 hover:text-primary-800"
                           >
                             {expandedId === notif.id ? 'Hide' : 'Details'}
@@ -500,7 +503,7 @@ export default function AdminPushHistory() {
             {/* Pagination */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-2 justify-between items-center">
               <button
-                onClick={() => handlePageChange(Math.max(0, (offset ?? 0) - (limit ?? 20)))}
+                onClick={() => { tap(); handlePageChange(Math.max(0, (offset ?? 0) - (limit ?? 20))); }}
                 disabled={(offset ?? 0) === 0}
                 className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 text-sm font-medium"
               >
@@ -510,7 +513,7 @@ export default function AdminPushHistory() {
                 Page {Math.floor((offset ?? 0) / (limit ?? 20)) + 1} of {Math.ceil(total / (limit ?? 20))}
               </span>
               <button
-                onClick={() => handlePageChange((offset ?? 0) + (limit ?? 20))}
+                onClick={() => { tap(); handlePageChange((offset ?? 0) + (limit ?? 20)); }}
                 disabled={(offset ?? 0) + (limit ?? 20) >= total}
                 className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-900 rounded disabled:opacity-50 text-sm font-medium"
               >

@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData, Form, useActionData } from 'react-router';
 import { useState } from 'react';
+import { useHaptics } from '~/lib/haptics';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
@@ -159,6 +160,7 @@ export default function ParticipantChecklist() {
   const { user, checklistItems } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [showForm, setShowForm] = useState(false);
+  const { tap, warning } = useHaptics();
 
   const preEventItems = checklistItems.filter((item: any) => item.category === 'pre_event');
   const eventDayItems = checklistItems.filter((item: any) => item.category === 'event_day');
@@ -250,6 +252,7 @@ export default function ParticipantChecklist() {
                 <input type="hidden" name="completed" value={item.completed.toString()} />
                 <button
                   type="submit"
+                  onClick={() => tap()}
                   className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
                     item.completed 
                       ? 'bg-primary-600 border-primary-600' 
@@ -271,6 +274,7 @@ export default function ParticipantChecklist() {
                       type="submit"
                       className="text-gray-400 hover:text-red-600"
                       onClick={(e) => {
+                        tap();
                         if (!confirm('Weet je zeker dat je dit item wilt verwijderen?')) {
                           e.preventDefault();
                         }
@@ -296,6 +300,7 @@ export default function ParticipantChecklist() {
                 <input type="hidden" name="completed" value={item.completed.toString()} />
                 <button
                   type="submit"
+                  onClick={() => tap()}
                   className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
                     item.completed 
                       ? 'bg-green-600 border-green-600' 
@@ -317,6 +322,7 @@ export default function ParticipantChecklist() {
                       type="submit"
                       className="text-gray-400 hover:text-red-600"
                       onClick={(e) => {
+                        tap();
                         if (!confirm('Weet je zeker dat je dit item wilt verwijderen?')) {
                           e.preventDefault();
                         }
@@ -335,7 +341,7 @@ export default function ParticipantChecklist() {
         <div className="bg-white rounded-lg shadow-md p-6">
           {!showForm ? (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => { tap(); setShowForm(true); }}
               className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-400 hover:bg-gray-50 transition-colors text-gray-600 hover:text-primary-600"
             >
               <Icon name="plus" className="w-5 h-5" />
@@ -376,13 +382,14 @@ export default function ParticipantChecklist() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
+                    onClick={() => tap()}
                     className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-semibold"
                   >
                     Item Toevoegen
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowForm(false)}
+                    onClick={() => { tap(); setShowForm(false); }}
                     className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Annuleren

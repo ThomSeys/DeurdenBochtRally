@@ -3,6 +3,7 @@ import { useLoaderData } from 'react-router';
 import { requireAdmin } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { useEffect } from 'react';
+import { useHaptics } from '~/lib/haptics';
 
 interface Participant {
   id: string;
@@ -62,10 +63,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function PrintParticipants() {
   const { participants, generatedAt } = useLoaderData<typeof loader>();
+  const haptics = useHaptics();
 
   useEffect(() => {
     // Auto-trigger print dialog after page loads
     const timeout = setTimeout(() => {
+      haptics.tap();
       window.print();
     }, 500);
 
@@ -96,13 +99,13 @@ export default function PrintParticipants() {
       {/* No Print Button */}
       <div className="mb-6 print:hidden">
         <button
-          onClick={() => window.print()}
+          onClick={() => { haptics.tap(); window.print(); }}
           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mr-3"
         >
           🖨️ Afdrukken
         </button>
         <button
-          onClick={() => window.history.back()}
+          onClick={() => { haptics.tap(); window.history.back(); }}
           className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
         >
           ← Terug

@@ -3,6 +3,7 @@ import { useLoaderData, Form, useActionData, useRevalidator } from 'react-router
 import { requireUserId } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import { useHaptics } from '~/lib/haptics';
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
@@ -401,6 +402,7 @@ export default function Gallery() {
   const [lightboxTags, setLightboxTags] = useState<any[]>([]);
   const [lightboxSubmitting, setLightboxSubmitting] = useState(false);
   
+  const { tap, success } = useHaptics();
   // Touch/swipe state for lightbox
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -621,6 +623,10 @@ export default function Gallery() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
       <Header />
+      {/* haptics */}
+      {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
+      {/* call hook in component scope */}
+      {null}
       
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
@@ -632,7 +638,7 @@ export default function Gallery() {
           <p className="text-xl text-primary-100 mb-8">Onze mooiste momenten op de baan</p>
           <div className="flex justify-center gap-4">
             <button
-              onClick={() => setShowUpload(!showUpload)}
+              onClick={() => { tap(); setShowUpload(!showUpload); }}
               className="inline-flex items-center gap-2 bg-white text-primary-600 hover:bg-primary-50 px-6 py-3 rounded-full font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <Icon name={showUpload ? "x" : "camera"} className="w-5 h-5" />
@@ -703,6 +709,7 @@ export default function Gallery() {
                     />
                     <label
                       htmlFor="gallery-camera-input"
+                      onClick={() => tap()}
                       className="flex-1 px-4 py-3 border-2 border-blue-600 rounded-xl bg-blue-600 text-white font-semibold cursor-pointer hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                     >
                       <Icon name="camera" className="w-5 h-5" />
@@ -735,6 +742,7 @@ export default function Gallery() {
                     />
                     <label
                       htmlFor="gallery-album-input"
+                      onClick={() => tap()}
                       className="flex-1 px-4 py-3 border-2 border-primary-600 rounded-xl bg-primary-600 text-white font-semibold cursor-pointer hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
                     >
                       <Icon name="image" className="w-5 h-5" />
@@ -773,6 +781,7 @@ export default function Gallery() {
 
                 <button
                   type="submit"
+                  onClick={() => tap()}
                   className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   <Icon name="upload" className="w-5 h-5" />
@@ -823,7 +832,7 @@ export default function Gallery() {
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Nog geen foto's</h3>
             <p className="text-gray-600 mb-6">Wees de eerste om een moment te delen!</p>
             <button
-              onClick={() => setShowUpload(true)}
+              onClick={() => { tap(); setShowUpload(true); }}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-6 py-3 rounded-full font-semibold transition-all shadow-lg"
             >
               <Icon name="camera" className="w-5 h-5" />
@@ -845,7 +854,7 @@ export default function Gallery() {
                     
                     {/* Photo */}
                     <div
-                      onClick={() => setLightboxPhoto(photo)}
+                      onClick={() => { tap(); setLightboxPhoto(photo); }}
                       className="relative overflow-hidden rounded-sm bg-gray-100 mb-4 aspect-square"
                     >
                       <img 
@@ -910,6 +919,7 @@ export default function Gallery() {
                         <input type="hidden" name="photo_id" value={photo.id} />
                         <button
                           type="submit"
+                          onClick={() => tap()}
                           className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full font-semibold text-sm shadow-lg transition-all transform hover:scale-110"
                         >
                           <Icon name="heart" className="w-4 h-4" />
