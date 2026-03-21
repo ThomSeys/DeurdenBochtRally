@@ -130,7 +130,7 @@ function ChapterNav({ items }: { items: NavItem[] }) {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-6 left-6 z-[1200]">
       {/* Panel */}
       <div
         className={`mb-3 origin-bottom-left transition-all duration-200 ${
