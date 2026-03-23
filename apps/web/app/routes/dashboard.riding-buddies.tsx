@@ -5,10 +5,12 @@ import { redirect } from 'react-router';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
+import HeroMedia from '~/components/HeroMedia';
 import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
 import { createRequestLogger } from '~/lib/logger.server';
 import { useModal } from '~/contexts/ModalContext';
+import { getSiteConfig } from '~/lib/sanity.server';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Naftgenoten - Deur Den Bocht' }];
@@ -178,8 +180,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const likedPhotoIds = (likedPhotos || []).map((like: any) => like.photo_id);
 
+  const siteConfig = await getSiteConfig();
+
   return { 
     user, 
+    siteConfig,
     buddies: buddies || [],
     pendingSent: pendingSent || [],
     pendingReceived: pendingReceived || [],
@@ -252,7 +257,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function RidingBuddies() {
-  const { user, buddies, pendingSent, pendingReceived, achievements, recentCheckIns, recentChallengeSubmissions, likedPhotoIds } = useLoaderData<typeof loader>();
+  const { user, buddies, pendingSent, pendingReceived, achievements, recentCheckIns, recentChallengeSubmissions, likedPhotoIds, siteConfig } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const { openModal, closeModal } = useModal();
@@ -360,24 +365,64 @@ export default function RidingBuddies() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Header />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 z-20">
+          <div className="max-w-3xl">
+            <p className="text-primary-200 font-semibold text-sm uppercase tracking-widest mb-3">
+              {siteConfig?.eventName || 'Deur Den Bocht'}
+            </p>
+            <h1 className="text-5xl lg:text-6xl font-black mb-4 leading-tight">
+              Naftgenoten
+            </h1>
+            <p className="text-lg lg:text-xl text-primary-100 leading-relaxed mb-8 max-w-2xl">
+              Voeg mederijders toe om samen in een groep te rijden. Zo weten wij wie er samen onderweg is.
+            </p>
+
+            <div className="flex flex-wrap gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="users" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">{buddies.length}</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Naftgenoten</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="clock" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">{pendingReceived.length}</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Nieuwe Verzoeken</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="flex-grow bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Naftgenoten</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-500 mb-2">Naftgenoten</h1>
+          <p className="text-gray-500">
             Voeg mederijders toe om samen in een groep te rijden. Zo weten wij wie er samen onderweg is.
           </p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Totaal Naftgenoten</p>
-                <p className="text-3xl font-bold text-gray-900">{buddies.length}</p>
+                <p className="text-sm text-gray-500">Totaal Naftgenoten</p>
+                <p className="text-3xl font-bold text-gray-500">{buddies.length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Icon name="users" className="w-6 h-6 text-blue-600" />
@@ -385,11 +430,11 @@ export default function RidingBuddies() {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Openstaande Verzoeken</p>
-                <p className="text-3xl font-bold text-gray-900">{pendingReceived.length}</p>
+                <p className="text-sm text-gray-500">Openstaande Verzoeken</p>
+                <p className="text-3xl font-bold text-gray-500">{pendingReceived.length}</p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <Icon name="clock" className="w-6 h-6 text-yellow-600" />
@@ -397,11 +442,11 @@ export default function RidingBuddies() {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/5 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Recente Check-ins</p>
-                <p className="text-3xl font-bold text-gray-900">{recentCheckIns.length}</p>
+                <p className="text-sm text-gray-500">Recente Check-ins</p>
+                <p className="text-3xl font-bold text-gray-500">{recentCheckIns.length}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Icon name="map-pin" className="w-6 h-6 text-green-600" />
@@ -412,14 +457,14 @@ export default function RidingBuddies() {
 
         {/* Pending Requests to Accept */}
         {pendingReceived.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-8">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div className="bg-white/5 rounded-lg mb-8">
+            <div className="p-6 border-b border-white/10">
+              <h2 className="text-xl font-semibold text-gray-500 flex items-center gap-2">
                 <Icon name="user-plus" className="w-5 h-5" />
                 Nieuwe Verzoeken ({pendingReceived.length})
               </h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-white/10">
               {pendingReceived.map((request: any) => (
                 <div key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -436,11 +481,11 @@ export default function RidingBuddies() {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                        <h3 className="font-semibold text-gray-500 text-base sm:text-lg truncate">
                           {request.requester.first_name} {request.requester.last_name}
                         </h3>
-                        <p className="text-gray-600 text-sm truncate">{request.requester.email}</p>
-                        <p className="text-gray-600 text-sm truncate">
+                        <p className="text-gray-500 text-sm truncate">{request.requester.email}</p>
+                        <p className="text-gray-500 text-sm truncate">
                           {request.requester.motorcycle_brand} {request.requester.motorcycle_model}
                         </p>
                         {request.requester.route_preference && (
@@ -473,7 +518,7 @@ export default function RidingBuddies() {
                         <button
                           type="submit"
                           disabled={navigation.state !== 'idle'}
-                          className="w-full px-4 py-3 sm:py-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
+                          className="w-full px-4 py-3 sm:py-2 text-gray-500 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
                         >
                           Weiger
                         </button>
@@ -488,14 +533,14 @@ export default function RidingBuddies() {
 
         {/* Pending Requests Sent by Me */}
         {pendingSent.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-8">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div className="bg-white/5 rounded-lg mb-8">
+            <div className="p-6 border-b border-white/10">
+              <h2 className="text-xl font-semibold text-gray-500 flex items-center gap-2">
                 <Icon name="clock" className="w-5 h-5" />
                 Verstuurde Verzoeken ({pendingSent.length})
               </h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-white/10">
               {pendingSent.map((request: any) => (
                 <div key={request.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
@@ -512,10 +557,10 @@ export default function RidingBuddies() {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
+                        <h3 className="font-semibold text-gray-500 truncate">
                           {request.buddy.first_name} {request.buddy.last_name}
                         </h3>
-                        <p className="text-gray-600 text-sm truncate">{request.buddy.email}</p>
+                        <p className="text-gray-500 text-sm truncate">{request.buddy.email}</p>
                         <p className="text-yellow-600 text-xs mt-1 flex items-center gap-1">
                           <Icon name="clock" className="w-3 h-3" />
                           Wacht op acceptatie
@@ -528,7 +573,7 @@ export default function RidingBuddies() {
                       <button
                         type="submit"
                         disabled={navigation.state !== 'idle'}
-                        className="w-full px-4 py-3 sm:py-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
+                        className="w-full px-4 py-3 sm:py-2 text-gray-500 hover:bg-gray-100 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[44px]"
                       >
                         Intrekken
                       </button>
@@ -542,9 +587,9 @@ export default function RidingBuddies() {
 
         {/* Buddy Achievements */}
         {achievements.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-8">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div className="bg-white/5 rounded-lg mb-8">
+            <div className="p-6 border-b border-white/10">
+              <h2 className="text-xl font-semibold text-gray-500 flex items-center gap-2">
                 <Icon name="trophy" className="w-5 h-5" />
                 Groep Achievements
               </h2>
@@ -560,8 +605,8 @@ export default function RidingBuddies() {
                       <Icon name={achievement.achievement.icon} className={`w-6 h-6 text-${achievement.achievement.badge_color}-700`} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{achievement.achievement.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{achievement.achievement.description}</p>
+                      <h3 className="font-semibold text-gray-500">{achievement.achievement.name}</h3>
+                      <p className="text-sm text-gray-500 mb-2">{achievement.achievement.description}</p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Icon name="calendar" className="w-3 h-3" />
                         <span>{new Date(achievement.unlocked_at).toLocaleDateString('nl-NL')}</span>
@@ -599,14 +644,14 @@ export default function RidingBuddies() {
 
         {/* Recent Activity */}
         {recentCheckIns.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-8">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div className="bg-white/5 rounded-lg mb-8">
+            <div className="p-6 border-b border-white/10">
+              <h2 className="text-xl font-semibold text-gray-500 flex items-center gap-2">
                 <Icon name="activity" className="w-5 h-5" />
                 Recente Buddy Activiteit
               </h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-white/10">
               {recentCheckIns.slice(0, 5).map((checkIn: any) => (
                 <div key={checkIn.id} className="p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
@@ -622,7 +667,7 @@ export default function RidingBuddies() {
                       </div>
                     )}
                     <div className="flex-1">
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm text-gray-500">
                         <span className="font-semibold">{checkIn.participant.first_name} {checkIn.participant.last_name}</span>
                         {' '}checked in bij {' '}
                         <span className="font-semibold">{checkIn.zone.name}</span>
@@ -644,8 +689,8 @@ export default function RidingBuddies() {
 
 
         {/* Add Buddy Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white/5 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-500 mb-4 flex items-center gap-2">
             <Icon name="search" className="w-5 h-5" />
             Naftgenoot Toevoegen
           </h2>
@@ -697,11 +742,11 @@ export default function RidingBuddies() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                      <h3 className="font-semibold text-gray-500 text-base sm:text-lg truncate">
                         {searchResult.participant.first_name} {searchResult.participant.last_name}
                       </h3>
-                      <p className="text-gray-600 text-sm truncate">{searchResult.participant.email}</p>
-                      <p className="text-gray-600 text-sm truncate">
+                      <p className="text-gray-500 text-sm truncate">{searchResult.participant.email}</p>
+                      <p className="text-gray-500 text-sm truncate">
                         {searchResult.participant.motorcycle_brand} {searchResult.participant.motorcycle_model}
                       </p>
                     </div>
@@ -730,9 +775,9 @@ export default function RidingBuddies() {
         </div>
 
         {/* Buddies List */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white/5 rounded-lg">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-gray-500 flex items-center gap-2">
               <Icon name="users" className="w-5 h-5" />
               Mijn Naftgenoten ({buddies.length})
             </h2>
@@ -747,7 +792,7 @@ export default function RidingBuddies() {
           ) : (
             <div className="divide-y divide-gray-200">
               {buddies.map((buddy: any) => (
-                <div key={buddy.buddy_id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                <div key={buddy.buddy_id} className="p-4 sm:p-6 transition-colors">
                   <div className="flex flex-col sm:flex-row items-start gap-4">
                     <div className="flex items-start gap-3 sm:gap-4 flex-1 w-full">
                       <Link to={`/dashboard/buddies/${buddy.buddy_id}`} className="flex-shrink-0">
@@ -765,20 +810,20 @@ export default function RidingBuddies() {
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link to={`/dashboard/buddies/${buddy.buddy_id}`} className="hover:text-primary-600 block">
-                          <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                          <h3 className="font-semibold text-gray-500 text-base sm:text-lg truncate">
                             {buddy.buddy_first_name} {buddy.buddy_last_name}
                           </h3>
                         </Link>
                         
                         {/* Contact Info */}
                         <div className="mt-2 space-y-1.5">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Icon name="mail" className="w-4 h-4 text-gray-400 flex-shrink-0" />
                             <a href={`mailto:${buddy.buddy_email}`} className="hover:text-primary-600 truncate">
                               {buddy.buddy_email}
                             </a>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Icon name="phone" className="w-4 h-4 text-gray-400 flex-shrink-0" />
                             <a href={`tel:${buddy.buddy_phone}`} className="hover:text-primary-600">
                               {buddy.buddy_phone}
@@ -789,7 +834,7 @@ export default function RidingBuddies() {
                         {/* Motorcycle Info */}
                         <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm">
                           <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-100 rounded-lg">
-                            <Icon name="bike" className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
+                            <Icon name="bike" className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
                             <span className="font-medium text-gray-700 truncate">
                               {buddy.buddy_motorcycle_brand} {buddy.buddy_motorcycle_model}
                             </span>
@@ -867,6 +912,7 @@ export default function RidingBuddies() {
             {actionData.message}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

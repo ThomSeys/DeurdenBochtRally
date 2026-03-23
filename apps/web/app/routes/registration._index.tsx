@@ -399,26 +399,34 @@ export default function Registration() {
             </div>
           )}
 
-          <div className="bg-white rounded-sm shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Inschrijven</h1>
-            <p className="text-gray-600 mb-8">
+          <div className="bg-white rounded-sm shadow-md border-l-4 border-primary-600 p-8">
+            <p className="text-primary-600 font-bold text-xs uppercase tracking-widest mb-2">Inschrijving</p>
+            <h1 className="text-3xl font-black text-gray-900 mb-1">Inschrijven</h1>
+            <p className="text-gray-400 text-sm mb-8">
               Vul je gegevens in om je in te schrijven voor Deur Den Bocht {edition.year}
             </p>
 
             {actionData?.error && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {actionData.error}
+              <div className="mb-6 bg-red-50 border-2 border-red-500 text-red-800 px-4 py-3 rounded-sm flex items-center gap-3">
+                <Icon name="alert-circle" className="w-5 h-5 text-red-600 flex-shrink-0" />
+                <span className="font-medium">{actionData.error}</span>
               </div>
             )}
 
             <Form method="post" className="space-y-6">
               <CSRFInput token={csrfToken} />
               {/* Personal Info */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Persoonlijke gegevens</h2>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <Icon name="user" className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <h2 className="text-base font-black text-gray-900 uppercase tracking-wide">Persoonlijke gegevens</h2>
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
+                <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="firstName" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                       Voornaam *
                     </label>
                     <input
@@ -426,11 +434,11 @@ export default function Registration() {
                       name="firstName"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="lastName" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                       Achternaam *
                     </label>
                     <input
@@ -438,13 +446,13 @@ export default function Registration() {
                       name="lastName"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                       Email *
                     </label>
                     <input
@@ -452,11 +460,11 @@ export default function Registration() {
                       name="email"
                       type="email"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="phone" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                       Telefoon *
                     </label>
                     <input
@@ -464,11 +472,11 @@ export default function Registration() {
                       name="phone"
                       type="tel"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                     />
                   
-                <div className="mt-4">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="mt-5">
+                  <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                     Wachtwoord *
                   </label>
                   <input
@@ -477,10 +485,10 @@ export default function Registration() {
                     type="password"
                     required
                     minLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                     placeholder="Minstens 6 karakters"
                   />
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1.5 text-xs text-gray-400">
                     Dit wachtwoord gebruik je om in te loggen op je dashboard
                   </p>
                 </div>
@@ -489,11 +497,17 @@ export default function Registration() {
               </div>
 
               {/* Motorcycle Info */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Motorgegevens</h2>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <Icon name="motorcycle" className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <h2 className="text-base font-black text-gray-900 uppercase tracking-wide">Motorgegevens</h2>
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
+                <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label htmlFor="motorcycleBrand" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="motorcycleBrand" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                       Merk *
                     </label>
                     <input
@@ -501,12 +515,12 @@ export default function Registration() {
                       name="motorcycleBrand"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                       placeholder="bv. BMW, Honda, Yamaha..."
                     />
                   </div>
                   <div>
-                    <label htmlFor="motorcycleModel" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="motorcycleModel" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                       Model *
                     </label>
                     <input
@@ -514,13 +528,13 @@ export default function Registration() {
                       name="motorcycleModel"
                       type="text"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
                       placeholder="bv. R1250GS, CB500X..."
                     />
                   </div>
                 </div>
-                <div className="mt-4">
-                  <label htmlFor="licensePlate" className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label htmlFor="licensePlate" className="block text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
                     Nummerplaat *
                   </label>
                   <input
@@ -528,50 +542,67 @@ export default function Registration() {
                     name="licensePlate"
                     type="text"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase"
+                    className="w-full px-4 py-3 border-2 border-gray-200 bg-gray-50 rounded-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all uppercase font-mono tracking-wider"
                     placeholder="1-ABC-123"
                   />
                 </div>
               </div>
 
               {/* Formula Selection */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Kies je formule *</h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <Icon name="money" className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <h2 className="text-base font-black text-gray-900 uppercase tracking-wide">Kies je formule *</h2>
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   {pricing.map((tier: any) => {
                     const iconName = getValidIconName(tier.icon);
+                    const tierValue = tier.price === 45 ? 'with_meals' : 'breakfast_only';
                     return (
                       <label
                         key={tier._id}
-                        className={`relative flex cursor-pointer rounded-sm border p-4 focus:outline-none ${
-                          selectedFormula === (tier.price === 45 ? 'with_meals' : 'breakfast_only')
-                            ? 'border-primary-600 ring-2 ring-primary-600 bg-primary-50'
-                            : 'border-gray-300'
+                        className={`relative flex cursor-pointer rounded-sm border-2 p-5 transition-all ${
+                          selectedFormula === tierValue
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                         }`}
                       >
                         <input
                           type="radio"
                           name="formula"
-                          value={tier.price === 45 ? 'with_meals' : 'breakfast_only'}
+                          value={tierValue}
                           className="sr-only"
                           onChange={(e) => setSelectedFormula(e.target.value)}
-                          checked={selectedFormula === (tier.price === 45 ? 'with_meals' : 'breakfast_only')}
+                          checked={selectedFormula === tierValue}
                         />
                         <div className="flex flex-1 flex-col">
-                          <div className="flex items-center justify-between">
-                            {iconName && <Icon name={iconName} className="w-8 h-8 mb-2 text-primary-600" />}
-                            <span className="text-2xl font-bold text-primary-600">€{tier.price}</span>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center">
+                              {iconName
+                                ? <Icon name={iconName} className="w-5 h-5 text-primary-400" />
+                                : <Icon name="flag" className="w-5 h-5 text-primary-400" />
+                              }
+                            </div>
+                            <span className="text-2xl font-black text-primary-600">€{tier.price}</span>
                           </div>
-                          <span className="block text-lg font-semibold text-gray-900">{tier.name}</span>
+                          <span className="block text-lg font-black text-gray-900 mb-2">{tier.name}</span>
                           {tier.features && (
-                            <ul className="mt-2 space-y-1">
+                            <ul className="space-y-1.5">
                               {tier.features.map((feature: string, idx: number) => (
-                                <li key={idx} className="text-sm text-gray-600 flex items-start">
-                                  <span className="text-primary-600 mr-1">✓</span>
+                                <li key={idx} className="text-sm text-gray-500 flex items-start gap-2">
+                                  <Icon name="checkSimple" className="w-3.5 h-3.5 text-primary-500 mt-0.5 flex-shrink-0" />
                                   {feature}
                                 </li>
                               ))}
                             </ul>
+                          )}
+                          {selectedFormula === tierValue && (
+                            <span className="mt-3 text-xs font-bold uppercase tracking-wide text-primary-600 flex items-center gap-1">
+                              <Icon name="checkSimple" className="w-3 h-3" /> Geselecteerd
+                            </span>
                           )}
                         </div>
                       </label>
@@ -581,13 +612,19 @@ export default function Registration() {
               </div>
 
               {/* Route Preference Selection */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Kies je route voorkeur *</h2>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <Icon name="road" className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <h2 className="text-base font-black text-gray-900 uppercase tracking-wide">Kies je route voorkeur *</h2>
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
+                <p className="text-sm text-gray-400">
                   Kies hoe je de rit wil beleven: met optionele rally zones voor een avontuurlijke ervaring, of de complete route zonder uitdagingen.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <label className="relative flex cursor-pointer rounded-sm border p-4 focus:outline-none border-primary-600 ring-2 ring-primary-600 bg-primary-50">
+                  <label className="relative flex cursor-pointer rounded-sm border-2 p-5 transition-all border-primary-500 bg-primary-50">
                     <input
                       type="radio"
                       name="routePreference"
@@ -596,33 +633,35 @@ export default function Registration() {
                       defaultChecked
                     />
                     <div className="flex flex-1 flex-col">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">🎯</span>
-                        <span className="text-xs font-semibold text-primary-700 bg-primary-100 px-2 py-1 rounded-full">AANBEVOLEN</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center">
+                          <Icon name="flag" className="w-5 h-5 text-primary-400" />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wide text-primary-600 bg-primary-100 px-2.5 py-1 rounded-full">Aanbevolen</span>
                       </div>
-                      <span className="block text-lg font-semibold text-gray-900 mb-2">Adventure Track</span>
-                      <ul className="space-y-1 text-sm text-gray-600">
-                        <li className="flex items-start">
-                          <span className="text-primary-600 mr-1">✓</span>
+                      <span className="block text-lg font-black text-gray-900 mb-2">Adventure Track</span>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-primary-500 mt-0.5 flex-shrink-0" />
                           Complete route met 4 optionele rally zones
                         </li>
-                        <li className="flex items-start">
-                          <span className="text-primary-600 mr-1">✓</span>
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-primary-500 mt-0.5 flex-shrink-0" />
                           Check-in via QR codes bij elke zone
                         </li>
-                        <li className="flex items-start">
-                          <span className="text-primary-600 mr-1">✓</span>
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-primary-500 mt-0.5 flex-shrink-0" />
                           Deel foto's en verhalen met de community
                         </li>
-                        <li className="flex items-start">
-                          <span className="text-primary-600 mr-1">✓</span>
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-primary-500 mt-0.5 flex-shrink-0" />
                           Ontgrendel achievements
                         </li>
                       </ul>
                     </div>
                   </label>
 
-                  <label className="relative flex cursor-pointer rounded-sm border p-4 focus:outline-none border-gray-300 hover:border-gray-400">
+                  <label className="relative flex cursor-pointer rounded-sm border-2 p-5 transition-all border-gray-200 hover:border-gray-300 bg-gray-50">
                     <input
                       type="radio"
                       name="routePreference"
@@ -630,25 +669,27 @@ export default function Registration() {
                       className="sr-only"
                     />
                     <div className="flex flex-1 flex-col">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">🗺️</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center">
+                          <Icon name="mountain" className="w-5 h-5 text-primary-400" />
+                        </div>
                       </div>
-                      <span className="block text-lg font-semibold text-gray-900 mb-2">Scenic Route</span>
-                      <ul className="space-y-1 text-sm text-gray-600">
-                        <li className="flex items-start">
-                          <span className="text-gray-400 mr-1">✓</span>
+                      <span className="block text-lg font-black text-gray-900 mb-2">Scenic Route</span>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                           Volledige uitgewerkte route zonder stops
                         </li>
-                        <li className="flex items-start">
-                          <span className="text-gray-400 mr-1">✓</span>
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                           Geen check-ins of QR codes
                         </li>
-                        <li className="flex items-start">
-                          <span className="text-gray-400 mr-1">✓</span>
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                           Rij in je eigen tempo
                         </li>
-                        <li className="flex items-start">
-                          <span className="text-gray-400 mr-1">✓</span>
+                        <li className="flex items-start gap-2 text-sm text-gray-500">
+                          <Icon name="checkSimple" className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                           Focus op de rit zelf
                         </li>
                       </ul>
@@ -662,86 +703,105 @@ export default function Registration() {
 
               {/* Paper Roadbook Option */}
               {paperRoadbookEnabled && (
-                <div className="pt-6 border-t">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Extra optie</h2>
-                  <div className="flex items-start">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+                      <Icon name="book" className="w-4 h-4 text-primary-400" />
+                    </div>
+                    <h2 className="text-base font-black text-gray-900 uppercase tracking-wide">Extra optie</h2>
+                    <div className="flex-1 h-px bg-gray-100" />
+                  </div>
+                  <label htmlFor="paperRoadbook" className="flex items-center gap-4 p-4 rounded-sm border-2 border-gray-100 hover:border-primary-200 hover:bg-primary-50/40 transition-all cursor-pointer group">
                     <input
                       id="paperRoadbook"
                       name="paperRoadbook"
                       type="checkbox"
-                      className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      className="h-5 w-5 text-primary-600 border-2 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
                     />
-                    <label htmlFor="paperRoadbook" className="ml-3 text-sm text-gray-700">
-                      <span className="font-semibold">Ik wil een papieren roadbook ontvangen</span>
-                      <p className="text-gray-600 mt-1">
-                        Naast de digitale versie ontvang je een fysiek roadbook met alle route-informatie en rally zones.
-                      </p>
-                    </label>
-                  </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-primary-100 flex items-center justify-center transition-colors">
+                        <Icon name="book" className="w-4 h-4 text-gray-500 group-hover:text-primary-600" />
+                      </div>
+                      <div>
+                        <span className="block text-sm font-bold text-gray-900">Papieren roadbook</span>
+                        <span className="text-xs text-gray-400">Ontvang een fysiek roadbook met alle route-informatie en rally zones</span>
+                      </div>
+                    </div>
+                  </label>
                 </div>
               )}
 
               {/* Consent Checkboxes */}
-              <div className="pt-6 border-t space-y-4">
-                <div className="flex items-start">
+              <div className="space-y-3">
+                <div className="flex items-center gap-4 pt-3">
+                  <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <Icon name="shield" className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <h2 className="text-base font-black text-gray-900 uppercase tracking-wide">Akkoord & toestemming</h2>
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
+
+                <label htmlFor="termsConsent" className="flex items-start gap-4 p-4 rounded-sm border-2 border-gray-100 hover:border-primary-200 hover:bg-primary-50/40 transition-all cursor-pointer">
                   <input
                     id="termsConsent"
                     name="termsConsent"
                     type="checkbox"
                     required
-                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="mt-0.5 h-5 w-5 text-primary-600 border-2 border-gray-300 rounded focus:ring-primary-500 cursor-pointer flex-shrink-0"
                   />
-                  <label htmlFor="termsConsent" className="ml-3 text-sm text-gray-700">
+                  <span className="text-sm text-gray-600 leading-relaxed">
                     Ik heb de{' '}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 underline">
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 font-semibold underline">
                       Algemene Voorwaarden
                     </a>
                     {' '}gelezen en ga hiermee akkoord *
-                  </label>
-                </div>
+                  </span>
+                </label>
 
-                <div className="flex items-start">
+                <label htmlFor="privacyConsent" className="flex items-start gap-4 p-4 rounded-sm border-2 border-gray-100 hover:border-primary-200 hover:bg-primary-50/40 transition-all cursor-pointer">
                   <input
                     id="privacyConsent"
                     name="privacyConsent"
                     type="checkbox"
                     required
-                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="mt-0.5 h-5 w-5 text-primary-600 border-2 border-gray-300 rounded focus:ring-primary-500 cursor-pointer flex-shrink-0"
                   />
-                  <label htmlFor="privacyConsent" className="ml-3 text-sm text-gray-700">
+                  <span className="text-sm text-gray-600 leading-relaxed">
                     Ik heb het{' '}
-                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 underline">
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700 font-semibold underline">
                       Privacybeleid
                     </a>
                     {' '}gelezen en ga akkoord met de verwerking van mijn persoonsgegevens *
-                  </label>
-                </div>
+                  </span>
+                </label>
 
-                <div className="flex items-start">
+                <label htmlFor="dataProcessingConsent" className="flex items-start gap-4 p-4 rounded-sm border-2 border-gray-100 hover:border-primary-200 hover:bg-primary-50/40 transition-all cursor-pointer">
                   <input
                     id="dataProcessingConsent"
                     name="dataProcessingConsent"
                     type="checkbox"
                     required
-                    className="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="mt-0.5 h-5 w-5 text-primary-600 border-2 border-gray-300 rounded focus:ring-primary-500 cursor-pointer flex-shrink-0"
                   />
-                  <label htmlFor="dataProcessingConsent" className="ml-3 text-sm text-gray-700">
-                    Ik geef toestemming voor het verzamelen en verwerken van mijn gegevens 
-                    (inclusief GPS-locatie, foto's) voor dit evenement en ga akkoord met het 
+                  <span className="text-sm text-gray-600 leading-relaxed">
+                    Ik geef toestemming voor het verzamelen en verwerken van mijn gegevens
+                    (inclusief GPS-locatie, foto's) voor dit evenement en ga akkoord met het
                     delen van foto's in de galerij *
-                  </label>
-                </div>
+                  </span>
+                </label>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-4">
                 <button
                   type="submit"
-                  className="btn-primary w-full"
+                  className="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-black py-3 px-8 rounded-sm uppercase tracking-wide transition-colors w-full text-lg"
                 >
+                  <Icon name="check" className="w-5 h-5" />
                   Doorgaan naar betaling
                 </button>
-                <p className="mt-4 text-sm text-gray-600 text-center">
-                  Je wordt doorverwezen naar een beveiligde betalingspagina van Stripe
+                <p className="mt-4 text-xs text-gray-400 text-center flex items-center justify-center gap-1.5">
+                  <Icon name="lock" className="w-3.5 h-3.5" />
+                  Beveiligde betaling via Stripe
                 </p>
               </div>
             </Form>
