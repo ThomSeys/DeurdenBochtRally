@@ -105,10 +105,8 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-sm shadow-xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🏍 Deur Den Bocht
-          </h1>
-          <p className="text-gray-600">Inloggen op je account</p>
+          <h1 className="text-3xl font-black mb-2 gradient-text">Deur Den Bocht</h1>
+          <p className="text-gray-600">Welkom terug. Log in op je dashboard.</p>
         </div>
 
         {actionData?.error && (
@@ -170,10 +168,7 @@ export default function Login() {
             </Link>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-sm transition-colors"
-          >
+          <button type="submit" className="btn-primary w-full">
             Inloggen
           </button>
         </Form>

@@ -168,10 +168,7 @@ export default function Index() {
             {/* Hero CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
               {!userId && edition?.registrationOpen && (
-                <Link
-                  to="/registration"
-                  className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-10 py-4 rounded-sm text-lg font-black uppercase transition-all duration-300 shadow-xl hover:shadow-2xl"
-                >
+                <Link to="/registration" className="btn-primary">
                   Nu inschrijven
                 </Link>
               )}
@@ -210,12 +207,9 @@ export default function Index() {
               </p>
             </>
           )}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {!userId && edition?.registrationOpen && (
-              <Link
-                to="/registration"
-                className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-10 py-4 rounded-sm text-lg font-bold uppercase transition-colors shadow-lg"
-              >
+              <Link to="/registration" className="btn-primary">
                 Nu inschrijven
               </Link>
             )}
@@ -369,10 +363,7 @@ export default function Index() {
 
             {!userId && edition?.registrationOpen && (
               <div className="text-center mt-12">
-                <Link
-                  to="/registration"
-                  className="inline-block bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-12 py-4 rounded-sm text-xl font-bold uppercase transition-colors shadow-lg"
-                >
+                <Link to="/registration" className="btn-primary inline-block">
                   Nu inschrijven
                 </Link>
               </div>

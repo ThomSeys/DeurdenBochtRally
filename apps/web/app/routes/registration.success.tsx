@@ -81,7 +81,7 @@ export default function RegistrationSuccess() {
       <div className="max-w-2xl w-full bg-white rounded-sm shadow-xl p-8">
         <div className="text-center mb-8">
           <Icon name="check" className="w-24 h-24 text-green-600 mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-black text-gray-900 mb-2 gradient-text">
             Inschrijving geslaagd!
           </h1>
           <p className="text-xl text-gray-600">
@@ -157,10 +157,7 @@ export default function RegistrationSuccess() {
         </div>
 
         <div className="mt-8 flex gap-4">
-          <Link
-            to="/dashboard"
-            className="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-center font-semibold py-3 px-4 rounded-sm transition-colors"
-          >
+          <Link to="/dashboard" className="btn-primary flex-1 text-center">
             Ga naar Dashboard
           </Link>
           <Link

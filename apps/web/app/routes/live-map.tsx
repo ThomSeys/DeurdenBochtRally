@@ -412,6 +412,7 @@ export default function LiveMap() {
   const [showEmergencyAlerts, setShowEmergencyAlerts] = useState(true);
   const [showUserLocation, setShowUserLocation] = useState(true);
   const [showLiveLocations, setShowLiveLocations] = useState(isAdmin ? true : false);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   // Get user's location
   useEffect(() => {
@@ -495,8 +496,8 @@ export default function LiveMap() {
           showLiveLocations={showLiveLocations}
         />
 
-        {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-20">
+        {/* Legend - desktop */}
+        <div className="hidden sm:block absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-20">
           <div className="flex items-center gap-2 mb-3">
             <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
             <h3 className="font-semibold text-gray-900">Legenda</h3>
@@ -584,6 +585,85 @@ export default function LiveMap() {
             <p className="text-xs text-gray-500 mt-3 italic">Geen actieve evenementen of check-ins</p>
           )}
         </div>
+
+        {/* Mobile legend button */}
+        <div className="sm:hidden fixed bottom-6 left-4 z-50 flex justify-center pointer-events-none">
+          <button
+            type="button"
+            onClick={() => setLegendOpen(true)}
+            className="pointer-events-auto bg-white rounded-full shadow p-4 flex items-center gap-3"
+          >
+            <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
+            <span className="font-medium">Legenda</span>
+          </button>
+        </div>
+
+        {/* Mobile legend panel (dismissible) */}
+        {legendOpen && (
+          <div className="sm:hidden fixed inset-x-4 bottom-4 z-50 bg-white rounded-lg shadow-lg p-4 max-h-[60vh] overflow-auto">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
+                <h3 className="font-semibold text-gray-900">Legenda</h3>
+              </div>
+              <button onClick={() => setLegendOpen(false)} className="text-sm text-gray-600 hover:text-gray-800">Sluiten</button>
+            </div>
+            <div className="space-y-2.5 text-sm">
+              <div className="border-b pb-2.5">
+                <div className="font-medium text-gray-700 mb-2 flex items-center gap-2" onClick={() => setShowZoneRoutes(!showZoneRoutes)}>
+                  <Icon name="map" className="w-4 h-4" />
+                  <span style={{opacity: showZoneRoutes ? 1 : 0.5}}>Rally Zones</span>
+                </div>
+                <div className="flex items-center gap-2 pl-6" style={{opacity: showZoneRoutes ? 1 : 0.5}}>
+                  <div className="w-3 h-0.5 bg-primary-600"></div>
+                  <span>Zone Routes</span>
+                </div>
+                <div className="flex items-center gap-2 pl-6" style={{opacity: showZoneRoutes ? 1 : 0.5}}>
+                  <span className="font-bold text-xs">S{isAdmin ? ' / E' : ''}</span>
+                  <span>Start{isAdmin ? ' / Eind' : ''} Punt{isAdmin ? 'en' : ''}</span>
+                </div>
+              </div>
+
+              {isAdmin && (
+                <div className="border-b pb-2.5">
+                  <div className="font-medium text-gray-700 mb-2 flex items-center gap-2" onClick={() => setShowCheckIns(!showCheckIns)}>
+                    <Icon name="check-circle" className="w-4 h-4" />
+                    <span style={{opacity: showCheckIns ? 1 : 0.5}}>Check-ins ({checkIns?.length || 0})</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="border-b pb-2.5">
+                <div className="font-medium text-gray-700 mb-2 flex items-center gap-2" onClick={() => setShowUserLocation(!showUserLocation)}>
+                  <Icon name="marker" className="w-4 h-4 text-purple-600" />
+                  <span style={{opacity: showUserLocation ? 1 : 0.5}}>Uw Locatie</span>
+                </div>
+              </div>
+
+              {eventMarkers.length > 0 && (
+                <div className="border-b pb-2.5">
+                  <div className="font-medium text-gray-700 mb-2 flex items-center gap-2" onClick={() => setShowEventMarkers(!showEventMarkers)}>
+                    <Icon name="alert" className="w-4 h-4" />
+                    <span style={{opacity: showEventMarkers ? 1 : 0.5}}>Live Evenementen ({eventMarkers.length})</span>
+                  </div>
+                </div>
+              )}
+
+              {isAdmin && emergencyAlerts && emergencyAlerts.length > 0 && (
+                <div className="border-t pt-2.5">
+                  <div className="font-medium text-red-600 mb-2 flex items-center gap-2" onClick={() => setShowEmergencyAlerts(!showEmergencyAlerts)}>
+                    <Icon name="alert-circle" className="w-4 h-4" />
+                    <span style={{opacity: showEmergencyAlerts ? 1 : 0.5}}>Nood SOS ({emergencyAlerts.length})</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {eventMarkers.length === 0 && checkIns.length === 0 && (
+              <p className="text-xs text-gray-500 mt-3 italic">Geen actieve evenementen of check-ins</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Event Submission Form */}

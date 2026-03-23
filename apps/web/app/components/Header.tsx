@@ -371,7 +371,7 @@ export default function Header({ transparent, fixed }: { transparent?: boolean; 
             onClick={() => { tap(); setUserMenuOpen(false); }}
           />
 
-          <div className={`hidden md:block fixed top-16 right-4 z-[1110] w-80 max-w-[92vw] transform transition-all duration-200 ${userMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 pointer-events-none'}`}>
+          <div className={`hidden md:block fixed top-16 right-4 z-[1110] w-80 max-w-[92vw] max-h-[80vh] overflow-y-auto transform transition-all duration-200 ${userMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 pointer-events-none'}`}>
             <div className="h-full flex flex-col bg-white rounded-lg shadow-xl overflow-hidden">
               {/* Header */}
               <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">

@@ -1,0 +1,36 @@
+[
+  {
+    "_id": "edition-2026",
+    "_type": "edition",
+    "year": 2026,
+    "name": "Deur den Bocht Rally 2026",
+    "slug": { "_type": "slug", "current": "2026" },
+    "isActive": true,
+    "eventDate": "2026-05-16",
+    "registrationOpen": true
+  },
+  {
+    "_type": "siteConfig",
+    "_id": "siteConfig",
+    "eventName": "Deur Den Bocht",
+    "eventDate": "2026-05-16",
+    "eventLocation": "Café Den Belami, Aalter",
+    "startLocation": { "lat": 51.0967, "lng": 3.44, "label": "Café Den Belami, Aalter" },
+    "eventTagline": "The 500 — Een unieke motordag door de mooiste bochten van België",
+    "contactEmail": "vzwddb@gmail.com",
+    "contactWhatsapp": "",
+    "contactLocation": "Aalter",
+    "socialFacebook": "",
+    "socialInstagram": "",
+    "socialStrava": "",
+    "seoTitle": "Deur Den Bocht — Motorrit Rally 2026",
+    "seoDescription": "Een unieke 500+ km motordag door België, Noord-Frankrijk en de Ardennen. Geen race, puur rijplezier. Inschrijven voor zondag 16 mei 2026.",
+    "maxRegistrations": 150,
+    "noIndex": false,
+    "noFollow": false,
+    "gpxRouteFiles": [],
+    "gpsInstructions": "Belangrijk: Het grootste deel van de route zal via GPS gevolgd worden (niet de rally zone markers). Deelnemers moeten een manier hebben om GPX-bestanden te volgen: een smartphone met een GPX-app of een standalone GPS-apparaat (bijv. TomTom of Garmin). We testen de GPX-bestanden op zowel TomTom als Garmin. Zorg dat je apparaat/ app up-to-date is en dat je de GPX importeert vóór de rit.",
+    "spotifyPlaylistUrl": "",
+    "edition": { "_type": "reference", "_ref": "edition-2026" }
+  }
+]

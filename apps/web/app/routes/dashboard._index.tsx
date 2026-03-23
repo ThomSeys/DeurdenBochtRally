@@ -4,10 +4,11 @@ import { useLoaderData, Link, Form } from 'react-router';
 import { useState, useEffect, useRef } from 'react';
 import { requireUserId, getUser } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
-import { sanityClient } from '~/lib/sanity.server';
+import { getSiteConfig, sanityClient } from '~/lib/sanity.server';
 import { FORMULA_LABELS, RIDE_TYPE_LABELS } from '~/lib/utils';
 import { isFeatureEnabled } from '~/lib/feature-flags.server';
 import Header from '~/components/Header';
+import HeroMedia from '~/components/HeroMedia';
 import { Icon } from '~/components/Icon';
 import { PWAInstallPrompt } from '~/components/PWAInstallPrompt';
 import { createRequestLogger } from '~/lib/logger.server';
@@ -75,23 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const buddyIds = (buddyLinks || []).map((b: any) => b.buddy_id).filter(Boolean);
 
   // Fetch GPX route file and Spotify playlist
-  const siteConfig = await sanityClient.fetch(`
-    *[_type == "siteConfig"][0] {
-      gpxRouteFile {
-        asset-> {
-          url,
-          originalFilename
-        }
-      },
-      gpxRouteFiles[] {
-        asset-> {
-          url,
-          originalFilename
-        }
-      },
-      spotifyPlaylistUrl
-    }
-  `);
+  const siteConfig = await getSiteConfig();
 
   const gpxRouteFiles = (siteConfig?.gpxRouteFiles || []).filter((file: any) => file?.asset?.url);
   const legacyGpxUrl = siteConfig?.gpxRouteFile?.asset?.url;
@@ -266,6 +251,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   return { 
     user, 
+    siteConfig,
     zoneCheckins,
     hazepadZones: zoneCheckins,
     hazepadCount: hazepadZoneIds?.size,
@@ -325,7 +311,8 @@ export default function Dashboard() {
     challengeStats, 
     completedChallenges, 
     rallyZones, 
-    crewStats 
+    crewStats,
+    siteConfig
   } = useLoaderData<typeof loader>();
   const [qrError, setQrError] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
@@ -403,21 +390,23 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
-                <Icon name="home" className="w-10 h-10" />
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-2">Welkom, {user.first_name}!</h1>
-              <p className="text-xl text-primary-100">Klaar voor een dag vol bochten en avontuur?</p>
-            </div>
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-primary-200 font-semibold text-sm uppercase tracking-widest mb-3">
+              {siteConfig?.eventName || 'Deur Den Bocht'}
+            </p>
+            <h1 className="text-5xl lg:text-6xl font-black mb-4 leading-tight">Welkom, {user.first_name}!</h1>
+            <p className="text-lg lg:text-xl text-primary-100 leading-relaxed mb-8">
+              Klaar voor een dag vol bochten en avontuur?
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-800">
         {/* PWA Install Prompt */}
         <PWAInstallPrompt />
 
@@ -589,36 +578,36 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {/* Registration Status */}
-          <div data-tour="profile-section" className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon name="check" className="w-6 h-6 text-green-600" />
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {/* Registration Status - dark style to match About */}
+          <div data-tour="profile-section" className="bg-gray-900 text-white rounded-sm shadow p-6">
+            <h3 className="font-semibold text-white/90 mb-4 flex items-center gap-2">
+              <Icon name="check" className="w-6 h-6 text-green-400" />
               Inschrijving
             </h3>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-gray-600">Status:</dt>
-                <dd className="font-medium text-green-600">Bevestigd</dd>
+                <dt className="text-white/60">Status:</dt>
+                <dd className="font-medium text-green-400">Bevestigd</dd>
               </div>
               <div>
-                <dt className="text-gray-600">Formule:</dt>
-                <dd className="font-medium">{FORMULA_LABELS[user.formula as keyof typeof FORMULA_LABELS]}</dd>
+                <dt className="text-white/60">Formule:</dt>
+                <dd className="font-medium text-white">{FORMULA_LABELS[user.formula as keyof typeof FORMULA_LABELS]}</dd>
               </div>
               <div>
-                <dt className="text-gray-600">Rittype:</dt>
-                <dd className="font-medium">{RIDE_TYPE_LABELS[user.ride_type as keyof typeof RIDE_TYPE_LABELS]}</dd>
+                <dt className="text-white/60">Rittype:</dt>
+                <dd className="font-medium text-white">{RIDE_TYPE_LABELS[user.ride_type as keyof typeof RIDE_TYPE_LABELS]}</dd>
               </div>
             </dl>
           </div>
 
-          {/* QR Code */}
-          <div data-tour="qr-code" className="bg-white rounded-sm shadow p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon name="phone" className="w-6 h-6 text-primary-600" />
+          {/* QR Code - dark panel */}
+          <div data-tour="qr-code" className="bg-gray-900 text-white rounded-sm shadow p-6">
+            <h3 className="font-semibold text-white/90 mb-4 flex items-center gap-2">
+              <Icon name="phone" className="w-6 h-6 text-primary-300" />
               QR-code
             </h3>
-            <div className="bg-gray-50 p-4 rounded text-center">
+            <div className="bg-gray-800 p-4 rounded text-center">
               {!qrError && qrCodeUrl ? (
                 <img 
                   src={qrCodeUrl}
@@ -627,72 +616,72 @@ export default function Dashboard() {
                   onError={() => setQrError(true)}
                 />
               ) : (
-                <div className="w-full max-w-[200px] mx-auto mb-2 bg-gray-200 rounded flex items-center justify-center" style={{height: '200px'}}>
-                  <span className="text-gray-500 text-sm">QR code niet beschikbaar</span>
+                <div className="w-full max-w-[200px] mx-auto mb-2 bg-gray-800 rounded flex items-center justify-center" style={{height: '200px'}}>
+                  <span className="text-white/40 text-sm">QR code niet beschikbaar</span>
                 </div>
               )}
-              <p className="text-xs text-gray-600 font-mono mb-1">
+              <p className="text-xs text-white/60 font-mono mb-1">
                 {user.qr_code}
               </p>
-              <p className="text-xs text-gray-600 font-semibold">
+              <p className="text-xs text-white font-semibold">
                 Toon dit bij de start
               </p>
             </div>
             <Link
               to="/dashboard/profile-edit"
-              className="mt-4 block text-center text-primary-600 hover:text-primary-700 font-medium text-sm"
+              className="mt-4 block text-center text-primary-200 hover:text-primary-300 font-medium text-sm"
             >
               Bewerk mijn gegevens →
             </Link>
           </div>
 
-          {/* Rally Progress */}
+          {/* Rally Progress - dark panel */}
           {rallyZonesEnabled && routePreference === 'adventure' && (
-            <div data-tour="rally-zones" className="bg-white rounded-sm shadow p-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Icon name="map" className="w-6 h-6 text-primary-600" />
+            <div data-tour="rally-zones" className="bg-gray-900 text-white rounded-sm shadow p-6">
+              <h3 className="font-semibold text-white/90 mb-4 flex items-center gap-2">
+                <Icon name="map" className="w-6 h-6 text-primary-300" />
                 Rally Avontuur
               </h3>
               {completedZones > 0 ? (
                 <div className="space-y-3 text-sm">
                   <div>
-                    <dt className="text-gray-600">Zones bezocht:</dt>
-                    <dd className="font-medium text-2xl text-primary-600">{completedZones}/4</dd>
+                    <dt className="text-white/60">Zones bezocht:</dt>
+                    <dd className="font-medium text-2xl text-primary-300">{completedZones}/4</dd>
                   </div>
                   <Link
                     to="/rally"
-                    className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium text-sm"
+                    className="inline-block mt-2 text-primary-200 hover:text-primary-300 font-medium text-sm"
                   >
                     Bekijk alle zones →
                   </Link>
                 </div>
               ) : (
-                <div className="text-gray-600 text-sm space-y-2">
+                <div className="text-white/60 text-sm space-y-2">
                   <p>Start je avontuur!</p>
                   <Link
                     to="/rally"
-                    className="inline-block mt-2 text-primary-600 hover:text-primary-700 font-medium"
+                    className="inline-block mt-2 text-primary-200 hover:text-primary-300 font-medium"
                   >
                     Ontdek de zones →
                   </Link>
                 </div>
               )}
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 mt-4">
-                <Icon name="award" className="w-6 h-6 text-amber-600" />
+              <h3 className="font-semibold text-white/90 mb-4 flex items-center gap-2 mt-4">
+                <Icon name="award" className="w-6 h-6 text-amber-400" />
                 Journey Punten
               </h3>
               <div className="grid sm:grid-cols-3 gap-6">
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">Behaalde Punten</p>
-                  <p className="font-bold text-3xl text-amber-600">{challengeStats.total_points_earned}</p>
+                  <p className="text-white/60 text-sm mb-1">Behaalde Punten</p>
+                  <p className="font-bold text-3xl text-amber-400">{challengeStats.total_points_earned}</p>
                 </div>
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">Challenges Goed</p>
-                  <p className="font-bold text-3xl text-green-600">{challengeStats.total_correct}/{challengeStats.total_submitted}</p>
+                  <p className="text-white/60 text-sm mb-1">Challenges Goed</p>
+                  <p className="font-bold text-3xl text-green-400">{challengeStats.total_correct}/{challengeStats.total_submitted}</p>
                 </div>
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">Nog te beoordelen</p>
-                  <p className="font-bold text-3xl text-accent-500">{completedChallenges.length - challengeStats.total_submitted}</p>
+                  <p className="text-white/60 text-sm mb-1">Nog te beoordelen</p>
+                  <p className="font-bold text-3xl text-accent-300">{completedChallenges.length - challengeStats.total_submitted}</p>
                 </div>
               </div>
 
@@ -709,7 +698,7 @@ export default function Dashboard() {
                   </div>
               )}
               {challengeStats.total_submitted === 0 && (
-                <p className="text-gray-600 text-sm mt-4">
+                <p className="text-white/60 text-sm mt-4">
                   Ontdek challenges op de rally zones en verdien punten! 🎯
                 </p>
               )}

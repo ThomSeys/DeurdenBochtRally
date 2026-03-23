@@ -736,7 +736,7 @@ export default function Registration() {
               <div className="pt-6">
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold py-4 px-6 rounded-sm text-lg transition-colors"
+                  className="btn-primary w-full"
                 >
                   Doorgaan naar betaling
                 </button>
