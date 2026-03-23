@@ -497,7 +497,7 @@ export default function LiveMap() {
         />
 
         {/* Legend - desktop */}
-        <div className="hidden sm:block absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-20">
+        <div className="hidden sm:block absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm border border-gray-200/20 shadow-2xl rounded-xl p-5 max-w-xs z-50 transform transition-all duration-200">
           <div className="flex items-center gap-2 mb-3">
             <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
             <h3 className="font-semibold text-gray-900">Legenda</h3>
@@ -591,7 +591,7 @@ export default function LiveMap() {
           <button
             type="button"
             onClick={() => setLegendOpen(true)}
-            className="pointer-events-auto bg-white rounded-full shadow p-4 flex items-center gap-3"
+            className="pointer-events-auto bg-white/95 border border-gray-200/20 rounded-full shadow-2xl p-3 flex items-center gap-3 px-4"
           >
             <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
             <span className="font-medium">Legenda</span>
@@ -600,7 +600,7 @@ export default function LiveMap() {
 
         {/* Mobile legend panel (dismissible) */}
         {legendOpen && (
-          <div className="sm:hidden fixed inset-x-4 bottom-4 z-50 bg-white rounded-lg shadow-lg p-4 max-h-[60vh] overflow-auto">
+          <div className="sm:hidden fixed inset-x-4 bottom-4 z-50 bg-white/95 backdrop-blur-sm border border-gray-200/20 shadow-2xl rounded-xl p-4 max-h-[60vh] overflow-auto transform transition-all duration-200">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Icon name="info-circle" className="w-5 h-5 text-primary-600" />
