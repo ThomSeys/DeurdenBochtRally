@@ -4,8 +4,11 @@ import { requireUserId } from '~/lib/session.server';
 import { supabaseAdmin } from '~/lib/supabase.server';
 import { createRequestLogger } from '~/lib/logger.server';
 import { checkAndUnlockAchievements } from '~/lib/achievement-checker.server';
+import { getSiteConfig, getActiveEdition } from '~/lib/sanity.server';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import HeroMedia from '~/components/HeroMedia';
+import Footer from '~/components/Footer';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Achievements - Deur Den Bocht' }];
@@ -384,14 +387,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
     progress: getAchievementProgress(achievement, stats),
   }));
 
+  const [siteConfig, edition] = await Promise.all([getSiteConfig(), getActiveEdition()]);
+
   return { 
     achievements: achievementsWithProgress,
     stats,
+    siteConfig,
+    edition,
   };
 }
 
 export default function Achievements() {
-  const { achievements, stats } = useLoaderData<typeof loader>();
+  const { achievements, stats, siteConfig, edition } = useLoaderData<typeof loader>();
 
   const categories: Record<string, { name: string; color: string; icon: string }> = {
     progress: { name: 'Voortgang', color: 'from-blue-500 to-blue-600', icon: 'chart' },
@@ -401,70 +408,70 @@ export default function Achievements() {
   };
 
   const groupedAchievements = achievements.reduce((acc: any, achievement: any) => {
-    if (!acc[achievement.category]) {
-      acc[achievement.category] = [];
-    }
+    if (!acc[achievement.category]) acc[achievement.category] = [];
     acc[achievement.category].push(achievement);
     return acc;
-  }, {});
+  }, {} as Record<string, any[]>);
 
   const totalAchievements = achievements.length;
   const unlockedCount = achievements.filter((a: any) => a.isUnlocked).length;
   const completionPercentage = totalAchievements > 0 ? Math.round((unlockedCount / totalAchievements) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <Header />
-      
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div className="min-h-screen flex flex-col bg-gray-800">
+      <Header fixed transparent={true} />
+
+      {/* Hero (About style) */}
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="trophy" className="w-10 h-10" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Achievements</h1>
-          <p className="text-xl text-primary-100">Ontgrendel achievements door deel te nemen aan de rally!</p>
+          <h1 className="text-5xl lg:text-6xl font-black mb-4">Achievements</h1>
+          <p className="text-lg lg:text-xl text-primary-100 leading-relaxed">Ontgrendel achievements door deel te nemen aan de rally!</p>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Stats Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {/* Total Progress */}
-          <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-primary-500">
-            <div className="text-sm font-medium text-gray-600 mb-2">Voortgang</div>
-            <div className="text-3xl font-bold text-primary-600 mb-2">{unlockedCount}/{totalAchievements}</div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="bg-gray-900 rounded-sm shadow-2xl p-6 border-t-4 border-primary-500">
+            <div className="text-sm font-medium text-primary-200 mb-2">Voortgang</div>
+            <div className="text-3xl font-bold text-white mb-2">{unlockedCount}/{totalAchievements}</div>
+            <div className="w-full bg-white/5 rounded-full h-2">
               <div 
                 className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>
-            <div className="text-xs text-gray-500 mt-2">{completionPercentage}% compleet</div>
+            <div className="text-xs text-primary-200 mt-2">{completionPercentage}% compleet</div>
           </div>
 
           {/* Zones */}
-          <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-green-500">
-            <div className="text-sm font-medium text-gray-600 mb-2">Zones Voltooid</div>
-            <div className="text-3xl font-bold text-green-600">{stats.zones_completed}<span className="text-xl text-gray-400">/8</span></div>
-            <div className="text-xs text-gray-500 mt-4 flex items-center gap-1">
+          <div className="bg-gray-900 rounded-sm shadow-2xl p-6 border-t-4 border-green-500">
+            <div className="text-sm font-medium text-primary-200 mb-2">Zones Voltooid</div>
+            <div className="text-3xl font-bold text-green-400">{stats.zones_completed}<span className="text-xl text-white/40">/8</span></div>
+            <div className="text-xs text-primary-200 mt-4 flex items-center gap-1">
               <Icon name="target" className="w-3 h-3" />
               Rally voortgang
             </div>
           </div>
 
           {/* Photos */}
-          <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-pink-500">
-            <div className="text-sm font-medium text-gray-600 mb-2">Foto's Geüpload</div>
-            <div className="text-3xl font-bold text-pink-600">{stats.photos_uploaded}</div>
-            <div className="text-xs text-gray-500 mt-4 flex gap-2 items-center"><Icon name="camera" className="w-3 h-3" /> Deel je momenten</div>
+          <div className="bg-gray-900 rounded-sm shadow-2xl p-6 border-t-4 border-pink-500">
+            <div className="text-sm font-medium text-primary-200 mb-2">Foto's Geüpload</div>
+            <div className="text-3xl font-bold text-pink-400">{stats.photos_uploaded}</div>
+            <div className="text-xs text-primary-200 mt-4 flex gap-2 items-center"><Icon name="camera" className="w-3 h-3" /> Deel je momenten</div>
           </div>
 
           {/* Stories */}
-          <div className="bg-white rounded-sm shadow-lg p-6 border-t-4 border-orange-500">
-            <div className="text-sm font-medium text-gray-600 mb-2">Verhalen Gedeeld</div>
-            <div className="text-3xl font-bold text-orange-600">{stats.stories_shared}</div>
-            <div className="text-xs text-gray-500 mt-4 flex gap-2 items-center"><Icon name="book" className="w-3 h-3" /> Deel je avontuur</div>
+          <div className="bg-gray-900 rounded-sm shadow-2xl p-6 border-t-4 border-orange-500">
+            <div className="text-sm font-medium text-primary-200 mb-2">Verhalen Gedeeld</div>
+            <div className="text-3xl font-bold text-orange-400">{stats.stories_shared}</div>
+            <div className="text-xs text-primary-200 mt-4 flex gap-2 items-center"><Icon name="book" className="w-3 h-3" /> Deel je avontuur</div>
           </div>
         </div>
 
@@ -490,8 +497,8 @@ export default function Achievements() {
                     key={achievement.id}
                     className={`group relative rounded-sm shadow-xl overflow-hidden transition-all duration-300 ${
                       isUnlocked 
-                        ? 'bg-gradient-to-br from-white via-teal-50 to-teal-100 border-2 border-teal-400 ring-2 ring-teal-200' 
-                        : 'bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-300 hover:border-gray-400'
+                        ? 'bg-gradient-to-br from-teal-700 to-teal-600 border-2 border-teal-500 text-white' 
+                        : 'bg-gray-800 border border-gray-700 hover:border-gray-600 text-primary-200'
                     }`}
                   >
                     {isUnlocked && (
@@ -519,12 +526,12 @@ export default function Achievements() {
                       </div>
 
                       {/* Title */}
-                      <h3 className={`text-xl font-bold mb-2 ${isUnlocked ? 'text-gray-900' : 'text-gray-600'}`}>
+                      <h3 className={`text-xl font-bold mb-2 ${isUnlocked ? 'text-white' : 'text-primary-100'}`}>
                         {achievement.title}
                       </h3>
 
                       {/* Description */}
-                      <p className={`text-sm mb-4 leading-relaxed ${isUnlocked ? 'text-gray-700' : 'text-gray-500'}`}>
+                      <p className={`text-sm mb-4 leading-relaxed ${isUnlocked ? 'text-white/80' : 'text-primary-200'}`}>
                         {achievement.description}
                       </p>
 
@@ -532,10 +539,10 @@ export default function Achievements() {
                       {!isUnlocked && progress.target > 0 && (
                         <div className="mb-4">
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-semibold text-gray-600">{progress.label}</span>
-                            <span className="text-xs font-bold text-primary-600">{progress.percentage}%</span>
+                            <span className="text-xs font-semibold text-primary-200">{progress.label}</span>
+                            <span className="text-xs font-bold text-primary-300">{progress.percentage}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="w-full bg-white/5 rounded-full h-2.5">
                             <div 
                               className="bg-gradient-to-r from-primary-500 to-primary-600 h-2.5 rounded-full transition-all duration-500"
                               style={{ width: `${progress.percentage}%` }}
@@ -545,14 +552,14 @@ export default function Achievements() {
                       )}
 
                       {/* Footer */}
-                      <div className="flex items-center justify-between pt-4 border-t-2 border-gray-200">
+                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
                         {isUnlocked ? (
-                          <div className="text-xs text-green-600 font-semibold px-3 py-1.5 bg-green-100 rounded-full flex items-center gap-1">
+                          <div className="text-xs text-green-300 font-semibold px-3 py-1.5 bg-green-900/30 rounded-full flex items-center gap-1">
                             <Icon name="sparkles" className="w-3 h-3" />
                             Voltooid
                           </div>
                         ) : (
-                          <div className="text-xs text-gray-500 font-medium">
+                          <div className="text-xs text-primary-200 font-medium">
                             {progress.label}
                           </div>
                         )}
@@ -601,6 +608,7 @@ export default function Achievements() {
           </div>
         </div>
       </div>
+      <Footer siteConfig={siteConfig} />
     </div>
   );
 }

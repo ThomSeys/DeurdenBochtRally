@@ -1,9 +1,11 @@
 import { type LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import { supabaseAdmin } from '~/lib/supabase.server';
+import { getSiteConfig } from '~/lib/sanity.server';
 import { useEffect, useState } from 'react';
 import Header from '~/components/Header';
 import { Icon } from '~/components/Icon';
+import HeroMedia from '~/components/HeroMedia';
 import { Lightbox } from '~/components/Lightbox';
 import { requireUserId } from '~/lib/session.server';
 
@@ -153,11 +155,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
   }));
 
-  return { albums, userId, likedPhotoIds, buddies: buddiesList };
+  const siteConfig = await getSiteConfig();
+
+  return { albums, userId, likedPhotoIds, buddies: buddiesList, siteConfig };
 }
 
 export default function EventAlbums() {
-  const { albums, userId, likedPhotoIds, buddies } = useLoaderData<typeof loader>();
+  const { albums, userId, likedPhotoIds, buddies, siteConfig } = useLoaderData<typeof loader>();
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
@@ -297,19 +301,31 @@ export default function EventAlbums() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-        {/* Header */}
-        <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="min-h-screen flex flex-col">
+        {/* Hero (About style) */}
+        <section className="relative text-white overflow-hidden">
+          <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
               <Icon name="folder" className="w-10 h-10" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-2">Event Albums</h1>
-            <p className="text-xl text-primary-100">
-              Bekijk officiële foto's per rally zone
-            </p>
+            <h1 className="text-5xl lg:text-6xl font-black mb-2">Event Albums</h1>
+            <p className="text-lg lg:text-xl text-primary-100">Bekijk officiële foto's per rally zone</p>
           </div>
-        </div>
+        </section>
+          {/* Hero (About style) */}
+          <section className="relative text-white overflow-hidden">
+            <HeroMedia siteConfig={undefined} neverShowVideo />
+
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20 text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
+                <Icon name="folder" className="w-10 h-10" />
+              </div>
+              <h1 className="text-5xl lg:text-6xl font-black mb-2">Event Albums</h1>
+              <p className="text-lg lg:text-xl text-primary-100">Bekijk officiële foto's per rally zone</p>
+            </div>
+          </section>
 
         {/* Albums */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

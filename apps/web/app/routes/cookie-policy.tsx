@@ -2,6 +2,7 @@ import { type MetaFunction } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { Icon } from '~/components/Icon';
+import HeroMedia from '~/components/HeroMedia';
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,16 +16,18 @@ export default function CookiePolicy() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Hero (About style) */}
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={undefined} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="document" className="w-10 h-10" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">Cookieverklaring</h1>
-          <p className="text-xl text-primary-100">Hoe we cookies gebruiken op onze website</p>
+          <h1 className="text-5xl lg:text-6xl font-black mb-2">Cookieverklaring</h1>
+          <p className="text-lg lg:text-xl text-primary-100">Hoe we cookies gebruiken op onze website</p>
         </div>
-      </div>
+      </section>
 
       {/* Content */}
       <main className="flex-1 bg-gray-50">

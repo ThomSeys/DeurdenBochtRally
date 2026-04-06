@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Form, useLoaderData, useSearchParams } from 'react-router';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
+import HeroMedia from '~/components/HeroMedia';
 import ClientOnly from '~/components/ClientOnly';
 import LiveEventMap from '~/components/LiveEventMap';
 import { supabaseAdmin } from '~/lib/supabase.server';
@@ -142,18 +143,13 @@ export default function PublicParticipantTracker() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl" />
-        </div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
-            Volg Deelnemers Live
-          </h1>
-          <p className="text-lg sm:text-xl text-primary-100 max-w-3xl mx-auto">
+      {/* Hero (About style) */}
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={undefined} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20 text-center">
+          <h1 className="text-5xl lg:text-6xl font-black mb-4">Volg Deelnemers Live</h1>
+          <p className="text-lg lg:text-xl text-primary-100 max-w-3xl mx-auto">
             Volg vrienden en familie live tijdens het rally event. Voer de nummerplaat en het emailadres in om hun laatste locatie en voortgang te bekijken.
           </p>
         </div>

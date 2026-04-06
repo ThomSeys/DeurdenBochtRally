@@ -4,6 +4,7 @@ import { requireUserId } from '~/lib/session.server';
 import { supabase, supabaseAdmin } from '~/lib/supabase.server';
 import Header from '~/components/Header';
 import { useHaptics } from '~/lib/haptics';
+import { getSiteConfig } from '~/lib/sanity.server';
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from '~/components/Icon';
 import { Lightbox } from '~/components/Lightbox';
@@ -80,13 +81,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   console.log('[gallery] transformed buddiesList:', buddiesList);
 
+  const siteConfig = await getSiteConfig();
+
   return { 
     userId, 
     participant, 
     photos: photos || [], 
     myPhotos: myPhotos || [],
     buddies: buddiesList,
-    csrfToken: await getCSRFToken(request)
+    csrfToken: await getCSRFToken(request),
+    siteConfig,
   };
 }
 
@@ -391,7 +395,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Gallery() {
-  const { photos, myPhotos, userId, buddies, csrfToken } = useLoaderData<typeof loader>();
+  const { photos, myPhotos, userId, buddies, csrfToken, siteConfig } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const revalidator = useRevalidator();
   const [showUpload, setShowUpload] = useState(false);
@@ -621,21 +625,23 @@ export default function Gallery() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+    <div className="min-h-screen flex flex-col">
       <Header />
       {/* haptics */}
       {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
       {/* call hook in component scope */}
       {null}
       
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white py-16 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Hero (About style) */}
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mb-6">
             <Icon name="camera" className="w-10 h-10" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Rally Fotoalbum</h1>
-          <p className="text-xl text-primary-100 mb-8">Onze mooiste momenten op de baan</p>
+          <h1 className="text-5xl lg:text-6xl font-black mb-4">Rally Fotoalbum</h1>
+          <p className="text-lg lg:text-xl text-primary-100 mb-8">Onze mooiste momenten op de baan</p>
           <div className="flex justify-center gap-4">
             <button
               onClick={() => { tap(); setShowUpload(!showUpload); }}
@@ -646,7 +652,7 @@ export default function Gallery() {
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {actionData?.message && (

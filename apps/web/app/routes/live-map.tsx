@@ -8,6 +8,7 @@ import { createRequestLogger } from '~/lib/logger.server';
 import EventSubmissionForm from '~/components/EventSubmissionForm';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
+import HeroMedia from '~/components/HeroMedia';
 import { Icon } from '~/components/Icon';
 import { MARKER_COLORS } from '~/lib/constants';
 import { useMasterTour } from '~/components/MasterTour';
@@ -445,34 +446,63 @@ export default function LiveMap() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      {/* Page Header */}
-      <div className="bg-gradient-to-br from-primary-900 via-primary-600 to-primary-400 text-white">
-        <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold break-words flex items-center gap-2">
-                <Icon name="map" className="w-8 h-8" />
-                Live Rally Kaart
-              </h1>
-              <p className="mt-2 text-primary-100 break-words text-sm sm:text-base">
-                Real-time overzicht van de rally zones en evenementen
-                {!isEventDay && isAdmin && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Admin Voorbeeld
-                  </span>
-                )}
-              </p>
-              {siteConfig?.gpsInstructions && (
-                <div className="mt-3 p-3 bg-white/10 rounded text-sm text-yellow-50 border border-yellow-200/20">
-                  <strong className="block font-semibold mb-1">GPX &amp; GPS — Belangrijke info</strong>
-                  <div>{siteConfig.gpsInstructions}</div>
+      {/* Hero (match About page style) */}
+      <section className="relative text-white overflow-hidden">
+        <HeroMedia siteConfig={siteConfig} neverShowVideo />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-20">
+          <div className="max-w-3xl">
+            <p className="text-primary-200 font-semibold text-sm uppercase tracking-widest mb-3">
+              {siteConfig?.eventName || 'Deur Den Bocht'} · {edition ? new Date(edition.eventDate).getFullYear() : new Date().getFullYear()}
+            </p>
+            <h1 className="text-5xl lg:text-6xl font-black mb-4 leading-tight flex items-center gap-4">
+              <Icon name="map" className="w-10 h-10" />
+              Live Rally Kaart
+            </h1>
+            <p className="text-lg lg:text-xl text-primary-100 leading-relaxed mb-8 max-w-2xl">
+              Real-time overzicht van de rally zones en evenementen. Volg deelnemers en gebeurtenissen live op de kaart.
+            </p>
+
+            <div className="flex flex-wrap gap-6">
+              {edition && (
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                    <Icon name="calendar" className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-black leading-none">
+                      {new Date(edition.eventDate).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long' })}
+                    </div>
+                    <div className="text-xs text-primary-200 mt-0.5">
+                      {new Date(edition.eventDate).getFullYear()}
+                    </div>
+                  </div>
                 </div>
               )}
+
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="road" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">Kaartweergave</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Realtime & interactief</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon name="flag" className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xl font-black leading-none">Zones</div>
+                  <div className="text-xs text-primary-200 mt-0.5">Rally zones en markers</div>
+                </div>
+              </div>
             </div>
-            <LiveMapTourButton />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Map Container */}
       <div className="relative" style={{ height: '80vh' }}>
