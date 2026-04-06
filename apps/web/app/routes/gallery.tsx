@@ -13,6 +13,7 @@ import { compressImage } from '~/lib/image-compression';
 import { stripEXIFAndOptimize } from '~/lib/image-exif.server';
 import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
 import CSRFInput from '~/components/CSRFInput';
+import HeroMedia from '~/components/HeroMedia';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'Fotogalerij - Deur Den Bocht' }];
@@ -625,13 +626,8 @@ export default function Gallery() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-800">
       <Header />
-      {/* haptics */}
-      {/* eslint-disable-next-line react-hooks/rules-of-hooks */}
-      {/* call hook in component scope */}
-      {null}
-      
       {/* Hero (About style) */}
       <section className="relative text-white overflow-hidden">
         <HeroMedia siteConfig={siteConfig} neverShowVideo />
@@ -654,7 +650,7 @@ export default function Gallery() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 rounded-2xl shadow-2xl">
         {actionData?.message && (
           <div className="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-r-lg shadow-md flex items-center gap-3">
             <Icon name="check-circle" className="w-6 h-6" />
@@ -854,7 +850,7 @@ export default function Gallery() {
                   className="break-inside-avoid group"
                 >
                   {/* Polaroid Card */}
-                  <div className="bg-white p-4 pb-16 rounded-sm shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer relative">
+                  <div className="bg-gray-900 p-4 pb-16 rounded-sm shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer relative">
                     {/* Tape effect */}
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-8 bg-amber-100/70 rounded-sm shadow-sm" style={{ transform: 'rotate(-2deg)' }}></div>
                     
