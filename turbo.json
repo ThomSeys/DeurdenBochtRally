@@ -24,6 +24,9 @@
     "VERCEL_OIDC_TOKEN"
   ],
   "tasks": {
+    "gen:types": {
+      "cache": false
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "build/**", "public/build/**"],

@@ -1,0 +1,10 @@
+{
+  "name": "@ddb/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./index.css"
+  },
+  "files": ["index.css"]
+}

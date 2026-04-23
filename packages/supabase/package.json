@@ -1,0 +1,30 @@
+{
+  "name": "@ddb/supabase",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gen:types": "node scripts/generate-types.mjs"
+  },
+  "exports": {
+    "./browser": "./src/client/browser.ts",
+    "./server": "./src/client/server.ts",
+    "./admin": "./src/client/admin.ts",
+    "./services/auth": "./src/services/auth.service.ts",
+    "./services/participant": "./src/services/participant.service.ts",
+    "./services/event": "./src/services/event.service.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./utils/env": "./src/utils/env.server.ts",
+    "./types": "./src/types/index.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.104.1",
+    "dotenv": "^17.2.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@ddb/typescript-config": "*",
+    "typescript": "^5.8.0"
+  }
+}

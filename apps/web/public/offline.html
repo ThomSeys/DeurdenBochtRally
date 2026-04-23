@@ -1,141 +1,139 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - Deur Den Bocht Rally</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      min-height: 100vh;
-      margin: 0;
-      background: #f9fafb;
-      color: #111827;
-    }
-    .offline-banner {
-      background: #fbbf24;
-      color: #78350f;
-      padding: 12px 16px;
-      text-align: center;
-      font-weight: 500;
-      border-bottom: 1px solid #f59e0b;
-    }
-    .container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 56px);
-      padding: 20px;
-    }
-    .content {
-      max-width: 500px;
-      text-align: center;
-    }
-    .icon {
-      font-size: 80px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      font-size: 28px;
-      margin: 0 0 12px 0;
-      color: #111827;
-    }
-    p {
-      font-size: 16px;
-      color: #6b7280;
-      line-height: 1.6;
-      margin: 0 0 20px 0;
-    }
-    .buttons {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-primary {
-      background: #667eea;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #5568d3;
-    }
-    .btn-secondary {
-      background: white;
-      color: #667eea;
-      border: 2px solid #667eea;
-    }
-    .btn-secondary:hover {
-      background: #f9fafb;
-    }
-    .status {
-      margin-top: 30px;
-      padding: 12px;
-      background: white;
-      border-radius: 6px;
-      border-left: 4px solid #fbbf24;
-    }
-    .status-item {
-      font-size: 14px;
-      color: #6b7280;
-      margin: 4px 0;
-    }
-    .status-item.cached {
-      color: #059669;
-    }
-  </style>
-</head>
-<body>
-  <div class="offline-banner">
-    📡 Je bent offline - functies werken beperkt
-  </div>
-  
-  <div class="container">
-    <div class="content">
-      <div class="icon">🏍️</div>
-      <h1>Offline Modus Actief</h1>
-      <p>
-        Je hebt geen internetverbinding. Je kunt nog steeds:
-      </p>
-      <ul style="text-align: left; max-width: 300px; margin: 0 auto 20px;">
-        <li>✓ Eerder geladen rally-informatie bekijken</li>
-        <li>✓ Check-ins invoeren (worden later gesynchroniseerd)</li>
-        <li>✓ Lokale kaarten raadplegen</li>
-      </ul>
-      
-      <div class="buttons">
-        <button class="btn-primary" onclick="goHome()">
-          Ga naar startpagina
-        </button>
-        <button class="btn-secondary" onclick="window.location.reload()">
-          Probeer opnieuw
-        </button>
-      </div>
-      
-      <div class="status">
-        <div class="status-item">Wachtend op verbinding...</div>
-        <div class="status-item cached">✓ Lokale gegevens beschikbaar</div>
-      </div>
-    </div>
-  </div>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f97316" />
+    <title>Offline – Deur Den Bocht</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-  <script>
-    function goHome() {
-      window.location.href = '/';
-    }
-    
-    // Monitor for online status
-    window.addEventListener('online', () => {
-      window.location.reload();
-    });
-  </script>
-</body>
+      :root {
+        --brand: #f97316;
+        --brand-dark: #c2410c;
+        --gray-600: #4b5563;
+        --gray-400: #9ca3af;
+        --gray-100: #f3f4f6;
+      }
+
+      body {
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: #fff;
+        color: #111;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+        text-align: center;
+      }
+
+      .icon {
+        width: 80px;
+        height: 80px;
+        background: var(--brand);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .icon svg {
+        width: 44px;
+        height: 44px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        color: var(--gray-600);
+        font-size: 1rem;
+        line-height: 1.625;
+        max-width: 28rem;
+        margin-bottom: 2rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--gray-100);
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        margin-bottom: 2rem;
+      }
+
+      .badge-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--gray-400);
+        border-radius: 9999px;
+      }
+
+      button {
+        background: var(--brand);
+        color: #fff;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        padding: 0.75rem 1.75rem;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+
+      button:hover {
+        background: var(--brand-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="icon">
+      <!-- Wifi-off icon -->
+      <svg viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23" />
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+        <circle cx="12" cy="20" r="1" fill="#fff" />
+      </svg>
+    </div>
+
+    <h1>You're offline</h1>
+
+    <div class="badge">
+      <span class="badge-dot"></span>
+      No internet connection
+    </div>
+
+    <p>
+      Some pages may still be available from your cache. Try navigating to a
+      page you've visited before, or reconnect and try again.
+    </p>
+
+    <button onclick="location.reload()">Try again</button>
+  </body>
 </html>

@@ -1,193 +1,111 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
+import { Form, redirect, useActionData, useNavigation, useSearchParams } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { serverClient } from "~/lib/supabase.server";
+import { getUser, signIn } from "@ddb/supabase/services/auth";
+import { LoginSchema } from "@ddb/supabase/schemas";
+import { formDataToObject, zodErrors } from "~/lib/zod";
+import { Input } from "~/components/ui/Input";
+import { Button } from "~/components/ui/Button";
+import { Alert } from "~/components/ui/Alert";
+import { TextLink } from "~/components/ui/TextLink";
+import { PageHeading } from "~/components/ui/PageHeading";
 
-import { Form, useActionData, useSearchParams, Link, useLoaderData } from 'react-router';
-import React from 'react';
-import { supabase, supabaseAdmin } from '~/lib/supabase.server';
-import { createUserSession, getUserId } from '~/lib/session.server';
-import { createRequestLogger } from '~/lib/logger.server';
-import { getCSRFToken, verifyCSRFToken } from '~/lib/csrf.server';
-import CSRFInput from '~/components/CSRFInput';
+export const meta: MetaFunction = () => [
+  { title: "Login – Deur Den Bocht" },
+];
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const userId = await getUserId(request);
-  if (userId) return redirect('/dashboard');
-  const csrfToken = await getCSRFToken(request);
-  return { csrfToken };
+  const ctx = serverClient(request);
+  const { user } = await getUser(ctx);
+  if (user) throw redirect("/dashboard", { headers: ctx.headers });
+  return null;
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const requestLogger = createRequestLogger(request);
-  await requestLogger.info('auth', 'Login attempt initiated');
+  const fd = await request.formData();
 
-  try {
-    // Verify CSRF token first
-    const isValidToken = await verifyCSRFToken(request);
-    if (!isValidToken) {
-      await requestLogger.warn('auth', 'Login failed: invalid CSRF token');
-      return { 
-        error: 'Invalid form submission. Please try again.',
-        status: 403
-      };
-    }
+  // ── Zod validation ──────────────────────────────────────────────────────────
+  const parsed = LoginSchema.safeParse(formDataToObject(fd));
 
-    const formData = await request.formData();
-    const email = formData.get('email');
-    const password = formData.get('password');
-
-    if (typeof email !== 'string' || typeof password !== 'string') {
-      await requestLogger.warn('auth', 'Login failed: missing credentials');
-      return { 
-        error: 'Email en wachtwoord zijn verplicht',
-        status: 400
-      };
-    }
-
-    // Authenticate with Supabase Auth
-    const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase(),
-      password,
-    });
-
-    if (authError || !user) {
-      await requestLogger.warn('auth', 'Login failed: invalid credentials', { 
-        email: email.toLowerCase(),
-        error: authError?.message 
-      });
-      return { 
-        error: 'Ongeldige inloggegevens. Controleer je email en wachtwoord.',
-        status: 401
-      };
-    }
-
-    // Verify user is a participant with completed payment
-    const { data: participant } = await supabaseAdmin
-      .from('participants')
-      .select('id')
-      .eq('id', user.id)
-      .eq('payment_status', 'completed')
-      .single();
-
-    if (!participant) {
-      await requestLogger.warn('auth', 'Login failed: participant not found or payment incomplete', {
-        userId: user.id,
-        email: email.toLowerCase()
-      });
-      return { 
-        error: 'Je account is niet actief. Controleer je betaling.',
-        status: 403
-      };
-    }
-
-    const url = new URL(request.url);
-    const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
-
-    await requestLogger
-      .withUser(participant.id)
-      .info('auth', 'Login successful', { 
-        email: email.toLowerCase(),
-        redirectTo 
-      });
-    return createUserSession(participant.id, redirectTo);
-  } catch (error) {
-    await requestLogger.error('auth', 'Login failed: unexpected error', error as Error);
-    return { error: 'Onverwachte fout', status: 500 };
+  if (!parsed.success) {
+    return { fieldErrors: zodErrors(parsed.error), error: null };
   }
+
+  const { email, password, redirectTo } = parsed.data;
+
+  const ctx = serverClient(request);
+  const { error, user } = await signIn(ctx, { email, password });
+
+  if (error || !user) {
+    return { fieldErrors: null, error: error ?? "Invalid email or password." };
+  }
+
+  throw redirect(redirectTo, { headers: ctx.headers });
 }
 
 export default function Login() {
-  const { csrfToken } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-  const [searchParams] = useSearchParams();
-  const [showPassword, setShowPassword] = React.useState(false);
-  const resetSuccess = searchParams.get('reset') === 'success';
+  const data = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submitting = navigation.state === "submitting";
+  const [params] = useSearchParams();
+  const registered = params.get("registered") === "1";
+  const redirectTo = params.get("redirectTo") ?? "/dashboard";
+  const fe = data?.fieldErrors ?? {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-sm shadow-xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black mb-2 gradient-text">Deur Den Bocht</h1>
-          <p className="text-gray-600">Welkom terug. Log in op je dashboard.</p>
-        </div>
+    <div className="flex min-h-[calc(100svh-64px)] items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+        <PageHeading
+          title="Welcome back"
+          subtitle={
+            <>
+              No account yet?{" "}
+              <TextLink to="/register">Register</TextLink>
+            </>
+          }
+        />
 
-        {actionData?.error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {actionData.error}
-          </div>
+        {registered && (
+          <Alert intent="success" className="mb-4">
+            Account created! You can now log in.
+          </Alert>
         )}
 
-        {resetSuccess && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-            Je wachtwoord is bijgewerkt. Je kan nu inloggen.
-          </div>
-        )}
+        <Form method="post" className="flex flex-col gap-4">
+          <input type="hidden" name="redirectTo" value={redirectTo} />
 
-        <Form method="post" className="space-y-6">
-          <CSRFInput token={csrfToken} />
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="jouw@email.be"
-            />
-          </div>
+          {data?.error && <Alert>{data.error}</Alert>}
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Wachtwoord
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="current-password"
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            error={fe["email"]}
+            placeholder="jan@example.com"
+          />
+
+          <Input
+            label="Password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            error={fe["password"]}
+            placeholder="••••••••"
+          />
+
+          <div className="flex justify-end">
+            <TextLink to="/forgot-password" intent="muted">
+              Forgot password?
+            </TextLink>
           </div>
 
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
-              Wachtwoord vergeten?
-            </Link>
-          </div>
-
-          <button type="submit" className="btn-primary w-full">
-            Inloggen
-          </button>
+          <Button type="submit" disabled={submitting} full>
+            {submitting ? "Logging in…" : "Log in"}
+          </Button>
         </Form>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>
-            Nog geen account?{' '}
-            <Link to="/registration" className="text-primary-600 hover:underline font-medium">
-              Inschrijven
-            </Link>
-          </p>
-        </div>
-
-        <div className="mt-4 text-center">
-          <Link to="/" className="text-sm text-primary-600 hover:underline">
-            ← Terug naar homepagina
-          </Link>
-        </div>
       </div>
     </div>
   );
 }
+

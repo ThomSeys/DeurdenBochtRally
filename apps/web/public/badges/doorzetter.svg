@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <rect width="200" height="200" fill="none"/>
-  <circle cx="100" cy="100" r="86" fill="rgba(255,255,255,0.12)"/>
-
-  <!-- Star/medal icon in accent color to represent persistence -->
-  <g fill="#FFB77A" transform="translate(0,0)">
-    <polygon points="100,64 110,96 144,96 116,116 126,148 100,128 74,148 84,116 56,96 90,96" />
-  </g>
-</svg>

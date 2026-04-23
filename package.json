@@ -15,7 +15,8 @@
     "deploy": "turbo run deploy",
     "script": "tsx",
     "setup": "tsx scripts/master-setup.ts",
-    "clean-slate": "tsx scripts/clean-slate.ts"
+    "clean-slate": "tsx scripts/clean-slate.ts",
+    "gen:types": "turbo run gen:types"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6",
