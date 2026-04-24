@@ -5,6 +5,7 @@ import { listEvents } from "@ddb/supabase/services/event";
 import { PageHeading } from "~/components/ui/PageHeading";
 import { LinkButton } from "~/components/ui/Button";
 import { Alert } from "~/components/ui/Alert";
+import { Badge } from "~/components/ui/Badge";
 
 export async function loader(_: LoaderFunctionArgs) {
   const admin = adminClient();
@@ -58,15 +59,9 @@ export default function AdminEventsIndex() {
                       : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {event.is_active ? (
-                      <span className="inline-flex items-center rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                        Inactive
-                      </span>
-                    )}
+                    <Badge intent={event.is_active ? "active" : "inactive"}>
+                      {event.is_active ? "Active" : "Inactive"}
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link

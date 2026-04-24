@@ -22,7 +22,7 @@ const year = z.preprocess(
     .number()
     .int()
     .min(1900, "Year must be 1900 or later.")
-    .max(2030, "Year must be 2030 or earlier.")
+    .max(new Date().getFullYear(), `Year must be ${new Date().getFullYear()} or earlier.`)
     .optional(),
 );
 

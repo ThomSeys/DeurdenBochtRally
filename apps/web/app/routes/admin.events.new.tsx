@@ -105,11 +105,11 @@ export default function AdminEventsNew() {
               type="checkbox"
               name="is_active"
               value="true"
-              className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+              className="h-4 w-4 rounded border-white/20 bg-surface-raised text-orange-500 focus:ring-orange-500/30"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-gray-300">
               Set as active event{" "}
-              <span className="text-gray-400">(deactivates all others)</span>
+              <span className="text-gray-500">(deactivates all others)</span>
             </span>
           </label>
         </section>

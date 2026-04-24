@@ -1,22 +1,32 @@
-import type { MetaFunction } from "react-router";
-import { PageHeading } from "~/components/ui/PageHeading";
+import type { MetaFunction, LoaderFunctionArgs } from "react-router";
+import { useLoaderData } from "react-router";
+import { sanityClient } from "@ddb/sanity/client";
+import { pageBySlugQuery } from "@ddb/sanity/queries/page";
+import type { PageDocument } from "@ddb/sanity/types";
+import { BlockRenderer } from "~/components/BlockRenderer";
 
-export const meta: MetaFunction = () => [
-  { title: "About – Deur Den Bocht" },
+export const loader = async (_: LoaderFunctionArgs) => {
+  const page = await sanityClient().fetch<PageDocument | null>(
+    pageBySlugQuery,
+    { slug: "about" }
+  );
+  return { page };
+};
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => [
+  { title: data?.page?.seo?.title ?? "About – Deur Den Bocht" },
+  {
+    name: "description",
+    content: data?.page?.seo?.description,
+  },
 ];
 
 export default function About() {
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-20">
-      <PageHeading
-        size="lg"
-        title="About the rally"
-        subtitle="Deur Den Bocht is an annual motorcycle rally where riders navigate scenic routes, tackle challenges, and compete for glory on the leaderboard."
-      />
-      <p className="text-gray-600">
-        {/* TODO: pull content from CMS */}
-        More details coming soon.
-      </p>
-    </div>
-  );
+  const { page } = useLoaderData<typeof loader>();
+
+  if (!page?.blocks?.length) {
+    return null;
+  }
+
+  return <BlockRenderer blocks={page.blocks} />;
 }

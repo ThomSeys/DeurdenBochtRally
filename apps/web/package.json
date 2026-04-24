@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@ddb/sanity": "*",
     "@ddb/supabase": "*",
     "@react-router/node": "^7.14.2",
     "@react-router/serve": "^7.14.2",

@@ -1,0 +1,20 @@
+{
+  "name": "@ddb/sanity",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./image": "./src/image.ts",
+    "./queries/page": "./src/queries/page.ts",
+    "./types": "./src/types/index.ts"
+  },
+  "dependencies": {
+    "@sanity/client": "^7.3.0",
+    "@sanity/image-url": "^1.1.0"
+  },
+  "devDependencies": {
+    "@ddb/typescript-config": "*",
+    "typescript": "^5.8.0"
+  }
+}

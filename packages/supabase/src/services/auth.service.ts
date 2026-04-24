@@ -1,10 +1,10 @@
 import type { User } from "@supabase/supabase-js";
-import type { ServerClientResult } from "../client/server.js";
+import type { ServerClientResult } from "../client/server";
 import type {
   SignInCredentials,
   SignInResult,
   GetUserResult,
-} from "../types/auth.types.js";
+} from "../types/auth.types";
 
 /**
  * Returns true if the authenticated user has the admin role.
